@@ -28,9 +28,6 @@ Index
 
 - Put the command_id back into the PDU descriptor.
 
-- Assign default values to standard parameters in smpp_param.hrl (just like
-  for TLVs).
-
 - Automatically add/remove trailing '\0' in C-Octet Strings.
 
   Pay special attention to C-Octet String parameteres defined as composites
@@ -45,18 +42,13 @@ Index
   Cambios en los hrls, modificar todos los valores por defecto que incluyen el
   NULL_CHARACTER explícitamente.  El NULL_C_OCTET_STRING es ahora un "".
 
-- Make OSERL behaviours OTP compilant.  
-
-  Notice the  behavior(name) vs behaviour_info/1 
-
-- Remove unused (commented out) macros from hrls.
-
 - Define a couple of MACROS for every composite parameter.  One to assign
   default (record) values, and the other to hide record definition to higher
   layers.
 
   DEST_TELEMATICS_ID_DEFAULT_VALUE
   DEST_TELEMATICS_ID_VALUE(...)
+
 
 2. Version 1.0
 

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -26,6 +26,17 @@
 % are likely to disappear on further versions.</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [17 Feb 2004]
+%
+% <ul>
+%   <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible 
+%     for encoding default values on standard and mandatory tlvs respectively.
+%   </li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol 
@@ -33,7 +44,7 @@
 %   </dd>
 % </dl>
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {21 Mar 2003} {@time}.
@@ -176,8 +187,7 @@ get_name(ParamType) when record(ParamType, tlv) ->
 %    Binary    = bin()
 %    StdType   = {standard, Name, Domain, Error}
 %    Name      = atom()
-%    Domain    = empty()          |
-%                constant()       | 
+%    Domain    = constant()       | 
 %                integer()        | 
 %                c_octet_string() | 
 %                octet_string()   |
@@ -231,8 +241,7 @@ decode_std(Binary, #standard{domain = Domain, error = Error}) ->
 %    Name     = atom()
 %    Tag      = int()
 %    Domain   = Type
-%    Type     = empty()          |
-%               constant()       | 
+%    Type     = constant()       | 
 %               integer()        | 
 %               c_octet_string() | 
 %               octet_string()   |
@@ -405,8 +414,7 @@ decode_tlv_value(BinaryValue, TlvType) ->
 % @spec encode_std(Value, StdType) -> {ok, Binary} | {error, Error}
 %    Value     = term()
 %    StdType   = {standard, Name, Domain, Error}
-%    Domain    = empty()          |
-%                constant()       | 
+%    Domain    = constant()       | 
 %                integer()        | 
 %                c_octet_string() | 
 %                octet_string()   |
@@ -439,6 +447,17 @@ decode_tlv_value(BinaryValue, TlvType) ->
 %
 % %@equiv
 %%
+encode_std(undefined, #standard{default = undefined, error = undefined}) ->
+	{error, ?ESME_RUNKNOWNERR};
+
+encode_std(undefined, #standard{default = undefined, error = Error}) ->
+	{error, Error};
+
+encode_std(undefined, #standard{domain = Domain, default = Default}) ->
+    % Guess default values should always be OK...if not, it'll be easier to
+    % review the default definitions rather than touching this clause.
+	base_syntax:encode(Default, Domain);
+
 encode_std(Value, #standard{domain = Domain, error = Error}) ->
     case base_syntax:encode(Value, Domain) of
         {error, _Reason} ->
@@ -459,8 +478,7 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 %    Name     = atom()
 %    Tag      = int()
 %    Domain   = Type
-%    Type     = empty()          |
-%               constant()       | 
+%    Type     = constant()       | 
 %               integer()        | 
 %               c_octet_string() | 
 %               octet_string()   |
@@ -482,16 +500,14 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 % <ol>
 %   <li><tt>Value</tt> is encoded into <tt>Binary</tt> according to 
 %     the base type of the parameter using base_syntax:encode/2.  The term
-%     <tt>
-%       {ok, &lt;&lt;Tag:16/integer, (size(Binary)):16/integer, Binary/binary&gt;&gt;}
-%     </tt>
-%     is returned.
+%     <tt>{ok, &lt;&lt;Tag:16/integer, (size(Binary)):16/integer, 
+%     Binary/binary&gt;&gt;}</tt> is returned.
 %   </li>
 %   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if 
-%     <tt>Value</tt> is the atom <tt>undefined</tt> on single TLVs.
+%     <tt>Value</tt> is the atom <tt>undefined</tt> on mandatory TLVs.
 %   </li>
-%   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if 
-%     <tt>Value</tt> is an empty list on multiple TLVs.
+%   <li>Additionally, <tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if 
+%     <tt>Value</tt> is an empty list on mandatory multiple TLVs.
 %   </li>
 %   <li>The term <tt>{error, ?ESME_RINVTLVVAL}</tt> is returned if
 %     <tt>Value</tt> doesn't match the TLV domain.  If the parameter has
@@ -499,6 +515,9 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 %     is returned instead of <tt>{error, ?ESME_RINVTLVVAL}</tt>.
 %   </li>
 % </ol>
+%
+% <p>If <tt>Value</tt> is <tt>undefined</tt> and the TLV is mandatory,
+% <tt>Default</tt> is encoded if not <tt>undefined</tt>.</p>
 %
 % <p>Given an <tt>undefined</tt> value and an optional TLV specifier,
 % the term <tt>{ok, &lt;&lt;&gt;&gt;}</tt> is returned.</p>
@@ -508,8 +527,11 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 %
 % %@equiv
 %%
-encode_tlv(undefined, #tlv{mandatory = true}) ->
+encode_tlv(undefined, #tlv{mandatory = true, default = undefined}) ->
     {error, ?ESME_RMISSINGTLV};
+
+encode_tlv(undefined, #tlv{mandatory = true, default = Default} = TlvType) ->
+	encode_tlv(Default, TlvType);
 
 encode_tlv([], #tlv{mandatory = true, multiple = true}) ->
     {error, ?ESME_RMISSINGTLV};

@@ -49,8 +49,9 @@ numbers on [SMPP 5.0].</p>
     <ol>
       <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a>
         <ol>
-          <li><a href="#changes0_1-0_2-base_syntax">base_syntax.hrl</a></li>
-          <li><a href="#changes0_1-0_2-param_syntax">param_syntax.hrl</a></li>
+          <li><a href="#changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></li>
+          <li><a href="#changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></li>
+          <li><a href="#changes0_1-0_2-param_syntax">param_syntax.erl</a></li>
           <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
           <li><a href="#changes0_1-0_2-smpp_param">smpp_param.hrl</a></li>
           <li><a href="#changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></li>
@@ -58,6 +59,7 @@ numbers on [SMPP 5.0].</p>
           <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
           <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
           <li><a href="#changes0_1-0_2-gen_esme">gen_esme.erl</a></li>
+          <li><a href="#changes0_1-0_2-other">Other changes</a></li>
         </ol> 
       </li>
     </ol>
@@ -2288,8 +2290,20 @@ Find OSERL's PICS proforma in openoffice format
 
 <h3><a name="changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></h3>
 
+<ul>
+  <li>Default values of standard parameters were included in the parameter
+    descriptor (just like in TLVs).  Lists of PDUs default values do no longer
+    exist.<br/>
+    <br/>
+    Refer to <i>smpp_param.hrl</i> if you want to change the default value of 
+    any parameter.
+  </li>
+</ul>
 
-<h4><a name="changes0_1-0_2-base_syntax">base_syntax.hrl</a></h4>
+<p>How these changes affected individual files is described below.</p>
+
+
+<h4><a name="changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></h4>
 
 <ul>
   <li><tt>empty</tt> base type record definition removed.</li>
@@ -2300,12 +2314,21 @@ Find OSERL's PICS proforma in openoffice format
 </ul>
 
 
-<h4><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h4>
+<h4><a name="changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></h4>
 
 <ul>
   <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br/>
   <br/>
   <tt>STANDARD</tt> macro accordingly updated.
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h4>
+
+<ul>
+  <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible for 
+    encoding default values on standard and mandatory tlvs respectively.
   </li>
 </ul>
 
@@ -2380,6 +2403,14 @@ Find OSERL's PICS proforma in openoffice format
 </ul>
 
 
+<h4><a name="changes0_1-0_2-other">Other changes</a></h4>
+
+<ul>
+  <li>Makefiles were fixed to find compiled behaviors.</li>
+</ul>
+
+
+
 <h2><a name="todo">TODO</a></h2>
 
 <ul>
@@ -2397,9 +2428,6 @@ Find OSERL's PICS proforma in openoffice format
       efficient manner.
     </li>
     <li>Automatically add/remove trailing '\0' in C-Octet Strings.</li>
-    <li>Assign default values to standard parameters in smpp_param.hrl 
-      (just like for TLVs).
-    </li>
   </ol>
   </li>
   <li>Version 1.0

@@ -296,7 +296,7 @@ set_param(ParamName, ParamValue, PduDict) ->
 % %@equiv
 %%
 merge_params(ParamList1, ParamList2) ->
-	merge_params(lists:keysort(1,ParamList1), lists:keysort(1,ParamList2), []).
+    merge_params(lists:keysort(1,ParamList1), lists:keysort(1,ParamList2), []).
 
 
 %%%
@@ -306,19 +306,19 @@ merge_params(ParamList1, ParamList2) ->
 % @end
 %%
 merge_params([], ParamList2, MergedParamList) ->
-	MergedParamList ++ ParamList2;
+    MergedParamList ++ ParamList2;
 
 merge_params(ParamList1, [], MergedParamList) ->
-	MergedParamList ++ ParamList1;
+    MergedParamList ++ ParamList1;
 
 merge_params([{Id,V1}|T1], [{Id,V2}|T2], MergedParamList) ->
-	merge_params(T1, T2, [{Id, V1}|MergedParamList]);
+    merge_params(T1, T2, [{Id, V1}|MergedParamList]);
 
 merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) when I1 < I2 ->
-	merge_params(T1, [{I2,V2}|T2], [{I1, V1}|MergedParamList]);
+    merge_params(T1, [{I2,V2}|T2], [{I1, V1}|MergedParamList]);
 
 merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
-	merge_params([{I1,V1}|T1], T2, [{I2, V2}|MergedParamList]).
+    merge_params([{I1,V1}|T1], T2, [{I2, V2}|MergedParamList]).
 
 
 %%%
@@ -339,9 +339,9 @@ merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
 %%
 new_bind_transmitter(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -364,9 +364,9 @@ new_bind_transmitter(SequenceNumber, InitParams) ->
 %%
 new_bind_transmitter_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -387,9 +387,9 @@ new_bind_transmitter_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_bind_receiver(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -412,9 +412,9 @@ new_bind_receiver(SequenceNumber, InitParams) ->
 %%
 new_bind_receiver_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -435,9 +435,9 @@ new_bind_receiver_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_bind_transceiver(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -460,9 +460,9 @@ new_bind_transceiver(SequenceNumber, InitParams) ->
 %%
 new_bind_transceiver_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -483,9 +483,9 @@ new_bind_transceiver_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_outbind(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_OUTBIND, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -506,9 +506,9 @@ new_outbind(SequenceNumber, InitParams) ->
 %%
 new_unbind(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_UNBIND, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -530,9 +530,9 @@ new_unbind(SequenceNumber, InitParams) ->
 %%
 new_unbind_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_UNBIND_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -553,9 +553,9 @@ new_unbind_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_enquire_link(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -578,9 +578,9 @@ new_enquire_link(SequenceNumber, InitParams) ->
 %%
 new_enquire_link_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -601,9 +601,9 @@ new_enquire_link_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_alert_notification(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_ALERT_NOTIFICATION, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -625,9 +625,9 @@ new_alert_notification(SequenceNumber, InitParams) ->
 %%
 new_generic_nack(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_GENERIC_NACK, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -648,9 +648,9 @@ new_generic_nack(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_submit_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -673,9 +673,9 @@ new_submit_sm(SequenceNumber, InitParams) ->
 %%
 new_submit_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -696,9 +696,9 @@ new_submit_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_data_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -720,9 +720,9 @@ new_data_sm(SequenceNumber, InitParams) ->
 %%
 new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -743,9 +743,9 @@ new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_submit_multi(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -768,9 +768,9 @@ new_submit_multi(SequenceNumber, InitParams) ->
 %%
 new_submit_multi_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -791,9 +791,9 @@ new_submit_multi_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_deliver_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -816,9 +816,9 @@ new_deliver_sm(SequenceNumber, InitParams) ->
 %%
 new_deliver_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -839,9 +839,9 @@ new_deliver_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_broadcast_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -864,9 +864,9 @@ new_broadcast_sm(SequenceNumber, InitParams) ->
 %%
 new_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -887,9 +887,9 @@ new_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_cancel_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -912,9 +912,9 @@ new_cancel_sm(SequenceNumber, InitParams) ->
 %%
 new_cancel_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -935,9 +935,9 @@ new_cancel_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_query_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -959,9 +959,9 @@ new_query_sm(SequenceNumber, InitParams) ->
 %%
 new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -982,9 +982,9 @@ new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_replace_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -1007,9 +1007,9 @@ new_replace_sm(SequenceNumber, InitParams) ->
 %%
 new_replace_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -1030,9 +1030,9 @@ new_replace_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_query_broadcast_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -1055,9 +1055,9 @@ new_query_broadcast_sm(SequenceNumber, InitParams) ->
 %%
 new_query_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -1078,9 +1078,9 @@ new_query_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 %%
 new_cancel_broadcast_sm(SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM, 
-					   ?ESME_ROK, 
-					   SequenceNumber,
-					   InitParams).
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%
@@ -1103,9 +1103,9 @@ new_cancel_broadcast_sm(SequenceNumber, InitParams) ->
 %%
 new_cancel_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP, 
-					   CommandStatus, 
-					   SequenceNumber,
-					   InitParams).
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
 
 
 %%%

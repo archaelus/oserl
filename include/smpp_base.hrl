@@ -36,8 +36,8 @@
 % <p>Its <b>domain</b> is the set of all possible TON Values: 
 % ?BOUND_INTEGER(1, 6).</p>
 %
-% <p>Datatype definitions are not currently used, but they're preserved until
-% definitely discarded</p>
+% <p><b>IMPORTANT</b> Datatype definitions are <b>not</b> used.  They're 
+% only preserved because they help document parameter definitions.</p>
 %
 %
 % <h2>References</h2>

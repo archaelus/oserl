@@ -7,29 +7,36 @@ Enrique Marcote Peña <mpquique@udc.es>
 
 Index
 
-1.  Changes 0.1 -> 0.2
-1.1 base_syntax.hrl
-1.2 param_syntax.hrl
-1.3 pdu_syntax.erl
-1.4 smpp_param.hrl
-1.5 smpp_pdu.hrl
-1.6 operation.erl
-1.7 sm.erl
-1.8 gen_esme_session.erl
-1.9 gen_esme.erl
-
+1.   Changes 0.1 -> 0.2
+1.1  base_syntax.hrl
+1.2  param_syntax.hrl
+1.3  param_syntax.erl
+1.4  pdu_syntax.erl
+1.5  smpp_param.hrl
+1.6  smpp_pdu.hrl
+1.7  operation.erl
+1.8  sm.erl
+1.9  gen_esme_session.erl
+1.10 gen_esme.erl
+1.11 Other changes
 
 ---
 
 
-1. Changes 0.1 -> 0.2
+1.   Changes 0.1 -> 0.2
 
-Makefiles were fixed to find compiled behaviors.
+- Default values of standard parameters were included in the parameter
+  descriptor (just like in TLVs).  Lists of PDUs default values do no longer
+  exist.
 
-Changes on individual modules are described below.
+  Refer to smpp_param.hrl if you want to change the default value of any
+  parameter.
 
 
-1.1 base_syntax.hrl 
+How these changes affected individual files is described below.
+
+
+1.1  base_syntax.hrl 
 
 - empty base type record definition removed.
 
@@ -38,14 +45,20 @@ Changes on individual modules are described below.
     -define(EMPTY, ?UNION([])).
 
 
-1.2 param_syntax.hrl 
+1.2  param_syntax.hrl 
 
 - Field default added to standard record definition.
 
   STANDARD macro accordingly updated.
 
 
-1.3 pdu_syntax.erl
+1.3  param_syntax.erl 
+
+- encode_std/2 and encode_tlv/2 are now responsible for encoding default 
+  values on standard and mandatory tlvs respectively.
+
+
+1.4  pdu_syntax.erl
 
 - Removed pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Using dictionary
   API instead.
@@ -53,14 +66,14 @@ Changes on individual modules are described below.
   pdu_syntax functions are no longer used beyond operation API.
 
 
-1.4 smpp_param.hrl
+1.5  smpp_param.hrl
 
 - Default values added to Standard parameters.
 
 - Default values for TLVs reviewed.
 
 
-1.5 smpp_pdu.hrl
+1.6  smpp_pdu.hrl
 
 - Default values moved to smpp_param.hrl.
 
@@ -69,7 +82,7 @@ Changes on individual modules are described below.
 - CDMA and TDMA specific TLVs are no longer commented out.
 
 
-1.6 operation.erl
+1.7  operation.erl
 
 - Implemented get_param/2 and set_param/3, replacements for 
   pdu_syntax:get_value/2 and pdu_syntax:set_value/3 respectively.
@@ -77,17 +90,21 @@ Changes on individual modules are described below.
 - new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.
 
 
-1.7 sm.erl
+1.8  sm.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 
-1.8 gen_esme_session.erl
+1.9 gen_esme_session.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 
-1.9 gen_esme.erl
+1.10 gen_esme.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
+
+1.11 Other changes
+
+- Makefiles were fixed to find compiled behaviors.

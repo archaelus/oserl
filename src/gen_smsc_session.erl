@@ -1354,8 +1354,6 @@
 %%% with a content larger than 160 characters.
 -module(gen_smsc_session).
 
-% CAMBIANDO LOS Command Name por Command Ids.
-
 -behaviour(gen_fsm).
 -behaviour(gen_tcp_connection).
 
@@ -1413,13 +1411,13 @@
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
 
-%% Bound state for a given command_id
-%% ***COMMENT OUT*** this line to regerate edocs. Don't know why ???
+% Bound state for a given command_id
+% ***COMMENT OUT*** this line to regerate edocs. Don't know why ???
 -define(BOUND(B), if 
-					  B == ?COMMAND_ID_BIND_RECEIVER    -> bound_rx;
-					  B == ?COMMAND_ID_BIND_TRANSMITTER -> bound_tx;
-					  B == ?COMMAND_ID_BIND_TRANSCEIVER -> bound_trx
-				  end).
+                      B == ?COMMAND_ID_BIND_RECEIVER    -> bound_rx;
+                      B == ?COMMAND_ID_BIND_TRANSMITTER -> bound_tx;
+                      B == ?COMMAND_ID_BIND_TRANSCEIVER -> bound_trx
+                  end).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -1470,9 +1468,8 @@
 %%   </dd>
 %%   <dt>SelfCongestionState: </dt><dd>ESME congestion state (default is 0).
 %%   </dd>
-%%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might be atom
-%%     <tt>undefined</tt> if the MC doesn't support the congestion_state 
-%%     parameter.
+%%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might be always
+%%     0 if the peer ESME doesn't support the congestion_state parameter.
 %%   </dd>
 %%   <dt>SessionInitTime: </dt><dd>A value in milliseconds or the atom
 %%     <tt>infinity</tt> (the later disables the timer).
@@ -1535,7 +1532,7 @@
          conn,
          requests,
          self_congestion_state = 0,
-         peer_congestion_state,
+         peer_congestion_state = 0,
          session_init_time,
          session_init_timer,
          enquire_link_time,
@@ -1630,7 +1627,8 @@ start_link(Name, Mod, Conn, Timers) ->
 %% <tt>Sid</tt>.
 %% @end
 alert_notification(Sid, ParamList) ->
-    gen_fsm:sync_send_event(Sid, {alert_notification, ParamList}, infinity).
+    CmdId = ?COMMAND_ID_ALERT_NOTIFICATION,
+    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
 
 
 %% @spec outbind(Sid, ParamList) -> Result
@@ -1645,7 +1643,8 @@ alert_notification(Sid, ParamList) ->
 %% @doc Issues an outbind operation on the session identified by <tt>Sid</tt>.
 %% @end
 outbind(Sid, ParamList) ->
-    gen_fsm:sync_send_event(Sid, {outbind, ParamList}, infinity).
+    CmdId = ?COMMAND_ID_OUTBIND,
+    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
 
 
 %% @spec data_sm(Sid, ParamList) -> Result
@@ -1661,7 +1660,8 @@ outbind(Sid, ParamList) ->
 %% </tt>.
 %% @end
 data_sm(Sid, ParamList) ->
-    gen_fsm:sync_send_event(Sid, {data_sm, ParamList}, infinity).
+    CmdId = ?COMMAND_ID_DATA_SM,
+    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
 
 
 %% @spec deliver_sm(Sid, ParamList) -> Result
@@ -1677,7 +1677,8 @@ data_sm(Sid, ParamList) ->
 %% </tt>.
 %% @end
 deliver_sm(Sid, ParamList) ->
-    gen_fsm:sync_send_event(Sid, {deliver_sm, ParamList}, infinity).
+    CmdId = ?COMMAND_ID_DELIVER_SM,
+    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
 
 
 %% @spec unbind(Sid) -> Result
@@ -1690,7 +1691,7 @@ deliver_sm(Sid, ParamList) ->
 %% </tt>.
 %% @end
 unbind(Sid) ->
-    gen_fsm:sync_send_event(Sid, unbind, infinity).
+    gen_fsm:sync_send_event(Sid, ?COMMAND_ID_UNBIND, infinity).
 
 
 %% @spec stop(Sid) -> ok
@@ -1751,15 +1752,15 @@ init([Pid, Mod, Conn, Timers]) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-open({CmdId, Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
-							   CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
-							   CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
+open({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
+                                CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
+                                CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     reset_timer(S#state.enquire_link_timer),
     case handle_peer_bind(R, self(), S) of  % Synchronous
         true ->
             cancel_timer(S#state.session_init_timer),
             Timer = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, ?BOUND(CmdName), S#state{inactivity_timer = Timer}};
+            {next_state, ?BOUND(CmdId), S#state{inactivity_timer = Timer}};
         false ->
             {next_state, open, S}
     end;
@@ -1800,15 +1801,15 @@ open(R, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-outbound({CmdId, Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
-								   CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
-								   CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
+outbound({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
+                                    CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
+                                    CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     reset_timer(S#state.enquire_link_timer),
     case handle_peer_bind(R, self(), S) of  % Synchronous
         true ->
             cancel_timer(S#state.session_init_timer),
             Timer = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, ?BOUND(CmdName), S#state{inactivity_timer = Timer}};
+            {next_state, ?BOUND(CmdId), S#state{inactivity_timer = Timer}};
         false ->
             {next_state, open, S}
     end;
@@ -1849,7 +1850,7 @@ outbound(R, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-bound_rx({?COMMAND_ID_UNBIND, Pdu} = R, S) ->
+bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     case handle_peer_unbind(R, self(), S) of  % Synchronous
@@ -1859,7 +1860,7 @@ bound_rx({?COMMAND_ID_UNBIND, Pdu} = R, S) ->
         false ->
             {next_state, bound_rx, S}
     end;
-bound_rx(unbind_resp, S) ->  % Not a command_id (sent by the request_broker)
+bound_rx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -1907,21 +1908,21 @@ bound_rx(R, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-bound_tx({CmdName, Pdu} = R, S) when CmdName == broadcast_sm;
-                                     CmdName == cancel_broadcast_sm;
-                                     CmdName == cancel_sm;
-                                     CmdName == data_sm;
-                                     CmdName == query_broadcast_sm;
-                                     CmdName == query_sm;
-                                     CmdName == replace_sm;
-                                     CmdName == submit_multi;
-                                     CmdName == submit_sm ->
+bound_tx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
+                                    CmdId == ?COMMAND_ID_SUBMIT_SM;
+                                    CmdId == ?COMMAND_ID_SUBMIT_MULTI;
+                                    CmdId == ?COMMAND_ID_REPLACE_SM;
+                                    CmdId == ?COMMAND_ID_BROADCAST_SM;
+                                    CmdId == ?COMMAND_ID_QUERY_SM;
+                                    CmdId == ?COMMAND_ID_QUERY_BROADCAST_SM;
+                                    CmdId == ?COMMAND_ID_CANCEL_BROADCAST_SM;
+                                    CmdId == ?COMMAND_ID_CANCEL_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
     spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
     {next_state, bound_tx, S};
-bound_tx({unbind, Pdu} = R, S) ->
+bound_tx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     case handle_peer_unbind(R, self(), S) of  % Synchronous
@@ -1931,7 +1932,7 @@ bound_tx({unbind, Pdu} = R, S) ->
         false ->
             {next_state, bound_tx, S}
     end;
-bound_tx(unbind_resp, S) ->  % Not a command_id (sent by the request_broker)
+bound_tx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -1979,21 +1980,21 @@ bound_tx(R, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-bound_trx({CmdName, _Pdu} = R, S) when CmdName == broadcast_sm;
-                                       CmdName == cancel_broadcast_sm;
-                                       CmdName == cancel_sm;
-                                       CmdName == data_sm;
-                                       CmdName == query_broadcast_sm;
-                                       CmdName == query_sm;
-                                       CmdName == replace_sm;
-                                       CmdName == submit_multi;
-                                       CmdName == submit_sm ->
+bound_trx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
+                                     CmdId == ?COMMAND_ID_SUBMIT_SM;
+                                     CmdId == ?COMMAND_ID_SUBMIT_MULTI;
+                                     CmdId == ?COMMAND_ID_REPLACE_SM;
+                                     CmdId == ?COMMAND_ID_BROADCAST_SM;
+                                     CmdId == ?COMMAND_ID_QUERY_SM;
+                                     CmdId == ?COMMAND_ID_QUERY_BROADCAST_SM;
+                                     CmdId == ?COMMAND_ID_CANCEL_BROADCAST_SM;
+                                     CmdId == ?COMMAND_ID_CANCEL_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
     spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
     {next_state, bound_trx, S};
-bound_trx({unbind, Pdu} = R, S) ->
+bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     case handle_peer_unbind(R, self(), S) of  % Synchronous
@@ -2003,7 +2004,7 @@ bound_trx({unbind, Pdu} = R, S) ->
         false ->
             {next_state, bound_trx, S}
     end;
-bound_trx(unbind_resp, S) ->  % Not a command_id (sent by the request_broker)
+bound_trx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -2076,14 +2077,14 @@ unbound(R, S) ->
 %% @end 
 esme_rinvbndsts_resp({CmdId, Pdu}, Conn) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case catch operation:response_command_id(CmdId) of
-		C when integer(C) ->
-			send_response(C, ?ESME_RINVBNDSTS, SeqNum, [], S#state.conn);
-		_Exit ->  % CmdId unknown
-			C = ?COMMAND_ID_GENERIC_NACK,
-			send_response(C, ?ESME_RINVCMDID, SeqNum, [], S#state.conn)
-	end.
-
+    case ?VALID_COMMAND_ID(CmdId) of
+        true ->
+            RespId = ?RESPONSE(CmdId),
+            send_response(RespId, ?ESME_RINVBNDSTS, SeqNum, [], Conn);
+        false ->
+            RespId = ?COMMAND_ID_GENERIC_NACK,
+            send_response(RespId, ?ESME_RINVCMDID, SeqNum, [], Conn)
+    end.
 
 
 %% @spec open(Event, From, StateData) -> Result
@@ -2105,7 +2106,7 @@ esme_rinvbndsts_resp({CmdId, Pdu}, Conn) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
 %% the state name open.
 %% @end
-open({outbind, ParamList}, _From, S) ->
+open({?COMMAND_ID_OUTBIND, ParamList}, _From, S) ->
     case send_request(?COMMAND_ID_OUTBIND, ParamList, undefined, S) of
         {ok, NewS} ->
             reset_timer(S#state.session_init_timer),
@@ -2160,22 +2161,23 @@ outbound(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
 %% the state name bound_rx.  Bound against a receiver ESME.
 %% @end
-bound_rx({CmdName, _}, _From, #state{peer_congestion_state = P} = S)
-  when is_integer(P) and (P > 90) and ((CmdName == alert_notification) or 
-                                       (CmdName == data_sm)            or
-                                       (CmdName == deliver_sm)) ->
-    % If the other peer is congested the request is not sent.  
+bound_rx({CmdId, _}, _From, S) 
+  when (S#state.peer_congestion_state > 90) and
+       ((CmdId == ?COMMAND_ID_DATA_SM) or
+        (CmdId == ?COMMAND_ID_DELIVER_SM) or
+        (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
+    % If the other peer is congested do not send the request.  
     %
-    % Notice that only current request is dropped, for the next one we put
+    % Notice that only current request is dropped, for the next one, we put
     % the peer_congestion_state back to 90.
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_rx, S#state{peer_congestion_state = 90}};
-bound_rx({CmdName, ParamList}, From, S) when CmdName == alert_notification;
-                                             CmdName == data_sm;
-                                             CmdName == deliver_sm ->
-    CmdId = operation:command_id(CmdName),
+bound_rx({CmdId, ParamList}, From, S) 
+  when CmdId == ?COMMAND_ID_DATA_SM;
+       CmdId == ?COMMAND_ID_DELIVER_SM;
+       CmdId == ?COMMAND_ID_ALERT_NOTIFICATION ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -2184,7 +2186,7 @@ bound_rx({CmdName, ParamList}, From, S) when CmdName == alert_notification;
         Error ->
             {reply, Error, bound_rx, S}
     end;
-bound_rx(unbind, From, S) ->
+bound_rx(?COMMAND_ID_UNBIND, From, S) ->
     case send_request(?COMMAND_ID_UNBIND, [], From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -2216,7 +2218,7 @@ bound_rx(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name bound_tx.  Bound against a transmitter ESME.
 %% @end
-bound_tx(unbind, From, S) ->
+bound_tx(?COMMAND_ID_UNBIND, From, S) ->
     case send_request(?COMMAND_ID_UNBIND, [], From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -2248,10 +2250,11 @@ bound_tx(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name bound_trx.  Bound against a transceiver ESME.
 %% @end
-bound_trx({Request, _}, _From, #state{peer_congestion_state = P} = S)
-  when is_integer(P) and (P > 90) and ((Request == alert_notification) or 
-                                       (Request == data_sm)            or
-                                       (Request == deliver_sm)) ->
+bound_trx({CmdId, _}, _From, S) 
+  when (S#state.peer_congestion_state > 90) and 
+       ((CmdId == ?COMMAND_ID_DATA_SM) or
+        (CmdId == ?COMMAND_ID_DELIVER_SM) or
+        (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
     % If the other peer is congested the request is not sent.  
     %
     % Notice that only current request is dropped, for the next one we put
@@ -2260,10 +2263,10 @@ bound_trx({Request, _}, _From, #state{peer_congestion_state = P} = S)
     reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_trx, S#state{peer_congestion_state = 90}};
-bound_trx({CmdName, ParamList}, From, S) when CmdName == alert_notification;
-                                              CmdName == data_sm;
-                                              CmdName == deliver_sm ->
-    CmdId = operation:command_id(CmdName),
+bound_trx({CmdId, ParamList}, From, S) 
+  when CmdId == ?COMMAND_ID_DATA_SM;
+       CmdId == ?COMMAND_ID_DELIVER_SM;
+       CmdId == ?COMMAND_ID_ALERT_NOTIFICATION ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -2272,7 +2275,7 @@ bound_trx({CmdName, ParamList}, From, S) when CmdName == alert_notification;
         Error ->
             {reply, Error, bound_trx, S}
     end;
-bound_trx(unbind, From, S) ->
+bound_trx(?COMMAND_ID_UNBIND, From, S) ->
     case send_request(?COMMAND_ID_UNBIND, [], From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -2361,12 +2364,6 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             handle_input_corrupt_pdu(undefined,?ESME_RUNKNOWNERR,0,StateData),
             {next_state, StateName, StateData}
     end;
-handle_event({enquire_link, Pdu}, StateName, StateData) ->
-    reset_timer(StateData#state.enquire_link_timer),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-	CmdId  = ?COMMAND_ID_ENQUIRE_LINK_RESP,
-    send_response(CmdId, ?ESME_ROK, SeqNum, [], StateData#state.conn),
-    {next_state, StateName, StateData};
 handle_event(die, StateName, StateData) ->
     gen_tcp_connection:stop(StateData#state.conn),
     {next_state, StateName, StateData}.
@@ -2382,17 +2379,17 @@ handle_event(die, StateName, StateData) ->
 handle_input_correct_pdu(Pdu, StateData) ->
 %    io:format("Correct input. PDU = ~p~n", [Pdu]),
     case operation:get_param(command_id, Pdu) of
-        RespCmdId when RespCmdId > 16#80000000 ->
+        CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
-            CmdId  = operation:request_command_id(RespCmdId),
+            RqstId = ?REQUEST(CmdId),
             case ets:lookup(StateData#state.requests, SeqNum) of
-                [{SeqNum, CmdId, Broker}] ->   % Expected response
+                [{SeqNum, RqstId, Broker}] ->  % Expected response
                     Broker ! {self(), {response, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
                 _Otherwise ->                  % Unexpected response
-                    Cid = StateData#state.conn,
-					Cmd = ?COMMAND_ID_GENERIC_NACK,
-                    send_response(Cmd, ?ESME_RINVCMDID, SeqNum, [], Cid)
+                    Conn = StateData#state.conn,
+                    Nack = ?COMMAND_ID_GENERIC_NACK,
+                    send_response(Nack, ?ESME_RINVCMDID, SeqNum, [], Conn)
             end;
         ?COMMAND_ID_GENERIC_NACK ->
             SeqNum = operation:get_param(sequence_number, Pdu),
@@ -2404,41 +2401,12 @@ handle_input_correct_pdu(Pdu, StateData) ->
                     % Do not send anything, might enter a request/response loop
                     true
             end;
-		RqstCmdId ->
-            gen_fsm:send_event(self(), {RqstCmdId, Pdu})
-%         ?COMMAND_ID_BIND_RECEIVER ->
-%             gen_fsm:send_event(self(), {bind_receiver, Pdu});
-%         ?COMMAND_ID_BIND_TRANSMITTER ->
-%             gen_fsm:send_event(self(), {bind_transmitter, Pdu});
-%         ?COMMAND_ID_BIND_TRANSCEIVER ->
-%             gen_fsm:send_event(self(), {bind_transceiver, Pdu});
-%         ?COMMAND_ID_BROADCAST_SM ->
-%             gen_fsm:send_event(self(), {broadcast_sm, Pdu});
-%         ?COMMAND_ID_CANCEL_BROADCAST_SM ->
-%             gen_fsm:send_event(self(), {cancel_broadcast_sm, Pdu});
-%         ?COMMAND_ID_CANCEL_SM ->
-%             gen_fsm:send_event(self(), {cancel_sm, Pdu});
-%         ?COMMAND_ID_ENQUIRE_LINK ->
-%             gen_fsm:send_all_state_event(self(), {enquire_link, Pdu});
-%         ?COMMAND_ID_QUERY_BROADCAST_SM ->
-%             gen_fsm:send_event(self(), {query_broadcast_sm, Pdu});
-%         ?COMMAND_ID_QUERY_SM ->
-%             gen_fsm:send_event(self(), {query_sm, Pdu});
-%         ?COMMAND_ID_REPLACE_SM ->
-%             gen_fsm:send_event(self(), {replace_sm, Pdu});
-%         ?COMMAND_ID_SUBMIT_MULTI ->
-%             gen_fsm:send_event(self(), {submit_multi, Pdu});
-%         ?COMMAND_ID_SUBMIT_SM ->
-%             gen_fsm:send_event(self(), {submit_sm, Pdu});
-%         ?COMMAND_ID_DATA_SM ->
-%             gen_fsm:send_event(self(), {data_sm, Pdu});
-%         ?COMMAND_ID_UNBIND ->
-%             gen_fsm:send_event(self(), {unbind, Pdu});
-%         _OtherRequest ->
-%             SeqNum = operation:get_param(sequence_number, Pdu),
-% 			CmdId  = ?COMMAND_ID_GENERIC_NACK,
-%             Cid    = StateData#state.conn,
-%             send_response(CmdId, ?ESME_RINVCMDID, SeqNum, [], Cid)
+        CmdId when CmdId == ?COMMAND_ID_ENQUIRE_LINK ->
+            reset_timer(StateData#state.enquire_link_timer),
+            SeqNum = operation:get_param(sequence_number, Pdu),
+            send_response(CmdId, ?ESME_ROK, SeqNum, [], StateData#state.conn);
+        CmdId ->
+            gen_fsm:send_event(self(), {CmdId, Pdu})
     end.
 
 %% @doc Auxiliary function for handle_event/3
@@ -2453,13 +2421,14 @@ handle_input_corrupt_pdu(?COMMAND_ID_GENERIC_NACK, _Status, _SeqNum, _S) ->
     % Do not send anything, might enter a request/response loop
     true;
 handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
-	case catch operation:response_command_id(CmdId) of
-		C when integer(C) ->
-			send_response(C, Status, SeqNum, [], S#state.conn);
-		_Exit ->  % CmdId unknown
-			C = ?COMMAND_ID_GENERIC_NACK,
-			send_response(C, Status, SeqNum, [], S#state.conn)
-	end.
+    case ?VALID_COMMAND_ID(CmdId) of
+        true ->
+            RespId = ?RESPONSE(CmdId),
+            send_response(RespId, Status, SeqNum, [], S#state.conn);
+        false ->
+            RespId = ?COMMAND_ID_GENERIC_NACK,
+            send_response(RespId, Status, SeqNum, [], S#state.conn)
+    end.
 
 %% @doc Auxiliary function for handle_event/3
 %%
@@ -2594,9 +2563,9 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 handle_accept(_Owner, _Conn, _Socket) -> error.
      
 
-%% @spec handle_input(Pid, Cid, Input, Lapse) -> {ok, RestBuffer}
+%% @spec handle_input(Pid, Conn, Input, Lapse) -> {ok, RestBuffer}
 %%    Pid = pid()
-%%    Cid = pid()
+%%    Conn = pid()
 %%    Input = binary()
 %%    RestBuffer = binary()
 %%    Lapse = int()
@@ -2604,20 +2573,20 @@ handle_accept(_Owner, _Conn, _Socket) -> error.
 %% @doc <a href="gen_connection.html#handle_input-4">gen_connection
 %% - handle_input/4</a> callback implementation.
 %% @end
-handle_input(Pid, Cid, Buffer, Lapse) ->
-    handle_input(Pid, Cid, Buffer, Lapse, 1).
-handle_input(Pid, Cid, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
+handle_input(Pid, Conn, Buffer, Lapse) ->
+    handle_input(Pid, Conn, Buffer, Lapse, 1).
+handle_input(Pid, Conn, <<CommandLength:32,Rest/binary>> = Buffer, Lapse, N) ->
     Len = CommandLength - 4,
     case Rest of
         <<PduRest:Len/binary-unit:8, NextPdus/binary>> -> 
             BinaryPdu = <<CommandLength:32, PduRest/binary>>,
             gen_fsm:send_all_state_event(Pid, {input, BinaryPdu, Lapse, N}),
             % The buffer may carry more than one SMPP PDU.
-            handle_input(Pid, Cid, NextPdus, Lapse, N + 1);
+            handle_input(Pid, Conn, NextPdus, Lapse, N + 1);
         _IncompletePdu ->
             {ok, Buffer}
     end;
-handle_input(_Pid, _Cid, Buffer, _Lapse, _N) ->
+handle_input(_Pid, _Conn, Buffer, _Lapse, _N) ->
     {ok, Buffer}.
 
 
@@ -2640,15 +2609,16 @@ handle_input(_Pid, _Cid, Buffer, _Lapse, _N) ->
 %% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_bind({CmdName, Pdu} = R, Self, S) ->
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    CmdId  = operation:response_command_id(CmdName),
-    case (S#state.mod):handle_bind(S#state.smsc, Self, R) of
+handle_peer_bind({CmdId, Pdu}, Self, S) ->
+    CmdName = ?COMMAND_NAME(CmdId),
+    SeqNum  = operation:get_param(sequence_number, Pdu),
+    RespId  = ?RESPONSE(CmdId),
+    case (S#state.mod):handle_bind(S#state.smsc, Self, {CmdName, Pdu}) of
         {ok, ParamList} ->
-            send_response(CmdId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
+            send_response(RespId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
             true;
         {error, Error, ParamList} ->
-            send_response(CmdId, Error, SeqNum, ParamList, S#state.conn),
+            send_response(RespId, Error, SeqNum, ParamList, S#state.conn),
             false
     end.
 
@@ -2668,18 +2638,19 @@ handle_peer_bind({CmdName, Pdu} = R, Self, S) ->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_operation({CmdName, Pdu} = R, Self, S) ->
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    CmdId  = operation:response_command_id(CmdName),
-    PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case (S#state.mod):handle_operation(S#state.smsc, Self, R) of
+handle_peer_operation({CmdId, Pdu}, Self, S) ->
+    CmdName = ?COMMAND_NAME(CmdId),
+    SeqNum  = operation:get_param(sequence_number, Pdu),
+    RespId  = ?RESPONSE(CmdId),
+    PList2  = [{congestion_state, S#state.self_congestion_state}],
+    case (S#state.mod):handle_operation(S#state.smsc, Self, {CmdName, Pdu}) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
-            send_response(CmdId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
+            send_response(RespId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
             true;
         {error, Error, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
-            send_response(CmdId, Error, SeqNum, ParamList, S#state.conn),
+            send_response(RespId, Error, SeqNum, ParamList, S#state.conn),
             false
     end.
 
@@ -2701,21 +2672,21 @@ handle_peer_operation({CmdName, Pdu} = R, Self, S) ->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_unbind({unbind, Pdu} = R, Self, S) ->
+handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
-    CmdId  = ?COMMAND_ID_UNBIND_RESP,
-    case (S#state.mod):handle_unbind(S#state.smsc, self(), R) of
+    RespId = ?COMMAND_ID_UNBIND_RESP,
+    case (S#state.mod):handle_unbind(S#state.smsc, self(), {unbind, Pdu}) of
         ok ->
-            send_response(CmdId, ?ESME_ROK, SeqNum, [], S#state.conn),
+            send_response(RespId, ?ESME_ROK, SeqNum, [], S#state.conn),
             true;
         {error, Error} ->
-            send_response(CmdId, Error, SeqNum, [],  S#state.conn),
+            send_response(RespId, Error, SeqNum, [],  S#state.conn),
             false
     end.
 
 
-%% @spec send_request(CommandId, ParamList, From, StateData) -> Result
-%%    CommandId    = atom()
+%% @spec send_request(CmdId, ParamList, From, StateData) -> Result
+%%    CmdId        = atom()
 %%    ParamList    = [{ParamName, ParamValue}]
 %%    ParamName    = atom()
 %%    ParamValue   = term()
@@ -2733,9 +2704,9 @@ handle_peer_unbind({unbind, Pdu} = R, Self, S) ->
 %% <p>Refer to <a href="operation.html#command_name-3">operation:command_name/3
 %% </a> for a complete list of valid values for <tt>CommandName</tt>.</p>
 %% @end
-send_request(CommandId, ParamList, From, StateData) ->
+send_request(CmdId, ParamList, From, StateData) ->
     SeqNum = StateData#state.sequence_number + 1,
-    Pdu    = operation:new(CommandId, SeqNum, ParamList),
+    Pdu    = operation:new(CmdId, SeqNum, ParamList),
     case send_pdu(StateData#state.conn, Pdu) of
         ok ->
             CmdId  = operation:get_param(command_id, Pdu),
@@ -2749,8 +2720,8 @@ send_request(CommandId, ParamList, From, StateData) ->
     end.
 
 
-%% @spec send_response(CommandId, Status, SeqNum, ParamList, Conn) -> Result
-%%    CommandId  = int()
+%% @spec send_response(CmdId, Status, SeqNum, ParamList, Conn) -> Result
+%%    CmdId      = int()
 %%    Status     = int()
 %%    SeqNum     = int()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -2764,22 +2735,21 @@ send_request(CommandId, ParamList, From, StateData) ->
 %% <tt>Status</tt> is the command status and <tt>SeqNun</tt> the sequence
 %% number of the PDU.
 %% @end
-send_response(CommandId, Status, SeqNum, ParamList, Conn) ->
-    Pdu = operation:new(CommandId, Status, SeqNum, ParamList),
-    send_pdu(Conn, Pdu).
+send_response(CmdId, Status, SeqNum, ParamList, Conn) ->
+    send_pdu(Conn, operation:new(CmdId, Status, SeqNum, ParamList)).
 
 
-%% @spec send_pdu(Cid, Pdu) -> ok | {error, Reason}
-%%    Cid = pid()
-%%    Pdu = pdu()
+%% @spec send_pdu(Conn, Pdu) -> ok | {error, Reason}
+%%    Conn = pid()
+%%    Pdu  = pdu()
 %%
-%% @doc Send the PDU <tt>Pdu</tt> over the connection <tt>Cid</tt>.
+%% @doc Send the PDU <tt>Pdu</tt> over the connection <tt>Conn</tt>.
 %% @end
-send_pdu(Cid, Pdu) ->
+send_pdu(Conn, Pdu) ->
 %     io:format("Sending PDU: ~p~n", [Pdu]),
     case catch operation:smsc_pack(Pdu) of
         {ok, BinaryPdu} ->
-            case gen_tcp_connection:send(Cid, BinaryPdu) of
+            case gen_tcp_connection:send(Conn, BinaryPdu) of
                 ok ->
 %                     io:format("OK~n", []),
                     ok;
@@ -2812,7 +2782,7 @@ request_broker(undefined, TimeoutError, Time) ->
                 ?ESME_ROK ->
                     case operation:get_param(command_id, Pdu) of
                         ?COMMAND_ID_UNBIND_RESP ->
-                            gen_fsm:send_event(Sid, unbind_resp);
+                            gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
                         _OtherResponse ->
                             ok
                     end;
@@ -2830,7 +2800,7 @@ request_broker(Caller, TimeoutError, Time) ->
                     case operation:get_param(command_id, Pdu) of
                         ?COMMAND_ID_UNBIND_RESP ->
                             gen_fsm:reply(Caller, {ok, Pdu}),
-                            gen_fsm:send_event(Sid, unbind_resp);
+                            gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
                         ?COMMAND_ID_GENERIC_NACK ->
                             gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
                         _OtherResponse ->

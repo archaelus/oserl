@@ -1845,19 +1845,22 @@
 %% @doc Gives information about the behaviour.
 %% @end
 behaviour_info(callbacks) ->
-    [{bind_receiver, 3}, 
-     {bind_transmitter, 3}, 
-     {bind_transceiver, 3}, 
-     {broadcast_sm, 3}, 
-     {cancel_broadcast_sm, 3}, 
-     {cancel_sm, 3}, 
-     {query_broadcast_sm, 3}, 
-     {query_sm, 3}, 
-     {replace_sm, 3}, 
-     {submit_multi, 3}, 
-     {submit_sm, 3}, 
-     {data_sm, 3},
-     {unbind, 3}];
+    [{handle_bind, 3}, 
+	 {handle_pdu, 3}, 
+	 {handle_unbind, 3}];
+%% 	 {bind_receiver, 3}, 
+%%      {bind_transmitter, 3}, 
+%%      {bind_transceiver, 3}, 
+%%      {broadcast_sm, 3}, 
+%%      {cancel_broadcast_sm, 3}, 
+%%      {cancel_sm, 3}, 
+%%      {query_broadcast_sm, 3}, 
+%%      {query_sm, 3}, 
+%%      {replace_sm, 3}, 
+%%      {submit_multi, 3}, 
+%%      {submit_sm, 3}, 
+%%      {data_sm, 3},
+%%      {unbind, 3}];
 behaviour_info(_Other) ->
     undefined.
 
@@ -2050,43 +2053,64 @@ init([Pid, Mod, Conn, Timers]) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-open({bind_receiver, Pdu}, #state{conn = C} = S) ->
+% open({bind_receiver, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_receiver(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             send_bind_receiver_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             {next_state, bound_rx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_receiver_resp(Error, SeqNum, ParamList, C),
+%             {next_state, open, S}
+%     end;
+% open({bind_transmitter, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_transmitter(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             {next_state, bound_tx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_transmitter_resp(Error, SeqNum, ParamList, C),
+%             {next_state, open, S}
+%     end;
+% open({bind_transceiver, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_transceiver(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             {next_state, bound_trx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_transceiver_resp(Error, SeqNum, ParamList, C),
+%             {next_state, open, S}
+%     end;
+open({CmdName, Pdu} = R, S) when CmdName == bind_receiver;
+								 CmdName == bind_transmitter;
+								 CmdName == bind_transceiver ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_receiver(S#state.smsc, self(), Pdu) of
+	CmdId  = operation:response_command_id(CmdName),
+    case (S#state.mod):handle_bind(S#state.smsc, self(), R) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            send_bind_receiver_resp(?ESME_ROK, SeqNum, ParamList, C),
-            {next_state, bound_rx, S#state{inactivity_timer = T}};
+            send_response(CmdId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
+            Timer = start_timer(S#state.inactivity_time, inactivity_timer),
+			SName = if
+						CmdName == bind_receiver    -> bound_rx;
+						CmdName == bind_transmitter -> bound_tx;
+						CmdName == bind_transceiver -> bound_trx
+					end,
+            {next_state, SName, S#state{inactivity_timer = Timer}};
         {error, Error, ParamList} ->
-            send_bind_receiver_resp(Error, SeqNum, ParamList, C),
-            {next_state, open, S}
-    end;
-open({bind_transmitter, Pdu}, #state{conn = C} = S) ->
-    reset_timer(S#state.enquire_link_timer),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_transmitter(S#state.smsc, self(), Pdu) of
-        {ok, ParamList} ->
-            cancel_timer(S#state.session_init_timer),
-            send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, bound_tx, S#state{inactivity_timer = T}};
-        {error, Error, ParamList} ->
-            send_bind_transmitter_resp(Error, SeqNum, ParamList, C),
-            {next_state, open, S}
-    end;
-open({bind_transceiver, Pdu}, #state{conn = C} = S) ->
-    reset_timer(S#state.enquire_link_timer),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_transceiver(S#state.smsc, self(), Pdu) of
-        {ok, ParamList} ->
-            cancel_timer(S#state.session_init_timer),
-            send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, bound_trx, S#state{inactivity_timer = T}};
-        {error, Error, ParamList} ->
-            send_bind_transceiver_resp(Error, SeqNum, ParamList, C),
+            send_response(CmdId, Error, SeqNum, ParamList, S#state.conn),
             {next_state, open, S}
     end;
 open({timeout, _Ref, enquire_link_timer}, S) ->
@@ -2126,43 +2150,64 @@ open(Request, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-outbound({bind_receiver, Pdu}, #state{conn = C} = S) ->
+% outbound({bind_receiver, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_receiver(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             send_bind_receiver_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             {next_state, bound_rx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_receiver_resp(Error, SeqNum, ParamList, C),
+%             {next_state, outbound, S}
+%     end;
+% outbound({bind_transmitter, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_transmitter(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             {next_state, bound_tx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_transmitter_resp(Error, SeqNum, ParamList, C),
+%             {next_state, outbound, S}
+%     end;
+% outbound({bind_transceiver, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     case (S#state.mod):bind_transceiver(S#state.smsc, self(), Pdu) of
+%         {ok, ParamList} ->
+%             cancel_timer(S#state.session_init_timer),
+%             send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
+%             T = start_timer(S#state.inactivity_time, inactivity_timer),
+%             {next_state, bound_trx, S#state{inactivity_timer = T}};
+%         {error, Error, ParamList} ->
+%             send_bind_transceiver_resp(Error, SeqNum, ParamList, C),
+%             {next_state, outbound, S}
+%     end;
+outbound({CmdName, Pdu} = R, S) when CmdName == bind_receiver;
+									 CmdName == bind_transmitter;
+									 CmdName == bind_transceiver ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_receiver(S#state.smsc, self(), Pdu) of
+	CmdId  = operation:response_command_id(CmdName),
+    case (S#state.mod):handle_bind(S#state.smsc, self(), R) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
-            send_bind_receiver_resp(?ESME_ROK, SeqNum, ParamList, C),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, bound_rx, S#state{inactivity_timer = T}};
+            send_response(CmdId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
+            Timer = start_timer(S#state.inactivity_time, inactivity_timer),
+			SName = if
+						CmdName == bind_receiver    -> bound_rx;
+						CmdName == bind_transmitter -> bound_tx;
+						CmdName == bind_transceiver -> bound_trx
+					end,
+            {next_state, SName, S#state{inactivity_timer = Timer}};
         {error, Error, ParamList} ->
-            send_bind_receiver_resp(Error, SeqNum, ParamList, C),
-            {next_state, outbound, S}
-    end;
-outbound({bind_transmitter, Pdu}, #state{conn = C} = S) ->
-    reset_timer(S#state.enquire_link_timer),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_transmitter(S#state.smsc, self(), Pdu) of
-        {ok, ParamList} ->
-            cancel_timer(S#state.session_init_timer),
-            send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, bound_tx, S#state{inactivity_timer = T}};
-        {error, Error, ParamList} ->
-            send_bind_transmitter_resp(Error, SeqNum, ParamList, C),
-            {next_state, outbound, S}
-    end;
-outbound({bind_transceiver, Pdu}, #state{conn = C} = S) ->
-    reset_timer(S#state.enquire_link_timer),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):bind_transceiver(S#state.smsc, self(), Pdu) of
-        {ok, ParamList} ->
-            cancel_timer(S#state.session_init_timer),
-            send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
-            T = start_timer(S#state.inactivity_time, inactivity_timer),
-            {next_state, bound_trx, S#state{inactivity_timer = T}};
-        {error, Error, ParamList} ->
-            send_bind_transceiver_resp(Error, SeqNum, ParamList, C),
+            send_response(CmdId, Error, SeqNum, ParamList, S#state.conn),
             {next_state, outbound, S}
     end;
 outbound({timeout, _Ref, enquire_link_timer}, S) ->
@@ -2202,17 +2247,18 @@ outbound(Request, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
-bound_rx({unbind, Pdu}, S) ->
+bound_rx({unbind, Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case (S#state.mod):unbind(S#state.smsc, self(), Pdu) of
+	CmdId  = ?COMMAND_ID_UNBIND_RESP,
+    case (S#state.mod):handle_unbind(S#state.smsc, self(), R) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
-            send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.conn),
+            send_response(CmdId, ?ESME_ROK, SeqNum, [], S#state.conn),
             {next_state, unbound, S};
         {error, Error} ->
-            send_unbind_resp(Error, SeqNum, [],  S#state.conn),
+            send_response(CmdId, Error, SeqNum, [],  S#state.conn),
             {next_state, bound_rx, S}
     end;
 bound_rx(unbind_resp, S) ->
@@ -2263,6 +2309,132 @@ bound_rx(Request, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
+% bound_tx({broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({cancel_broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):cancel_broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({cancel_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):cancel_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({data_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):data_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_data_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_data_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({query_broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):query_broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({query_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):query_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({replace_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):replace_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_replace_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_replace_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({submit_multi, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):submit_multi(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_multi_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_multi_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
+% bound_tx({submit_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):submit_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_tx, S};
 bound_tx({broadcast_sm, Pdu}, #state{conn = C} = S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
@@ -2450,6 +2622,132 @@ bound_tx(Request, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
+% bound_trx({broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({cancel_broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):cancel_broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({cancel_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):cancel_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_cancel_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({data_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):data_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_data_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_data_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({query_broadcast_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):query_broadcast_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_broadcast_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({query_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):query_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_query_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({replace_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):replace_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_replace_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_replace_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({submit_multi, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):submit_multi(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_multi_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_multi_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
+% bound_trx({submit_sm, Pdu}, #state{conn = C} = S) ->
+%     reset_timer(S#state.inactivity_timer),
+%     reset_timer(S#state.enquire_link_timer),
+%     SeqNum = operation:get_param(sequence_number, Pdu),
+%     PList2 = [{congestion_state, S#state.self_congestion_state}],
+%     case (S#state.mod):submit_sm(S#state.smsc, self(), Pdu) of
+%         {ok, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
+%         {error, Error, PList1} ->
+%             ParamList = operation:merge_params(PList1, PList2),
+%             send_submit_sm_resp(Error, SeqNum, ParamList, C)
+%     end,
+%     {next_state, bound_trx, S};
 bound_trx({broadcast_sm, Pdu}, #state{conn = C} = S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
@@ -3705,6 +4003,61 @@ send_unbind_resp(Status, SeqNum, _ParamList, Cid) ->
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %%% Utility functions
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% @spec send_request(CommandId, ParamList, From, StateData) -> Result
+%%    CommandId    = atom()
+%%    ParamList    = [{ParamName, ParamValue}]
+%%    ParamName    = atom()
+%%    ParamValue   = term()
+%%    From         = {pid(), Tag}
+%%    Tag          = term()
+%%    StateData    = state()
+%%    Result       = {ok, NewStateData} | {error, Error}
+%%    NewStateData = state()
+%%    Error        = int()
+%%
+%% @doc Send a SMPP request given the command PDU.  <tt>From</tt> represents
+%% the caller issuing the request (might be the atom <tt>undefined</tt>).
+%% </p>
+%%
+%% <p>Refer to <a href="operation.html#command_name-3">operation:command_name/3
+%% </a> for a complete list of valid values for <tt>CommandName</tt>.</p>
+%% @end
+send_request(CommandId, ParamList, From, StateData) ->
+    SeqNum = StateData#state.sequence_number + 1,
+    Pdu    = operation:new(CommandId, SeqNum, ParamList),
+    case send_pdu(StateData#state.conn, Pdu) of
+        ok ->
+            CmdId  = operation:get_param(command_id, Pdu),
+            Err    = operation:request_failure_code(CmdId),
+            Time   = StateData#state.response_time,
+            Broker = spawn_link(fun() -> request_broker(From, Err, Time) end),
+            ets:insert(StateData#state.requests, {SeqNum, CmdId, Broker}),
+            {ok, StateData#state{sequence_number = SeqNum}};
+        Error ->
+            Error
+    end.
+
+
+%% @spec send_response(CommandId, Status, SeqNum, ParamList, Conn) -> Result
+%%    CommandId  = int()
+%%    Status     = int()
+%%    SeqNum     = int()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Conn       = pid()
+%%    Result     = ok | {error, Error}
+%%    Error      = int()
+%%
+%% @doc Send a SMPP response over the connection identified by <tt>Conn</tt>.
+%% <tt>Status</tt> is the command status and <tt>SeqNun</tt> the sequence
+%% number of the PDU.
+%% @end
+send_response(CommandId, Status, SeqNum, ParamList, Conn) ->
+    Pdu = operation:new(CommandId, Status, SeqNum, ParamList),
+    send_pdu(Conn, Pdu).
+
+
 %% @spec send_request(Function, From, StateData) -> Result
 %%    SeqNum       = int()
 %%    From         = {pid(), Tag}

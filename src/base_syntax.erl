@@ -112,8 +112,6 @@
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = fun(Str) -> bool()
-%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -129,6 +127,13 @@
 % the term <tt>{ok, Value, Rest}</tt> is returned (where Rest is the
 % remainder of the unused binary), otherwise <tt>{error, {type_mismatch, 
 % Type, Details}}</tt> is returned.
+%
+% <p>where</p>
+%
+% <ul>
+%   <li><tt>Format = fun(Str) -&gt; bool()</tt></li>
+%   <li><tt>Str = string()</tt></li>
+% </ul>
 %
 % <p>Every type is decoded according to [SMPP 5.0].</p>
 %
@@ -499,8 +504,6 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = fun(Str) -> bool()
-%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -513,6 +516,13 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 % @doc Encodes a Value using a Type specifier.  Before encoding the value
 % a type checking operation is done, if unsuccessful the term 
 % <tt>{error, {type_mismatch, Type, Details}}</tt> is returned.
+%
+% <p>where</p>
+%
+% <ul>
+%   <li><tt>Format = fun(Str) -&gt; bool()</tt></li>
+%   <li><tt>Str = string()</tt></li>
+% </ul>
 %
 % <p>Every type is encoded according to [SMPP 5.0].</p>
 %
@@ -811,8 +821,6 @@ encode_try(Value, [Type|Types], Error, Priority) ->
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = fun(Str) -> bool()
-%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -820,6 +828,13 @@ encode_try(Value, [Type|Types], Error, Priority) ->
 %    NewType  = Type
 %
 % @doc Fits a type specifier to a given Size.
+%
+% <p>where</p>
+%
+% <ul>
+%   <li><tt>Format = fun(Str) -&gt; bool()</tt></li>
+%   <li><tt>Str = string()</tt></li>
+% </ul>
 %
 % <ul>
 %   <li>constants, composites and union specifiers are left unchanged.

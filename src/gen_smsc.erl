@@ -159,6 +159,9 @@
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 0.1, {13 May 2004} {@time}.
 %%% @end
+%%%
+%%% %@TODO Outbind is synchronous, may block the entire SMSC during connection
+%%% establishment.
 -module(gen_smsc).
 
 -behaviour(gen_server).
@@ -185,11 +188,11 @@
          start_link/5, 
          listen/1,
          listen/3,
-         alert_notification/2,
-         outbind/3,
-         deliver_sm/2,
-         data_sm/2,
-         unbind/1,
+         alert_notification/3,
+         outbind/4,
+         deliver_sm/3,
+         data_sm/3,
+         unbind/3,
          call/2, 
          call/3, 
          cast/2, 
@@ -435,8 +438,8 @@ alert_notification(ServerRef, SystemId, ParamList) ->
 %%
 %% @doc Issues an outbind operation on the session identified by <tt>Sid</tt>.
 %% @end
-outbind(ServerRef, SystemId, ParamList) ->
-    gen_server:call(ServerRef, {outbind, ParamList, SystemId}, infinity).
+outbind(ServerRef, Addr, Port, ParamList) ->
+    gen_server:call(ServerRef, {outbind, Addr, Port, ParamList}, infinity).
 
 
 %% @spec data_sm(ServerRef, SystemId, ParamList) -> Result
@@ -471,7 +474,7 @@ deliver_sm(ServerRef, SystemId, ParamList) ->
     gen_server:call(ServerRef, {deliver_sm, SystemId, ParamList}, infinity).
 
 
-%% @spec unbind(ServerRef, SystemId) -> Result
+%% @spec unbind(ServerRef, SystemId, BoundAs) -> Result
 %%    Sid     = atom()
 %%    Result  = {ok, PduResp} | {error, Error}
 %%    PduResp = pdu()
@@ -480,8 +483,8 @@ deliver_sm(ServerRef, SystemId, ParamList) ->
 %% @doc Issues an unbind operation on the session identified by <tt>Sid
 %% </tt>.
 %% @end
-unbind(ServerRef, SystemId) ->
-    gen_server:call(ServerRef, {unbind, SystemId}, infinity).
+unbind(ServerRef, SystemId, BoundAs) ->
+    gen_server:call(ServerRef, {unbind, SystemId, BoundAs}, infinity).
 
 
 %% @spec call(ServerRef, Request) -> Reply
@@ -593,12 +596,12 @@ init({Mod, Timers, Args}) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({bind, Session, {BoundAs, Pdu} = R}, From, S) ->
+handle_call({peer_bind, Session, {BoundAs, Pdu} = R}, From, S) ->
     SystemId = operation:get_param(system_id, Pdu),
     ets:delete(S#state.sessions, Session),
     ets:insert(S#state.sessions, {Session, SystemId, BoundAs}),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({operation, Session, {Operation, Pdu}}, From, S) ->
+handle_call({peer_operation, Session, {Operation, Pdu}}, From, S) ->
     Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
 				  {[[SystemId, _BoundAs]], _Continuation} ->
 					  {Operation, SystemId, Pdu};
@@ -606,7 +609,7 @@ handle_call({operation, Session, {Operation, Pdu}}, From, S) ->
 					  {Operation, undefined, Pdu}
 			  end,
 	pack((S#state.mod):handle_operation(Request, From, S#state.mod_state), S);
-handle_call({unbind, Session, _Unbind}, From, S) ->
+handle_call({peer_unbind, Session, _Unbind}, From, S) ->
     Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
 				  {[[SystemId, BoundAs]], _Continuation} ->
 					  {BoundAs, SystemId};
@@ -614,9 +617,48 @@ handle_call({unbind, Session, _Unbind}, From, S) ->
 					  {undefined, undefined}
 			  end,
 	pack((S#state.mod):handle_unbind(Request, From, S#state.mod_state), S);
-handle_call({data_sm, SystemId, ParamList}, From, S) ->
-	spawn_link(),
-	{noreply, S};
+handle_call({alert_notification, SystemId, ParamList}, From, S) ->
+	case ets:match(S#state.sessions, {'$1', SystemId, '_'}, 1) of
+		{[[Session]], _Continuation} ->
+			Reply = gen_smsc_session:alert_notification(Session, ParamList),
+			{reply, Reply, S};
+		_Otherwise ->  
+			{reply, {error, system_id}, S}
+	end;
+handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
+	% This shoud be asynchronous.
+	case gen_tcp_connection:start_connect(?SESSION_MODULE, Addr, Port) of
+		{ok, Conn} ->
+			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
+				{ok, Session} ->
+                    % The system_id and bound state of the session are 
+					% still undefined
+					ets:insert(S#state.sessions,{Session,undefined,undefined}),
+					Reply = gen_smsc_session:outbind(Session, ParamList),
+					{reply, Reply, S};
+				SessionError ->
+					{reply, SessionError, S}
+			end;
+		ConnectError ->
+			{reply, ConnectError, S}
+	end;
+handle_call({CmdName,SystemId,ParamList}, From, S) when CmdName == deliver_sm;
+														CmdName == data_sm ->
+	case ets:match(S#state.sessions, {'$1', SystemId, '_'}, 1) of
+		{[[Session]], _Continuation} ->
+			sm_delivery(CmdName, Session, ParamList, From),
+			{noreply, S};
+		_Otherwise ->
+			{reply, {error, system_id}, S}
+	end;
+handle_call({unbind, SystemId, BoundAs}, From, S) ->
+	case ets:match(S#state.sessions, {'$1', SystemId, BoundAs}, 1) of
+		{[[Session]], _Continuation} ->
+			unbind(Session, From),
+			{noreply, S};
+		_Otherwise ->
+			{reply, {error, system_id}, S}
+	end;
 handle_call({accept, Conn, _Socket}, From, S) ->
     case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
         {ok, Session} ->
@@ -654,9 +696,6 @@ handle_call({call, Request}, From, S) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast({alert_notification, SystemId, ParamList}, S) ->
-	gen_smsc_session:alert_notification(Session, ParamList),
-	{noreply, S};
 handle_cast({cast, Request}, S) ->
     pack((S#state.mod):handle_cast(Request, S#state.mod_state), S).
 
@@ -756,7 +795,7 @@ code_change(OldVsn, S, Extra) ->
 %% handle_bind/3</a> callback implementation.
 %% @end
 handle_bind(SMSC, Session, Bind) ->
-    gen_server:call(SMSC, {bind, Session, Bind}, infinity).
+    gen_server:call(SMSC, {peer_bind, Session, Bind}, infinity).
 
 
 %% @spec handle_operation(SMSC, Session, Operation) -> Result
@@ -781,7 +820,7 @@ handle_bind(SMSC, Session, Bind) ->
 %% handle_operation/3</a> callback implementation.
 %% @end
 handle_operation(SMSC, Session, Operation) ->
-    gen_server:call(SMSC, {operation, Session, Operation}, infinity).
+    gen_server:call(SMSC, {peer_operation, Session, Operation}, infinity).
 
 
 %% @spec handle_unbind(SMSC, Session, Unbind) -> ok | {error, Error}
@@ -795,7 +834,7 @@ handle_operation(SMSC, Session, Operation) ->
 %% handle_unbind/3</a> callback implementation.
 %% @end
 handle_unbind(SMSC, Session, Unbind) ->
-    gen_server:call(SMSC, {unbind, Session, Unbind}, infinity).
+    gen_server:call(SMSC, {peer_unbind, Session, Unbind}, infinity).
 
 
 %%%===================================================================
@@ -829,6 +868,22 @@ handle_input(_Owner, _Conn, _Input, _Lapse) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+sm_delivery(CmdName, Session, ParamList, From) ->
+	F = fun() ->
+				Reply = gen_smsc_session:CmdName(Session, ParamList),
+				gen_server:reply(From, Reply)
+		end,
+	spawn_link(fun() -> F() end).
+
+unbind(Session, From) ->
+	F = fun() ->
+				Reply = gen_smsc_session:unbind(Session),
+				gen_server:reply(From, Reply)
+		end,
+	spawn_link(fun() -> F() end).
+	
+
+
 %% @spec pack(CallbackReply, State) -> Reply
 %%
 %% @doc The callback module replies as if I were gen_server.  Pack his

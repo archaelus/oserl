@@ -1353,6 +1353,8 @@
 %%% with a content larger than 160 characters.
 -module(gen_smsc_session).
 
+% ARREGLAR EL ALERT NOTIFICAITON
+
 -behaviour(gen_fsm).
 -behaviour(gen_tcp_connection).
 
@@ -2381,29 +2383,30 @@ handle_input_correct_pdu(Pdu, StateData) ->
         CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
             RqstId = ?REQUEST(CmdId),
-            case ets:lookup_element(StateData#state.requests, SeqNum, 1) of
-                {SeqNum, RqstId, Broker} ->    % Expected response
-                    Broker ! {self(), {response, Pdu}},
+			case ets:match(StateData#state.requests, {SeqNum,RqstId,'$1'},1) of
+				{[[Broker]], _Continuation} ->  % Expected response
+                    Broker ! {self(), {response, CmdId, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
-                _Otherwise ->                  % Unexpected response
+                _Otherwise ->                   % Unexpected response
                     Conn = StateData#state.conn,
                     Nack = ?COMMAND_ID_GENERIC_NACK,
                     send_response(Nack, ?ESME_RINVCMDID, SeqNum, [], Conn)
             end;
-        ?COMMAND_ID_GENERIC_NACK ->
+        CmdId when CmdId == ?COMMAND_ID_GENERIC_NACK ->
             SeqNum = operation:get_param(sequence_number, Pdu),
-            case ets:lookup_element(StateData#state.requests, SeqNum, 1) of
-                {SeqNum, _CmdId, Broker} ->    % Expected response
-                    Broker ! {self(), {response, Pdu}},
+			case ets:match(StateData#state.requests, {SeqNum, '_', '$1'}, 1) of
+				{[[Broker]], _Continuation} ->  % Expected response
+                    Broker ! {self(), {response, CmdId, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
-                _Otherwise ->                  % Unexpected response
+                _Otherwise ->                   % Unexpected response
                     % Do not send anything, might enter a request/response loop
                     true
             end;
         CmdId when CmdId == ?COMMAND_ID_ENQUIRE_LINK ->
             reset_timer(StateData#state.enquire_link_timer),
             SeqNum = operation:get_param(sequence_number, Pdu),
-            send_response(CmdId, ?ESME_ROK, SeqNum, [], StateData#state.conn);
+			RespId = ?RESPONSE(CmdId),
+            send_response(RespId, ?ESME_ROK, SeqNum, [], StateData#state.conn);
         CmdId ->
             gen_fsm:send_event(self(), {CmdId, Pdu})
     end.
@@ -2489,6 +2492,10 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
+handle_info({'EXIT', C, R}, unbound, #state{conn = C} = StateData) ->
+    % If the underlying connection terminates, the session must be stopped.
+%    io:format("Underlying connection terminated with reason: ~p~n", [R]),
+    {stop, normal, StateData#state{conn = closed}};
 handle_info({'EXIT', C, R}, _StateName, #state{conn = C} = StateData) ->
     % If the underlying connection terminates, the session must be stopped.
 %    io:format("Underlying connection terminated with reason: ~p~n", [R]),
@@ -2511,6 +2518,7 @@ handle_info(_Info, StateName, StateData) ->
 %% <p>Return value is ignored by the server.</p>
 %% @end
 terminate(Reason, StateName, S) when S#state.conn == closed; Reason == kill ->
+	io:format("*** gen_smsc_session terminating: ~p - ~p ***~n", [self(), Reason]),
     process_flag(trap_exit, false),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
@@ -2774,15 +2782,12 @@ send_pdu(Conn, Pdu) ->
 %% @end
 request_broker(undefined, TimeoutError, Time) ->
     receive 
-        {Sid, {response, Pdu}} ->
+        {Sid, {response, CmdId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
+                ?ESME_ROK when CmdId == ?COMMAND_ID_UNBIND_RESP ->
+					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
                 ?ESME_ROK ->
-                    case operation:get_param(command_id, Pdu) of
-                        ?COMMAND_ID_UNBIND_RESP ->
-                            gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
-                        _OtherResponse ->
-                            ok
-                    end;
+					ok;
                 Error ->
                     {error, Error}
             end
@@ -2791,18 +2796,15 @@ request_broker(undefined, TimeoutError, Time) ->
     end;
 request_broker(Caller, TimeoutError, Time) ->
     receive
-        {Sid, {response, Pdu}} ->
+        {Sid, {response, CmdId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
+                ?ESME_ROK when CmdId == ?COMMAND_ID_UNBIND_RESP ->
+					gen_fsm:reply(Caller, {ok, Pdu}),
+					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
+				?ESME_ROK when CmdId == ?COMMAND_ID_GENERIC_NACK ->
+					gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
                 ?ESME_ROK ->
-                    case operation:get_param(command_id, Pdu) of
-                        ?COMMAND_ID_UNBIND_RESP ->
-                            gen_fsm:reply(Caller, {ok, Pdu}),
-                            gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
-                        ?COMMAND_ID_GENERIC_NACK ->
-                            gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
-                        _OtherResponse ->
-                            gen_fsm:reply(Caller, {ok, Pdu})
-                    end;
+					gen_fsm:reply(Caller, {ok, Pdu});
                 Error ->
                     gen_fsm:reply(Caller, {error, Error})
             end

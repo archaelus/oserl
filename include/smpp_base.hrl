@@ -61,6 +61,21 @@
 %%% </ul>
 %%%
 %%%
+%%% <h2>Changes 0.2 -&gt; 1.2</h2>
+%%%
+%%% [02 Nov 2004]
+%%% 
+%%% <ul>
+%%%   <li><tt>ESM_CLASS_DOMAIN</tt> fixed.  Thanks to hfventer for this fix.
+%%%     <br/>
+%%%     The max values were less than the min values!
+%%%     <br/>
+%%%     Without this it would be impossible to send binary content messages 
+%%%     (like ring tones or WAP push).
+%%%   </li>
+%%% </ul>
+%%%
+%%%
 %%% <h2>References</h2>
 %%% <dl>
 %%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -719,27 +734,28 @@
 
 %% esm_class
 -define(ESM_CLASS_DATATYPE, ?INTEGER(1)).
+
 -define(ESM_CLASS_DOMAIN,
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00000111),
                 ?RANGE_INTEGER(1, 2#00100000, 2#00100011),
                 ?RANGE_INTEGER(1, 2#00001000, 2#00001011),
                 ?RANGE_INTEGER(1, 2#00010000, 2#00010011),
                 ?RANGE_INTEGER(1, 2#00011000, 2#00011011),
-                ?RANGE_INTEGER(1, 2#01000000, 2#00000111),
-                ?RANGE_INTEGER(1, 2#01100000, 2#00100011),
-                ?RANGE_INTEGER(1, 2#01001000, 2#00001011),
-                ?RANGE_INTEGER(1, 2#01010000, 2#00010011),
-                ?RANGE_INTEGER(1, 2#01011000, 2#00011011),
-                ?RANGE_INTEGER(1, 2#10000000, 2#00000111),
-                ?RANGE_INTEGER(1, 2#10100000, 2#00100011),
-                ?RANGE_INTEGER(1, 2#10001000, 2#00001011),
-                ?RANGE_INTEGER(1, 2#10010000, 2#00010011),
-                ?RANGE_INTEGER(1, 2#11000000, 2#00000111),
-                ?RANGE_INTEGER(1, 2#11100000, 2#00100011),
-                ?RANGE_INTEGER(1, 2#11001000, 2#00001011),
-                ?RANGE_INTEGER(1, 2#11010000, 2#00010011)])).
-% never happens?      ?RANGE_INTEGER(1, 2#10011000, 2#00011011), CDMA & GSM?
-% never happens?      ?RANGE_INTEGER(1, 2#11011000, 2#00011011), CDMA & GSM?
+                ?RANGE_INTEGER(1, 2#01000000, 2#01000111),
+                ?RANGE_INTEGER(1, 2#01100000, 2#01100011),
+                ?RANGE_INTEGER(1, 2#01001000, 2#01001011),
+                ?RANGE_INTEGER(1, 2#01010000, 2#01010011),
+                ?RANGE_INTEGER(1, 2#01011000, 2#01011011),
+                ?RANGE_INTEGER(1, 2#10000000, 2#10000111),
+                ?RANGE_INTEGER(1, 2#10100000, 2#10100011),
+                ?RANGE_INTEGER(1, 2#10001000, 2#10001011),
+                ?RANGE_INTEGER(1, 2#10010000, 2#10010011),
+                ?RANGE_INTEGER(1, 2#11000000, 2#11000111),
+                ?RANGE_INTEGER(1, 2#11100000, 2#11100011),
+                ?RANGE_INTEGER(1, 2#11001000, 2#11001011),
+                ?RANGE_INTEGER(1, 2#11010000, 2#11010011)])).
+% never happens?      ?RANGE_INTEGER(1, 2#10011000, 2#10011011), CDMA & GSM?
+% never happens?      ?RANGE_INTEGER(1, 2#11011000, 2#11011011), CDMA & GSM?
 -define(ESM_CLASS_RESERVED, ?EMPTY).
 
 % esm_class Values

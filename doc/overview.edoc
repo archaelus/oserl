@@ -15,8 +15,8 @@ numbers on [SMPP 5.0].</p>
 <h2><a name="contents">Contents</a></h2>
 <ol>
   <li><a href="#intro">Introduction</a></li>
-  <li><a href="#overview">SMPP protocol implementation overview</a></li>
   <li><a href="#install">Install OSERL</a></li>
+  <li><a href="#overview">SMPP protocol implementation overview</a></li>
   <li><a href="#howto">Developing SMS based applications with OSERL</a>
     <ol>
       <li><a href="#howto_esme">How to implement an ESME</a>
@@ -73,6 +73,60 @@ of the recently released SMPP version 5.0 (February 20th, 2003).  Moreover,
 every forward and backward compatibility guidelines were adopted at the design 
 stage, what makes the resulting library easy to maintain and update to any
 future or previous version of the protocol.</p>
+
+<h2><a name="install">Install OSERL</a></h2>
+
+You need to have <a href="http://www.erlang.org/">erlang</a> installed before 
+you attempt to use OSERL.  
+
+<p>Erlang is a concurrent functional programming language designed for 
+programming large industrial real-time systems. Erlang is dynamically typed 
+and has a pattern matching syntax. Functions are defined using recursion 
+equations. Erlang provides explicit concurrency, has asynchronous message 
+passing and is relatively free from side effects.</p>
+
+<p>Distributed Erlang programs can run transparently on cross-platform 
+multi-vendor systems. The language has primitives for detecting run-time errors
+and for dynamic code replacement (i.e. changes to code can be made in a running
+real-time system, without stopping system).</p>
+
+<p>Install common_lib package:</p>
+
+<pre>
+  tar -zxvf common_lib-0.1.tar.gz
+  cd common_lib-0.1
+  make
+</pre>
+
+<p>Install oserl package:
+</p>
+
+<pre>
+  tar -zxvf oserl-0.1.tar.gz
+  cd oserl-0.1
+  make
+</pre>
+
+<p>Put the ebin directory of both packages in your code path.  You may add 
+these lines to your <tt>~/.erlang</tt></p>
+
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
+<pre>
+code:add_path("&lt;path-to-common_lib&gt;/ebin").
+code:add_path("&lt;path-to-oserl&gt;/ebin").
+</pre>
+    </td>
+  </tr>
+</table>
+
+<p>To compile an erlang program using oserl, don't forget to add a reference to
+the include directory:</p>
+
+<pre>
+   -I &lt;path-to-oserl&gt;/include -pz &lt;path-to-oserl&gt;/ebin
+</pre>
 
 
 <h2><a name="overview">SMPP protocol implementation overview</a></h2>
@@ -174,36 +228,6 @@ module on top of the PDU syntax.  This module hides the type descriptors of
 the SMPP specification to higher layers.</p>
 
 
-<h2><a name="install">Install OSERL</a></h2>
-
-Install common_lib package:
-
-<pre>
-  tar -zxvf common_lib-0.1.tar.gz
-  cd common_lib-0.1
-  make
-</pre>
-
-<p>Install oserl package:
-</p>
-
-<pre>
-  tar -zxvf oserl-0.1.tar.gz
-  cd oserl-0.1
-  make
-</pre>
-
-<p>Put the ebin directory of both packages in your code path.
-</p>
-<p>To compile an erlang program using oserl, don't forget to add a reference to
-the include directory:
-</p>
-
-<pre>
-   -I &lt;path-to-oserl&gt;/include -pz &lt;path-to-oserl&gt;/ebin
-</pre>
-
-
 <h2><a name="howto">Developing SMS based applications with OSERL</a></h2>
 
 This sections shows how to implement SMS based applications with the
@@ -263,7 +287,7 @@ a language such us java, and compare the result with the erlang implementations
 given below (I think you'll find erlang implementation much more readable and 
 compact).</p>
 
-<table width="100%" border="1">
+<table bgcolor="#CCCCCC" width="100%" border="1">
   <tr>
     <th width="50%" align="center">java submit_sm</th>
     <th width="50%" align="center">erlang submit_sm</th>
@@ -712,6 +736,9 @@ functions at this moment.</p>
 <p>Recall <a href="gen_esme.html#submit_sm-2">gen_esme:submit_sm/2</a> function
 and how it was used in our <a href="echo_esme.html">echo_esme</a> example.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 deliver_sm(_Pid, Eid, Pdu) -&gt;
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
@@ -720,6 +747,9 @@ deliver_sm(_Pid, Eid, Pdu) -&gt;
     spawn(fun() -&gt; gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
     {ok, []}.
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>See how we submit a short message from our ESME.  Just need to call
 <a href="gen_esme.html#submit_sm-2">gen_esme:submit_sm/2</a>.  This function 
@@ -749,6 +779,9 @@ pairs in the format <tt>{ParamName, ParamValue}</tt>.
 module, so you can see all the details:
 </p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 deliver_sm(_Pid, Eid, Pdu) -&gt;
     % First of all, lets get the source address.
@@ -785,6 +818,9 @@ deliver_sm(_Pid, Eid, Pdu) -&gt;
     spawn(fun() -&gt; gen_esme:submit_sm(Eid, ParamList) end), 
     {ok, []}.
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Since getting the <i>message_payload</i> and creating the response address 
 from the source address are common operations, both have been implemented in 
@@ -809,6 +845,9 @@ names and types in <a href="../../include/smpp_param.hrl">smpp_param.hrl</a>.
 <tt>unsuccess_sme</tt> record (defined in 
 <a href="../../include/smpp_base.hrl">smpp_base.hrl</a>).</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 %%%
 % %@spec {unsuccess_sme,
@@ -850,6 +889,9 @@ names and types in <a href="../../include/smpp_param.hrl">smpp_param.hrl</a>.
          destination_addr,
          error_status_code}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>The rest of SMPP operation functions have a <tt>ParamList</tt> 
 argument also, and work much like <a href="gen_esme.html#submit_sm-2">
@@ -867,6 +909,9 @@ echo ESME to notify the error somewhere and then halt, whenever the receiver
 session goes down, just need to do:
 </p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 receiver_mc_unavailable(Pid, Eid, Address, Port) -&gt;
     % Notify the error 
@@ -874,6 +919,9 @@ receiver_mc_unavailable(Pid, Eid, Address, Port) -&gt;
 
     stop().
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Look at the callbacks exported by the <a href="gen_esme.html">gen_esme</a> 
 behavior, to see how much you can customize your particular ESME 
@@ -889,6 +937,9 @@ OK if you don't want your ESME to handle that operation.</p>
 We'll look now at the code_lock FSM example presented in the 
 <a href="http://www.erlang.org/doc/r9c/doc/design_principles/part_frame.html">Design Principles</a>.
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -module(code_lock).
 -behaviour(gen_fsm).
@@ -937,6 +988,9 @@ do_open() -&gt;
 do_close() -&gt;
     io:format("do close~n", []).
 </pre>    
+    </td>
+  </tr>
+</table>
 
 <p>Save this code in a module called <b>code_lock.erl</b>, compile it, 
 and see how it works:</p>
@@ -1284,6 +1338,9 @@ lists.</p>
 
 <p>Given the following declaration:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(BIND_TRANSMITTER_RESP,
         ?PDU(?COMMAND_ID_BIND_TRANSMITTER_RESP,
@@ -1291,23 +1348,38 @@ lists.</p>
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>A dictionary representing this PDU must have the elements:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 [{command_id, ?COMMAND_ID_BIND_TRANSMITTER_RESP},
  {command_status, CommandStatus},
  {sequence_number, SequenceNumber},
  {system_id, SystemId}]
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>The pair <tt>{system_id, SystemId}</tt> might be ignored if 
 <tt>command_status</tt> is not 0. Following pairs are also optional:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 [{congestion_state, CongestionState}, 
  {sc_interface_version, ScInterfaceVersion}]
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Notice that a <tt>command_length</tt> element is not included in the 
 dictionary.</p>
@@ -1517,6 +1589,9 @@ encoded multiple times according to the value specified in the
 
 <p>This PDU type is internaly represented by the following descriptor:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(SUBMIT_MULTI_RESP,
         ?PDU(?COMMAND_ID_SUBMIT_MULTI_RESP,
@@ -1528,6 +1603,9 @@ encoded multiple times according to the value specified in the
               ?DPF_RESULT,
               ?NETWORK_ERROR_CODE])).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>This macro definition can be found in the header file 
 <b>smpp_pdu.hrl</b></p>
@@ -1538,6 +1616,9 @@ to be declared.</p>
 <p>Recalling the internal representation of the PDU, every individual field is 
 defined in <b>smpp_param.hrl</b> as:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(MESSAGE_ID, 
         ?STANDARD(message_id, 
@@ -1591,12 +1672,18 @@ defined in <b>smpp_param.hrl</b> as:</p>
                       undefined, 
                       undefined)).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>These parameter descriptors were defined by means of some macros
 declared in the <a href="#param">parameter syntax</a>.</p>
 
 <p>Domains and reserved values are defined in <b>smpp_base.hrl</b>.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 %%%
 % message_id
@@ -1658,6 +1745,9 @@ declared in the <a href="#param">parameter syntax</a>.</p>
                    {?NETWORK_ERROR_CODE_TYPE_RESERVED,
                     ?NETWORK_ERROR_CODE_ERROR_RESERVED})).
 </pre>
+    </td>
+  </tr>
+</table>
 
 
 <p>Notice that <tt>UNSUCCESS_SME_DOMAIN</tt> embraces the definition of both 
@@ -1668,6 +1758,9 @@ fields; <tt>unsuccess_sme</tt> and <tt>no_unsuccess</tt>, since a list is
 <p>Additionally, two records must be defined in order to successfully decode 
 named composites:</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -record(unsuccess_sme, 
         {dest_addr_ton     = ?TON_INTERNATIONAL,
@@ -1679,6 +1772,9 @@ named composites:</p>
         {type  = ?NETWORK_ERROR_CODE_TYPE_GSM,
          error}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Record identifiers must match the names provided in the composite 
 declaration for the decoding function to work propertly.  These names are 
@@ -1941,6 +2037,9 @@ the one above mentioned, where the union types are composites.</p>
 
 <p>Macros based on record data-types definitions</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(CONSTANT(Value), 
         #constant{value = Value}).
@@ -1955,12 +2054,19 @@ the one above mentioned, where the union types are composites.</p>
 -define(COMPOSITE(Name, Tuple), 
         #composite{name = Name, tuple = Tuple}).
 -define(UNION(Types), 
-        #union{types = Types}).</pre>
+        #union{types = Types}).
+</pre>
+    </td>
+  </tr>
+</table>
 
 
 <p>Simplified macros, some options are implicitly assigned.  Most of the SMPP 
 PDU fields definitions are more readable using these macros.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(BOUND_INTEGER(Size, Max), 
         #integer{size = Size, min = 0, max = Max}).
@@ -2009,9 +2115,15 @@ PDU fields definitions are more readable using these macros.</p>
 -define(SIZED_LIST(Type, Size), 
         #list{type = Type, size = Size}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Time strings</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(ATIME_C_OCTET_STRING,
         #c_octet_string{
@@ -2024,13 +2136,22 @@ PDU fields definitions are more readable using these macros.</p>
             size   = 17,
             format = fun(Str) -> my_string:is_rtime(Str) end}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Sets</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(EMPTY,     ?UNION([])).
 -define(SET(List), ?UNION(lists:map(fun(C) -&gt; ?CONSTANT(C) end, List))).
 </pre>
+    </td>
+  </tr>
+</table>
 
 
 <h2><a name="param">Param Syntax</a></h2>
@@ -2137,6 +2258,9 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
 
 <p>Macros based on record param-types definitions.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(STANDARD(Name, Domain, Default, Error), 
         #standard{
@@ -2155,10 +2279,16 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
             default   = Default, 
             error     = Error}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 <p>Simplified TLV Macros for Readability, some options are implicitly assigned
 here.  SMPP PDU TLV definitions are more readable using these macros.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(MANDATORY_TLV(Name, Tag, Domain, Reserved, Default, Error), 
         ?TLV(Name, Tag, Domain, Reserved, true, false, Default, Error)).
@@ -2169,6 +2299,9 @@ here.  SMPP PDU TLV definitions are more readable using these macros.</p>
 -define(MULTIPLE_OPTIONAL_TLV(Name, Tag, Domain, Reserved, Default, Error), 
         ?TLV(Name, Tag, Domain, Reserved, false, true, Default, Error)).
 </pre>
+    </td>
+  </tr>
+</table>
 
 
 <h2><a name="pdu">PDU Syntax</a></h2>
@@ -2217,12 +2350,18 @@ defintions.</p>
 
 <p>Macros based on PDU record definition.</p>
 
+<table bgcolor="#CCCCCC" width="100%" border="1">
+  <tr>
+    <td>
 <pre>
 -define(PDU(CommandId, StdsTypes, TlvsTypes),
         #pdu{command_id = CommandId,
-			 stds_types = StdsTypes, 
-			 tlvs_types = TlvsTypes}).
+             stds_types = StdsTypes, 
+             tlvs_types = TlvsTypes}).
 </pre>
+    </td>
+  </tr>
+</table>
 
 
 <h2><a name="behaviours">Behaviours</a></h2>

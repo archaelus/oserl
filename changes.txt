@@ -1,4 +1,4 @@
-changes.txt - OSERL Version 1.1                              Jul 10, 2004
+changes.txt - OSERL Version 1.2                              Feb 13, 2005
 
                     http://sourceforge.net/projects/oserl/
 
@@ -38,6 +38,7 @@ Contents
 
 4.   Changes 1.1 -> 1.2
 4.1  smpp_base.hrl
+4.2  sm.erl
 
 ---
 
@@ -259,3 +260,11 @@ How these changes affected individual files is described below.
 - ESM_CLASS_DOMAIN fixed.  Thanks to hfventer for this fix.  
   The max values were less than the min values! Without this it would be 
   impossible to send binary content messages (like ring tones or WAP push).
+
+4.2  sm.erl
+
+- Functions reply_destination_address/1, reply_source_address/1 and
+  reply_addresses/1 added.
+
+  reply_address/1 will be removed in future releases, please use 
+  reply_destination_address/1 instead.

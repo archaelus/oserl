@@ -6,10 +6,10 @@
 </head>
 <body bgcolor="white">
 <h1>Change Log</h1>
-<p>Copyright © 2003 - 2004 Enrique Marcote Peña</p>
+<p>Copyright © 2003 - 2005 Enrique Marcote Peña</p>
 <p><b>Version:</b> 1.0 beta
 </p>
-<p><b>Authors:</b> Enrique Marcote Peña (<a href="mailto:mpquique@users.sourceforge.net"><tt>mpquique@users.sourceforge.net</tt></a>) [<em>web site:</em> <tt><a href="http://www.des.udc.es/~mpquique/">http://www.des.udc.es/~mpquique/</a></tt>].</p>
+<p><b>Authors:</b> Enrique Marcote Peña (<a href="mailto:mpquique@users.sourceforge.net"><tt>mpquique@users.sourceforge.net</tt></a>) [<em>web site:</em> <tt><a href="http://www.nomasystems.com/~quique/">http://www.nomasystems.com/~quique/</a></tt>].</p>
 
 <h2><a name="contents">Contents</a></h2>
 <ol>
@@ -44,7 +44,8 @@
   <li><a href="#changes0_2-1_0">Changes 1.0 -> 1.1</a></li>
   <li><a href="#changes1_1-1_2">Changes 1.1 -> 1.2</a>
     <ol>
-      <li><a href="#changes0_2-1_0-smpp_base-hrl">smpp_base.hrl</a></li>
+      <li><a href="#changes0_2-1_2-smpp_base-hrl">smpp_base.hrl</a></li>
+      <li><a href="#changes0_2-1_2-sm-erl">sm.erl</a></li>
     </ol>
   </li>
 </ol>
@@ -398,7 +399,7 @@
 
 <h2><a name="changes1_1-1_2">Changes 1.1 -> 1.2</a></h2>
 
-<h3><a name="changes1_1-1_2-smpp_base-hrl">smpp_base.hrl</a></h3>
+<h3><a name="changes0_2-1_2-smpp_base-hrl">smpp_base.hrl</a></h3>
 
 <ul>
   <li><tt>ESM_CLASS_DOMAIN</tt> fixed.  Thanks to hfventer for this fix.
@@ -407,6 +408,20 @@
     <br/>
     Without this it would be impossible to send binary content messages 
     (like ring tones or WAP push).
+  </li>
+</ul>
+
+<h3><a name="changes0_2-1_2-sm-erl">sm.erl</a></h3>
+
+<ul>
+  <li>Functions <a href="#reply_destination_address-1">
+    reply_destination_address/1</a>, <a href="#reply_source_address-1">
+    reply_source_address/1</a> and <a href="#reply_address-1">
+    reply_addresses/1</a> added.
+    <br/>
+    <a href="#reply_address-1">reply_address/1</a> will be removed in future
+    releases, please use <a href="#reply_destination_address-1">
+    reply_destination_address/1</a> instead.
   </li>
 </ul>
 

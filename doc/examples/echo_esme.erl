@@ -36,6 +36,13 @@
 %   <li>Last changes in <a href="gen_esme.html">gen_esme.erl</a> adopted.</li>
 % </ul>
 %
+% [27 Feb 2004]
+%
+% <ul>
+%   <li>Uses new callbacks defined in <a href="gen_esme.html">gen_esme.erl</a>.
+%   </li>
+% </ul>
+%
 %
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
@@ -65,15 +72,16 @@
 %%%-------------------------------------------------------------------
 % Internal gen_esme exports
 %%--------------------------------------------------------------------
--export([deliver_sm/3, deliver_data_sm/3]).
--export([bound_receiver/3,
-         bound_transmitter/3,
-         receiver_cannot_bind/3,
-         transmitter_cannot_bind/3,
-         receiver_unbind/2,
-         transmitter_unbind/2,
+-export([bind_receiver_resp/3,
+         bind_transmitter_resp/3,
+		 deliver_sm/3, 
+		 deliver_data_sm/3,
          receiver_mc_unavailable/2,
-         transmitter_mc_unavailable/2]).
+         transmitter_mc_unavailable/2,
+         receiver_mc_unbind/2,
+         transmitter_mc_unbind/2,
+		 unbind_receiver_resp/3,
+		 unbind_transmitter_resp/3]).
 
 %%%-------------------------------------------------------------------
 % Macros
@@ -86,6 +94,20 @@
 %%%===================================================================
 % External functions
 %%====================================================================
+%%%
+% @spec start() -> ok
+%
+% @doc Starts the echo ESME.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+start() ->
+    start_link("banana", "secret", "1948", "1948", {193, 144, 50, 51}).
+    
+
 %%%
 % @spec start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -> ok
 %    SystemId = string()
@@ -101,12 +123,7 @@
 %
 % %@equiv
 %%
-start() ->
-    start_link("banana", "secret", "1948", "1948", {193, 144, 50, 51}).
-    
-
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
-%    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
     Setup = #gen_esme_setup{
       system_id         = SystemId,
       password          = Password,
@@ -118,16 +135,21 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
       source_addr       = SourceAddr,
       service_type      = ?SERVICE_TYPE_NULL,
       system_type       = ?NULL_C_OCTET_STRING,
-      session_init_time = ?SESSION_INIT_TIME, % 180000
-      enquire_link_time = ?ENQUIRE_LINK_TIME,
-      inactivity_time   = 240000,
-      response_time     = ?RESPONSE_TIME,
-      rebind_time       = ?REBIND_TIME},
+      session_init_time = ?SESSION_INIT_TIME, % @see smpp_globals.hrl
+      enquire_link_time = ?ENQUIRE_LINK_TIME, % @see smpp_globals.hrl
+      inactivity_time   = ?INACTIVITY_TIME,   % @see smpp_globals.hrl
+      response_time     = ?RESPONSE_TIME,     % @see smpp_globals.hrl
+      rebind_time       = ?REBIND_TIME},      % @see smpp_globals.hrl
+
+	% If default values are OK for you, you may use the macro GEN_ESME_SETUP
+    % to define an equivalent Setup by a compact expression like
+
+% 	Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+
     case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
         {ok, Eid} ->
             gen_esme:open_transmitter(echo_esme, McAddr),
             gen_esme:bind_transmitter(echo_esme),
-%            receive after 120000 ->    ok end,
             gen_esme:open_receiver(echo_esme, McAddr),
             gen_esme:bind_receiver(echo_esme),
             process_flag(trap_exit, true),
@@ -159,195 +181,51 @@ stop() ->
 % ESME functions
 %%====================================================================
 %%%
-% @spec bound_receiver(Pid, Sid, PduResp) -> ok
+% @spec bind_receiver_resp(Pid, Sid, Resp) -> ok
 %    Pid = pid()
-%    Eid = pid()
+%    Sid = pid()
+%    Resp = {ok, PduResp} | {error, Error}
 %    PduResp = pdu()
-%
-% @doc The ESME just bound as a receiver.
-%
-% <p>Returning value is ignored by the ESME. The callback module may start
-% some initialization on response to this callback.</p>
-%
-% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
-% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-bound_receiver(Pid, Sid, PduResp) ->
-    SystemId = operation:get_value(system_id, PduResp),
-    io:format("Bound as receiver to ~p~n", [SystemId]).
-
-
-%%%
-% @spec bound_transmitter(Pid, Sid, PduResp) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    PduResp = pdu()
-%
-% @doc The ESME just bound as a transmitter.
-%
-% <p>Returning value is ignored by the ESME. The callback module may start
-% some initialization on response to this callback.</p>
-%
-% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
-% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-bound_transmitter(Pid, Sid, PduResp) ->
-    SystemId = operation:get_value(system_id, PduResp),
-    io:format("Bound as transmitter to ~p~n", [SystemId]).
-
-
-%%%
-% @spec receiver_unbind(Pid, Eid) -> ok | {error, Error}
-%    Pid = pid()
-%    Eid = pid()
 %    Error = int()
 %
-% @doc This callback forwards an unbind request (issued by the MC) to the 
-% receiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_rx state.
-%
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
+% @doc <a href="gen_esme.html#bind_receiver_resp-3">gen_esme - 
+% bind_receiver_resp/3</a> callback implementation.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-receiver_unbind(Pid, Eid) -> 
-    io:format("Unbind request received on receiver session~n", []).
+bind_receiver_resp(Pid, Sid, {ok, PduResp}) ->
+    SystemId = operation:get_param(system_id, PduResp),
+    io:format("Bound as receiver to ~p~n", [SystemId]);
+
+bind_receiver_resp(Pid, Sid, Error) ->
+    io:format("Bind error on receiver session: ~p~n", [Error]).
 
 
 %%%
-% @spec transmitter_unbind(Pid, Eid) -> ok | {error, Error}
+% @spec bind_transmitter_resp(Pid, Sid, Resp) -> ok
 %    Pid = pid()
-%    Eid = pid()
+%    Sid = pid()
+%    Resp = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
 %    Error = int()
 %
-% @doc This callback forwards an unbind request (issued by the MC) to the 
-% transmitter session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_tx state.
-%
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
+% @doc <a href="gen_esme.html#bind_transmitter_resp-3">gen_esme - 
+% bind_transmitter_resp/3</a> callback implementation.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-transmitter_unbind(Pid, Eid) -> 
-    io:format("Unbind request received on transmitter session~n", []).
+bind_transmitter_resp(Pid, Sid, {ok, PduResp}) ->
+    SystemId = operation:get_param(system_id, PduResp),
+    io:format("Bound as transmitter to ~p~n", [SystemId]);
 
-
-%%%
-% @spec receiver_mc_unavailable(Pid, Eid) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%
-% @doc If the MC becomes unavailable on the receiver session, this circumstance
-% is notified with a call to this function.
-%
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
-% handle these <i>undesired</i> callbacks appropriately.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-receiver_mc_unavailable(Pid, Eid) ->
-    io:format("MC unavailable on receiver session~n", []).
-
-
-%%%
-% @spec transmitter_mc_unavailable(Pid, Eid) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%
-% @doc If the MC becomes unavailable on the transmitter session, this
-% circumstance is notified with a call to this function.
-%
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
-% handle these <i>undesired</i> callbacks appropriately.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-transmitter_mc_unavailable(Pid, Eid) ->
-    io:format("MC unavailable on transmitter session~n", []).
-
-
-%%%
-% @spec receiver_cannot_bind(Pid, Eid, Error) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Error = {error, term()}
-%
-% @doc Cannot bind on the receiver session.
-% 
-% <p><tt>Error</tt> is the error returned by the bind operation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-receiver_cannot_bind(Pid, Eid, Error) ->
-    io:format("Can not bind on receiver session: ~p~n", [Error]).
-     
-
-%%%
-% @spec transmitter_cannot_bind(Pid, Eid, Error) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Error = {error, term()}
-%
-% @doc Cannot bind on the transmitter session.
-% 
-% <p><tt>Error</tt> is the error returned by the bind operation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-transmitter_cannot_bind(Pid, Eid, Error) ->
-    io:format("Can not bind on transmitter session: ~p~n", [Error]).
+bind_transmitter_resp(Pid, Sid, Error) ->
+	io:format("Bind error on receiver session: ~p~n", [Error]).
 
 
 %%%
@@ -360,17 +238,8 @@ transmitter_cannot_bind(Pid, Eid, Error) ->
 %    ParamName  = atom()
 %    ParamValue = term()
 %
-% @doc Short messages delivered by the ESME via this callback are enclosed
-% inside a deliver_sm PDU.
-%
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
+% @doc <a href="gen_esme.html#deliver_sm-3">gen_esme - deliver_sm/3</a>
+% callback implementation.
 % @end
 %
 % %@see
@@ -395,17 +264,8 @@ deliver_sm(_Pid, Eid, Pdu) ->
 %    ParamName  = atom()
 %    ParamValue = term()
 %
-% @doc Short messages delivered by the ESME via this callback are enclosed
-% inside a data_sm PDU.
-%
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
+% @doc <a href="gen_esme.html#deliver_data_sm-3">gen_esme - deliver_data_sm/3
+% </a> callback implementation.
 % @end
 %
 % %@see
@@ -418,6 +278,125 @@ deliver_data_sm(_Pid, Eid, Pdu) ->
     io:format("Echoing SM: ~p~n", [Mesg]),
     spawn(fun() -> gen_esme:data_sm(Eid, [Mesg|Dest]) end), 
     {ok, []}.
+
+
+%%%
+% @spec receiver_mc_unavailable(Pid, Eid) -> ok
+%    Pid = pid()
+%    Eid = pid()
+%
+% @doc <a href="gen_esme.html#receiver_mc_unavailable-2">gen_esme - 
+% receiver_mc_unavailable/2</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+receiver_mc_unavailable(Pid, Eid) ->
+    io:format("MC unavailable on receiver session~n", []).
+
+
+%%%
+% @spec transmitter_mc_unavailable(Pid, Eid) -> ok
+%    Pid = pid()
+%    Eid = pid()
+%
+% @doc <a href="gen_esme.html#transmitter_mc_unavailable-2">gen_esme - 
+% transmitter_mc_unavailable/2</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+transmitter_mc_unavailable(Pid, Eid) ->
+    io:format("MC unavailable on transmitter session~n", []).
+
+
+%%%
+% @spec receiver_mc_unbind(Pid, Eid) -> ok | {error, Error}
+%    Pid = pid()
+%    Eid = pid()
+%    Error = int()
+%
+% @doc <a href="gen_esme.html#receiver_mc_unbind-2">gen_esme - 
+% receiver_mc_unbind/2</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+receiver_mc_unbind(Pid, Eid) -> 
+    io:format("Unbind request received on receiver session~n", []),
+	ok.
+
+
+%%%
+% @spec transmitter_mc_unbind(Pid, Eid) -> ok | {error, Error}
+%    Pid = pid()
+%    Eid = pid()
+%    Error = int()
+%
+% @doc <a href="gen_esme.html#transmitter_mc_unbind-2">gen_esme - 
+% transmitter_mc_unbind/2</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+transmitter_mc_unbind(Pid, Eid) -> 
+    io:format("Unbind request received on transmitter session~n", []),
+	ok.
+
+
+%%%
+% @spec unbind_receiver_resp(Pid, Sid, Resp) -> ok
+%    Pid = pid()
+%    Sid = pid()
+%    Resp = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
+%    Error = int()
+%
+% @doc <a href="gen_esme.html#unbind_receiver_resp-3">gen_esme - 
+% unbind_receiver_resp/3</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+unbind_receiver_resp(Pid, Sid, {ok, _PduResp}) ->
+    io:format("Unbound as receiver.~n", []);
+
+unbind_receiver_resp(Pid, Sid, Error) ->
+    io:format("Unbind error on receiver session: ~p~n", [Error]).
+
+
+%%%
+% @spec unbind_transmitter_resp(Pid, Sid, Resp) -> ok
+%    Pid = pid()
+%    Sid = pid()
+%    Resp = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
+%    Error = int()
+%
+% @doc <a href="gen_esme.html#unbind_transmitter_resp-3">gen_esme - 
+% unbind_transmitter_resp/3</a> callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+unbind_transmitter_resp(Pid, Sid, {ok, _PduResp}) ->
+    io:format("Unbound as transmitter.~n", []);
+
+unbind_transmitter_resp(Pid, Sid, Error) ->
+	io:format("Unbind error on transmitter session: ~p~n", [Error]).
+
 
 %%%===================================================================
 % Internal functions

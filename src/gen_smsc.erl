@@ -89,10 +89,12 @@
          start_link/4,
          start_link/5, 
          listen/1,
-         listen/2,
+         listen/3,
+%         outbind/3,
          call/2, 
          call/3, 
          cast/2, 
+         reply/2,
          stop/1]).
 
 %%%-------------------------------------------------------------------
@@ -123,11 +125,9 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, SystemId, Password, Timers, Sessions}
+%% %@spec {state, Mod, ModState, Timers, Sessions}
 %%    Mod           = atom()
 %%    ModState      = atom()
-%%    SystemId      = string()
-%%    Password      = string()
 %%    Timers        = #timers()
 %%    Sessions      = ets()
 %%
@@ -136,24 +136,11 @@
 %% <dl>
 %%   <dt>Mod: </dt><dd>Callback module.</dd>
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
-%%   <dt>SystemId: </dt><dd>ESME identifier.  C-octet string, null terminated 
-%%     string (default value is ?NULL_C_OCTET_STRING).
-%%   </dd>
-%%   <dt>Password: </dt><dd>ESME password.  C-octet string, null terminated 
-%%     string (default value is ?NULL_C_OCTET_STRING).
-%%   </dd>
 %%   <dt>Timers: </dt><dd>SMPP timers.</dd>
 %%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
 %% </dl>
 %% %@end
--record(state, 
-		{mod, 
-		 mod_state, 
-		 system_id, 
-		 password, 
-		 timers, 
-		 listener,
-		 sessions}).
+-record(state, {mod, mod_state, timers, listener, sessions}).
 
 
 %%%===================================================================
@@ -169,51 +156,51 @@
 %% @doc Gives information about the behaviour.
 %% @end
 behaviour_info(callbacks) ->
-     [{init, 1},
-      {handle_bind, 3}, 
-      {handle_operation, 3}, 
-      {handle_ubind, 3}, 
-      {handle_session_failure, 2},
-	  {handle_listen_error, 1},
-      {handle_call, 3},
-      {handle_cast, 2},
-      {handle_info, 2},
-      {terminate, 2},
-      {code_change, 3}];
+    [{init, 1},
+     {handle_bind, 3}, 
+     {handle_operation, 3}, 
+     {handle_ubind, 3}, 
+     {handle_session_failure, 2},
+     {handle_listen_error, 1},
+     {handle_call, 3},
+     {handle_cast, 2},
+     {handle_info, 2},
+     {terminate, 2},
+     {code_change, 3}];
 behaviour_info(_Other) ->
     undefined.
 
 
-%% @spec start(Module, Setup, Args, Options) -> Result
-%%    Module     = atom()
-%%    Setup      = #smsc_setup()
-%%    Result     = {ok, Pid} | ignore | {error, Error}
-%%    Pid        = pid()
-%%    Error      = {already_started, Pid} | term()
+%% @spec start(Module, Timers, Args, Options) -> Result
+%%    Module = atom()
+%%    Timers = #timers()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
 %% @doc Starts the SMSC server.
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Setup</tt> is a <tt>smsc_setup</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macros
-%% <tt>DEFAULT_SMSC_SETUP()</tt> or <tt>SMSC_SETUP(SystemId, Password)</tt> to
-%% define this parameter if default SMPP timers are OK for you.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
+%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% timers are OK for you.</p>
 %%
 %% @see gen_server:start/3
 %% @see start_link/4
 %% @see start/5
 %% @end
-start(Module, Setup, Args, Options) ->
-    gen_server:start(?MODULE, {Module, Setup, Args}, Options).
+start(Module, Timers, Args, Options) ->
+    gen_server:start(?MODULE, {Module, Timers, Args}, Options).
 
 
-%% @spec start(ServerName, Module, Setup, Args, Options) -> Result
+%% @spec start(ServerName, Module, Timers, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Setup      = #smsc_setup()
+%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -223,49 +210,49 @@ start(Module, Setup, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Setup</tt> is a <tt>smsc_setup</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macros
-%% <tt>DEFAULT_SMSC_SETUP()</tt> or <tt>SMSC_SETUP(SystemId, Password)</tt> to
-%% define this parameter if default SMPP timers are OK for you.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
+%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% timers are OK for you.</p>
 %%
 %% @see gen_server:start/4
 %% @see start_link/5
 %% @see start/4
 %% @end
-start(ServerName, Module, Setup, Args, Options) ->
-    gen_server:start(ServerName, ?MODULE, {Module, Setup, Args}, Options).
+start(ServerName, Module, Timers, Args, Options) ->
+    gen_server:start(ServerName, ?MODULE, {Module, Timers, Args}, Options).
 
 
-%% @spec start_link(Module, Setup, Args, Options) -> Result
-%%    Module     = atom()
-%%    Setup      = #smsc_setup()
-%%    Result     = {ok, Pid} | ignore | {error, Error}
-%%    Pid        = pid()
-%%    Error      = {already_started, Pid} | term()
+%% @spec start_link(Module, Timers, Args, Options) -> Result
+%%    Module = atom()
+%%    Timers = #timers()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
 %% @doc Starts the SMSC server.
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Setup</tt> is a <tt>smsc_setup</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macros
-%% <tt>DEFAULT_SMSC_SETUP()</tt> or <tt>SMSC_SETUP(SystemId, Password)</tt> to
-%% define this parameter if default SMPP timers are OK for you.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
+%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% timers are OK for you.</p>
 %%
 %% @see gen_server:start_link/3
 %% @see start_link/5
 %% @see start/4
 %% @end
-start_link(Module, Setup, Args, Options) ->
-    gen_server:start_link(?MODULE, {Module, Setup, Args}, Options).
+start_link(Module, Timers, Args, Options) ->
+    gen_server:start_link(?MODULE, {Module, Timers, Args}, Options).
 
 
-%% @spec start_link(ServerName, Module, Setup, Args, Options) -> Result
+%% @spec start_link(ServerName, Module, Timers, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Setup      = #smsc_setup()
+%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -275,17 +262,17 @@ start_link(Module, Setup, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Setup</tt> is a <tt>smsc_setup</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macros
-%% <tt>DEFAULT_SMSC_SETUP()</tt> or <tt>SMSC_SETUP(SystemId, Password)</tt> to
-%% define this parameter if default SMPP timers are OK for you.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
+%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% timers are OK for you.</p>
 %%
 %% @see gen_server:start_link/4
 %% @see start_link/4
 %% @see start/5
 %% @end
-start_link(ServerName, Module, Setup, Args, Options) ->
-    gen_server:start_link(ServerName, ?MODULE, {Module, Setup, Args}, Options).
+start_link(ServerName, Module, Timers, Args, Options) ->
+    gen_server:start_link(ServerName, ?MODULE, {Module,Timers,Args}, Options).
 
 
 %% @spec listen(ServerRef) -> ok | {error, Reason}
@@ -300,25 +287,42 @@ start_link(ServerName, Module, Setup, Args, Options) ->
 %% <p>Returns <tt>true</tt> if success, <tt>false</tt> otherwise.</p>
 %%
 %% @see listen/2
-%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT)
+%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, infinity)
 %% @end 
 listen(ServerRef) -> 
-	listen(ServerRef, ?DEFAULT_SMPP_PORT).
+    listen(ServerRef, ?DEFAULT_SMPP_PORT, infinity).
 
 
-%% @spec listen(ServerRef, Port) -> ok | {error, Reason}
+%% @spec listen(ServerRef, Port, Count) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
 %%    Port = int()
+%%    Count = int() | infinity
 %%    Reason = term()
 %%
 %% @doc Puts the SMSC Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
 %%
 %% <p>Returns <tt>true</tt> if success, <tt>false</tt> otherwise.</p>
 %% @end 
-listen(ServerRef, Port) ->
-	gen_server:call(ServerRef, {listen, Port}).
+listen(ServerRef, Port, Count) ->
+    gen_server:call(ServerRef, {listen, Port, Count}).
+
+
+%% @spec outbind(Sid, ParamList) -> Result
+%%    Sid        = atom()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues an outbind operation on the session identified by <tt>Sid</tt>.
+%% @end
+% outbind(Sid, ParamList) ->
+%     CmdId = ?COMMAND_ID_OUTBIND,
+%     gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
 
 
 %% @spec call(ServerRef, Request) -> Reply
@@ -373,6 +377,17 @@ cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
 
+%% @spec reply(Client, Reply) -> true
+%%    Client = term()
+%%    Reply  = term()
+%%
+%% @doc Equivalent to gen_server:reply/2.  Please refer to the gen_server man
+%% page for greater details.
+%% @end 
+reply(Client, Reply) ->
+    gen_server:reply(Client, Reply).
+
+    
 %% @spec stop() -> ok
 %%
 %% @doc Stops the server.
@@ -395,16 +410,8 @@ stop(ServerRef) ->
 %%    Reason  = term()
 %%
 %% @doc Initiates the server
-init({Mod, #smsc_setup{system_id = I, password = P, timers = T}, Args}) ->
-	S = #state{system_id = I, password = P, timers = T},
-	case Mod:init(Args) of
-		{ok, ModState} ->
-			{ok, S#state{mod = Mod, mod_state = ModState}};
-		{ok, ModState, Timeout} ->
-			{ok, S#state{mod = Mod, mod_state = ModState}, Timeout};
-		Other ->
-			Other
-	end.
+init({Mod, Timers, Args}) ->
+    pack(Mod:init(Args), #state{timers = Timers}).
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -433,55 +440,46 @@ init({Mod, #smsc_setup{system_id = I, password = P, timers = T}, Args}) ->
 %%
 %% @see terminate/2
 %% @end
-% Peer ESME SMPP requests 
-handle_call({Request, Args}, From, S) when Request == handle_operation;
-										   Request == handle_bind;
-										   Request == handle_unbind ->
-    Self = self(),
-    spawn_link(fun() -> 
-					   apply_callback(Self, From, S#state.mod, Request, Args) 
-			   end),
-    {noreply, State};
-
-% Internal requests
-handle_call({listen, Port}, From, S) ->
-	case gen_tcp_connection(?MODULE, Port, infinity) of
-		{ok, Listener} ->
-			{reply, ok, S#state{listener = Listener}};
-		Error ->
-			{reply, Error, S}
-	end;
-
-% % Asynchronous replies (Update Mod State).
-% handle_call({reply, Reply, NewMS}, From, S) ->
-%     {reply, Reply, S#state{mod_state = NewMS}};
-% handle_call({reply, Reply, NewMS, Timeout}, From, S) ->
-%     {reply, Reply, S#state{mod_state = NewMS}, Timeout};
-% handle_call({noreply, NewMS}, From, S) ->
-%     {noreply, S#state{mod_state = NewMS}};
-% handle_call({noreply, NewMS, Timeout}, From, S) ->
-%     {noreply, S#state{mod_state = NewMS}, Timeout};
-% handle_call({stop, Reason, Reply, NewMS}, From, S) ->
-%     {stop, Reason, Reply, S#state{mod_state = NewMS}};
-% handle_call({stop, Reason, NewMS}, From, S) ->
-%     {stop, Reason,  S#state{mod_state = NewMS}};
-
-% Callback SMSC custom calls
+handle_call({bind, Session, {BoundAs, Pdu} = R}, From, S) ->
+    SystemId = operation:get_param(system_id, Pdu),
+    ets:delete(S#state.sessions, {undefined, Session}),
+    ets:insert(S#state.sessions, {{SystemId, Session}, BoundAs}),
+    pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
+handle_call({operation, Session, {Operation, Pdu}}, From, S) ->
+    case ets:match(S#state.sessions, {{'$1', Session}, '$2'}, 1) of
+        [[SystemId, _BoundAs]] ->
+            R = {Operation, SystemId, Pdu},
+            pack((S#state.mod):handle_operation(R, From, S#state.mod_state),S);
+        _Otherwise ->
+            {reply, {error, ?ESME_RUNKNOWNERR, []}, S}
+    end;
+handle_call({unbind, Session, _Request}, From, S) ->
+    case ets:match(S#state.sessions, {{'$1', Session}, '$2'}, 1) of
+        [[SystemId, BoundAs]] ->
+            R = {SystemId, BoundAs},
+            pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
+        _Otherwise ->
+            {reply, {error, ?ESME_RUNKNOWNERR}, S}
+    end;
+handle_call({accept, Conn, _Socket}, From, S) ->
+    case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
+        {ok, Session} ->
+            % SystemId and the Bound State of the session are still undefined
+            ets:insert(S#state.sessions, {{undefined, Session}, undefined}),
+            {reply, {ok, Session}, S};
+        _Error ->
+            {reply, error, S}
+    end;
+handle_call({listen, Port, Count}, From, S) ->
+    case gen_tcp_connection:start_link(?MODULE, Port, Count) of
+        {ok, Listener} ->
+            {reply, ok, S#state{listener = Listener}};
+        Error ->
+            {reply, Error, S}
+    end;
 handle_call({call, Request}, From, S) ->
-    case (S#state.mod):handle_call(Request, From, S#state.mod_state) of
-        {reply, Reply, NewMS} ->
-            {reply, Reply, S#state{mod_state = NewMS}};
-        {reply, Reply, NewMS, Timeout} ->
-            {reply, Reply, S#state{mod_state = NewMS}, Timeout};
-        {noreply, NewMS} ->
-            {noreply, S#state{mod_state = NewMS}};
-        {noreply, NewMS, Timeout} ->
-            {noreply, S#state{mod_state = NewMS}, Timeout};
-        {stop, Reason, Reply, NewMS} ->
-            {stop, Reason, Reply, S#state{mod_state = NewMS}};
-        {stop, Reason, NewMS} ->
-            {stop, Reason,  S#state{mod_state = NewMS}}
-    end.
+    pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S).
+
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -500,26 +498,8 @@ handle_call({call, Request}, From, S) ->
 %%
 %% @see terminate/2
 %% @end
-% Asynchronous replies (Update Mod State)
-handle_cast({noreply, NewMS}, From, S) ->
-    {noreply, S#state{mod_state = NewMS}};
-handle_cast({noreply, NewMS, Timeout}, From, S) ->
-    {noreply, S#state{mod_state = NewMS}, Timeout};
-handle_cast({stop, Reason, NewMS}, From, S) ->
-    {stop, Reason,  S#state{mod_state = NewMS}};
-
 handle_cast({cast, Request}, S) ->
-    case (S#state.mod):handle_cast(Request, S#state.mod_state) of
-        {noreply, NewMS} ->
-            {noreply, S#state{mod_state = NewMS}};
-        {noreply, NewMS, Timeout} ->
-            {noreply, S#state{mod_state = NewMS}, Timeout};
-        {stop, Reason, NewMS} ->
-            {stop, Reason,  S#state{mod_state = NewMS}}
-    end;
-
-handle_cast({mod_state, NewMs}, S) ->
-    {noreply, S#state{mod_state = NewMS}}.
+    pack((S#state.mod):handle_cast(Request, S#state.mod_state), S).
 
 
 %% @spec handle_info(Info, State) -> Result
@@ -540,15 +520,35 @@ handle_cast({mod_state, NewMs}, S) ->
 %%
 %% @see terminate/2
 %% @end
+handle_info({'EXIT', Child, normal} = Info, S) ->
+    % A Child process terminates with normal status.
+    case ets:match(S#state.sessions, {{'$1', Child}, '$2'}, 1) of
+        [[SystemId, _BoundAs]] ->             % Child is a bound session
+            ets:delete(S#state.sessions, {SystemId, Child}),
+            {noreply, S};
+        [] when Child == S#state.listener ->  % Child is the listener
+            {noreply, S#state{listener = closed}};
+        _Otherwise ->
+            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
+    end;
+handle_info({'EXIT', Child, Reason} = Info, S) when Reason /= normal ->
+    % A Child process terminates on error.
+    case ets:match(S#state.sessions, {{'$1', Child}, '$2'}, 1) of
+        [[undefined, undefined]] ->           % Child is an unbound session
+            ets:delete(S#state.sessions, {undefined, Child}),
+            {noreply, S};
+        [[SystemId, BoundAs]] ->              % Child is a bound session
+            ets:delete(S#state.sessions, {SystemId, Child}),
+            MS = S#state.mod_state,
+            pack((S#state.mod):handle_session_failure(SystemId,BoundAs,MS), S);
+        [] when Child == S#state.listener ->  % Child is the listener
+            NewS = S#state{listener = closed},
+            pack((S#state.mod):handle_listen_error(S#state.mod_state), NewS);
+        _Otherwise ->
+            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
+    end;
 handle_info(Info, S) ->
-    case (S#state.mod):handle_info(Info, S#state.mod_state) of
-        {noreply, NewMS} ->
-            {noreply, S#state{mod_state = NewMS}};
-        {noreply, NewMS, Timeout} ->
-            {noreply, S#state{mod_state = NewMS}, Timeout};
-        {stop, Reason, NewMS} ->
-            {stop, Reason, S#state{mod_state = NewMS}}
-    end.
+    pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
 
 %% @spec terminate(Reason, State) -> ok
@@ -560,7 +560,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, S) ->
-    (S#state.mod):terminate(Reason, S#state.mod_state).
+    pack((S#state.mod):terminate(Reason, S#state.mod_state), S).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
@@ -571,11 +571,8 @@ terminate(Reason, S) ->
 %%
 %% @doc Convert process state when code is changed
 %% @end
-code_change(OldVsn, #state{mod=M, mod_state=S} = State, Extra) ->
-    {ok, NewS} = M:code_change(OldVsn, S, Extra),
-    {ok, State#state{mod_state = NewS}};
-code_change(OldVsn, State, Extra) ->
-    {ok, State}.
+code_change(OldVsn, S, Extra) ->
+    pack((S#state.mod):code_change(OldVsn, S#state.mod_state, Extra), S).
 
 
 %%%===================================================================
@@ -597,7 +594,7 @@ code_change(OldVsn, State, Extra) ->
 %% handle_bind/3</a> callback implementation.
 %% @end
 handle_bind(SMSC, Session, Bind) ->
-    gen_server:call(SMSC, {handle_bind, [Session, Bind]}, infinity).
+    gen_server:call(SMSC, {bind, Session, Bind}, infinity).
 
 
 %% @spec handle_operation(SMSC, Session, Operation) -> Result
@@ -622,7 +619,7 @@ handle_bind(SMSC, Session, Bind) ->
 %% handle_operation/3</a> callback implementation.
 %% @end
 handle_operation(SMSC, Session, Operation) ->
-    gen_server:call(SMSC, {handle_operation, [Session, Operation]}, infinity).
+    gen_server:call(SMSC, {operation, Session, Operation}, infinity).
 
 
 %% @spec handle_unbind(SMSC, Session, Unbind) -> ok | {error, Error}
@@ -636,7 +633,7 @@ handle_operation(SMSC, Session, Operation) ->
 %% handle_unbind/3</a> callback implementation.
 %% @end
 handle_unbind(SMSC, Session, Unbind) ->
-    gen_server:call(SMSC, {handle_unbind, [Session, Unbind]}, infinity).
+    gen_server:call(SMSC, {unbind, Session, Unbind}, infinity).
 
 
 %%%===================================================================
@@ -650,15 +647,8 @@ handle_unbind(SMSC, Session, Unbind) ->
 %% @doc <a href="gen_connection.html#handle_accept-3">gen_connection 
 %% - handle_accept/3</a> callback implementation.
 %% @end
-handle_accept(Owner, Conn, _Socket) -> 
-	% Start a new session.
-	case gen_smsc_session:start_link(?MODULE) of
-		{ok, Session} ->
-			gen_server:cast(Owner, {register_session, Session}),
-			{ok, Session};
-		_Error ->
-			error
-	end.
+handle_accept(Owner, Conn, Socket) -> 
+    gen_server:call(Owner, {accept, Conn, Socket}, infinity).
 
 
 %% @spec handle_input(Owner, Conn, Input, Lapse) -> {ok, RestBuffer}
@@ -672,30 +662,33 @@ handle_accept(Owner, Conn, _Socket) ->
 %% - handle_input/4</a> callback implementation.
 %% @end
 handle_input(_Owner, _Conn, _Input, _Lapse) -> 
-	exit({unexpected_callback, handle_input}).
+    exit({unexpected_callback, handle_input}).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-
-% apply_sync_callback(Pid, From, Mod, Callback, Args) ->
-%     Reply = gen_server:call(Pid, apply(Mod, Callback, Args)),
-%     gen_server:reply(From, Reply).
-
-% apply_async_callback(Pid, Mod, Callback, Args) ->
-%     gen_server:cast(Pid, apply(Mod, Callback, Args)).
-
-apply_callback(Pid, From, Mod, Callback, Args) ->
-    case apply(Mod, Callback, Args) of
-        {reply, Reply, NewMS} ->
-            gen_server:cast(Pid, {noreply, NewMS}),
-            gen_server:reply(From, Reply);
-        {reply, Reply, NewMS, Timeout} ->
-            gen_server:cast(Pid, {noreply, NewMS, Timeout}),
-            gen_server:reply(From, Reply);
-        {stop, Reason, Reply, NewMS} ->
-            gen_server:reply(From, Reply), % reply first
-            gen_server:cast(Pid, {stop, Reason, NewMS});
-        WithoutReply ->
-            gen_server:cast(Pid, WithoutReply)
-    end.
+%% @spec pack(CallbackReply, State) -> Reply
+%%
+%% @doc The callback module replies as if I were gen_server.  Pack his
+%% state into mine.
+%%
+%% <p>Originally written by Ulf Wiger for his dispatched_server.erl module.</p>
+%% @end 
+pack({reply, Reply, MS}, S) ->
+    {reply, Reply, S#state{mod_state = MS}};
+pack({reply, Reply, MS, Timeout}, S) ->
+    {reply, Reply, S#state{mod_state = MS}, Timeout};
+pack({noreply, MS}, S) ->
+    {noreply, S#state{mod_state = MS}};
+pack({noreply, MS, Timeout}, S) ->
+    {noreply, S#state{mod_state = MS}, Timeout};
+pack({stop, Reason, Reply, MS}, S) ->
+    {stop, Reason, Reply, S#state{mod_state = MS}};
+pack({stop, Reason, MS}, S) ->
+    {stop, Reason,  S#state{mod_state = MS}};
+pack({ok, MS}, S) ->
+    {ok, S#state{mod_state = MS}};
+pack({ok, MS, Timeout}, S) ->
+    {ok, S#state{mod_state = MS}, Timeout};
+pack(Other, _S) ->
+    Other.

@@ -16,7 +16,26 @@
 
 %%% @doc Generic SMSC.
 %%%
-%%% <p>A generic SMSC implemented as a gen_server.</p>
+%%% <p>A generic SMSC implemented as a <i>gen_server</i>.</p>
+%%%
+%%% <p>This behaviour acts as an extended <i>gen_server</i>, homonymous 
+%%% functions have the exact same meaning.</p>
+%%%
+%%% <p>By default sessions are NOT linked to the parent SMSC, thus silently
+%%% dropped if an error occurs.  To monitor sessions, SMSC programmers may 
+%%% either use <tt>erlang:monitor(process, Session)</tt> or explicitly create 
+%%% a link to them.</p>
+%%%
+%%% <p>SMPP operations are directly issued upon underlying sessions, they
+%%% don't go through the SMSC server loop.  This means you may call the 
+%%% functions <a href="#alert_notification-3">alert_notification/3</a>, 
+%%% <a href="#outbind-3">outbind/3</a>, <a href="#deliver_sm-3">deliver_sm/3
+%%% </a>, <a href="#data_sm-3">data_sm/3</a> or <a href="#unbind-2">unbind/2
+%%% </a> from within any callback without having the risk of blocking the 
+%%% SMSC server.</p>
+%%%
+%%% <p>Please refer to <a href="examples/test_smsc.erl">test_smsc.erl</a>
+%%% for a minimal SMSC example.</p>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
@@ -26,6 +45,11 @@
 %%% particular function is called.</p>
 %%%
 %%% <table width="100%" border="1">
+%%%   <tr>
+%%%     <td valign="top"><a href="#init-1">init/1</a></td>
+%%%     <td>Forwards <i>gen_server:init/1</i> callbacks to the SMSC server.
+%%%     </td>
+%%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_bind-3">handle_bind/3</a></td>
 %%%     <td>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
@@ -49,10 +73,58 @@
 %%%       to the SMSC.
 %%%     </td>
 %%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_listen_error-1">handle_listen_error/1
+%%%       </a></td>
+%%%     <td>Notifies listen socket failures to the callback SMSC.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_call-3">handle_call/3</a></td>
+%%%     <td>Forwards <i>gen_server:handle_call/3</i> callbacks to the SMSC 
+%%%       server.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td>
+%%%     <td>Forwards <i>gen_server:handle_cast/2</i> callbacks to the SMSC 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_info-2">handle_info/2
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:handle_info/2</i> callbacks to the SMSC 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#terminate-2">terminate/2
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:terminate/2</i> callbacks to the SMSC 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#code_change-3">code_change/3
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:code_change/3</i> callbacks to the SMSC 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
 %%% </table>
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
+%%%
+%%%
+%%% <h3><a name="init-1">init/1</a></h3>
+%%%
+%%% <tt>init(Args) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:init/1</i> callbacks to the SMSC server.</p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
 %%% 
 %%% <h3><a name="handle_bind-3">handle_bind/3</a></h3>
 %%%
@@ -75,6 +147,8 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
@@ -115,6 +189,8 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
@@ -136,6 +212,8 @@
 %%%   <li><tt>Unbind = {unbind, Session, Pdu}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>From = term()</tt></li>
+%%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {reply, Reply, NewState}          |
 %%%                    {reply, Reply, NewState, Timeout} |
 %%%                    {noreply, NewState}               |
@@ -144,6 +222,8 @@
 %%%                    {stop, Reason, NewState}</tt></li>
 %%%   <li><tt>Reply = ok | {error, Error}</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>This callback forwards an unbind request (issued by peer ESMEs) to the 
@@ -156,15 +236,81 @@
 %%% command_status and the session will remain on it's current bound state
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
+%%% 
+%%% <h3><a name="handle_listen_failure-1">handle_listen_failure/1</a></h3>
+%%%
+%%% <tt>handle_listen_failure(State) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Notifies listen socket failures to the callback SMSC.</p>
+%%%
+%%%
+%%% <h3><a name="handle_call-3">handle_call/3</a></h3>
+%%%
+%%% <tt>handle_call(Request, From, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_call/3</i> callbacks to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="handle_cast-2">handle_cast/2</a></h3>
+%%%
+%%% <tt>handle_cast(Request, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_cast/2</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="handle_info-2">handle_info/2</a></h3>
+%%%
+%%% <tt>handle_info(Info, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_info/2</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="terminate-2">terminate/2</a></h3>
+%%%
+%%% <tt>terminate(Reason, State)</tt>
+%%%
+%%% <p>Forwards <i>gen_server:terminate/2</i> callback to the SMSC server.</p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="code_change-3">code_change/3</a></h3>
+%%%
+%%% <tt>code_change(OldVsn, State, Extra) -> {ok, NewState}</tt>
+%%%
+%%% <p>Forwards <i>gen_server:code_change/3</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 0.1, {13 May 2004} {@time}.
 %%% @end
-%%%
-%%% %@TODO Outbind is synchronous, may block the entire SMSC during connection
-%%% establishment.
 -module(gen_smsc).
 
 -behaviour(gen_server).
@@ -184,14 +330,15 @@
 %%% External exports
 %%%-------------------------------------------------------------------
 %%-compile(export_all).
--export([start/4,
-         start/5,
-         start_link/4,
-         start_link/5, 
+-export([start/3,
+         start/4,
+         start_link/3,
+         start_link/4, 
          listen_start/1,
-         listen_start/3,
+         listen_start/4,
          listen_stop/1,
          session_start/3,
+         session_start/4,
          session_stop/2,
          alert_notification/3,
          outbind/3,
@@ -232,24 +379,20 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, Timers, Lsocket, Sessions}
+%% %@spec {state, Mod, ModState, LSocket}
 %%    Mod      = atom()
 %%    ModState = atom()
-%%    Timers   = #timers()
-%%    Lsocket = pid()
-%%    Sessions = ets()
+%%    LSocket  = socket()
 %%
 %% %@doc Representation of the server's state.
 %%
 %% <dl>
 %%   <dt>Mod: </dt><dd>Callback module.</dd>
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
-%%   <dt>Timers: </dt><dd>SMPP timers.</dd>
-%%   <dt>Lsocket: </dt><dd>Pid of the lsocket process.</dd>
-%%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
+%%   <dt>LSocket: </dt><dd>Listener socket.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, timers, lsocket = closed}).
+-record(state, {mod, mod_state, lsocket = closed}).
 
 
 %%%===================================================================
@@ -279,9 +422,8 @@ behaviour_info(_Other) ->
     undefined.
 
 
-%% @spec start(Module, Timers, Args, Options) -> Result
+%% @spec start(Module, Args, Options) -> Result
 %%    Module = atom()
-%%    Timers = #timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -290,25 +432,19 @@ behaviour_info(_Other) ->
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
-%%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
 %%
 %% @see gen_server:start/3
-%% @see start_link/4
-%% @see start/5
+%% @see start_link/3
+%% @see start/4
 %% @end
-start(Module, Timers, Args, Options) ->
-    gen_server:start(?MODULE, {Module, Timers, Args}, Options).
+start(Module, Args, Options) ->
+    gen_server:start(?MODULE, {Module, Args}, Options).
 
 
-%% @spec start(ServerName, Module, Timers, Args, Options) -> Result
+%% @spec start(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -318,22 +454,16 @@ start(Module, Timers, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start/4
-%% @see start_link/5
-%% @see start/4
+%% @see start_link/4
+%% @see start/3
 %% @end
-start(ServerName, Module, Timers, Args, Options) ->
-    gen_server:start(ServerName, ?MODULE, {Module, Timers, Args}, Options).
+start(ServerName, Module, Args, Options) ->
+    gen_server:start(ServerName, ?MODULE, {Module, Args}, Options).
 
 
-%% @spec start_link(Module, Timers, Args, Options) -> Result
+%% @spec start_link(Module, Args, Options) -> Result
 %%    Module = atom()
-%%    Timers = #timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -343,24 +473,18 @@ start(ServerName, Module, Timers, Args, Options) ->
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start_link/3
-%% @see start_link/5
-%% @see start/4
+%% @see start_link/4
+%% @see start/3
 %% @end
-start_link(Module, Timers, Args, Options) ->
-    gen_server:start_link(?MODULE, {Module, Timers, Args}, Options).
+start_link(Module, Args, Options) ->
+    gen_server:start_link(?MODULE, {Module, Args}, Options).
 
 
-%% @spec start_link(ServerName, Module, Timers, Args, Options) -> Result
+%% @spec start_link(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -370,17 +494,12 @@ start_link(Module, Timers, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start_link/4
-%% @see start_link/4
-%% @see start/5
+%% @see start_link/3
+%% @see start/4
 %% @end
-start_link(ServerName, Module, Timers, Args, Options) ->
-    gen_server:start_link(ServerName, ?MODULE, {Module,Timers,Args}, Options).
+start_link(ServerName, Module, Args, Options) ->
+    gen_server:start_link(ServerName, ?MODULE, {Module, Args}, Options).
 
 
 %% @spec listen_start(ServerRef) -> ok | {error, Reason}
@@ -392,29 +511,39 @@ start_link(ServerName, Module, Timers, Args, Options) ->
 %% @doc Puts the SMSC Server <tt>ServerRef</tt> to listen on 
 %% <tt>DEFAULT_SMPP_PORT</tt>.
 %%
-%% <p>By default infinity connections are accepted.</p>
+%% <p>By default infinity connections are accepted.  Started sessions are NOT
+%% linked to the SMSC.</p>
 %%
-%% @see listen_start/3
-%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, infinity)
+%% @see listen_start/4
+%%
+%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, infinity, DEFAULT_SMPP_TIMERS)
 %% @end 
 listen_start(ServerRef) -> 
-    listen_start(ServerRef, ?DEFAULT_SMPP_PORT, infinity).
+    listen_start(ServerRef, ?DEFAULT_SMPP_PORT, infinity,?DEFAULT_SMPP_TIMERS).
 
 
-%% @spec listen_start(ServerRef, Port, Count) -> ok | {error, Reason}
+%% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
 %%    Port = int()
+%%    Timers = #timers()
 %%    Count = int() | infinity
 %%    Reason = term()
 %%
 %% @doc Puts the SMSC Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
 %%
-%% <p><tt>Count</tt> connections are accepted.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  Accepted session will be subject to
+%% given timers.</p>
+%%
+%% <p>Only <tt>Count</tt> connections are accepted.  Started sessions are NOT
+%% linked to the SMSC.</p>
+%%
+%% @see listen_start/1
 %% @end 
-listen_start(ServerRef, Port, Count) ->
-    gen_server:call(ServerRef, {listen_start, Port, Count}).
+listen_start(ServerRef, Port, Count, Timers) ->
+    gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
 
 %% @spec stop_listen(ServerRef) -> ok
@@ -438,15 +567,43 @@ listen_stop(ServerRef) ->
 %%    Session = pid()
 %%    Reason = term()
 %%
-%% @doc Opens a new session.
+%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
 %%
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
+%%
+%% @equiv session_start(ServerRef, Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
 session_start(ServerRef, Address, Port) ->
+	session_start(ServerRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
+
+
+%% @spec session_start(ServerRef, Address, Port, Timers) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Timers = #timers()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @see session_start/3
+%% @see gen_smsc_session:start/3
+%% @end 
+session_start(ServerRef, Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
-            case gen_server:call(ServerRef, {session_start, Socket}) of
+            case gen_smsc_session:start(?MODULE, Socket, Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -634,8 +791,8 @@ reply(Client, Reply) ->
 %%
 %% <p>Initiates the server.</p>
 %% @end
-init({Mod, Timers, Args}) ->
-    pack(Mod:init(Args), #state{mod = Mod, timers = Timers}).
+init({Mod, Args}) ->
+    pack(Mod:init(Args), #state{mod = Mod}).
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -669,23 +826,18 @@ init({Mod, Timers, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({listen_start, Port, Count}, From, S) ->
+handle_call({listen_start, Port, Count, Timers}, From, S) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
-            spawn_link(fun() -> listener(Self, LSocket, Count) end),
+            spawn_link(fun() -> listener(Self, LSocket, Count, Timers) end),
             {reply, true, S#state{lsocket = LSocket}};
         _Error ->
             {reply, false, S}
     end;
-handle_call({session_start, Socket}, From, S) ->
-    {reply, gen_smsc_session:start_link(?MODULE, Socket, S#state.timers), S};
-handle_call({session_accept, Socket}, From, S) ->
-    {reply, gen_smsc_session:start(?MODULE, Socket, S#state.timers), S};
 handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
                                                     Bind == bind_transmitter;
                                                     Bind == bind_receiver ->
-    link(Session),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
 handle_call({unbind, Session, Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
@@ -867,7 +1019,7 @@ pack(Other, _S) ->
     Other.
 
 
-%% @spec listener(ServerRef, LSocket) -> void()
+%% @spec listener(ServerRef, LSocket, Count, Timers) -> void()
 %%    ServerRef     = pid()
 %%    LSocket = socket()
 %%
@@ -875,22 +1027,22 @@ pack(Other, _S) ->
 %% error occurs.  If successful the event <i>accept</i> is triggered. On
 %% error an exit on the listen socket is reported.
 %% @end
-listener(ServerRef, LSocket, Count) ->
+listener(ServerRef, LSocket, Count, Timers) ->
     case gen_tcp:accept(LSocket) of
         {ok, Socket} ->
             inet:setopts(Socket, ?CONNECT_OPTIONS),
-            case gen_server:call(ServerRef, {session_accept, Socket}) of
+            case gen_smsc_session:start(?MODULE, Socket, Timers) of
                 {ok, Pid} ->
                     gen_tcp:controlling_process(Socket, Pid),
                     if
                         Count > 1 ->
-                            listener(ServerRef, LSocket, ?DECR(Count));
+                            listener(ServerRef, LSocket, ?DECR(Count), Timers);
                         true ->
                             gen_server:cast(ServerRef, listen_stop)
                     end;
                 _Error ->
                     gen_tcp:close(Socket),
-                    listener(ServerRef, LSocket, Count)
+                    listener(ServerRef, LSocket, Count, Timers)
             end;
         _Error ->
             gen_server:cast(ServerRef, listen_error)

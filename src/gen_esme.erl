@@ -188,14 +188,15 @@
 %%% External exports
 %%%-------------------------------------------------------------------
 %%-compile(export_all).
--export([start/4,
-         start/5,
-         start_link/4,
-         start_link/5, 
+-export([start/3,
+         start/4,
+         start_link/3,
+         start_link/4, 
          listen_start/1,
-         listen_start/3,
+         listen_start/4,
          listen_stop/1,
          session_start/3,
+         session_start/4,
          session_stop/2,
          bind_receiver/3,
          bind_transmitter/3,
@@ -247,24 +248,20 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, Timers, Listener, Sessions}
+%% %@spec {state, Mod, ModState, LSocket}
 %%    Mod      = atom()
 %%    ModState = atom()
-%%    Timers   = #timers()
-%%    Listener = pid()
-%%    Sessions = ets()
+%%    LSocket  = socket()
 %%
 %% %@doc Representation of the server's state.
 %%
 %% <dl>
 %%   <dt>Mod: </dt><dd>Callback module.</dd>
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
-%%   <dt>Timers: </dt><dd>SMPP timers.</dd>
-%%   <dt>Listener: </dt><dd>Pid of the listener process.</dd>
-%%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
+%%   <dt>LSocket: </dt><dd>Listener socket.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, timers, lsocket = closed}).
+-record(state, {mod, mod_state, lsocket = closed}).
 
 
 %%%===================================================================
@@ -295,9 +292,8 @@ behaviour_info(_Other) ->
     undefined.
 
 
-%% @spec start(Module, Timers, Args, Options) -> Result
+%% @spec start(Module, Args, Options) -> Result
 %%    Module = atom()
-%%    Timers = #timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -306,25 +302,19 @@ behaviour_info(_Other) ->
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
-%%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
 %%
 %% @see gen_server:start/3
-%% @see start_link/4
-%% @see start/5
+%% @see start_link/3
+%% @see start/4
 %% @end
-start(Module, Timers, Args, Options) ->
-    gen_server:start(?MODULE, {Module, Timers, Args}, Options).
+start(Module, Args, Options) ->
+    gen_server:start(?MODULE, {Module, Args}, Options).
 
 
-%% @spec start(ServerName, Module, Timers, Args, Options) -> Result
+%% @spec start(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -334,22 +324,16 @@ start(Module, Timers, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start/4
-%% @see start_link/5
-%% @see start/4
+%% @see start_link/4
+%% @see start/3
 %% @end
-start(ServerName, Module, Timers, Args, Options) ->
-    gen_server:start(ServerName, ?MODULE, {Module, Timers, Args}, Options).
+start(ServerName, Module, Args, Options) ->
+    gen_server:start(ServerName, ?MODULE, {Module, Args}, Options).
 
 
-%% @spec start_link(Module, Timers, Args, Options) -> Result
+%% @spec start_link(Module, Args, Options) -> Result
 %%    Module = atom()
-%%    Timers = #timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -359,24 +343,18 @@ start(ServerName, Module, Timers, Args, Options) ->
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start_link/3
-%% @see start_link/5
-%% @see start/4
+%% @see start_link/4
+%% @see start/3
 %% @end
-start_link(Module, Timers, Args, Options) ->
-    gen_server:start_link(?MODULE, {Module, Timers, Args}, Options).
+start_link(Module, Args, Options) ->
+    gen_server:start_link(?MODULE, {Module, Args}, Options).
 
 
-%% @spec start_link(ServerName, Module, Timers, Args, Options) -> Result
+%% @spec start_link(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
 %%    Module     = atom()
-%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
@@ -386,17 +364,12 @@ start_link(Module, Timers, Args, Options) ->
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
-%% timers are OK for you.</p>
-%%
 %% @see gen_server:start_link/4
-%% @see start_link/4
-%% @see start/5
+%% @see start_link/3
+%% @see start/4
 %% @end
-start_link(ServerName, Module, Timers, Args, Options) ->
-    gen_server:start_link(ServerName, ?MODULE, {Module,Timers,Args}, Options).
+start_link(ServerName, Module, Args, Options) ->
+    gen_server:start_link(ServerName, ?MODULE, {Module, Args}, Options).
 
 
 %% @spec listen_start(ServerRef) -> ok | {error, Reason}
@@ -408,30 +381,36 @@ start_link(ServerName, Module, Timers, Args, Options) ->
 %% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on 
 %% <tt>DEFAULT_SMPP_PORT</tt>.
 %%
-%% <p>By default only one connection is accepted, then the listen socket
-%% will be closed.</p>
+%% <p>By default only one connection is accepted before the listen socket
+%% is closed.  Started sessions are NOT linked to the SMSC.</p>
 %%
-%% @see listen_start/3
-%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, 1)
+%% @see listen_start/4
+%% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, 1, DEFAULT_SMPP_TIMERS)
 %% @end 
 listen_start(ServerRef) -> 
-    listen_start(ServerRef, ?DEFAULT_SMPP_PORT, 1).
+    listen_start(ServerRef, ?DEFAULT_SMPP_PORT, 1, ?DEFAULT_SMPP_TIMERS).
 
 
-%% @spec listen_start(ServerRef, Port, Count) -> ok | {error, Reason}
+%% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
 %%    Port = int()
 %%    Count = int() | infinity
+%%    Timers = #timers()
 %%    Reason = term()
 %%
 %% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
 %%
-%% <p><tt>Count</tt> connections are accepted.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.  Accepted session will be subject to
+%% given timers.</p>
+%%
+%% <p><tt>Count</tt> connections are accepted.  Started sessions are NOT
+%% linked to the SMSC.</p>
 %% @end 
-listen_start(ServerRef, Port, Count) ->
-    gen_server:call(ServerRef, {listen_start, Port, Count}).
+listen_start(ServerRef, Port, Count, Timers) ->
+    gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
 
 %% @spec listen_stop(ServerRef) -> ok
@@ -455,15 +434,42 @@ listen_stop(ServerRef) ->
 %%    Session = pid()
 %%    Reason = term()
 %%
-%% @doc Opens a new session.
+%% @doc Opens a new session.  By default Sessions are NOT linked to the ESME.
 %%
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
+%%
+%% @equiv session_start(ServerRef, Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
 session_start(ServerRef, Address, Port) ->
+	session_start(ServerRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
+
+
+%% @spec session_start(ServerRef, Address, Port, Timers) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.  By default Sessions are NOT linked to the ESME.
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @see session_start/3
+%% @see gen_esme_session:start/3
+%% @end 
+session_start(ServerRef, Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
-            case gen_server:call(ServerRef, {session_start, Socket}) of
+            case gen_esme_session:start(?MODULE, Socket, Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -809,8 +815,8 @@ reply(Client, Reply) ->
 %%
 %% <p>Initiates the server.</p>
 %% @end
-init({Mod, Timers, Args}) ->
-    pack(Mod:init(Args), #state{mod = Mod, timers = Timers}).
+init({Mod, Args}) ->
+    pack(Mod:init(Args), #state{mod = Mod}).
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -844,23 +850,18 @@ init({Mod, Timers, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({listen_start, Port, Count}, From, S) ->
+handle_call({listen_start, Port, Count, Timers}, From, S) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
-            spawn_link(fun() -> listener(Self, LSocket, Count) end),
+            spawn_link(fun() -> listener(Self, LSocket, Count, Timers) end),
             {reply, true, S#state{lsocket = LSocket}};
         _Error ->
             {reply, false, S}
     end;
-handle_call({session_start, Socket}, From, S) ->
-    {reply, gen_esme_session:start_link(?MODULE, Socket, S#state.timers), S};
-handle_call({session_accept, Socket}, From, S) ->
-    {reply, gen_esme_session:start(?MODULE, Socket, S#state.timers), S};
 handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
                                                     Bind == bind_transmitter;
                                                     Bind == bind_receiver ->
-    link(Session),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
 handle_call({unbind, Session, Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
@@ -1053,22 +1054,22 @@ pack(Other, _S) ->
 %% error occurs.  If successful the event <i>accept</i> is triggered. On
 %% error an exit on the listen socket is reported.
 %% @end
-listener(ServerRef, LSocket, Count) ->
+listener(ServerRef, LSocket, Count, Timers) ->
     case gen_tcp:accept(LSocket) of
         {ok, Socket} ->
             inet:setopts(Socket, ?CONNECT_OPTIONS),
-            case gen_server:call(ServerRef, {session_accept, Socket}) of
+            case gen_esme_session:start(?MODULE, Socket, Timers) of
                 {ok, Pid} ->
                     gen_tcp:controlling_process(Socket, Pid),
                     if
                         Count > 1 ->
-                            listener(ServerRef, LSocket, ?DECR(Count));
+                            listener(ServerRef, LSocket, ?DECR(Count), Timers);
                         true ->
                             gen_server:cast(ServerRef, listen_stop)
                     end;
                 _Error ->
                     gen_tcp:close(Socket),
-                    listener(ServerRef, LSocket, Count)
+                    listener(ServerRef, LSocket, Count, Timers)
             end;
         _Error ->
             gen_server:cast(ServerRef, listen_error)

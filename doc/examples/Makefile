@@ -14,7 +14,8 @@ EDOC_OPTS = [{dir, "$(DOCDIR)"}]
 # ----------------------------------------------------
 # Target Specs
 # ----------------------------------------------------
-EDOC_MODULES = echo_esme submit_esme test_smsc 
+EDOC_MODULES = echo_esme test_smsc 
+#submit_esme 
 
 MODULES = $(EDOC_MODULES)
 

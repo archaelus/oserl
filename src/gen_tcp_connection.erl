@@ -357,12 +357,12 @@ init([Pid, Mod, {listen, ChildMod, Port, Count}]) ->
             {ok, #state{owner=Pid,socket=LSocket,mod=Mod,child_mod=ChildMod}};
         Error ->
             {stop, Error}
-    end.
-% init([Pid, Mod, {accept, Socket}]) ->
-%     Self = self(),
-%     process_flag(trap_exit, true),
-%     spawn_link(fun() -> wait_recv(Self, Socket) end),
-%     {ok, #state{owner = Pid, socket = Socket, mod = Mod}}.
+    end;
+init([Pid, Mod, {accept, Socket}]) ->
+    Self = self(),
+    process_flag(trap_exit, true),
+    spawn_link(fun() -> wait_recv(Self, Socket) end),
+    {ok, #state{owner = Pid, socket = Socket, mod = Mod, child_mod = Mod}}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -510,6 +510,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, #state{buffer = B} = S) when B == <<>>; Reason == kill ->
+	io:format("*** gen_tcp_connection terminating: ~p - ~p ***~n", [self(), Reason]),
     process_flag(trap_exit, false),
     gen_tcp:close(S#state.socket),
     case process_info(self(), registered_name) of

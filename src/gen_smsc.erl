@@ -58,9 +58,10 @@
 %%%
 %%% <tt>handle_bind(Bind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Bind = {bind_receiver, Pdu}    |
-%%%                  {bind_transmitter, Pdu} |
-%%%                  {bind_transceiver, Pdu}</tt></li>
+%%%   <li><tt>Bind = {bind_receiver, SystemId, Pdu}    |
+%%%                  {bind_transmitter, SystemId, Pdu} |
+%%%                  {bind_transceiver, SystemId, Pdu}</tt></li>
+%%%   <li><tt>SystemId= string()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
@@ -91,15 +92,16 @@
 %%%
 %%% <tt>handle_operation(Operation, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Operation = {broadcast_sm, Pdu} |
-%%%                       {cancel_broadcast_sm, Pdu} |
-%%%                       {cancel_sm, Pdu} |
-%%%                       {query_broadcast_sm, Pdu} |
-%%%                       {query_sm, Pdu} |
-%%%                       {replace_sm, Pdu} |
-%%%                       {submit_multi, Pdu} |
-%%%                       {submit_sm, Pdu} |
-%%%                       {data_sm, Pdu}</tt></li>
+%%%   <li><tt>Operation = {broadcast_sm, SystemId, Pdu} |
+%%%                       {cancel_broadcast_sm, SystemId, Pdu} |
+%%%                       {cancel_sm, SystemId, Pdu} |
+%%%                       {query_broadcast_sm, SystemId, Pdu} |
+%%%                       {query_sm, SystemId, Pdu} |
+%%%                       {replace_sm, SystemId, Pdu} |
+%%%                       {submit_multi, SystemId, Pdu} |
+%%%                       {submit_sm, SystemId, Pdu} |
+%%%                       {data_sm, SystemId, Pdu}</tt></li>
+%%%   <li><tt>SystemId = string()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
@@ -131,7 +133,10 @@
 %%%
 %%% <tt>handle_unbind(Unbind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
+%%%   <li><tt>Unbind = {bound_rx, SystemId, Pdu} |
+%%%                    {bound_tx, SystemId, Pdu} |
+%%%                    {bound_trx, SystemId, Pdu}</tt></li>
+%%%   <li><tt>SystemId = string()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {reply, Reply, NewState}          |
 %%%                    {reply, Reply, NewState, Timeout} |
@@ -211,7 +216,7 @@
 %%%-------------------------------------------------------------------
 %%% Internal gen_smsc_session exports
 %%%-------------------------------------------------------------------
--export([handle_bind/3, handle_operation/3, handle_unbind/3]).
+-export([handle_bind/3, handle_operation/3, handle_unbind/2]).
 
 %%%-------------------------------------------------------------------
 %%% Internal gen_connection exports
@@ -241,7 +246,7 @@
 %%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, timers, listener, sessions}).
+-record(state, {mod, mod_state, timers, listener, sessions, peers}).
 
 
 %%%===================================================================
@@ -564,7 +569,8 @@ init({Mod, Timers, Args}) ->
 	S = #state{mod      = Mod, 
 			   timers   = Timers, 
 			   listener = closed,
-			   sessions = ets:new(sessions,[])},
+			   sessions = ets:new(sessions, []),
+			   peers    = ets:new(peers, [])},
     process_flag(trap_exit, true),
     pack(Mod:init(Args), S).
 
@@ -595,74 +601,60 @@ init({Mod, Timers, Args}) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({peer_bind, Session, {BoundAs, Pdu} = R}, From, S) ->
-    SystemId = operation:get_param(system_id, Pdu),
-    ets:delete(S#state.sessions, Session),
-    ets:insert(S#state.sessions, {Session, SystemId, BoundAs}),
+handle_call({call, Request}, From, S) ->
+    pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+% Peer ESME requests
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+handle_call({bind_receiver, Pdu}, {Rx, _} = From, S) ->
+    Id = operation:get_param(system_id, Pdu),
+	R  = {bind_receiver, Id, Pdu},
+	case ets:match(S#state.peers, {Id, '$1', '$2'}, 1) of
+		'$end_of_table' ->
+		{[[undefined, Tx]], _} ->
+			ets:insert(S#state.sessions, {Rx, Id}),
+			ets:insert(S#state.peers, {Id, Rx, Tx}),
+			pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
+
+
+		{[[Session, _Tx]], _}     -> {rx,  Id, Pdu};
+		{[[_Rx, Session]], _}     -> {tx,  Id, Pdu}
+	end,
+
+	case ets:lookup_el
+handle_call({bind_transmitter, Pdu}, {Tx, _} = From, S) ->
+    Id = operation:get_param(system_id, Pdu),
+	Rx = ets:lookup_element(S#state.peers, Id, 2),
+	R  = {bind_transmitter, Id, Pdu},
+    ets:insert(S#state.sessions, {Rx, Id}),
+    ets:insert(S#state.peers, {Id, Rx, Tx}),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({peer_operation, Session, {Operation, Pdu}}, From, S) ->
-    Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
-				  {[[SystemId, _BoundAs]], _Continuation} ->
-					  {Operation, SystemId, Pdu};
-				  _Otherwise ->
-					  {Operation, undefined, Pdu}
-			  end,
-	pack((S#state.mod):handle_operation(Request, From, S#state.mod_state), S);
-handle_call({peer_unbind, Session, _Unbind}, From, S) ->
-    Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
-				  {[[SystemId, BoundAs]], _Continuation} ->
-					  {BoundAs, SystemId};
-				  _Otherwise ->  
-					  {undefined, undefined}
-			  end,
-	pack((S#state.mod):handle_unbind(Request, From, S#state.mod_state), S);
-handle_call({alert_notification, SystemId, ParamList}, From, S) ->
-	case ets:match(S#state.sessions, {'$1', SystemId, '_'}, 1) of
-		{[[Session]], _Continuation} ->
-			Reply = gen_smsc_session:alert_notification(Session, ParamList),
-			{reply, Reply, S};
-		_Otherwise ->  
-			{reply, {error, system_id}, S}
-	end;
-handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
-	% This shoud be asynchronous.
-	case gen_connection:start_connect(?SESSION_MODULE, Addr, Port) of
-		{ok, Conn} ->
-			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
-				{ok, Session} ->
-                    % The system_id and bound state of the session are 
-					% still undefined
-					ets:insert(S#state.sessions,{Session,undefined,undefined}),
-					Reply = gen_smsc_session:outbind(Session, ParamList),
-					{reply, Reply, S};
-				SessionError ->
-					{reply, SessionError, S}
-			end;
-		ConnectError ->
-			{reply, ConnectError, S}
-	end;
-handle_call({CmdName,SystemId,ParamList}, From, S) when CmdName == deliver_sm;
-														CmdName == data_sm ->
-	case ets:match(S#state.sessions, {'$1', SystemId, '_'}, 1) of
-		{[[Session]], _Continuation} ->
-			sm_delivery(CmdName, Session, ParamList, From),
-			{noreply, S};
-		_Otherwise ->
-			{reply, {error, system_id}, S}
-	end;
-handle_call({unbind, SystemId, BoundAs}, From, S) ->
-	case ets:match(S#state.sessions, {'$1', SystemId, BoundAs}, 1) of
-		{[[Session]], _Continuation} ->
-			unbind(Session, From),
-			{noreply, S};
-		_Otherwise ->
-			{reply, {error, system_id}, S}
-	end;
+handle_call({bind_transceiver, Pdu}, {Trx, _} = From, S) ->
+    Id = operation:get_param(system_id, Pdu),
+	R  = {bind_transmitter, Id, Pdu},
+    ets:insert(S#state.sessions, {Trx, Id}),
+    ets:insert(S#state.peers, {Id, Trx, Trx}),
+    pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
+handle_call({unbind, Pdu}, {Session, _} = From, S) ->
+	Id = ets:lookup_element(S#state.sessions, Session, 2),
+	R  = case ets:match(S#state.peers, {Id, '$1', '$2'}, 1) of
+			 {[[Session, Session]], _} -> {trx, Id, Pdu};
+			 {[[Session, _Tx]], _}     -> {rx,  Id, Pdu};
+			 {[[_Rx, Session]], _}     -> {tx,  Id, Pdu}
+		 end,
+	pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
+handle_call({CmdName, Pdu}, {Session, _} = From, S) ->
+	Id = ets:lookup_element(S#state.sessions, Session, 2),
+    R  = {CmdName, Id, Pdu},
+	pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S);
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+% SMSC requests
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 handle_call({accept, Conn, _Socket}, From, S) ->
     case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
         {ok, Session} ->
-            % The system_id and bound state of the session are still undefined
-            ets:insert(S#state.sessions, {Session, undefined, undefined}),
+            % The system_id of the peer ESME is still undefined
+            ets:insert(S#state.sessions, {Session, undefined}),
             {reply, {ok, Session}, S};
         _Error ->
             {reply, error, S}
@@ -674,8 +666,35 @@ handle_call({listen, Port, Count}, From, S) ->
         Error ->
             {reply, Error, S}
     end;
-handle_call({call, Request}, From, S) ->
-    pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S).
+handle_call({alert_notification, Id, ParamList}, From, S) ->
+	Rx = ets:lookup_element(S#state.peers, Id, 2),
+	{reply, gen_smsc_session:alert_notification(Rx, ParamList), S};
+handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
+	% This shoud be asynchronous.
+	case gen_connection:start_connect(?SESSION_MODULE, Addr, Port) of
+		{ok, Conn} ->
+			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
+				{ok, Session} ->
+                    % Peer system_id is undefined
+					ets:insert(S#state.sessions, {Session, undefined}),
+					{reply, gen_smsc_session:outbind(Session, ParamList), S};
+				SessionError ->
+					{reply, SessionError, S}
+			end;
+		ConnectError ->
+			{reply, ConnectError, S}
+	end;
+handle_call({unbind, BoundAs, Id}, From, S) ->
+	Session = if
+				  BoundAs == rx -> ets:lookup_element(S#state.peers, Id, 2);
+				  true          -> ets:lookup_element(S#state.peers, Id, 3)
+			  end,
+	spawn_link(fun() -> unbind(Session, From) end),
+	{noreply, S};
+handle_call({CmdName, Id, ParamList}, From, S) ->
+	Rx = ets:lookup_element(S#state.peers, Id, 2),
+	spawn_link(fun() -> operation(CmdName, Rx, ParamList, From) end),
+	{noreply, S}.
 
 
 %% @spec handle_cast(Request, State) -> Result
@@ -724,27 +743,33 @@ handle_info({'EXIT', Child, Reason}, S) when Child == S#state.listener ->
     % The listener terminates on error.
 	NewS = S#state{listener = closed},
 	pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
-handle_info({'EXIT', Child, normal} = Info, S) ->
-    % A Child process terminates with normal status.
-    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
-        {[[SystemId, _BoundAs]], _Continuation} ->  % Child is a session
-            ets:delete(S#state.sessions, Child),
-            {noreply, S};
-        _Otherwise ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
-    end;
 handle_info({'EXIT', Child, Reason} = Info, S) ->
-    % A Child process terminates on error.
-    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
-        {[[undefined, undefined]], _Continuation} -> % An unbound session
+    % A Child process terminates with normal status.
+	case catch ets:lookup_element(S#state.sessions, Child, 2) of
+		{'EXIT', What} ->
+            pack((S#state.mod):handle_info(Info, S#state.mod_state), S);
+		undefined -> % Child is a open session
             ets:delete(S#state.sessions, Child),
             {noreply, S};
-        {[[SystemId, BoundAs]], _Continuation} ->    % Child is a bound session
+		Id ->        % Child is a bound session
             ets:delete(S#state.sessions, Child),
-			R = {SystemId, BoundAs},
-            pack((S#state.mod):handle_session_failure(R, S#state.mod_state),S);
-        _Otherwise ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
+			case ets:match(S#state.peers, {Id, '$1', '$2'}, 1) of
+				{[[Rx, Child]], _} when Rx == Child; Rx == undefined ->
+					ets:delete(S#state.peers, Id);
+				{[[Child, Tx]], _} when Tx == Child; Tx == undefined ->
+					ets:delete(S#state.peers, Id);
+				{[[Rx, Child]], _} ->
+					ets:insert(S#state.peers, {Id, Rx, undefined});
+				{[[Child, Tx]], _} ->
+					ets:insert(S#state.peers, {Id, undefined, Tx})
+			end,
+			if
+				Reason == normal ->
+					{noreply, S};
+				true ->
+					pack((S#state.mod):handle_session_failure(
+						   R, S#state.mod_state), S)
+			end
     end;
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
@@ -778,12 +803,9 @@ code_change(OldVsn, S, Extra) ->
 %%%===================================================================
 %%% SMSC Session functions
 %%%===================================================================
-%% @spec handle_bind(SMSC, Session, Bind) -> Result
+%% @spec handle_bind(SMSC, CmdName, Pdu) -> Result
 %%    SMSC = pid()
-%%    Session = pid()
-%%    Bind = {bind_receiver, Pdu} |
-%%           {bind_transmitter, Pdu} |
-%%           {bind_transceiver, Pdu}
+%%    CmdName = bind_receiver | bind_transmitter | bind_transceiver
 %%    Pdu = pdu()
 %%    Result = {ok, ParamList} | {error, Error, ParamList}
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -793,22 +815,21 @@ code_change(OldVsn, S, Extra) ->
 %% @doc <a href="gen_smsc_session.html#handle_bind-3">gen_smsc_session - 
 %% handle_bind/3</a> callback implementation.
 %% @end
-handle_bind(SMSC, Session, Bind) ->
-    gen_server:call(SMSC, {peer_bind, Session, Bind}, infinity).
+handle_bind(SMSC, CmdName, Pdu) ->
+    gen_server:call(SMSC, {CmdName, Pdu}, infinity).
 
 
-%% @spec handle_operation(SMSC, Session, Operation) -> Result
+%% @spec handle_operation(SMSC, CmdName, Pdu) -> Result
 %%    SMSC = pid()
-%%    Session = pid()
-%%    Operation = {broadcast_sm, Pdu} |
-%%                {cancel_broadcast_sm, Pdu} |
-%%                {cancel_sm, Pdu} |
-%%                {query_broadcast_sm, Pdu} |
-%%                {query_sm, Pdu} |
-%%                {replace_sm, Pdu} |
-%%                {submit_multi, Pdu} |
-%%                {submit_sm, Pdu} |
-%%                {data_sm, Pdu}
+%%    CmdName = broadcast_sm |
+%%              cancel_broadcast_sm |
+%%              cancel_sm |
+%%              query_broadcast_sm |
+%%              query_sm |
+%%              replace_sm |
+%%              submit_multi |
+%%              submit_sm |
+%%              data_sm
 %%    Pdu = pdu()
 %%    Result = {ok, ParamList} | {error, Error, ParamList}
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -818,22 +839,20 @@ handle_bind(SMSC, Session, Bind) ->
 %% @doc <a href="gen_smsc_session.html#handle_operation-3">gen_smsc_session - 
 %% handle_operation/3</a> callback implementation.
 %% @end
-handle_operation(SMSC, Session, Operation) ->
-    gen_server:call(SMSC, {peer_operation, Session, Operation}, infinity).
+handle_operation(SMSC, CmdName, Pdu) ->
+    gen_server:call(SMSC, {CmdName, Pdu}, infinity).
 
 
-%% @spec handle_unbind(SMSC, Session, Unbind) -> ok | {error, Error}
+%% @spec handle_unbind(SMSC, Pdu) -> ok | {error, Error}
 %%    SMSC = pid()
-%%    Unbind = {unbind, Pdu}
 %%    Pdu = pdu()
-%%    Session = pid()
 %%    Error = int()
 %%
 %% @doc <a href="gen_smsc_session.html#handle_unbind-3">gen_smsc_session - 
 %% handle_unbind/3</a> callback implementation.
 %% @end
-handle_unbind(SMSC, Session, Unbind) ->
-    gen_server:call(SMSC, {peer_unbind, Session, Unbind}, infinity).
+handle_unbind(SMSC, Pdu) ->
+    gen_server:call(SMSC, {unbind, Pdu}, infinity).
 
 
 %%%===================================================================
@@ -867,20 +886,22 @@ handle_input(_Owner, _Conn, _Input, _Lapse) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-sm_delivery(CmdName, Session, ParamList, From) ->
-	F = fun() ->
-				Reply = gen_smsc_session:CmdName(Session, ParamList),
-				gen_server:reply(From, Reply)
-		end,
-	spawn_link(fun() -> F() end).
+%% @spec operation(CmdName, Session, ParamList, From) -> true
+%%
+%% @doc Issues a SMPP operation on the given <tt>Session</tt>.
+%% @end 
+operation(CmdName, Session, ParamList, From) ->
+	Reply = gen_smsc_session:CmdName(Session, ParamList),
+	gen_server:reply(From, Reply).
 
+
+%% @spec unbind(CmdName, Session, ParamList, From) -> true
+%%
+%% @doc Issues an <i>unbind</i> on the given <tt>Session</tt>.
+%% @end 
 unbind(Session, From) ->
-	F = fun() ->
-				Reply = gen_smsc_session:unbind(Session),
-				gen_server:reply(From, Reply)
-		end,
-	spawn_link(fun() -> F() end).
-	
+	Reply = gen_smsc_session:unbind(Session),
+	gen_server:reply(From, Reply).
 
 
 %% @spec pack(CallbackReply, State) -> Reply

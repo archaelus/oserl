@@ -54,14 +54,14 @@
 %%%
 %%% <table width="100%" border="1">
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_outbind-3">handle_outbind/3</a></td>
+%%%     <td valign="top"><a href="#handle_outbind-2">handle_outbind/2</a></td>
 %%%     <td>Forwards <i>outbind</i> operations (from the peer SMSC) to the 
 %%%       callback ESME.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_alert_notification-3">
-%%%       handle_alert_notification/3</a></td>
+%%%     <td valign="top"><a href="#handle_alert_notification-2">
+%%%       handle_alert_notification/2</a></td>
 %%%     <td>Forwards <i>alert_notification</i> operations (from the peer SMSC) 
 %%%       to the callback ESME.
 %%%     </td>
@@ -69,15 +69,12 @@
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_operation-3">handle_operation/3</a>
 %%%     </td>
-%%%     <td>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
-%%%       <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
-%%%       <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
-%%%       <i>data_sm</i> operations (from the peer SMSC) to the callback 
-%%%       ESME.
+%%%     <td>Forwards <i>data_sm</i> and <i>deliver_sm</i> operations (from the
+%%%       peer SMSC) to the callback ESME.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
+%%%     <td valign="top"><a href="#handle_unbind-2">handle_unbind/2</a></td>
 %%%     <td>This callback forwards <i>unbind</i> requests (issued by a peer
 %%%       SMSC) to the callback ESME.
 %%%     </td>
@@ -87,14 +84,12 @@
 %%%
 %%% <h2>Callback Function Details</h2>
 %%% 
-%%% <h3><a name="handle_outbind-3">handle_outbind/3</a></h3>
+%%% <h3><a name="handle_outbind-2">handle_outbind/2</a></h3>
 %%%
-%%% <tt>handle_bind(ESME, Session, Outbind) -> ok</tt>
+%%% <tt>handle_outbind(ESME, Pdu) -> ok</tt>
 %%% <ul>
-%%%   <li><tt>ESME = Session = pid()</tt></li>
-%%%   <li><tt>Outbind = {outbind, Pdu}</tt></li>
+%%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
-%%%   <li><tt>ok</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>outbind</i> operations (from the peer SMSC) to the 
@@ -106,15 +101,13 @@
 %%% process id.</p>
 %%%
 %%%
-%%% <h3><a name="handle_alert_notification-3">handle_alert_notification/3</a>
+%%% <h3><a name="handle_alert_notification-2">handle_alert_notification/2</a>
 %%% </h3>
 %%%
-%%% <tt>handle_alert_notification(ESME, Session, AlertNotification) -> ok</tt>
+%%% <tt>handle_alert_notification(ESME, Pdu) -> ok</tt>
 %%% <ul>
-%%%   <li><tt>ESME = Session = pid()</tt></li>
-%%%   <li><tt>AlertNotification = {alert_notification, Pdu}</tt></li>
+%%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
-%%%   <li><tt>ok</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>alert_notification</i> operations (from the peer SMSC) to 
@@ -128,10 +121,10 @@
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
-%%% <tt>handle_operation(ESME, Session, Operation) -> Result</tt>
+%%% <tt>handle_operation(ESME, CmdName, Pdu) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>ESME = Session = pid()</tt></li>
-%%%   <li><tt>Operation = {data_sm, Pdu} | {deliver_sm, Pdu}</tt></li>
+%%%   <li><tt>ESME = pid()</tt></li>
+%%%   <li><tt>CmdName = data_sm | deliver_sm</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {ok, ParamList} | {error, Error, ParamList}</tt></li>
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
@@ -139,7 +132,7 @@
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>data_sm</i> and, <i>deliver_sm</i> operations (from the
+%%% <p>Forwards <i>data_sm</i> and <i>deliver_sm</i> operations (from the
 %%% peer SMSC) to the callback ESME.</p>
 %%%
 %%% <p>The <tt>ParamList</tt> included in the response is used to construct
@@ -152,12 +145,11 @@
 %%% process id.</p>
 %%%
 %%% 
-%%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
+%%% <h3><a name="handle_unbind-2">handle_unbind/2</a></h3>
 %%%
-%%% <tt>handle_unbind(ESME, Session, Unbind) -> ok | {error, Error}</tt>
+%%% <tt>handle_unbind(ESME, Pdu) -> ok | {error, Error}</tt>
 %%% <ul>
-%%%   <li><tt>ESME = Session = pid()</tt></li>
-%%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
+%%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
 %%% </ul>
@@ -414,10 +406,10 @@
 %% @doc Gives information about the behaviour.
 %% @end
 behaviour_info(callbacks) ->
-    [{handle_outbind, 3}, 
-     {handle_alert_notification, 3}, 
+    [{handle_outbind, 2}, 
+     {handle_alert_notification, 2}, 
      {handle_operation, 3}, 
-     {handle_unbind, 3}];
+     {handle_unbind, 2}];
 behaviour_info(_Other) ->
     undefined.
 
@@ -755,8 +747,7 @@ init([Pid, Mod, Conn, Timers]) ->
 open({?COMMAND_ID_OUTBIND, _Pdu} = R, S) ->
     reset_timer(S#state.session_init_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_outbind(R, Self, S) end),
+    spawn_link(fun() -> handle_peer_outbind(R, S) end),
     {next_state, outbound, S};
 open(CmdId, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER_RESP;
                     CmdId == ?COMMAND_ID_BIND_TRANSMITTER_RESP;
@@ -840,20 +831,18 @@ outbound(R, S) ->
 bound_rx({?COMMAND_ALERT_NOTIFICATION, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_alert_notification(R, Self, S) end),
+    spawn_link(fun() -> handle_peer_alert_notification(R, S) end),
     {next_state, bound_rx, StateData};
 bound_rx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                     CmdId == ?COMMAND_ID_DELIVER_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
+    spawn_link(fun() -> handle_peer_operation(R, S) end),  % Asynchronous
     {next_state, bound_rx, S};
 bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -911,7 +900,7 @@ bound_rx(R, S) ->
 bound_tx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -969,20 +958,18 @@ bound_tx(R, S) ->
 bound_trx({?COMMAND_ALERT_NOTIFICATION, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_alert_notification(R, Self, S) end),
+    spawn_link(fun() -> handle_peer_alert_notification(R, S) end),
     {next_state, bound_trx, StateData};
 bound_trx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                      CmdId == ?COMMAND_ID_DELIVER_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
+    spawn_link(fun() -> handle_peer_operation(R, S) end),  % Asynchronous
     {next_state, bound_trx, S};
 bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -1634,33 +1621,29 @@ handle_input(_Pid, _Conn, Buffer, _Lapse, _N) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-%% @spec handle_peer_outbind(Outbind, Self, State) -> true
-%%    Outbind = {CmdId, Pdu}
-%%    CmdId   = int()
-%%    Self    = pid()
-%%    State   = #state()
+%% @spec handle_peer_outbind(CmdId, Pdu, State) -> true
+%%    CmdId = int()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
-%% @doc Handles <i>outbind</i> requests from the peer SMSC.  <tt>Self</tt> is 
-%% pid of the ESME session.
+%% @doc Handles <i>outbind</i> requests from the peer SMSC.
 %%
-%% <p>This function issues the <a href="#handle_bind-3">handle_bind/3</a>
+%% <p>This function issues the <a href="#handle_outbind-2">handle_outbind/2</a>
 %% callback to the callback module.</p>
 %%
 %% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_outbind({?COMMAND_ID_OUTBIND, Pdu}, Self, S) ->
-    (S#state.mod):handle_outbind(S#state.esme, Self, {outbind, Pdu}).
+handle_peer_outbind(?COMMAND_ID_OUTBIND, Pdu, S) ->
+    (S#state.mod):handle_outbind(S#state.esme, Pdu).
 
 
-%% @spec handle_peer_alert_notification(AlertNotification, Self, State) -> true
-%%    AlertNotification = {CmdId, Pdu}
-%%    CmdId   = int()
-%%    Self    = pid()
-%%    State   = #state()
+%% @spec handle_peer_alert_notification(CmdId, Pdu, State) -> true
+%%    CmdId = int()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
 %% @doc Handles <i>alert_notification</i> requests from the peer SMSC.  
-%% <tt>Self</tt> is pid of the ESME session.
 %%
 %% <p>This function issues the <a href="#handle_bind-3">handle_bind/3</a>
 %% callback to the callback module.</p>
@@ -1668,19 +1651,16 @@ handle_peer_outbind({?COMMAND_ID_OUTBIND, Pdu}, Self, S) ->
 %% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
-    (S#state.mod):handle_alert_notification(
-      S#state.esme, Self, {alert_notification, Pdu}).
+handle_peer_alert_notification(?COMMAND_ID_ALERT_NOTIFICATION, Pdu, S)->
+    (S#state.mod):handle_alert_notification(S#state.esme, Pdu).
 
 
-%% @spec handle_peer_operation(Operation, Self, State) -> bool()
-%%    Operation = {CmdName, Pdu}
-%%    CmdName   = atom()
-%%    Self      = pid()
-%%    State     = #state()
+%% @spec handle_peer_operation(CmdId, Pdu, State) -> bool()
+%%    CmdId = atom()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
-%% @doc Handles SMPP operations from the peer SMSC.  <tt>Self</tt> is pid of 
-%% the SMSC session.
+%% @doc Handles SMPP operations from the peer SMSC.
 %%
 %% <p>This function issues the <a href="#handle_operation-3">handle_operation/3
 %% </a> callback to the callback module.</p>
@@ -1688,12 +1668,12 @@ handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_operation({CmdId, Pdu}, Self, S) ->
+handle_peer_operation(CmdId, Pdu, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
     RespId  = ?RESPONSE(CmdId),
     PList2  = [{congestion_state, S#state.self_congestion_state}],
-    case (S#state.mod):handle_operation(S#state.esme, Self, {CmdName, Pdu}) of
+    case (S#state.mod):handle_operation(S#state.esme, CmdName, Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_response(RespId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
@@ -1705,16 +1685,13 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
     end.
 
 
-%% @spec handle_peer_unbind(Unbind, Self, State) -> bool()
-%%    Unbind = {bind_receiver, Pdu}    |
-%%             {bind_transmitter, Pdu} |
-%%             {bind_transceiver, Pdu}
-%%    Self   = pid()
-%%    State  = #state()
+%% @spec handle_peer_unbind(CmdId, Pdu, State) -> bool()
+%%    CmdId = int()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
 %%
-%% @doc Handles unbind requests from the peer SMSC.  <tt>Self</tt> is pid of
-%% the SMSC session.
+%% @doc Handles <i>unbind</i> requests from the peer SMSC.
 %%
 %% <p>This function issues the <a href="#handle_unbind-3">handle_unbind/3</a>
 %% callback to the callback module.</p>
@@ -1722,10 +1699,10 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
+handle_peer_unbind(?COMMAND_ID_UNBIND, Pdu, S) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     RespId = ?COMMAND_ID_UNBIND_RESP,
-    case (S#state.mod):handle_unbind(S#state.esme, self(), {unbind, Pdu}) of
+    case (S#state.mod):handle_unbind(S#state.esme, Pdu) of
         ok ->
             send_response(RespId, ?ESME_ROK, SeqNum, [], S#state.conn),
             true;

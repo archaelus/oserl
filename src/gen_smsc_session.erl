@@ -85,7 +85,7 @@
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
+%%%     <td valign="top"><a href="#handle_unbind-2">handle_unbind/2</a></td>
 %%%     <td>This callback forwards an unbind request (issued by a peer ESME) 
 %%%       to the SMSC.
 %%%     </td>
@@ -95,14 +95,14 @@
 %%%
 %%% <h2>Callback Function Details</h2>
 %%% 
-%%% <h3><a name="handle_bind-3">handle_bind/3</a></h3>
+%%% <h3><a name="handle_bind-4">handle_bind/4</a></h3>
 %%%
-%%% <tt>handle_bind(SMSC, Session, Bind) -> Result</tt>
+%%% <tt>handle_bind(SMSC, CmdName, Pdu) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>SMSC = Session = pid()</tt></li>
-%%%   <li><tt>Bind = {bind_receiver, Pdu} |
-%%%                  {bind_transmitter, Pdu} |
-%%%                  {bind_transceiver, Pdu}</tt></li>
+%%%   <li><tt>SMSC = pid()</tt></li>
+%%%   <li><tt>CmdName = bind_receiver | 
+%%%                     bind_transmitter | 
+%%%                     bind_transceiver</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {ok, ParamList} | {error, Error, ParamList}</tt></li>
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
@@ -120,24 +120,23 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
-%%% process id.</p>
+%%% <p><tt>SMSC</tt> is the SMSC's process id.</p>
 %%%
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
-%%% <tt>handle_operation(SMSC, Session, Operation) -> Result</tt>
+%%% <tt>handle_operation(SMSC, CmdName, Pdu) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>SMSC = Session = pid()</tt></li>
-%%%   <li><tt>Operation = {broadcast_sm, Pdu} |
-%%%                       {cancel_broadcast_sm, Pdu} |
-%%%                       {cancel_sm, Pdu} |
-%%%                       {query_broadcast_sm, Pdu} |
-%%%                       {query_sm, Pdu} |
-%%%                       {replace_sm, Pdu} |
-%%%                       {submit_multi, Pdu} |
-%%%                       {submit_sm, Pdu} |
-%%%                       {data_sm, Pdu}</tt></li>
+%%%   <li><tt>SMSC = pid()</tt></li>
+%%%   <li><tt>CmdName = broadcast_sm |
+%%%                     cancel_broadcast_sm |
+%%%                     cancel_sm |
+%%%                     query_broadcast_sm |
+%%%                     query_sm |
+%%%                     replace_sm |
+%%%                     submit_multi |
+%%%                     submit_sm |
+%%%                     data_sm</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {ok, ParamList} | {error, Error, ParamList}</tt></li>
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
@@ -156,16 +155,14 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
-%%% process id.</p>
+%%% <p><tt>SMSC</tt> is the SMSC's process id.</p>
 %%%
 %%% 
-%%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
+%%% <h3><a name="handle_unbind-2">handle_unbind/2</a></h3>
 %%%
-%%% <tt>handle_unbind(SMSC, Session, Unbind) -> ok | {error, Error}</tt>
+%%% <tt>handle_unbind(SMSC, Pdu) -> ok | {error, Error}</tt>
 %%% <ul>
-%%%   <li><tt>SMSC = Session = pid()</tt></li>
-%%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
+%%%   <li><tt>SMSC = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
 %%% </ul>
@@ -180,8 +177,7 @@
 %%% command_status and the session will remain on it's current bound state
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
-%%% process id.</p>
+%%% <p><tt>SMSC</tt> is the SMSC's process id.</p>
 %%%
 %%%
 %%% <h2>Used modules</h2>
@@ -414,7 +410,7 @@
 %% @doc Gives information about the behaviour.
 %% @end
 behaviour_info(callbacks) ->
-    [{handle_bind, 3}, {handle_operation, 3}, {handle_unbind, 3}];
+    [{handle_bind, 3}, {handle_operation, 3}, {handle_unbind, 2}];
 behaviour_info(_Other) ->
     undefined.
 
@@ -617,7 +613,7 @@ open({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
                                 CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
                                 CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_bind(R, self(), S) of  % Synchronous
+    case handle_peer_bind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.session_init_timer),
             Timer = start_timer(S#state.inactivity_time, inactivity_timer),
@@ -666,7 +662,7 @@ outbound({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
                                     CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
                                     CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_bind(R, self(), S) of  % Synchronous
+    case handle_peer_bind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.session_init_timer),
             Timer = start_timer(S#state.inactivity_time, inactivity_timer),
@@ -714,7 +710,7 @@ outbound(R, S) ->
 bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -780,13 +776,12 @@ bound_tx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                     CmdId == ?COMMAND_ID_CANCEL_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
+    spawn_link(fun() -> handle_peer_operation(R, S) end),  % Asynchronous
     {next_state, bound_tx, S};
 bound_tx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -852,13 +847,12 @@ bound_trx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                      CmdId == ?COMMAND_ID_CANCEL_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
+    spawn_link(fun() -> handle_peer_operation(R, S) end),  % Asynchronous
     {next_state, bound_trx, S};
 bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
-    case handle_peer_unbind(R, self(), S) of  % Synchronous
+    case handle_peer_unbind(R, S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
             {next_state, unbound, S};
@@ -1474,14 +1468,12 @@ handle_input(_Pid, _Conn, Buffer, _Lapse, _N) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-%% @spec handle_peer_bind(Bind, Self, State) -> bool()
-%%    Bind  = {CmdId, Pdu}
+%% @spec handle_peer_bind(CmdId, Pdu, State) -> bool()
 %%    CmdId = int()
-%%    Self  = pid()
+%%    Pdu   = pdu()
 %%    State = #state()
 %%
-%% @doc Handles bind requests from the peer ESME.  <tt>Self</tt> is pid of
-%% the SMSC session.
+%% @doc Handles bind requests from the peer ESME.
 %%
 %% <p>This function issues the <a href="#handle_bind-3">handle_bind/3</a>
 %% callback to the callback module.</p>
@@ -1489,11 +1481,11 @@ handle_input(_Pid, _Conn, Buffer, _Lapse, _N) ->
 %% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_bind({CmdId, Pdu}, Self, S) ->
+handle_peer_bind(CmdId, Pdu, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
     RespId  = ?RESPONSE(CmdId),
-    case (S#state.mod):handle_bind(S#state.smsc, Self, {CmdName, Pdu}) of
+    case (S#state.mod):handle_bind(S#state.smsc, CmdName, Pdu) of
         {ok, ParamList} ->
             send_response(RespId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
             true;
@@ -1503,14 +1495,12 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
     end.
 
 
-%% @spec handle_peer_operation(Operation, Self, State) -> bool()
-%%    Operation = {CmdId, Pdu}
-%%    CmdId     = int()
-%%    Self      = pid()
-%%    State     = #state()
+%% @spec handle_peer_operation(CmdId, Pdu, State) -> bool()
+%%    CmdId = int()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
-%% @doc Handles SMPP operations from the peer ESME.  <tt>Self</tt> is pid of 
-%% the SMSC session.
+%% @doc Handles SMPP operations from the peer ESME.
 %%
 %% <p>This function issues the <a href="#handle_operation-3">handle_operation/3
 %% </a> callback to the callback module.</p>
@@ -1518,12 +1508,12 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_operation({CmdId, Pdu}, Self, S) ->
+handle_peer_operation(CmdId, Pdu, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
     RespId  = ?RESPONSE(CmdId),
     PList2  = [{congestion_state, S#state.self_congestion_state}],
-    case (S#state.mod):handle_operation(S#state.smsc, Self, {CmdName, Pdu}) of
+    case (S#state.mod):handle_operation(S#state.smsc, CmdName, Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_response(RespId, ?ESME_ROK, SeqNum, ParamList, S#state.conn),
@@ -1535,15 +1525,13 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
     end.
 
 
-%% @spec handle_peer_unbind(Unbind, Self, State) -> bool()
-%%    Unbind = {CmdId, Pdu}
-%%    CmdId  = int()
-%%    Self   = pid()
-%%    State  = #state()
+%% @spec handle_peer_unbind(CmdId, Pdu, State) -> bool()
+%%    CmdId = int()
+%%    Pdu   = pdu()
+%%    State = #state()
 %%
 %%
-%% @doc Handles unbind requests from the peer ESME.  <tt>Self</tt> is pid of
-%% the SMSC session.
+%% @doc Handles unbind requests from the peer ESME.
 %%
 %% <p>This function issues the <a href="#handle_unbind-3">handle_unbind/3</a>
 %% callback to the callback module.</p>
@@ -1551,10 +1539,10 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
 %% @end 
-handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
+handle_peer_unbind(?COMMAND_ID_UNBIND, Pdu, S) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     RespId = ?COMMAND_ID_UNBIND_RESP,
-    case (S#state.mod):handle_unbind(S#state.smsc, self(), {unbind, Pdu}) of
+    case (S#state.mod):handle_unbind(S#state.smsc, Pdu) of
         ok ->
             send_response(RespId, ?ESME_ROK, SeqNum, [], S#state.conn),
             true;

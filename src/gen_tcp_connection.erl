@@ -99,7 +99,7 @@
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
-%%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 1.0 beta, {24 May 2004} {@time}.
 %%% @end
@@ -429,8 +429,6 @@ handle_call({owner, NewOwner}, {Owner, _Tag}, #state{owner = Owner} = S) ->
 handle_call({owner, NewOwner}, From, S) ->
     {reply, {error, eperm}, S};
 handle_call(die, _From, S) ->
-    process_flag(trap_exit, false),
-    gen_tcp:close(S#state.socket),
     {stop, normal, ok, S}.
 
 
@@ -490,14 +488,14 @@ handle_info({'EXIT', _RecvLoop, {recv_error, Reason}}, S) ->
     {stop, Reason, S};
 handle_info({'EXIT', _Child, Reason}, S) ->
     % A child gen_connection exits on error.  
-	%
+    %
     % %@see TODOs
     {noreply, S};
 handle_info(Info, S) ->
     {noreply, S}.
 
 
-%% @spec terminate(Reason, State) -> ok
+%% @spec terminate(Reason, State) -> true
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
 %%
@@ -505,12 +503,14 @@ handle_info(Info, S) ->
 %%
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
-terminate(Reason, #state{buffer = <<>>} = S) ->
+terminate(Reason, #state{buffer = B} = S) when B == <<>>; Reason == kill ->
+    process_flag(trap_exit, false),
+    gen_tcp:close(S#state.socket),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
             unregister(Name);
         _NotRegistered ->
-            ok
+            true
     end;
 terminate(Reason, S) ->
     (S#state.mod):handle_input(S#state.owner, self(), S#state.buffer, 0),

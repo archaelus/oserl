@@ -1,69 +1,83 @@
+%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%
+%%% This library is free software; you can redistribute it and/or
+%%% modify it under the terms of the GNU Lesser General Public
+%%% License as published by the Free Software Foundation; either
+%%% version 2.1 of the License, or (at your option) any later version.
+%%%
+%%% This library is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%%% Lesser General Public License for more details.
+%%%
+%%% You should have received a copy of the GNU Lesser General Public
+%%% License along with this library; if not, write to the Free Software
+%%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+%%%
 
+%%% @doc SMPP Global definitions.
 %%%
-% @doc SMPP Global definitions.
-%
-% <p>Some global definitions used in the SMPP protocol implementation.</p>
-%
-% <p>As a guideline, some comments reference the section number of the
-% document [SMPP 5.0].</p>
-%
-%
-% <h2>Changes 0.1 -&gt; 0.2</h2>
-%
-% [18 Feb 2004]
-% 
-% <ul>
-%   <li>$\0 removed from the NULL_C_OCTET_STRING macro.</li>
-% </ul>
-%
-%
-% <h2>References</h2>
-% <dl>
-%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
-%     Version 5.0. SMS Forum.
-%   </dd>
-% </dl>
-%
-%
-% @copyright 2003 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {27 Apr 2003} {@time}.
-% @end
-%%
+%%% <p>Some global definitions used in the SMPP protocol implementation.</p>
+%%%
+%%% <p>As a guideline, some comments reference the section number of the
+%%% document [SMPP 5.0].</p>
+%%%
+%%%
+%%% <h2>Changes 0.1 -&gt; 0.2</h2>
+%%%
+%%% [18 Feb 2004]
+%%% 
+%%% <ul>
+%%%   <li>$\0 removed from the NULL_C_OCTET_STRING macro.</li>
+%%% </ul>
+%%%
+%%% <h2>Changes 0.2 -&gt; 1.0</h2>
+%%%
+%%% [16 Jun 2004]
+%%% 
+%%% <ul>
+%%%   <li>VALID_COMMAND_ID macro defined.</li>
+%%%   <li>Two new macros added:  REQUEST and RESPONSE.  To compute the
+%%%     counterpart of a <i>command_id</i>
+%%%   </li>
+%%%   <li>The macro COMMAND_ID gets the <i>command_id</i> (int) for a given
+%%%     <i>command_name</i> (atom).
+%%%   </li>
+%%%   <li>The macro COMMAND_NAME gets the <i>command_name</i> (atom) for a 
+%%%     given <i>command_id</i> (int).
+%%%   </li>
+%%% </ul>
+%%%
+%%%
+%%% <h2>References</h2>
+%%% <dl>
+%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
+%%%     Version 5.0. SMS Forum.
+%%%   </dd>
+%%% </dl>
+%%%
+%%%
+%%% @copyright 2003 Enrique Marcote Peña
+%%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%%         [http://www.des.udc.es/~mpquique/]
+%%% @version 0.1 alpha, {27 Apr 2003} {@time}.
+%%% @end
 
 -ifndef(smpp_globals).
 -define(smpp_globals, true).
 
 %%%-------------------------------------------------------------------
-% Include files
-%%--------------------------------------------------------------------
+%%% Include files
+%%%-------------------------------------------------------------------
 
 %%%-------------------------------------------------------------------
-% Macros
-%%--------------------------------------------------------------------
-%%%
-% Command Ids
-%
-% %@see section 4.7.5 on [SMPP 5.0]
+%%% Macros
+%%%-------------------------------------------------------------------
+%% Command Ids
 %%
+%% Don't forget to update VALID_COMMAND_ID macro below if you remove or
+%% add any command_id.
+%% %@see section 4.7.5 on [SMPP 5.0]
 -define(COMMAND_ID_BIND_RECEIVER,            16#00000001).
 -define(COMMAND_ID_BIND_TRANSMITTER,         16#00000002).
 -define(COMMAND_ID_QUERY_SM,                 16#00000003).
@@ -98,18 +112,186 @@
 -define(COMMAND_ID_QUERY_BROADCAST_SM_RESP,  16#80000112).
 -define(COMMAND_ID_CANCEL_BROADCAST_SM_RESP, 16#80000113).
 
-%%%
-% Default Port Number (Standardised by IANA)
-%
-% %@see section 2.2 on [SMPP 5.0]
-%% 
+
+%% Work with command ids and names
+%%
+%% %@see section 4.7.5 on [SMPP 5.0]
+% true if valid, false otherwise
+-define(VALID_COMMAND_ID(CmdId),
+        (((CmdId >= ?COMMAND_ID_BIND_RECEIVER) and
+          (CmdId =< ?COMMAND_ID_BIND_TRANSCEIVER)) or
+         (CmdId == ?COMMAND_ID_OUTBIND) or
+         (CmdId == ?COMMAND_ID_ENQUIRE_LINK) or
+         (CmdId == ?COMMAND_ID_SUBMIT_MULTI) or
+         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION) or
+         (CmdId == ?COMMAND_ID_DATA_SM) or
+         ((CmdId >= ?COMMAND_ID_BROADCAST_SM) and
+          (CmdId =< ?COMMAND_ID_CANCEL_BROADCAST_SM)) or
+         ((CmdId >= ?COMMAND_ID_GENERIC_NACK) and
+          (CmdId =< ?COMMAND_ID_BIND_TRANSCEIVER_RESP)) or
+         (CmdId == ?COMMAND_ID_ENQUIRE_LINK_RESP) or
+         (CmdId == ?COMMAND_ID_SUBMIT_MULTI_RESP) or
+         (CmdId == ?COMMAND_ID_DATA_SM_RESP) or
+         ((CmdId >= ?COMMAND_ID_BROADCAST_SM_RESP) and
+          (CmdId =< ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP)))).
+            
+% Gets the counterpart response command_id
+-define(RESPONSE(CmdId), (CmdId + 16#80000000)).
+
+% Gets the counterpart request command_id
+-define(REQUEST(CmdId), (CmdId - 16#80000000)).
+
+% Gets the command_id for a given command_name.
+-define(COMMAND_ID(CmdName), 
+        if
+            CmdName == bind_transmitter -> 
+                ?COMMAND_ID_BIND_TRANSMITTER;
+            CmdName == bind_transmitter_resp -> 
+                ?COMMAND_ID_BIND_TRANSMITTER_RESP;
+            CmdName == bind_receiver -> 
+                ?COMMAND_ID_BIND_RECEIVER;
+            CmdName == bind_receiver_resp -> 
+                ?COMMAND_ID_BIND_RECEIVER_RESP;
+            CmdName == bind_transceiver -> 
+                ?COMMAND_ID_BIND_TRANSCEIVER;
+            CmdName == bind_transceiver_resp -> 
+                ?COMMAND_ID_BIND_TRANSCEIVER_RESP;
+            CmdName == outbind -> 
+                ?COMMAND_ID_OUTBIND;
+            CmdName == unbind -> 
+                ?COMMAND_ID_UNBIND;
+            CmdName == unbind_resp -> 
+                ?COMMAND_ID_UNBIND_RESP;
+            CmdName == enquire_link -> 
+                ?COMMAND_ID_ENQUIRE_LINK;
+            CmdName == enquire_link_resp -> 
+                ?COMMAND_ID_ENQUIRE_LINK_RESP;
+            CmdName == alert_notification -> 
+                ?COMMAND_ID_ALERT_NOTIFICATION;
+            CmdName == generic_nack -> 
+                ?COMMAND_ID_GENERIC_NACK;
+            CmdName == submit_sm -> 
+                ?COMMAND_ID_SUBMIT_SM;
+            CmdName == submit_sm_resp -> 
+                ?COMMAND_ID_SUBMIT_SM_RESP;
+            CmdName == data_sm -> 
+                ?COMMAND_ID_DATA_SM;
+            CmdName == data_sm_resp -> 
+                ?COMMAND_ID_DATA_SM_RESP;
+            CmdName == submit_multi -> 
+                ?COMMAND_ID_SUBMIT_MULTI;
+            CmdName == submit_multi_resp -> 
+                ?COMMAND_ID_SUBMIT_MULTI_RESP;
+            CmdName == deliver_sm -> 
+                ?COMMAND_ID_DELIVER_SM;
+            CmdName == deliver_sm_resp -> 
+                ?COMMAND_ID_DELIVER_SM_RESP;
+            CmdName == broadcast_sm -> 
+                ?COMMAND_ID_BROADCAST_SM;
+            CmdName == broadcast_sm_resp -> 
+                ?COMMAND_ID_BROADCAST_SM_RESP;
+            CmdName == cancel_sm -> 
+                ?COMMAND_ID_CANCEL_SM;
+            CmdName == cancel_sm_resp -> 
+                ?COMMAND_ID_CANCEL_SM_RESP;
+            CmdName == query_sm -> 
+                ?COMMAND_ID_QUERY_SM;
+            CmdName == query_sm_resp -> 
+                ?COMMAND_ID_QUERY_SM_RESP;
+            CmdName == replace_sm -> 
+                ?COMMAND_ID_REPLACE_SM;
+            CmdName == replace_sm_resp -> 
+                ?COMMAND_ID_REPLACE_SM_RESP;
+            CmdName == query_broadcast_sm -> 
+                ?COMMAND_ID_QUERY_BROADCAST_SM;
+            CmdName == query_broadcast_sm_resp -> 
+                ?COMMAND_ID_QUERY_BROADCAST_SM_RESP;
+            CmdName == cancel_broadcast_sm -> 
+                ?COMMAND_ID_CANCEL_BROADCAST_SM;
+            CmdName == cancel_broadcast_sm_resp -> 
+                ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP
+        end).
+
+%% Gets the command_name for a given command_id.
+-define(COMMAND_NAME(CmdId), 
+        if
+            CmdId == ?COMMAND_ID_BIND_TRANSMITTER -> 
+                bind_transmitter;
+            CmdId == ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+                bind_transmitter_resp;
+            CmdId == ?COMMAND_ID_BIND_RECEIVER -> 
+                bind_receiver;
+            CmdId == ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+                bind_receiver_resp;
+            CmdId == ?COMMAND_ID_BIND_TRANSCEIVER -> 
+                bind_transceiver;
+            CmdId == ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+                bind_transceiver_resp;
+            CmdId == ?COMMAND_ID_OUTBIND -> 
+                outbind;
+            CmdId == ?COMMAND_ID_UNBIND -> 
+                unbind;
+            CmdId == ?COMMAND_ID_UNBIND_RESP -> 
+                unbind_resp;
+            CmdId == ?COMMAND_ID_ENQUIRE_LINK -> 
+                enquire_link;
+            CmdId == ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+                enquire_link_resp;
+            CmdId == ?COMMAND_ID_ALERT_NOTIFICATION -> 
+                alert_notification;
+            CmdId == ?COMMAND_ID_GENERIC_NACK -> 
+                generic_nack;
+            CmdId == ?COMMAND_ID_SUBMIT_SM -> 
+                submit_sm;
+            CmdId == ?COMMAND_ID_SUBMIT_SM_RESP -> 
+                submit_sm_resp;
+            CmdId == ?COMMAND_ID_DATA_SM ->
+                data_sm;
+            CmdId == ?COMMAND_ID_DATA_SM_RESP ->
+                data_sm_resp;
+            CmdId == ?COMMAND_ID_SUBMIT_MULTI -> 
+                submit_multi;
+            CmdId == ?COMMAND_ID_SUBMIT_MULTI_RESP ->
+                submit_multi_resp;
+            CmdId == ?COMMAND_ID_DELIVER_SM -> 
+                deliver_sm;
+            CmdId == ?COMMAND_ID_DELIVER_SM_RESP -> 
+                deliver_sm_resp;
+            CmdId == ?COMMAND_ID_BROADCAST_SM ->
+                broadcast_sm;
+            CmdId == ?COMMAND_ID_BROADCAST_SM_RESP -> 
+                broadcast_sm_resp;
+            CmdId == ?COMMAND_ID_CANCEL_SM -> 
+                cancel_sm;
+            CmdId == ?COMMAND_ID_CANCEL_SM_RESP -> 
+                cancel_sm_resp;
+            CmdId == ?COMMAND_ID_QUERY_SM -> 
+                query_sm;
+            CmdId == ?COMMAND_ID_QUERY_SM_RESP -> 
+                query_sm_resp;
+            CmdId == ?COMMAND_ID_REPLACE_SM -> 
+                replace_sm;
+            CmdId == ?COMMAND_ID_REPLACE_SM_RESP -> 
+                replace_sm_resp;
+            CmdId == ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+                query_broadcast_sm;
+            CmdId == ?COMMAND_ID_QUERY_BROADCAST_SM_RESP ->
+                query_broadcast_sm_resp;
+            CmdId == ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+                cancel_broadcast_sm;
+            CmdId == ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+                cancel_broadcast_sm_resp
+        end).
+
+
+%% Default Port Number (Standardised by IANA)
+%%
+%% %@see section 2.2 on [SMPP 5.0]
 -define(DEFAULT_SMPP_PORT, 2775).
 
-%%%
-% Error Codes
-%
-% %@see section 4.7.6 on [SMPP 5.0]
+%% Error Codes
 %%
+%% %@see section 4.7.6 on [SMPP 5.0]
 -define(ESME_ROK,                 16#00000000). % No Error
 -define(ESME_RINVMSGLEN,          16#00000001). % Message Length is invalid
 -define(ESME_RINVCMDLEN,          16#00000002). % Command Length is invalid
@@ -202,9 +384,9 @@
 -define(ESME_RINVBCASTCHANIND,    16#00000112). % Broadcast Channel Indicator
                                                 % is invalid
 
-% SMPP 3.4 Error Code Synonyms
-%
-% %@deprecated For backward compatibility only.
+%% SMPP 3.4 Error Code Synonyms
+%%
+%% %@deprecated For backward compatibility only.
 -define(ESME_RINVOPTPARSTREAM,    16#000000C0). % Error in the optional part of
                                                 % the PDU Body
 -define(ESME_ROPTPARNOTALLWD,     16#000000C1). % Optional Parameter not
@@ -215,28 +397,24 @@
 -define(ESME_RINVOPTPARAMVAL,     16#000000C4). % Invalid Optional Parameter
                                                 % Value
 
-%%%
-% Null Settings
-%
-% %@see section 3.1.1 on [SMPP 5.0]
+%% Null Settings
 %%
+%% %@see section 3.1.1 on [SMPP 5.0]
 -define(NULL_CHARACTER, 0).
 -define(NULL_INTEGER,   0).
 -define(NULL_C_OCTET_STRING, "").
 -define(NULL_OCTET_STRING,   "").
 
 
-%%%
-% Timers default values
-%
-% %@doc Besides the timers declared on [SMPP 5.0], a rebind timer default is
-% defined.  This timer sets the time lapse in which the ESME should try to
-% rebind once the MC becomes unavailable.</p>
-%
-% %@TODO Review these default values.
-%
-% %@see section 2.7 on [SMPP 5.0]
+%% Timers default values
 %%
+%% %@doc Besides the timers declared on [SMPP 5.0], a rebind timer default is
+%% defined.  This timer sets the time lapse in which the ESME should try to
+%% rebind once the MC becomes unavailable.</p>
+%%
+%% %@TODO Review these default values.
+%%
+%% %@see section 2.7 on [SMPP 5.0]
 -define(SESSION_INIT_TIME, 180000).  % 3 minutes
 -define(ENQUIRE_LINK_TIME,  60000).  % 1 minute
 -define(INACTIVITY_TIME, infinity).  % No timeout, never drop the session.
@@ -244,7 +422,7 @@
 -define(REBIND_TIME,         5000).  % Tries to rebind every 5 seconds.
 
 %%%-------------------------------------------------------------------
-% Records
-%%--------------------------------------------------------------------
+%%% Records
+%%%-------------------------------------------------------------------
 
 -endif.  % -ifndef(smpp_globals)

@@ -37,7 +37,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 %% Timers
--define(DEFAULT_TIMERS, #timers{}).
+-define(DEFAULT_SMPP_TIMERS, #timers{}).
 
 -define(TIMERS(STime, ETime, ITime, RTime, RetryT),
         #timers{session_init_time = STime,
@@ -74,12 +74,6 @@
                     password      = Password,
                     address_range = AddressRange,
                     source_addr   = SourceAddr}).
-
-% SMSC
--define(DEFAULT_SMSC_SETUP, #smsc_setup{}).
--define(SMSC_SETUP(SystemId, Password),
-        #smsc_setup{system_id = SystemId, password = Password}).
-
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -318,28 +312,5 @@
          inactivity_time   = ?INACTIVITY_TIME,
          response_time     = ?RESPONSE_TIME,
          rebind_time       = ?REBIND_TIME}).
-
-
-%% %@spec {smsc_setup, SystemId, Password, Port, Timers}
-%%    SystemId = string()
-%%    Password = string()
-%%    Timers   = #timers()
-%%
-%% %@doc SMSC setup record.
-%%
-%% <dl>
-%%   <dt>SystemId: </dt><dd>SMSC identifier.  C-octet string (default value is
-%%     ?NULL_C_OCTET_STRING).
-%%   </dd>
-%%   <dt>Password: </dt><dd>SMSC password.  C-octet string (default value is
-%%     ?NULL_C_OCTET_STRING).
-%%   </dd>
-%%   <dt>Timers: </dt><dd>SMPP Timers.</dd>
-%% </dl>
-%% %@end
--record(smsc_setup, 
-        {system_id = ?NULL_C_OCTET_STRING,
-         password  = ?NULL_C_OCTET_STRING,
-         timers    = #timers()}).
 
 -endif.  % -ifndef(oserl)

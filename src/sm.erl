@@ -26,7 +26,23 @@
 %%% <ul>
 %%%   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
 %%%     <tt>operation:get_param/2</tt>.
-%%%    </li>
+%%%   </li>
+%%% </ul>
+%%%
+%%% <h2>Changes 0.2 -&gt; 1.2</h2>
+%%%
+%%% [13 Feb 2005]
+%%%
+%%% <ul>
+%%%   <li>Functions <a href="#reply_destination_address-1">
+%%%     reply_destination_address/1</a>, <a href="#reply_source_address-1">
+%%%     reply_source_address/1</a> and <a href="#reply_address-1">
+%%%     reply_addresses/1</a> added.
+%%%
+%%%     <a href="#reply_address-1">reply_address/1</a> will be removed, use
+%%%     <a href="#reply_destination_address-1">reply_destination_address/1</a>
+%%%     instead.
+%%%   </li>
 %%% </ul>
 %%%
 %%%
@@ -44,12 +60,20 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([message_user_data/1, reply_address/1]).
+-export([message_user_data/1, 
+         reply_addresses/1,
+         reply_destination_address/1,
+         reply_source_address/1]).
+
+%%%-------------------------------------------------------------------
+%%% Undocumented exports
+%%%-------------------------------------------------------------------
+-export([reply_address/1]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
 %%%-------------------------------------------------------------------
--export([]).
+%-export([]).
 
 %%%-------------------------------------------------------------------
 %%% Macros
@@ -80,20 +104,64 @@ message_user_data(Pdu) ->
     end.
 
 
-%% @spec reply_address(Pdu) -> ParamList
+%% @spec reply_addresses(Pdu) -> ParamList
 %%    Pdu = pdu()
 %%    ParamList = [DestAddrTon | [DestAddrNpi | [DestinationAddr]]]
 %%    DestAddrTon = {dest_addr_ton, int()}
 %%    DestAddrNpi = {dest_addr_npi, int()}
 %%    DestinationAddr = {destination_addr, string()}
 %%
-%% @doc Creates destination address parameters from the source address 
-%% parameters of a given <tt>Pdu</tt>.
+%% @doc Creates reply addresses (<i>dest_addr_ton</i>, <i>dest_addr_npi</i>,
+%% <i>destination_addr</i>, <i>source_addr_ton</i>, <i>source_addr_npi</i>
+%% and <i>source_addr</i>) from the source address and destination address
+%% given in <tt>Pdu</tt>.
 %% @end
+reply_addresses(Pdu) ->
+    reply_source_address(Pdu) ++ reply_destination_address(Pdu).
+
+
+%% @spec reply_destination_address(Pdu) -> ParamList
+%%    Pdu = pdu()
+%%    ParamList = [DestAddrTon | [DestAddrNpi | [DestinationAddr]]]
+%%    DestAddrTon = {dest_addr_ton, int()}
+%%    DestAddrNpi = {dest_addr_npi, int()}
+%%    DestinationAddr = {destination_addr, string()}
+%%
+%% @doc Creates destination address parameters (<i>ton</i>, <i>npi</i> and 
+%% <i>addr</i>) from the source address parameters of a given <tt>Pdu</tt>.
+%% @end
+reply_destination_address(Pdu) ->
+    [{dest_addr_ton, operation:get_param(source_addr_ton, Pdu)},
+     {dest_addr_npi, operation:get_param(source_addr_npi, Pdu)},
+     {destination_addr, operation:get_param(source_addr, Pdu)}].
+
+
+%% @spec reply_source_address(Pdu) -> ParamList
+%%    Pdu = pdu()
+%%    ParamList = [DestAddrTon | [DestAddrNpi | [DestinationAddr]]]
+%%    DestAddrTon = {dest_addr_ton, int()}
+%%    DestAddrNpi = {dest_addr_npi, int()}
+%%    DestinationAddr = {destination_addr, string()}
+%%
+%% @doc Creates source address parameters (<i>ton</i>, <i>npi</i> and 
+%% <i>addr</i>) from the destination address parameters of a given 
+%% <tt>Pdu</tt>.
+%% @end
+reply_source_address(Pdu) ->
+    [{source_addr_ton, operation:get_param(dest_addr_ton, Pdu)},
+     {source_addr_npi, operation:get_param(dest_addr_npi, Pdu)},
+     {source_addr, operation:get_param(destination_addr, Pdu)}].
+
+
+%%%===================================================================
+%%% Undocumented functions
+%%%
+%%% <p>For compatibility only.  Will be removed in future versions</p>
+%%%===================================================================
 reply_address(Pdu) ->
-    [{dest_addr_ton,    operation:get_param(source_addr_ton, Pdu)},
-     {dest_addr_npi,    operation:get_param(source_addr_npi, Pdu)},
-     {destination_addr, operation:get_param(source_addr,     Pdu)}].
+    [{dest_addr_ton, operation:get_param(source_addr_ton, Pdu)},
+     {dest_addr_npi, operation:get_param(source_addr_npi, Pdu)},
+     {destination_addr, operation:get_param(source_addr, Pdu)}].
 
 
 %%%===================================================================

@@ -1395,8 +1395,8 @@ handle_call({bind_transceiver, Address, Port}, _From, State) ->
                 BindError ->
                     {reply, BindError, State#state{rx_session = TrxSession}}
             end;
-        Error ->
-            {reply, Error, State}
+        OpenError ->
+            {reply, OpenError, State}
     end;
 
 handle_call({broadcast_sm, _ParamList}, _From, State) 
@@ -1414,7 +1414,7 @@ handle_call({cancel_broadcast_sm, _ParamList}, _From, State)
 handle_call({cancel_broadcast_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_cancel_broadcast_sm(ParamList, From, State) end),
     {noreply, State};
-         
+
 handle_call({cancel_sm, _ParamList}, _From, State) 
   when State#state.tx_session == undefined ->
     {reply, {error, undefined_session}, State};
@@ -1462,7 +1462,7 @@ handle_call({submit_multi, _ParamList}, _From, State)
 handle_call({submit_multi, ParamList}, From, State) ->
     spawn_link(fun() -> do_submit_multi(ParamList, From, State) end),
     {noreply, State};
-         
+
 handle_call({submit_sm, _ParamList}, _From, State) 
   when State#state.tx_session == undefined ->
     {reply, {error, undefined_session}, State};
@@ -2071,6 +2071,8 @@ do_listen(Session, Port, _SessionSetup) ->
     case gen_esme_session:do_listen(Session, Port) of
         ok ->
             {ok, Session};
+        {error, {already_listening, _}} ->
+            {ok, Session};
         {error, Error} ->
             {error, {error_code, Error}}
     end.
@@ -2108,6 +2110,8 @@ do_open(undefined, Address, Port, SessionSetup) ->
 do_open(Session, Address, Port, _SessionSetup) ->
     case gen_esme_session:do_open(Session, Address, Port) of
         ok ->
+            {ok, Session};
+        {error, {already_connected, _, _}} ->
             {ok, Session};
         {error, Error} ->
             {error, {error_code, Error}}

@@ -49,6 +49,12 @@
 %   <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
 % </ul>
 %
+% [01 Mar 2004]
+%
+% <ul>
+%   <li><i>command_id</i> added to PDU descriptors.</li>
+% </ul>
+%
 %
 % <h2>References</h2>
 % <dl>
@@ -95,6 +101,7 @@
 % <p>Every PDU declaration consists of two lists.</p>
 %
 % <dl>
+%   <dt>Command Id: </dt><dd>SMPP <i>command_id</i>.</dd>
 %   <dt>Standard body parameters declaration: </dt><dd>A list with the
 %     declaration of every standard parameter of the PDU body.  Header 
 %     parameters are *not* included on the PDU declaration.  The standard
@@ -116,7 +123,8 @@
 % 
 % <pre>
 % -define(BIND_TRANSMITTER_RESP,
-%         ?PDU([?SYSTEM_ID],
+%         ?PDU(?COMMAND_ID_BIND_TRANSMITTER_RESP,
+%              [?SYSTEM_ID],
 %              [?CONGESTION_STATE,
 %               ?SC_INTERFACE_VERSION])).
 % </pre>
@@ -148,7 +156,8 @@
 % bind_transmitter
 %%
 -define(BIND_TRANSMITTER, 
-        ?PDU([?SYSTEM_ID,
+        ?PDU(?COMMAND_ID_BIND_TRANSMITTER,
+             [?SYSTEM_ID,
               ?PASSWORD,
               ?SYSTEM_TYPE,
               ?INTERFACE_VERSION,
@@ -161,7 +170,8 @@
 % bind_transmitter_resp
 %%
 -define(BIND_TRANSMITTER_RESP,
-        ?PDU([?SYSTEM_ID],
+        ?PDU(?COMMAND_ID_BIND_TRANSMITTER_RESP,
+             [?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
 
@@ -169,7 +179,8 @@
 % bind_receiver
 %%
 -define(BIND_RECEIVER, 
-        ?PDU([?SYSTEM_ID,
+        ?PDU(?COMMAND_ID_BIND_RECEIVER,
+             [?SYSTEM_ID,
               ?PASSWORD,
               ?SYSTEM_TYPE,
               ?INTERFACE_VERSION,
@@ -182,7 +193,8 @@
 % bind_receiver_resp
 %%
 -define(BIND_RECEIVER_RESP, 
-        ?PDU([?SYSTEM_ID],
+        ?PDU(?COMMAND_ID_BIND_RECEIVER_RESP,
+             [?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
 
@@ -190,7 +202,8 @@
 % bind_transceiver
 %%
 -define(BIND_TRANSCEIVER, 
-        ?PDU([?SYSTEM_ID,
+        ?PDU(?COMMAND_ID_BIND_TRANSCEIVER,
+             [?SYSTEM_ID,
               ?PASSWORD,
               ?SYSTEM_TYPE,
               ?INTERFACE_VERSION,
@@ -203,7 +216,8 @@
 % bind_transceiver_resp
 %%
 -define(BIND_TRANSCEIVER_RESP, 
-        ?PDU([?SYSTEM_ID],
+        ?PDU(?COMMAND_ID_BIND_TRANSCEIVER_RESP,
+             [?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
 
@@ -211,7 +225,8 @@
 % outbind
 %%
 -define(OUTBIND, 
-        ?PDU([?SYSTEM_ID, 
+        ?PDU(?COMMAND_ID_OUTBIND,
+             [?SYSTEM_ID, 
               ?PASSWORD],
              [])).
 
@@ -219,35 +234,40 @@
 % unbind
 %%
 -define(UNBIND, 
-        ?PDU([], 
+        ?PDU(?COMMAND_ID_UNBIND,
+             [], 
              [])).
 
 %%%
 % unbind_resp
 %%
 -define(UNBIND_RESP, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_UNBIND_RESP,
+             [],
              [?CONGESTION_STATE])).
 
 %%%
 % enquire_link
 %%
 -define(ENQUIRE_LINK, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_ENQUIRE_LINK,
+             [],
              [])).
 
 %%%
 % enquire_link_resp
 %%
 -define(ENQUIRE_LINK_RESP, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_ENQUIRE_LINK_RESP,
+             [],
              [?CONGESTION_STATE])).
 
 %%%
 % alert_notification
 %%
 -define(ALERT_NOTIFICATION, 
-        ?PDU([?SOURCE_ADDR_TON,
+        ?PDU(?COMMAND_ID_ALERT_NOTIFICATION,
+             [?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_65,
               ?ESME_ADDR_TON,
@@ -259,14 +279,16 @@
 % generic_nack
 %%
 -define(GENERIC_NACK, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_GENERIC_NACK,
+             [],
              [])).
 
 %%%
 % submit_sm
 %%
 -define(SUBMIT_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_SUBMIT_SM,
+             [?SERVICE_TYPE,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21,
@@ -334,7 +356,8 @@
 % %@TODO Remove ?DELIVERY_FAILURE_REASON if never needed
 %%
 -define(SUBMIT_SM_RESP,
-        ?PDU([?MESSAGE_ID],
+        ?PDU(?COMMAND_ID_SUBMIT_SM_RESP,
+             [?MESSAGE_ID],
              [?ADDITIONAL_STATUS_INFO_TEXT,         
               ?CONGESTION_STATE,
               ?DELIVERY_FAILURE_REASON,   % data_sm_resp only
@@ -345,7 +368,8 @@
 % data_sm Syntax
 %%
 -define(DATA_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_DATA_SM,
+             [?SERVICE_TYPE,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_65,
@@ -404,7 +428,8 @@
 % data_sm_resp
 %%
 -define(DATA_SM_RESP,
-        ?PDU([?MESSAGE_ID],
+        ?PDU(?COMMAND_ID_DATA_SM_RESP,
+             [?MESSAGE_ID],
              [?ADDITIONAL_STATUS_INFO_TEXT,
               ?CONGESTION_STATE,
               ?DELIVERY_FAILURE_REASON,
@@ -417,7 +442,8 @@
 % %@TODO Remove ?MORE_MESSAGES_TO_SEND and ?SET_DPF if never needed.
 %%
 -define(SUBMIT_MULTI,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_SUBMIT_MULTI,
+             [?SERVICE_TYPE,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21,
@@ -526,7 +552,8 @@
 % %@end
 %%
 -define(SUBMIT_MULTI_RESP,
-        ?PDU([?MESSAGE_ID, 
+        ?PDU(?COMMAND_ID_SUBMIT_MULTI_RESP,
+             [?MESSAGE_ID, 
               ?UNSUCCESS_SME],
              [?ADDITIONAL_STATUS_INFO_TEXT,
               ?CONGESTION_STATE,
@@ -538,7 +565,8 @@
 % deliver_sm
 %%
 -define(DELIVER_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_DELIVER_SM,
+             [?SERVICE_TYPE,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21,
@@ -593,7 +621,8 @@
 % deliver_sm_resp Syntax
 %%
 -define(DELIVER_SM_RESP, 
-        ?PDU([?MESSAGE_ID],
+        ?PDU(?COMMAND_ID_DELIVER_SM_RESP,
+             [?MESSAGE_ID],
              [?ADDITIONAL_STATUS_INFO_TEXT,
               ?CONGESTION_STATE,
               ?DELIVERY_FAILURE_REASON,
@@ -605,7 +634,8 @@
 % %@TODO Confirm that the <tt>message_payload</tt> is mandatory
 %%
 -define(BROADCAST_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_BROADCAST_SM,
+             [?SERVICE_TYPE,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21,
@@ -647,7 +677,8 @@
 % broadcast_sm_resp Syntax
 %%
 -define(BROADCAST_SM_RESP,
-        ?PDU([?MESSAGE_ID],
+        ?PDU(?COMMAND_ID_BROADCAST_SM_RESP,
+             [?MESSAGE_ID],
              [?BROADCAST_ERROR_STATUS,
               ?CONGESTION_STATE, 
               ?FAILED_BROADCAST_AREA_IDENTIFIER])).
@@ -656,7 +687,8 @@
 % cancel_sm Syntax
 %%
 -define(CANCEL_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_CANCEL_SM,
+             [?SERVICE_TYPE,
               ?MESSAGE_ID,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
@@ -670,14 +702,16 @@
 % cancel_sm_resp Syntax
 %%
 -define(CANCEL_SM_RESP, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_CANCEL_SM_RESP,
+             [],
              [?CONGESTION_STATE])).
 
 %%%
 % query_sm Syntax
 %%
 -define(QUERY_SM,
-        ?PDU([?MESSAGE_ID,
+        ?PDU(?COMMAND_ID_QUERY_SM,
+             [?MESSAGE_ID,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21],
@@ -687,7 +721,8 @@
 % query_sm_resp Syntax
 %%
 -define(QUERY_SM_RESP,
-        ?PDU([?MESSAGE_ID,
+        ?PDU(?COMMAND_ID_QUERY_SM_RESP,
+             [?MESSAGE_ID,
               ?FINAL_DATE,
               ?MESSAGE_STATE,
               ?ERROR_CODE],
@@ -697,7 +732,8 @@
 % replace_sm Syntax
 %%
 -define(REPLACE_SM,
-        ?PDU([?MESSAGE_ID,
+        ?PDU(?COMMAND_ID_REPLACE_SM,
+             [?MESSAGE_ID,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21,
@@ -712,14 +748,16 @@
 % replace_sm_resp Syntax
 %%
 -define(REPLACE_SM_RESP, 
-        ?PDU([],
+        ?PDU(?COMMAND_ID_REPLACE_SM_RESP,
+             [],
              [?CONGESTION_STATE])).
 
 %%%
 % query_broadcast_sm Syntax
 %%
 -define(QUERY_BROADCAST_SM,
-        ?PDU([?MESSAGE_ID,
+        ?PDU(?COMMAND_ID_QUERY_BROADCAST_SM,
+             [?MESSAGE_ID,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21],
@@ -729,7 +767,8 @@
 % query_broadcast_sm_resp Syntax
 %%
 -define(QUERY_BROADCAST_SM_RESP,
-        ?PDU([?MESSAGE_ID],
+        ?PDU(?COMMAND_ID_QUERY_BROADCAST_SM_RESP,
+             [?MESSAGE_ID],
              [?CONGESTION_STATE,
               ?MANDATORY_MESSAGE_STATE,
               ?BROADCAST_AREA_IDENTIFIER,
@@ -741,7 +780,8 @@
 % cancel_broadcast_sm Syntax
 %%
 -define(CANCEL_BROADCAST_SM,
-        ?PDU([?SERVICE_TYPE,
+        ?PDU(?COMMAND_ID_CANCEL_BROADCAST_SM,
+             [?SERVICE_TYPE,
               ?MESSAGE_ID,
               ?SOURCE_ADDR_TON,
               ?SOURCE_ADDR_NPI,
@@ -753,7 +793,8 @@
 % cancel_broadcast_sm_resp Syntax
 %%
 -define(CANCEL_BROADCAST_SM_RESP,
-        ?PDU([],
+        ?PDU(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP,
+             [],
              [?CONGESTION_STATE])).
 
 

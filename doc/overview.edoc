@@ -2324,6 +2324,7 @@ Find OSERL's PICS proforma in openoffice format
     <a href="../include/smpp_base.hrl">smpp_base.hrl</a> for further details).
   </li>
   <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
+  <li>PDU packing/unpacking functions redefined.</li>
 </ul>
 
 <p>How these changes affected individual files is described 
@@ -2333,20 +2334,6 @@ Find OSERL's PICS proforma in openoffice format
 <h2><a name="todo">TODO</a></h2>
 
 <ul>
-  <li>Version 0.2
-  <ol>
-    <li>Don't like current PDU packing/unpacking mechanism using the 
-      <tt>pdu_type/1</tt> function.
-
-      <p>Consider creating a pack/unpack function for each PDU type.  Call the
-      appropriate pack/unpack function by means of the <tt>command_id</tt> and
-      remove <tt>pdu_type/1</tt> function.</p>
-    </li>
-    <li>Try to put the <tt>command_id</tt> back into the PDU descriptor in an
-      efficient manner.
-    </li>
-  </ol>
-  </li>
   <li>Version 1.0
     <ol>
       <li>Implement a gen_mc_session behavior.</li>

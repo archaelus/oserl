@@ -15,18 +15,19 @@ Contents
 1.2  base_syntax.erl
 1.3  param_syntax.hrl
 1.4  param_syntax.erl
-1.5  pdu_syntax.erl
-1.6  smpp_globals.hrl
-1.7  smpp_base.hrl
-1.8  smpp_param.hrl
-1.9  smpp_pdu.hrl
-1.10 operation.erl
-1.11 sm.erl
-1.12 gen_connection.erl
-1.13 gen_esme_session.erl
-1.14 gen_esme.erl
-1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
-1.16 Other changes
+1.5  pdu_syntax.hrl
+1.6  pdu_syntax.erl
+1.7  smpp_globals.hrl
+1.8  smpp_base.hrl
+1.9  smpp_param.hrl
+1.10 smpp_pdu.hrl
+1.11 operation.erl
+1.12 sm.erl
+1.13 gen_connection.erl
+1.14 gen_esme_session.erl
+1.15 gen_esme.erl
+1.16 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
+1.17 Other changes
 
 ---
 
@@ -46,6 +47,7 @@ Contents
   records).  time record removed.  (Refer to base_syntax.erl, 
   base_syntax.hrl and smpp_base.hrl for further details).
 - gen_esme callback interface redefined.
+- PDU packing/unpacking functions redefined.
 
 How these changes affected individual files is described below.
 
@@ -90,51 +92,60 @@ How these changes affected individual files is described below.
   values on standard and mandatory tlvs respectively.
 
 
-1.5  pdu_syntax.erl
+1.5  pdu_syntax.hrl
+
+- command_id added to PDU descriptors.
+
+
+1.6  pdu_syntax.erl
 
 - Removed pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Using dictionary
   API instead.
 
   pdu_syntax functions are no longer used beyond operation API.
+- command_id is now included into the PDU descriptor.
+- New functions command_id/1 and sequence_number/1.
 
 
-1.6  smpp_globals.hrl
+1.7  smpp_globals.hrl
 
 - $\0 removed from the NULL_C_OCTET_STRING macro.
 
 
-1.7  smpp_base.hrl
+1.8  smpp_base.hrl
 
 - Trailing $\0 removed from the c_octet_string values.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 
   finally removed.  Time manipulation is now much more natural... and easy.
 
-1.8  smpp_param.hrl
+1.9  smpp_param.hrl
 
 - Default values added to Standard parameters.
 - Default values for TLVs reviewed.
 
 
-1.9  smpp_pdu.hrl
+1.10 smpp_pdu.hrl
 
 - Default values moved to smpp_param.hrl.
 - Field number_of_messages added to submit_sm, data_sm and submit_multi_sm.
 - CDMA and TDMA specific TLVs are no longer commented out.
+- command_id added to PDU descriptors.
 
 
-1.10 operation.erl
+1.11 operation.erl
 
 - Implemented get_param/2 and set_param/3, replacements for 
   pdu_syntax:get_value/2 and pdu_syntax:set_value/3 respectively.
 - new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.
+- pack/1, pack_esme/1, pack_mc/1, unpack/1, unpack_esme/1 and unpack_mc/1 
+  functions redefined.
 
-
-1.11 sm.erl
+1.12 sm.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 
-1.12 gen_connection.erl
+1.13 gen_connection.erl
 
 - retry_status is disabled on die event.
 - If already listening on Port, the term {error, {already_listening, Port}} is
@@ -145,7 +156,7 @@ How these changes affected individual files is described below.
 - Changes in comments.
 
 
-1.13 gen_esme_session.erl
+1.14 gen_esme_session.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 - All timers reviewed (fixed).
@@ -153,14 +164,14 @@ How these changes affected individual files is described below.
 - Changes in comments.
 
 
-1.14 gen_esme.erl
+1.15 gen_esme.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 - Completely redesigned.
 - Callback interface redefined.
 
 
-1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
+1.16 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
 
 - Trailing $\0 removed from the c_octet_string values.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 

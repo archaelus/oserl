@@ -19,6 +19,7 @@
       <li><a href="#changes0_1-0_2-base_syntax">base_syntax.erl</a></li>
       <li><a href="#changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></li>
       <li><a href="#changes0_1-0_2-param_syntax">param_syntax.erl</a></li>
+      <li><a href="#changes0_1-0_2-pdu_syntax-hrl">pdu_syntax.hrl</a></li>
       <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
       <li><a href="#changes0_1-0_2-smpp_globals-hrl">smpp_globals.hrl</a></li>
       <li><a href="#changes0_1-0_2-smpp_base-hrl">smpp_base.hrl</a></li>
@@ -55,6 +56,7 @@
     <a href="../include/smpp_base.hrl">smpp_base.hrl</a> for further details).
   </li>
   <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
+  <li>PDU packing/unpacking functions redefined.</li>
 </ul>
 
 <p>How these changes affected individual files is described below.</p>
@@ -121,12 +123,19 @@
 </ul>
 
 
-<h3><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h3>
+<h3><a name="changes0_1-0_2-param_syntax">param_syntax.erl</a></h3>
 
 <ul>
   <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible for 
     encoding default values on standard and mandatory tlvs respectively.
   </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-pdu_syntax-hrl">pdu_syntax.hrl</a></h3>
+
+<ul>
+  <li><i>command_id</i> added to PDU descriptors.</li>
 </ul>
 
 
@@ -138,6 +147,10 @@
     <br/>
     <a href="pdu_syntax.html">pdu_syntax</a> functions are no longer used 
     beyond <a href="operation.html">operation</a> API.
+  </li>
+  <li><i>command_id</i> is now included into the PDU descriptor.</li>
+  <li>New functions <a href="pdu_syntax.html#command_id-1">command_id/1</a>
+    and <a href="pdu_syntax.html#sequence_number-1">sequence_number/1</a>.
   </li>
 </ul>
 
@@ -175,6 +188,7 @@
     and <i>submit_multi_sm</i>.
   </li>
   <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
+  <li><i>command_id</i> added to PDU descriptors.</li>
 </ul>
 
 
@@ -187,6 +201,13 @@
     respectively.
   </li>
   <li>new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.</li>
+  <li><a href="operation.html#pack-1">pack/1</a>, 
+    <a href="operation.html#pack_esme-1">pack_esme/1</a>, 
+    <a href="operation.html#pack_mc-1">pack_mc/1</a>, 
+    <a href="operation.html#unpack-1">unpack/1</a>, 
+    <a href="operation.html#unpack_esme-1">unpack_esme/1</a> and 
+    <a href="operation.html#unpack_mc-1">unpack_mc/1</a> functions redefined.
+  </li>
 </ul>
 
 

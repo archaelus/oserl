@@ -17,14 +17,7 @@ Contents
 
 1. Version 0.2
 
-- Don't like current PDU packing/unpacking mechanism using the pdu_type/1 
-  function.
-
-  Consider creating a pack/unpack function for each PDU type. Call the 
-  appropriate pack/unpack function by means of the command_id and remove 
-  pdu_type/1 function.
-
-- Try to put the command_id back into the PDU descriptor.
+- Update overview.edoc (c_octet_string and octet_string format field).
 
 - Define a couple of MACROS for every composite parameter.  One to assign
   default (record) values, and the other to hide record definition to higher

@@ -26,16 +26,22 @@
 %%% either use <tt>erlang:monitor(process, Session)</tt> or explicitly create 
 %%% a link to them.</p>
 %%%
-%%% <p>SMPP operations are directly issued upon underlying sessions, they
-%%% don't go through the SMSC server loop.  This means you may call the 
-%%% functions <a href="#alert_notification-3">alert_notification/3</a>, 
-%%% <a href="#outbind-3">outbind/3</a>, <a href="#deliver_sm-3">deliver_sm/3
-%%% </a>, <a href="#data_sm-3">data_sm/3</a> or <a href="#unbind-2">unbind/2
+%%% <p>SMPP operations are directly issued upon sessions, they don't go through
+%%% the SMSC server loop.  This means you may call the functions 
+%%% <a href="#session_start-2">session_start/2</a>, 
+%%% <a href="#session_start-3">session_start/3</a>, 
+%%% <a href="#session_stop-1">session_stop/1</a>, 
+%%% <a href="#alert_notification-2">alert_notification/2</a>, 
+%%% <a href="#outbind-2">outbind/2</a>, <a href="#deliver_sm-2">deliver_sm/2
+%%% </a>, <a href="#data_sm-2">data_sm/2</a> or <a href="#unbind-1">unbind/1
 %%% </a> from within any callback without having the risk of blocking the 
 %%% SMSC server.</p>
 %%%
 %%% <p>Please refer to <a href="examples/test_smsc.erl">test_smsc.erl</a>
-%%% for a minimal SMSC example.</p>
+%%% for a minimal SMSC example.  There is also a SMSC skeleton you may use
+%%% as the starting point of your SMSC development, find the module
+%%% <a href="examples/smsc_skel.erl">smsc_skel.erl</a> under <tt>doc/examples
+%%% </tt> directory.</p>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
@@ -330,9 +336,8 @@
 -export([behaviour_info/1]).
 
 %%%-------------------------------------------------------------------
-%%% External exports
+%%% External SMSC exports
 %%%-------------------------------------------------------------------
-%%-compile(export_all).
 -export([start/3,
          start/4,
          start_link/3,
@@ -340,18 +345,22 @@
          listen_start/1,
          listen_start/4,
          listen_stop/1,
-         session_start/3,
-         session_start/4,
-         session_stop/2,
-         alert_notification/3,
-         outbind/3,
-         deliver_sm/3,
-         data_sm/3,
-         unbind/2,
          call/2, 
          call/3, 
          cast/2, 
          reply/2]).
+
+%%%-------------------------------------------------------------------
+%%% External Session exports
+%%%-------------------------------------------------------------------
+-export([session_start/2,
+         session_start/3,
+         session_stop/1,
+         alert_notification/2,
+         outbind/2,
+         deliver_sm/2,
+         data_sm/2,
+         unbind/1]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -382,10 +391,11 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, LSocket}
+%% %@spec {state, Mod, ModState, LSocket, Timers}
 %%    Mod      = atom()
 %%    ModState = atom()
 %%    LSocket  = socket()
+%%    Timers   = #timers{}
 %%
 %% %@doc Representation of the server's state.
 %%
@@ -393,13 +403,14 @@
 %%   <dt>Mod: </dt><dd>Callback module.</dd>
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
 %%   <dt>LSocket: </dt><dd>Listener socket.</dd>
+%%   <dt>Timers: </dt><dd>SMPP timers for accepted session.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, lsocket = closed}).
+-record(state, {mod, mod_state, lsocket = closed, timers}).
 
 
 %%%===================================================================
-%%% External functions
+%%% Behaviour functions
 %%%===================================================================
 %% @spec behaviour_info(Category) -> Info
 %%    Category      = callbacks | term()
@@ -424,7 +435,9 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
     undefined.
 
-
+%%%===================================================================
+%%% External SMSC functions
+%%%===================================================================
 %% @spec start(Module, Args, Options) -> Result
 %%    Module = atom()
 %%    Result = {ok, Pid} | ignore | {error, Error}
@@ -560,162 +573,6 @@ listen_stop(ServerRef) ->
     gen_server:cast(ServerRef, listen_stop).
 
 
-%% @spec session_start(ServerRef, Address, Port) -> Result
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Address = string() | atom() | ip_address()
-%%    Port = int()
-%%    Result = {ok, Session} | {error, Reason}
-%%    Session = pid()
-%%    Reason = term()
-%%
-%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
-%%
-%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
-%% otherwise.</p>
-%%
-%% @equiv session_start(ServerRef, Address, Port, DEFAULT_SMPP_TIMERS)
-%% @end 
-session_start(ServerRef, Address, Port) ->
-	session_start(ServerRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
-
-
-%% @spec session_start(ServerRef, Address, Port, Timers) -> Result
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Address = string() | atom() | ip_address()
-%%    Port = int()
-%%    Timers = #timers()
-%%    Result = {ok, Session} | {error, Reason}
-%%    Session = pid()
-%%    Reason = term()
-%%
-%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
-%%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.
-%%
-%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
-%% otherwise.</p>
-%%
-%% @see session_start/3
-%% @see gen_smsc_session:start/3
-%% @end 
-session_start(ServerRef, Address, Port, Timers) ->
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
-        {ok, Socket} ->
-            case gen_smsc_session:start(?MODULE, Socket, Timers) of
-                {ok, Session} ->
-                    gen_tcp:controlling_process(Socket, Session),
-                    {ok, Session};
-                SessionError ->
-                    SessionError
-            end;
-        ConnectError ->
-            ConnectError
-    end.
-
-
-%% @spec session_stop(ServerRef, Session) -> ok
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%
-%% @doc Stops the <tt>Session</tt>.
-%% @end 
-session_stop(_ServerRef, Session) ->
-    gen_smsc_session:stop(Session).
-
-
-%% @spec alert_notification(ServerRef, Session, ParamList) -> ok
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Issues an <i>alert_notification</i> operation on the session 
-%% identified by <tt>Session</tt>.
-%% @end
-alert_notification(_ServerRef, Session, ParamList) ->
-    gen_smsc_session:alert_notification(Session, ParamList).
-
-
-%% @spec outbind(ServerRef, Session, ParamList) -> ok
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Issues an <i>outbind</i> operation on the session identified by 
-%% <tt>Session</tt>.
-%% @end
-outbind(_ServerRef, Session, ParamList) ->
-    gen_smsc_session:outbind(Session, ParamList).
-
-
-%% @spec data_sm(ServerRef, Session, ParamList) -> Result
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
-%%
-%% @doc Issues a <i>data_sm</i> operation on the session identified by 
-%% <tt>Session</tt>.
-%% @end
-data_sm(_ServerRef, Session, ParamList) ->
-    gen_smsc_session:data_sm(Session, ParamList).
-
-
-%% @spec deliver_sm(ServerRef, Session, ParamList) -> Result
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
-%%
-%% @doc Issues a <i>deliver_sm</i> operation on the session identified by 
-%% <tt>Session</tt>.
-%% @end
-deliver_sm(_ServerRef, Session, ParamList) ->
-    gen_smsc_session:deliver_sm(Session, ParamList).
-
-
-%% @spec unbind(ServerRef, Session) -> Result
-%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
-%%    Name = atom()
-%%    Node = atom()
-%%    Session = pid()
-%%    Result  = {ok, PduResp} | {error, Error}
-%%    PduResp = pdu()
-%%    Error   = int()
-%%
-%% @doc Issues an <i>unbind</i> operation on the session identified by 
-%% <tt>Session</tt>.
-%% @end
-unbind(_ServerRef, Session) ->
-    gen_smsc_session:unbind(Session).
-
-
 %% @spec call(ServerRef, Request) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -780,6 +637,141 @@ reply(Client, Reply) ->
 
 
 %%%===================================================================
+%%% External Session functions
+%%%===================================================================
+%% @spec session_start(Address, Port) -> Result
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @equiv session_start(Address, Port, DEFAULT_SMPP_TIMERS)
+%% @end 
+session_start(Address, Port) ->
+	session_start(Address, Port, ?DEFAULT_SMPP_TIMERS).
+
+
+%% @spec session_start(Address, Port, Timers) -> Result
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Timers = #timers()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @see session_start/3
+%% @see gen_smsc_session:start/2
+%% @end 
+session_start(Address, Port, Timers) ->
+    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
+        {ok, Socket} ->
+            case gen_smsc_session:start(?MODULE, Socket, Timers) of
+                {ok, Session} ->
+                    gen_tcp:controlling_process(Socket, Session),
+                    {ok, Session};
+                SessionError ->
+                    SessionError
+            end;
+        ConnectError ->
+            ConnectError
+    end.
+
+
+%% @spec session_stop(Session) -> ok
+%%    Session = pid()
+%%
+%% @doc Stops the <tt>Session</tt>.
+%% @end 
+session_stop(Session) ->
+    gen_smsc_session:stop(Session).
+
+
+%% @spec alert_notification(Session, ParamList) -> ok
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%
+%% @doc Issues an <i>alert_notification</i> operation on the session 
+%% identified by <tt>Session</tt>.
+%% @end
+alert_notification(Session, ParamList) ->
+    gen_smsc_session:alert_notification(Session, ParamList).
+
+
+%% @spec outbind(Session, ParamList) -> ok
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%
+%% @doc Issues an <i>outbind</i> operation on the session identified by 
+%% <tt>Session</tt>.
+%% @end
+outbind(Session, ParamList) ->
+    gen_smsc_session:outbind(Session, ParamList).
+
+
+%% @spec data_sm(Session, ParamList) -> Result
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>data_sm</i> operation on the session identified by 
+%% <tt>Session</tt>.
+%% @end
+data_sm(Session, ParamList) ->
+    gen_smsc_session:data_sm(Session, ParamList).
+
+
+%% @spec deliver_sm(Session, ParamList) -> Result
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>deliver_sm</i> operation on the session identified by 
+%% <tt>Session</tt>.
+%% @end
+deliver_sm(Session, ParamList) ->
+    gen_smsc_session:deliver_sm(Session, ParamList).
+
+
+%% @spec unbind(Session) -> Result
+%%    Session = pid()
+%%    Result  = {ok, PduResp} | {error, Error}
+%%    PduResp = pdu()
+%%    Error   = int()
+%%
+%% @doc Issues an <i>unbind</i> operation on the session identified by 
+%% <tt>Session</tt>.
+%% @end
+unbind(Session) ->
+    gen_smsc_session:unbind(Session).
+
+
+%%%===================================================================
 %%% Server functions
 %%%===================================================================
 %% @spec init(Args) -> Result
@@ -833,11 +825,13 @@ handle_call({listen_start, Port, Count, Timers}, From, S) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
-            spawn_link(fun() -> listener(Self, LSocket, Count, Timers) end),
-            {reply, true, S#state{lsocket = LSocket}};
+            spawn_link(fun() -> listener(Self, LSocket, Count) end),
+            {reply, true, S#state{lsocket = LSocket, timers = Timers}};
         _Error ->
             {reply, false, S}
     end;
+handle_call({accept, Socket}, From, S) ->
+	{reply, gen_smsc_session:start(?MODULE, Socket, S#state.timers), S};
 handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
                                                     Bind == bind_transmitter;
                                                     Bind == bind_receiver ->
@@ -918,7 +912,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(R, S) ->
-    io:format("*** gen_smsc terminating: ~p - ~p ***~n", [self(), R]),
+%    io:format("*** gen_smsc terminating: ~p - ~p ***~n", [self(), R]),
     pack((S#state.mod):terminate(R, S#state.mod_state), S).
 
 
@@ -1022,30 +1016,31 @@ pack(Other, _S) ->
     Other.
 
 
-%% @spec listener(ServerRef, LSocket, Count, Timers) -> void()
-%%    ServerRef     = pid()
+%% @spec listener(ServerRef, LSocket, Count) -> void()
+%%    ServerRef = pid()
 %%    LSocket = socket()
+%%    Count = int()
 %%
 %% @doc Waits until a connection is requested on <tt>LSocket</tt> or an
 %% error occurs.  If successful the event <i>accept</i> is triggered. On
 %% error an exit on the listen socket is reported.
 %% @end
-listener(ServerRef, LSocket, Count, Timers) ->
+listener(ServerRef, LSocket, Count) ->
     case gen_tcp:accept(LSocket) of
         {ok, Socket} ->
             inet:setopts(Socket, ?CONNECT_OPTIONS),
-            case gen_smsc_session:start(?MODULE, Socket, Timers) of
+            case gen_server:call(ServerRef, {accept, Socket}, infinity) of
                 {ok, Pid} ->
                     gen_tcp:controlling_process(Socket, Pid),
                     if
                         Count > 1 ->
-                            listener(ServerRef, LSocket, ?DECR(Count), Timers);
+                            listener(ServerRef, LSocket, ?DECR(Count));
                         true ->
                             gen_server:cast(ServerRef, listen_stop)
                     end;
                 _Error ->
                     gen_tcp:close(Socket),
-                    listener(ServerRef, LSocket, Count, Timers)
+                    listener(ServerRef, LSocket, Count)
             end;
         _Error ->
             gen_server:cast(ServerRef, listen_error)

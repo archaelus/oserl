@@ -193,7 +193,7 @@
 %%%   <li>gen_connection</li>
 %%%   <li>my_calendar</li>
 %%%   <li>operation</li>
-%%% <ul>
+%%% </ul>
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
@@ -417,7 +417,7 @@ behaviour_info(_Other) ->
 %% @spec start(Mod, Socket, Timers) -> Result
 %%    Mod    = atom()
 %%    Socket = socket()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -471,7 +471,7 @@ start(Name, Mod, Socket, Timers) ->
 %% @spec start_link(Mod, Socket, Timers) -> Result
 %%    Mod    = atom()
 %%    Socket = socket()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -932,7 +932,12 @@ unbound(R, S) ->
 %% <p>Sends the corresponding response with a <tt>?ESME_RINVBNDSTS</tt>
 %% status.</p>
 %%
-%% @see open/2, outbound/2, bound_rx/2, bound_tx/2, bound_trx/2 and unbound/2
+%% @see open/2
+%% @see outbound/2
+%% @see bound_rx/2
+%% @see bound_tx/2
+%% @see bound_trx/2
+%% @see unbound/2
 %% @end 
 esme_rinvbndsts_resp({CmdId, Pdu}, Socket) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
@@ -1387,8 +1392,8 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %% @spec handle_peer_bind({CmdId, Pdu}, Self, State) -> bool()
 %%    CmdId = int()
 %%    Pdu   = pdu()
-%%    Self = pid()
-%%    State = #state()
+%%    Self  = pid()
+%%    State = state()
 %%
 %% @doc Handles bind requests from the peer ESME.
 %%
@@ -1415,8 +1420,8 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
 %% @spec handle_peer_operation({CmdId, Pdu}, Self, State) -> bool()
 %%    CmdId = int()
 %%    Pdu   = pdu()
-%%    Self = pid()
-%%    State = #state()
+%%    Self  = pid()
+%%    State = state()
 %%
 %% @doc Handles SMPP operations from the peer ESME.
 %%
@@ -1446,8 +1451,8 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 %% @spec handle_peer_unbind({CmdId, Pdu}, Self, State) -> bool()
 %%    CmdId = int()
 %%    Pdu   = pdu()
-%%    Self = pid()
-%%    State = #state()
+%%    Self  = pid()
+%%    State = state()
 %%
 %%
 %% @doc Handles unbind requests from the peer ESME.
@@ -1479,11 +1484,11 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
 %%    StateData    = state()
 %%    NewStateData = state()
 %%
-%% @doc Send a SMPP request given the command PDU.</p>
+%% @doc Send a SMPP request given the command PDU.
 %%
 %% <p>This function doesn't expect any response, thus no request broker is
 %% spawned.  Used by the <i>outbind</i> and <i>alert_notification</i> 
-%% operations.</p
+%% operations.</p>
 %%
 %% <p>If PDU is not successfully sent, the functions exits on error.</p>
 %%
@@ -1507,7 +1512,6 @@ send_request(CmdId, ParamList, StateData) ->
 %%
 %% @doc Send a SMPP request given the command PDU.  <tt>From</tt> represents
 %% the caller issuing the request (might be the atom <tt>undefined</tt>).
-%% </p>
 %%
 %% <p>This function spawns a request broker that waits for the response.</p>
 %%
@@ -1531,7 +1535,7 @@ send_request(CmdId, ParamList, From, StateData) ->
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
-%%    Socket      = socket()
+%%    Socket     = socket()
 %%    Result     = ok | {error, Error}
 %%    Error      = int()
 %%
@@ -1613,9 +1617,10 @@ request_broker(Caller, CmdId, Time) ->
     end.
 
 
-%% @spec wait_recv(FsmRef, Socket) -> void()
-%%    FsmRef   = pid()
+%% @spec wait_recv(FsmRef, Socket, Buffer) -> void()
+%%    FsmRef = pid()
 %%    Socket = socket()
+%%    Buffer = binary()
 %%
 %% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
 %% receive loop to get bulk input.  All data received on the same loop triggers

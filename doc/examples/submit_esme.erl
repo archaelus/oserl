@@ -131,12 +131,12 @@ stop() ->
 %% <p>Initiates the server.</p>
 %% @end
 init([]) ->
-    case gen_esme:session_start(?SERVER, ?SMSC_ADDRESS, ?SMPP_PORT) of
+    case gen_esme:session_start(?SMSC_ADDRESS, ?SMPP_PORT) of
         {ok, Tx} ->
             ParamList = [{system_id, ?SYSTEM_ID},
                          {password, ?PASSWORD},
                          {source_addr, ?SOURCE_ADDR}],
-            case gen_esme:bind_transmitter(?SERVER, Tx, ParamList) of
+            case gen_esme:bind_transmitter(Tx, ParamList) of
                 {ok, _PduResp} ->
                     {ok, #state{tx_session = Tx}};
                 BindError ->
@@ -520,7 +520,7 @@ submit_sm_iter(_ParamList, 0, _Session) ->
     ok;
 submit_sm_iter(ParamList, Count, Session) ->
     spawn(fun() ->
-                  case gen_esme:submit_sm(?SERVER, Session, ParamList) of
+                  case gen_esme:submit_sm(Session, ParamList) of
                       {ok, Response} -> 
                           % See how to get a parameter value
                           Id = operation:get_param(message_id, Response),

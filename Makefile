@@ -3,7 +3,7 @@
 # ----------------------------------------------------
 include common.mk
 
-SUB_DIRECTORIES = src doc/examples
+SUB_DIRECTORIES = src doc/examples  
 
 OTHER_FILES = COPYING Makefile README TODO changes.txt common.mk $(APPNAME).pub
 
@@ -36,6 +36,31 @@ debug:
 	@for d in $(SUB_DIRECTORIES); do \
 	  	(cd $$d; $(MAKE) DEBUG=-Ddebug=1); \
 	done
+
+#all: $(addsuffix /all,$(SUB_DIRECTORIES));
+
+
+#$(SUB_DIRECTORIES):
+#	$(MAKE) -C $@
+
+
+#docs: $(addsuffix /doc,$(SUB_DIRECTORIES));
+
+
+#clean: $(addsuffix /clean,$(SUB_DIRECTORIES));
+
+
+#realclean: $(addsuffix /realclean,$(SUB_DIRECTORIES));
+
+
+#debug: PASS=DEBUG=-Ddebug=1
+
+#debug: $(addsuffix /debug,$(SUB_DIRECTORIES));
+
+
+#$(addsuffix /%,$(SUB_DIRECTORIES)):
+#	$(MAKE) -C $(@D) $(@F) $(PASS)
+
 
 release:
 	mkdir $(BASE_REL)

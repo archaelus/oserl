@@ -171,17 +171,17 @@ init([]) ->
 %% desired command_status error code.</p>
 %% @end
 handle_bind({bind_receiver, Rx, _Pdu}, _From, S) ->
-	erlang:monitor(process, Rx),
+    erlang:monitor(process, Rx),
     io:format("bound_rx: ~p~n", [Rx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, S#state{rx = [Rx|S#state.rx]}};
 handle_bind({bind_transmitter, Tx, _Pdu}, _From, S) ->
-	erlang:monitor(process, Tx),
+    erlang:monitor(process, Tx),
     io:format("bound_tx: ~p~n", [Tx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, S#state{tx = [Tx|S#state.tx]}};
 handle_bind({bind_transceiver, Trx, _Pdu}, _From, S) ->
-	erlang:monitor(process, Trx),
+    erlang:monitor(process, Trx),
     io:format("bound_trx: ~p~n", [Trx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, S#state{rx = [Trx|S#state.rx],
@@ -271,8 +271,7 @@ handle_operation({CmdName, Session, Pdu}, From, S) ->
 %% @end
 handle_unbind({unbind, Session, Pdu}, _From, S) ->
     io:format("unbind: ~p~n", [Session]),
-    {reply, ok, S#state{rx = lists:delete(Session, S#state.rx),
-                        tx = lists:delete(Session, S#state.tx)}}.
+    {reply, ok, S}.
 
 
 %% @spec handle_listen_error(State) -> Result
@@ -343,8 +342,10 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast({deliver_sm, ParamList}, #state{rx = R} = S) ->
-    lists:foreach(fun(X) -> gen_smsc:deliver_sm(?SERVER, X, ParamList) end, R),
+handle_cast({deliver_sm, ParamList}, #state{rx = Rx} = S) ->
+    lists:foreach(fun(X) -> 
+                          spawn(fun() -> gen_smsc:deliver_sm(X, ParamList) end)
+                  end, Rx),
     {noreply, S}.
 
 
@@ -371,14 +372,29 @@ handle_cast({deliver_sm, ParamList}, #state{rx = R} = S) ->
 handle_info({'DOWN', _MonitorReference, process, Object, Info}, S) ->
     case {lists:member(Object,S#state.rx), lists:member(Object,S#state.tx)} of
         {true, true} ->
-            io:format("trx_session failure: ~p~n", [Object]),
+            if
+                Info == normal ->
+                    io:format("trx_session closed: ~p~n", [Object]);
+                true ->
+                    io:format("trx_session failure: ~p - ~p~n", [Object, Info])
+            end,
             {noreply, S#state{rx = lists:delete(Object, S#state.rx),
                               tx = lists:delete(Object, S#state.tx)}};
         {true, false} ->
-            io:format("rx_session failure: ~p~n", [Object]),
+            if
+                Info == normal ->
+                    io:format("rx_session closed: ~p~n", [Object]);
+                true ->
+                    io:format("rx_session failure: ~p - ~p~n", [Object, Info])
+            end,
             {noreply, S#state{rx = lists:delete(Object, S#state.rx)}};
         {false, true} ->
-            io:format("tx_session failure: ~p~n", [Object]),
+            if
+                Info == normal ->
+                    io:format("tx_session closed: ~p~n", [Object]);
+                true ->
+                    io:format("tx_session failure: ~p - ~p~n", [Object, Info])
+            end,
             {noreply, S#state{tx = lists:delete(Object, S#state.tx)}};
         _NotASession ->
             {stop, Info, S}
@@ -402,8 +418,8 @@ terminate(kill, S) ->
     ok;
 terminate(Reason, S) ->
     L = lists:usort(S#state.rx ++ S#state.tx),
-    lists:foreach(fun(X) -> catch gen_smsc:unbind(?SERVER, X) end, L),
-    lists:foreach(fun(X) -> catch gen_smsc:session_stop(?SERVER, X) end, L).
+    lists:foreach(fun(X) -> catch gen_smsc:unbind(X) end, L),
+    lists:foreach(fun(X) -> catch gen_smsc:session_stop(X) end, L).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}

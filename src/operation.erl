@@ -234,7 +234,7 @@ new(CommandId, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(CommandId, ?ESME_ROK, SequenceNumber, InitParams).
 
 
-%% @spec new(CommandId, SequenceNumber, InitParams) -> Pdu
+%% @spec new(CommandId, CommandStatus, SequenceNumber, InitParams) -> Pdu
 %%    CommandId      = int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()

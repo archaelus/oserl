@@ -56,7 +56,8 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(SMSC_ADDRESS, {192, 168, 1, 4}).
+%-define(SMSC_ADDRESS, {192, 168, 1, 4}).
+-define(SMSC_ADDRESS, {193, 144, 50, 43}).
 -define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
 -define(PASSWORD, "secret").
@@ -90,8 +91,7 @@
 %% @see start/0
 %% @end
 start_link() ->
-    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []),
-	gen_esme:call(?SERVER, {bind, ?SMSC_ADDRESS, ?SMPP_PORT}, infinity).
+    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 
 %% @spec stop() -> ok
@@ -121,7 +121,21 @@ stop() ->
 %% <p>Initiates the server.</p>
 %% @end
 init([]) ->
-	{ok, #state{}}.
+    case gen_esme:session_start(?SMSC_ADDRESS, ?SMPP_PORT) of
+        {ok, Trx} ->
+            erlang:monitor(process, Trx),
+            ParamList = [{system_id, ?SYSTEM_ID},
+                         {password, ?PASSWORD},
+                         {source_addr, ?SOURCE_ADDR}],
+            case gen_esme:bind_transceiver(Trx, ParamList) of
+                {ok, _PduResp} ->
+                    {ok, #state{trx_session = Trx}};
+                BindError ->
+                    {stop, BindError}
+            end;
+        SessionError ->
+            {stop, SessionError}
+    end.
 
 
 %% @spec handle_outbind(Outbind, From, State) -> Result
@@ -207,13 +221,13 @@ handle_operation({deliver_sm, _Session, Pdu}, From, S) ->
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
     io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:submit_sm(?SERVER, S#state.trx_session, [Mesg|Dest]),
+    spawn(fun() -> gen_esme:submit_sm(S#state.trx_session, [Mesg|Dest]) end),
     {reply, {ok, []}, S};
 handle_operation({data_sm, Session, Pdu}, From, S) ->
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
     io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:data_sm(?SERVER, S#state.trx_session, [Mesg|Dest]), 
+    spawn(fun() -> gen_esme:data_sm(S#state.trx_session, [Mesg|Dest]) end),
     {reply, {ok, []}, S};
 handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
     % Don't know how to handle CmdName
@@ -298,22 +312,6 @@ handle_listen_error(State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({bind, SMSCAddr, Port}, From, S) ->
-    case gen_esme:session_start(?SERVER, SMSCAddr, Port) of
-        {ok, Trx} ->
-%			erlang:monitor(process, Trx),
-            ParamList = [{system_id, ?SYSTEM_ID},
-                         {password, ?PASSWORD},
-                         {source_addr, ?SOURCE_ADDR}],
-            case gen_esme:bind_transmitter(?SERVER, Trx, ParamList) of
-                {ok, _PduResp} ->
-                    {reply, ok, #state{trx_session = Trx}};
-                BindError ->
-                    {stop, BindError, S}
-            end;
-        SessionError ->
-            {stop, SessionError, S}
-	end;
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
@@ -362,7 +360,7 @@ handle_cast(Request, State) ->
 %% @see terminate/2
 %% @end
 handle_info({'DOWN', _, process, Trx, Info}, #state{trx_session = Trx} = S) ->
-	{stop, Info, S};
+    {stop, Info, S};
 handle_info(Info, S) ->
     {noreply, S}.
 
@@ -381,8 +379,8 @@ handle_info(Info, S) ->
 terminate(kill, S) ->
     ok;
 terminate(Reason, S) ->
-    catch gen_smsc:unbind(?SERVER, S#state.trx_session),
-    catch gen_smsc:session_stop(?SERVER, S#state.trx_session).
+    catch gen_smsc:unbind(S#state.trx_session),
+    catch gen_smsc:session_stop(S#state.trx_session).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}

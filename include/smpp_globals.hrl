@@ -48,6 +48,12 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [6 Jul 2004]
+%%% 
+%%% <ul>
+%%%   <li>Timers and port macros moved to <i>oserl.hrl</i>.</li>
+%%% </ul>
+%%%
 %%%
 %%% <h2>References</h2>
 %%% <dl>
@@ -292,11 +298,6 @@
         end).
 
 
-%% Default Port Number (Standardised by IANA)
-%%
-%% %@see section 2.2 on [SMPP 5.0]
--define(DEFAULT_SMPP_PORT, 2775).
-
 %% Error Codes
 %%
 %% %@see section 4.7.6 on [SMPP 5.0]
@@ -412,22 +413,6 @@
 -define(NULL_INTEGER,   0).
 -define(NULL_C_OCTET_STRING, "").
 -define(NULL_OCTET_STRING,   "").
-
-
-%% Timers default values
-%%
-%% %@doc Besides the timers declared on [SMPP 5.0], a rebind timer default is
-%% defined.  This timer sets the time lapse in which the ESME should try to
-%% rebind once the MC becomes unavailable.</p>
-%%
-%% %@TODO Review these default values.
-%%
-%% %@see section 2.7 on [SMPP 5.0]
--define(SESSION_INIT_TIME, 180000).  % 3 minutes
--define(ENQUIRE_LINK_TIME,  60000).  % 1 minute
--define(INACTIVITY_TIME, infinity).  % No timeout, never drop the session.
--define(RESPONSE_TIME,      60000).  % 1 minute
--define(REBIND_TIME,         5000).  % Tries to rebind every 5 seconds.
 
 %%%-------------------------------------------------------------------
 %%% Records

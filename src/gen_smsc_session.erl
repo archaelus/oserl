@@ -2382,8 +2382,8 @@ handle_input_correct_pdu(Pdu, StateData) ->
         CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
             RqstId = ?REQUEST(CmdId),
-            case ets:lookup(StateData#state.requests, SeqNum) of
-                [{SeqNum, RqstId, Broker}] ->  % Expected response
+            case ets:lookup_element(StateData#state.requests, SeqNum, 1) of
+                {SeqNum, RqstId, Broker} ->    % Expected response
                     Broker ! {self(), {response, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
                 _Otherwise ->                  % Unexpected response
@@ -2393,8 +2393,8 @@ handle_input_correct_pdu(Pdu, StateData) ->
             end;
         ?COMMAND_ID_GENERIC_NACK ->
             SeqNum = operation:get_param(sequence_number, Pdu),
-            case ets:lookup(StateData#state.requests, SeqNum) of
-                [{SeqNum, _CmdId, Broker}] ->  % Expected response
+            case ets:lookup_element(StateData#state.requests, SeqNum, 1) of
+                {SeqNum, _CmdId, Broker} ->    % Expected response
                     Broker ! {self(), {response, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
                 _Otherwise ->                  % Unexpected response
@@ -2553,9 +2553,9 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %%%===================================================================
 %%% Server gen_connection functions
 %%%===================================================================
-%% @spec handle_accept(Pid, Cid) -> ok
-%%    Pid = pid()
-%%    Cid = pid()
+%% @spec handle_accept(Owner, Conn, Socket) -> {ok, NewOwner} | error
+%%    Owner = NewOwner = Conn = pid()
+%%    Socket = socket()
 %%
 %% @doc <a href="gen_connection.html#handle_accept-2">gen_connection 
 %% - handle_accept/2</a> callback implementation.
@@ -2563,11 +2563,9 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 handle_accept(_Owner, _Conn, _Socket) -> error.
      
 
-%% @spec handle_input(Pid, Conn, Input, Lapse) -> {ok, RestBuffer}
-%%    Pid = pid()
-%%    Conn = pid()
-%%    Input = binary()
-%%    RestBuffer = binary()
+%% @spec handle_input(Owner, Conn, Input, Lapse) -> {ok, RestInput}
+%%    Owner = Conn = pid()
+%%    Input = RestInput = binary()
 %%    Lapse = int()
 %%
 %% @doc <a href="gen_connection.html#handle_input-4">gen_connection

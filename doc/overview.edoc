@@ -1070,7 +1070,7 @@ gets to our code lock ESME:</p>
 <pre>
     Digit: 1
     Caller: [{dest_addr_ton,0},{dest_addr_npi,0},{destination_addr,"981654321"}]
-    Submitted SM: "Came in please.  The door is open"
+    Submitted SM: "Come in please.  The door is open"
     Destination: [{dest_addr_ton,0},
                   {dest_addr_npi,0},
                   {destination_addr,"981654321"}]

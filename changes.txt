@@ -153,6 +153,7 @@ How these changes affected individual files is described below.
 1.14 gen_esme.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
+- Completely redesigned.
 
 
 1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
@@ -160,6 +161,7 @@ How these changes affected individual files is described below.
 - Trailing $\0 removed from the c_octet_string values.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 
   finally removed.  Time manipulation is now much more natural... and easy.
+- Last changes in gen_esme.erl adopted.
 
 
 1.16 Other changes

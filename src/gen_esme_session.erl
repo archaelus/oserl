@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -675,10 +675,21 @@
 % <p><b>See also:</b> <tt>callback_deliver_data_sm/2</tt></p>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [10 Feb 2004]
+%
+% <ul>
+%   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+%     <tt>operation:get_param/2</tt>.
+%    </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {26 May 2003} {@time}.
+% @version 0.2 alpha, {26 May 2003} {@time}.
 % @end
 %
 % %@TODO New fsm implementation (on stdlib 1.12) includes now timers, use this 
@@ -712,8 +723,7 @@
 % -import(ets, [insert/2, delete/2, lookup/2, new/1]).
 % -import(gen_connection, [close/1, connect/4, disable_retry/1, enable_retry/1, listen/2, start_link/2, send/2]).
 % -import(my_calendar, [time_since/1]).
-% -import(operation, [esme_pack/1, esme_unpack/1, merge_params/2, request_command_id/1, request_failure_code/1, new_bind_receiver/2, new_bind_transmitter/2, new_bind_transceiver/2, new_broadcast_sm/2, new_cancel_broadcast_sm/2, new_cancel_sm/2, new_query_broadcast_sm/2, new_generic_nack/3, new_data_sm/2, new_data_sm_resp/3, new_deliver_sm_resp/3, new_enquire_link/2, new_enquire_link_resp/3, new_unbind_resp/3, new_query_sm/2, new_replace_sm/2, new_submit_multi/2, new_submit_sm/2, new_unbind/2]).
-% -import(pdu_syntax, [get_value/2]).
+% -import(operation, [get_param/2, esme_pack/1, esme_unpack/1, merge_params/2, request_command_id/1, request_failure_code/1, new_bind_receiver/2, new_bind_transmitter/2, new_bind_transceiver/2, new_broadcast_sm/2, new_cancel_broadcast_sm/2, new_cancel_sm/2, new_query_broadcast_sm/2, new_generic_nack/3, new_data_sm/2, new_data_sm_resp/3, new_deliver_sm_resp/3, new_enquire_link/2, new_enquire_link_resp/3, new_unbind_resp/3, new_query_sm/2, new_replace_sm/2, new_submit_multi/2, new_submit_sm/2, new_unbind/2]).
 
 %%%-------------------------------------------------------------------
 % Behaviour exports
@@ -1419,7 +1429,7 @@ init([Pid, Module, #gen_esme_session_setup{retry_time = T} = Setup]) ->
 % @end
 %%
 open({alert_notification, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, open, StateData};
 
@@ -1445,12 +1455,12 @@ open(bind_transceiver_resp, StateData) ->
                                             inactivity_timer   = ITimer}};
 
 open({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_data_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, open, StateData};
 
 open({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, open, StateData};
 
@@ -1460,7 +1470,7 @@ open({outbind, Pdu}, StateData) ->
     {next_state, outbound, StateData};
 
 open({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, open, StateData};
 
@@ -1488,7 +1498,7 @@ open(_Event, StateData) ->
 % @end
 %%
 outbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
@@ -1511,22 +1521,22 @@ outbound(bind_transceiver_resp, StateData) ->
                                             inactivity_timer   = ITimer}};
 
 outbound({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_data_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
 outbound({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
 outbound({outbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
 outbound({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
@@ -1558,7 +1568,7 @@ bound_rx({alert_notification, Pdu}, StateData) ->
 bound_rx({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
     reset_timer(StateData#state.inactivity_timer),
     reset_timer(StateData#state.enquire_link_timer),
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, StateData#state.self_congestion_state}],
     case callback_deliver_data_sm(Pdu, StateData) of
         {ok, PList1} ->
@@ -1573,7 +1583,7 @@ bound_rx({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
 bound_rx({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
     reset_timer(StateData#state.inactivity_timer),
     reset_timer(StateData#state.enquire_link_timer),
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, StateData#state.self_congestion_state}],
     case callback_deliver_sm(Pdu, StateData) of
         {ok, PList1} ->
@@ -1586,12 +1596,12 @@ bound_rx({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
     {next_state, bound_rx, StateData};
 
 bound_rx({outbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_rx, StateData};
 
 bound_rx({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
@@ -1645,27 +1655,27 @@ bound_rx(_Event, StateData) ->
 % @end
 %%
 bound_tx({alert_notification, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_tx, StateData};
 
 bound_tx({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_data_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_tx, StateData};
 
 bound_tx({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_tx, StateData};
 
 bound_tx({outbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_tx, StateData};
 
 bound_tx({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
@@ -1728,7 +1738,7 @@ bound_trx({alert_notification, Pdu}, StateData) ->
 bound_trx({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
     reset_timer(StateData#state.inactivity_timer),
     reset_timer(StateData#state.enquire_link_timer),
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, StateData#state.self_congestion_state}],
     case callback_deliver_data_sm(Pdu, StateData) of
         {ok, PList1} ->
@@ -1743,7 +1753,7 @@ bound_trx({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
 bound_trx({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
     reset_timer(StateData#state.inactivity_timer),
     reset_timer(StateData#state.enquire_link_timer),
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, StateData#state.self_congestion_state}],
     case callback_deliver_sm(Pdu, StateData) of
         {ok, PList1} ->
@@ -1756,12 +1766,12 @@ bound_trx({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
     {next_state, bound_trx, StateData};
 
 bound_trx({outbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, bound_trx, StateData};
 
 bound_trx({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
@@ -1815,27 +1825,27 @@ bound_trx(_Event, StateData) ->
 % @end
 %%
 unbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
 unbound({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_data_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
 unbound({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_deliver_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
 unbound({outbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_generic_nack(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
 unbound({unbind, Pdu}, #state{connection = C} = StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
@@ -2479,12 +2489,12 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
                         StateData#state{self_congestion_state = Scs};
                     bound_tx ->
                         % As a transmitter, we care about MC's congestion state
-                        Pcs  = pdu_syntax:get_value(congestion_state, Pdu),
+                        Pcs  = operation:get_param(congestion_state, Pdu),
                         Time = 2 * my_calendar:time_since(Timestamp),
                         StateData#state{peer_congestion_state = Pcs};
                     bound_trx ->
                         % Transceivers care about both congestion states
-                        Pcs  = pdu_syntax:get_value(congestion_state, Pdu),
+                        Pcs  = operation:get_param(congestion_state, Pdu),
                         Time = 2 * my_calendar:time_since(Timestamp),
                         Scs  = congestion_state(Lapse, Index, Time),
                         StateData#state{self_congestion_state = Scs,
@@ -2522,7 +2532,7 @@ handle_event(die, StateName, #state{connection = C} = StateData) ->
     {next_state, StateName, StateData};
 
 handle_event({enquire_link, Pdu}, StateName, StateData) ->
-    SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+    SeqNum = operation:get_param(sequence_number, Pdu),
     send_enquire_link_resp(?ESME_ROK, SeqNum, [], StateData#state.connection),
     {next_state, StateName, StateData};
 
@@ -2547,9 +2557,9 @@ handle_event({listen_recovery, Port}, _StateName, StateData) ->
 %%
 handle_input_correct_pdu(Pdu, StateData) ->
 %    io:format("Correct input. PDU = ~p~n", [Pdu]),
-    case pdu_syntax:get_value(command_id, Pdu) of
+    case operation:get_param(command_id, Pdu) of
         RespCmdId when RespCmdId > 16#80000000 ->
-            SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+            SeqNum = operation:get_param(sequence_number, Pdu),
             CmdId  = operation:request_command_id(RespCmdId),
             case ets:lookup(StateData#state.requests, SeqNum) of
                 [{SeqNum, CmdId, Broker}] ->   % Expected response
@@ -2560,7 +2570,7 @@ handle_input_correct_pdu(Pdu, StateData) ->
                     send_generic_nack(?ESME_RINVCMDID, SeqNum, [], Cid)
             end;
         ?COMMAND_ID_GENERIC_NACK ->
-            SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+            SeqNum = operation:get_param(sequence_number, Pdu),
             case ets:lookup(StateData#state.requests, SeqNum) of
                 [{SeqNum, _CmdId, Broker}] ->  % Expected response
                     Broker ! {self(), {response, Pdu}},
@@ -2582,7 +2592,7 @@ handle_input_correct_pdu(Pdu, StateData) ->
         ?COMMAND_ID_UNBIND ->
             unbind(self(), Pdu);
         _OtherRequest ->
-            SeqNum = pdu_syntax:get_value(sequence_number, Pdu),
+            SeqNum = operation:get_param(sequence_number, Pdu),
             Cid    = StateData#state.connection,
             send_generic_nack(?ESME_RINVCMDID, SeqNum, [], Cid)
     end.
@@ -3593,7 +3603,7 @@ send_request(Function, From, StateData) ->
     Pdu    = Function(SeqNum),
     case send_pdu(StateData#state.connection, Pdu) of
         ok ->
-            CmdId  = pdu_syntax:get_value(command_id, Pdu),
+            CmdId  = operation:get_param(command_id, Pdu),
             Err    = operation:request_failure_code(CmdId),
             Time   = StateData#state.response_time,
             Broker = spawn_link(fun() -> request_broker(From, Err, Time) end),
@@ -3663,9 +3673,9 @@ request_broker(undefined, _TimeoutError, Time) ->
 request_broker(Caller, TimeoutError, Time) ->
     receive
         {Sid, {response, Pdu}} ->
-            case pdu_syntax:get_value(command_status, Pdu) of
+            case operation:get_param(command_status, Pdu) of
                 ?ESME_ROK ->
-                    case pdu_syntax:get_value(command_id, Pdu) of
+                    case operation:get_param(command_id, Pdu) of
                         ?COMMAND_ID_BIND_RECEIVER_RESP ->
                             gen_fsm:reply(Caller, {ok, Pdu}),
                             bind_receiver_resp(Sid);

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -21,10 +21,22 @@
 %
 % <p>Utility functions for short messages on SMPP requests/responses.</p>
 %
-% @copyright 2003 Enrique Marcote Peña
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [10 Feb 2004]
+%
+% <ul>
+%   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+%     <tt>operation:get_param/2</tt>.
+%    </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {24 Jul 2003} {@time}.
+% @version 0.2 alpha, {24 Jul 2003} {@time}.
 % @end
 %%
 -module(sm).
@@ -32,6 +44,14 @@
 %%%-------------------------------------------------------------------
 % Include files
 %%--------------------------------------------------------------------
+
+%%%-------------------------------------------------------------------
+% Imports.  
+%
+% <p>Imports are explicitly made on the function calls.  These lines are
+% commented out and only included for informative purposes.</p>
+%%--------------------------------------------------------------------
+% -import(operation, [get_param/2]).
 
 %%%-------------------------------------------------------------------
 % External exports
@@ -70,9 +90,9 @@
 % %@equiv
 %%
 message_user_data(Pdu) ->
-    case pdu_syntax:get_value(short_message, Pdu) of
+    case operation:get_param(short_message, Pdu) of
         ShortMessage when ShortMessage == ""; ShortMessage == undefined ->
-            {message_payload, pdu_syntax:get_value(message_payload, Pdu)};
+            {message_payload, operation:get_param(message_payload, Pdu)};
         ShortMessage ->
             {short_message, ShortMessage}
     end.
@@ -95,9 +115,9 @@ message_user_data(Pdu) ->
 % %@equiv
 %%
 reply_address(Pdu) ->
-    [{dest_addr_ton,    pdu_syntax:get_value(source_addr_ton, Pdu)},
-     {dest_addr_npi,    pdu_syntax:get_value(source_addr_npi, Pdu)},
-     {destination_addr, pdu_syntax:get_value(source_addr,     Pdu)}].
+    [{dest_addr_ton,    operation:get_param(source_addr_ton, Pdu)},
+     {dest_addr_npi,    operation:get_param(source_addr_npi, Pdu)},
+     {destination_addr, operation:get_param(source_addr,     Pdu)}].
 
 
 %%%===================================================================

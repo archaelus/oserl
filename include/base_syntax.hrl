@@ -203,6 +203,8 @@
 %
 % <h2>Changes 0.1 -&gt; 0.2</h2>
 %
+% [09 Feb 2004]
+% 
 % <ul>
 %   <li><tt>empty</tt> base type record definition removed.</li>
 %   <li><tt>EMPTY</tt> macro now defined as<br/>
@@ -223,7 +225,7 @@
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.2 alpha, {09 Feb 2004} {@time}.
+% @version 0.2 alpha, {14 Mar 2003} {@time}.
 % @end
 %%
 

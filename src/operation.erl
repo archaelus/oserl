@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -21,10 +21,23 @@
 %
 % <p>SMPP Operation PDU definitions.</p>
 %
-% @copyright 2003 Enrique Marcote Peña
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [10 Feb 2004]
+%
+% <ul>
+%   <li>Implemented <tt>get_param/2</tt> and <tt>set_param/3</tt>, replacements
+%     for <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
+%     respectively.
+%    </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {24 May 2003} {@time}.
+% @version 0.2 alpha, {24 May 2003} {@time}.
 % @end
 %%
 -module(operation).
@@ -38,7 +51,9 @@
 %%%-------------------------------------------------------------------
 % External exports
 %%--------------------------------------------------------------------
--export([merge_params/2,
+-export([get_param/2, 
+         set_param/3, 
+         merge_params/2,
          new_bind_transmitter/2,
          new_bind_transmitter_resp/3,
          new_bind_receiver/2,
@@ -214,6 +229,49 @@
 %%%===================================================================
 % External functions
 %%====================================================================
+%%%
+% @spec get_param(ParamName, PduDict) -> ParamValue
+%    ParamName  = atom()
+%    PduDict    = dictionary()
+%    ParamValue = term()
+%
+% @doc Gets the value of a parameter from a PDU dictionary given the parameter
+% name.  If the parameter is not defined on the PDU the atom <tt>undefined
+% </tt> is returned.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+get_param(ParamName, PduDict) ->
+    case dict:find(ParamName, PduDict) of
+        {ok, ParamValue} ->
+            ParamValue;
+        error ->
+            undefined
+    end.
+
+
+%%%
+% @spec set_param(ParamName, ParamValue, PduDict) -> NewPduDict
+%    ParamName  = atom()
+%    ParamValue = term()
+%    PduDict    = dictionary()
+%    NewPduDict = dictionary()
+%
+% @doc Sets the value of a parameter on a PDU dictionary given the parameter
+% name, the new PDU dictionary is returned.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+set_param(ParamName, ParamValue, PduDict) ->
+    dict:store(ParamName, ParamValue, PduDict).
+
+
 %%%
 % @spec merge_params(ParamList1, ParamList2) -> NewParamList
 %    ParamList1 = [{ParamName, ParamValue}]

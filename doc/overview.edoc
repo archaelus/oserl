@@ -51,6 +51,11 @@ numbers on [SMPP 5.0].</p>
         <ol>
           <li><a href="#changes0_1-0_2-smpp_base">smpp_base.hrl</a></li>
           <li><a href="#changes0_1-0_2-base_syntax">base_syntax.hrl</a></li>
+          <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
+          <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
+          <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
+          <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
+          <li><a href="#changes0_1-0_2-gen_esme">gen_esme.erl</a></li>
         </ol> 
       </li>
     </ol>
@@ -335,7 +340,7 @@ stop() -&gt;
 %
 % Notice we have access to received PDU in the third argument of the callback. 
 % PDUs are internally represented as dictionaries.  Should you need to get any 
-% parameter of a PDU, you may use the pdu_syntax:get_value/2 function.
+% parameter of a PDU, you may use the operation:get_param/2 function.
 %
 % Important.  PDUs received by callbacks are *guarantee* to be correct.  
 % Malformed PDUs are discarded at the session layer (where the appropriate
@@ -647,9 +652,9 @@ all the details:
 deliver_sm(_Pid, Eid, Pdu) -&gt;
     % First of all, lets get the source address.
 
-    SourceAddrTon = pdu_syntax:get_value(source_addr_ton, Pdu),
-    SourceAddrNpi = pdu_syntax:get_value(source_addr_npi, Pdu),
-    SourceAddr    = pdu_syntax:get_value(source_addr,     Pdu),
+    SourceAddrTon = operation:get_param(source_addr_ton, Pdu),
+    SourceAddrNpi = operation:get_param(source_addr_npi, Pdu),
+    SourceAddr    = operation:get_param(source_addr,     Pdu),
 
     % Get the message payload from the incoming PDU. 
     % Since we don't know if the SMSC sends the short message using the
@@ -659,9 +664,9 @@ deliver_sm(_Pid, Eid, Pdu) -&gt;
     %  We'd also want to respond using the same parameter the SMSC uses.
 
     MessageUserData = 
-        case pdu_syntax:get_value(short_message, Pdu) of
+        case operation:get_param(short_message, Pdu) of
             ShortMessage when ShortMessage == ""; ShortMessage == undefined -&gt;
-                {message_payload, pdu_syntax:get_value(message_payload, Pdu)};
+                {message_payload, operation:get_param(message_payload, Pdu)};
             ShortMessage -&gt;
                 {short_message, ShortMessage}
         end,
@@ -1319,7 +1324,7 @@ are declared.</p>
 <h2><a name="storage">PDU data storage</a></h2>
 
 PDU data is internally stored as a dictionary.  Dictionaries are defined on 
-erlang's <a href="http://www.erlang.se/doc/doc-5.0.1/lib/stdlib-1.9.1/doc/">stdlib</a>.  Functions <a href="http://www.des.udc.es/~mpquique/oserl/pdu_syntax.html#get_value-2#">pdu_syntax:get_value/2</a> and <a href="http://www.des.udc.es/~mpquique/oserl/pdu_syntax.html#set_value-3#">pdu_syntax:set_value/3</a> may be used to get/set parameters values by name.
+erlang's <a href="http://www.erlang.se/doc/doc-5.0.1/lib/stdlib-1.9.1/doc/">stdlib</a>.  Functions <a href="operation.html#get_param-2#">operation:get_param/2</a> and <a href="operation.html#set_param-3#">operation:set_param/3</a> may be used to get/set parameters values by name.
 
 <p>The names of the parameters (keys of the PDU dictionary) are those on the 
 SMPP protocol specification.</p>
@@ -2309,6 +2314,56 @@ Find OSERL's PICS proforma in openoffice format
 </ul>
 
 
+<h4><a name="changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></h4>
+
+<ul>
+  <li>Removed <tt>get_value/2</tt> and <tt>set_value/3</tt>.  Using dictionary
+    API instead.<br/>
+    <br/>
+    <a href="pdu_syntax.html">pdu_syntax</a> functions are no longer used 
+    beyond <a href="operation.html">operation</a> API.
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-operation">operation.erl</a></h4>
+
+<ul>
+  <li>Implemented <a href="operation.html#get_param-2">get_param/2</a> and 
+    <a href="operation.html#set_param-3">set_param/3</a>, replacements for 
+    <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
+    respectively.
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-sm">sm.erl</a></h4>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></h4>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-gen_esme">gen_esme.erl</a></h4>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
 <h2><a name="todo">TODO</a></h2>
 
 <ul>
@@ -2324,16 +2379,6 @@ Find OSERL's PICS proforma in openoffice format
     </li>
     <li>Try to put the <tt>command_id</tt> back into the PDU descriptor in an
       efficient manner.
-    </li>
-    <li>Remove <a href="pdu_syntax.html#get_value-2">pdu_syntax:get_value/2</a>
-      and <a href="pdu_syntax.html#set_value-3">pdu_syntax:set_value/3</a>.  
-      Use the dicctionary API instead.
-  
-      <p>Move these functions to operation.erl (and rename them as 
-      <tt>get_parameter/2</tt> and <tt>set_parameter/3</tt> respectively.</p>
-
-      <p>Do not use <a href="pdu_syntax.html">pdu_syntax</a> functions beyond
-      <a href="operation.html">operation</a> API.</p>
     </li>
   </ol>
   </li>

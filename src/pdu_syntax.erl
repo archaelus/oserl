@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -21,10 +21,24 @@
 %
 % <p>Library functions for the SMPP PDU manipulation.</p>
 %
-% @copyright 2003 Enrique Marcote Peña
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [10 Feb 2004]
+%
+% <ul>
+%   <li>Removed <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3
+%     </tt>.  Using dictionary API instead.<br/>
+%     <br/>
+%     pdu_syntax functions are no longer used beyond operation API.
+%    </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {19 Mar 2003} {@time}.
+% @version 0.2 alpha, {19 Mar 2003} {@time}.
 % @end
 %%
 -module(pdu_syntax).
@@ -38,7 +52,7 @@
 %%%-------------------------------------------------------------------
 % External exports
 %%--------------------------------------------------------------------
--export([get_value/2, set_value/3, new_pdu/4, pack/3, unpack/3]).
+-export([new_pdu/4, pack/3, unpack/3]).
 
 %%%-------------------------------------------------------------------
 % Internal exports
@@ -56,49 +70,6 @@
 %%%===================================================================
 % External functions
 %%====================================================================
-%%%
-% @spec get_value(ParamName, PduDict) -> ParamValue
-%    ParamName  = atom()
-%    PduDict    = dictionary()
-%    ParamValue = term()
-%
-% @doc Gets the value of a parameter from a PDU dictionary given the parameter
-% name.  If the parameter is not defined on the PDU the atom <tt>undefined
-% </tt> is returned.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-get_value(ParamName, PduDict) ->
-    case dict:find(ParamName, PduDict) of
-        {ok, ParamValue} ->
-            ParamValue;
-        error ->
-            undefined
-    end.
-
-
-%%%
-% @spec set_value(ParamName, ParamValue, PduDict) -> NewPduDict
-%    ParamName  = atom()
-%    ParamValue = term()
-%    PduDict    = dictionary()
-%    NewPduDict = dictionary()
-%
-% @doc Sets the value of a parameter on a PDU dictionary given the parameter
-% name, the new PDU dictionary is returned.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-set_value(ParamName, ParamValue, PduDict) ->
-    dict:store(ParamName, ParamValue, PduDict).
-
-
 %%%
 % @spec new_pdu(CommandId, CommandStatus, SequenceNumber, Body) -> PduDict
 %    CommandId      = int()
@@ -328,8 +299,13 @@ pack_stds(_BodyDict, [], Acc) ->
     {ok, lists:reverse(Acc)};
 
 pack_stds(BodyDict, [Type|Types], Acc) ->
-    % See how param_syntax:encode/2 handles undefined
-    Value = get_value(param_syntax:get_name(Type), BodyDict),
+    Value = case dict:find(param_syntax:get_name(Type), BodyDict) of
+                {ok, ParamValue} -> 
+                    ParamValue;
+                error -> 
+                    % See how param_syntax:encode/2 handles undefined
+                    undefined
+            end,
     case param_syntax:encode(Value, Type) of
         {ok, BinaryValue} ->
             pack_stds(BodyDict, Types, [BinaryValue|Acc]);
@@ -359,8 +335,13 @@ pack_tlvs(_BodyDict, [], Acc) ->
     {ok, lists:reverse(Acc)};
 
 pack_tlvs(BodyDict, [Type|Types], Acc) ->
-    % See how param_syntax:encode/2 handles undefined
-    Value = get_value(param_syntax:get_name(Type), BodyDict),
+    Value = case dict:find(param_syntax:get_name(Type), BodyDict) of
+                {ok, ParamValue} ->
+                    ParamValue;
+                error ->
+                    % See how param_syntax:encode/2 handles undefined
+                    undefined
+            end,
     case param_syntax:encode(Value, Type) of
         {ok, BinaryValue} ->
             pack_tlvs(BodyDict, Types, [BinaryValue|Acc]);

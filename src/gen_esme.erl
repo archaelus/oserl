@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -510,10 +510,21 @@
 % <p><b>See also:</b> <tt>callback_deliver_data_sm/2</tt></p>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [10 Feb 2004]
+%
+% <ul>
+%   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+%     <tt>operation:get_param/2</tt>.
+%    </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {10 Jun 2003} {@time}.
+% @version 0.2 alpha, {10 Jun 2003} {@time}.
 % @end
 %%
 -module(gen_esme).
@@ -1575,7 +1586,7 @@ handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S,
                                                     tx_session = S} = State) ->
     case do_bind_transceiver(State) of
         {ok, PduResp, NewState} ->
-            SystemId = pdu_syntax:get_value(system_id, PduResp),
+            SystemId = operation:get_param(system_id, PduResp),
             callback_bound_transceiver(SystemId, NewState),
             {noreply, NewState};
         Error ->
@@ -1586,7 +1597,7 @@ handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S,
 handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S} = State) ->
     case do_bind_receiver(State) of
         {ok, PduResp, NewState} ->
-            SystemId = pdu_syntax:get_value(system_id, PduResp),
+            SystemId = operation:get_param(system_id, PduResp),
             callback_bound_receiver(SystemId, NewState),
             {noreply, NewState};
         Error ->
@@ -1597,7 +1608,7 @@ handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S} = State) ->
 handle_cast({resume_service, S, Addr, Port}, #state{tx_session = S} = State) ->
     case do_bind_transmitter(State) of
         {ok, PduResp, NewState} ->
-            SystemId = pdu_syntax:get_value(system_id, PduResp),
+            SystemId = operation:get_param(system_id, PduResp),
             callback_bound_transmitter(SystemId, NewState),
             {noreply, NewState};
         Error ->
@@ -1814,8 +1825,8 @@ code_change(OldVsn, State, Extra) ->
 % %@equiv
 %%
 outbind(Pid, Sid, Pdu) ->
-    SystemId = pdu_syntax:get_value(system_id, Pdu),
-    Password = pdu_syntax:get_value(system_id, Pdu),
+    SystemId = operation:get_param(system_id, Pdu),
+    Password = operation:get_param(system_id, Pdu),
     gen_server:cast(Pid, {outbind, Sid, SystemId, Password}).
       
 

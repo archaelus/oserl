@@ -28,16 +28,6 @@ Index
 
 - Put the command_id back into the PDU descriptor.
 
-- Remove pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Use dicctionary
-  API instead.
-
-  Move these functions to operation.erl
-
-    get_parameter/2
-    set_parameter/3
-
-  Do not use pdu_syntax beyond operation API.
-
 - Assign default values to standard parameters in smpp_param.hrl (just like
   for TLVs).
 
@@ -45,6 +35,12 @@ Index
 
   Pay special attention to C-Octet String parameteres defined as composites
   (records), such us TIME_DOMAIN.
+
+- Make OSERL behaviours OTP compilant.  
+
+  Notice the  behavior(name) vs behaviour_info/1 
+
+- Remove unused (commented out) macros from hrls.
 
 
 2. Version 1.0

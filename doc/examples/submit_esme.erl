@@ -318,7 +318,7 @@ submit_sm(ParamList) ->
     case gen_esme:submit_sm(submit_esme, ParamList) of
         {ok, Response} -> 
             % See how to get a parameter value
-            MessageId = pdu_syntax:get_value(message_id, Response),
+            MessageId = operation:get_param(message_id, Response),
             io:format("Message ID: ~p~n", [MessageId]);
         {error, Error} ->
             io:format("Submit operation failed with ~p~n", [Error])

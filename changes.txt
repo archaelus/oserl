@@ -10,6 +10,11 @@ Index
 1.  Changes 0.1 -> 0.2
 1.1 smpp_base.hrl
 1.2 base_syntax.hrl
+1.3 pdu_syntax.erl
+1.4 operation.erl
+1.5 sm.erl
+1.6 gen_esme_session.erl
+1.7 gen_esme.erl
 
 
 ---
@@ -36,5 +41,33 @@ Index
 
     -define(EMPTY, ?UNION([])).
 
+
+1.3 pdu_syntax.erl
+
+- Removed pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Using dictionary
+  API instead.
+
+  pdu_syntax functions are no longer used beyond operation API.
+
+
+1.4 operation.erl
+
+- Implemented get_param/2 and set_param/3, replacements for 
+  pdu_syntax:get_value/2 and pdu_syntax:set_value/3 respectively.
+
+
+1.5 sm.erl
+
+- Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
+
+
+1.6 gen_esme_session.erl
+
+- Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
+
+
+1.7 gen_esme.erl
+
+- Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 

@@ -41,10 +41,25 @@
 %%% </ul>
 %%%
 %%%
+%%% <h2>Changes 0.2 -&gt; 1.2</h2>
+%%%
+%%% [13 Jul 2004]
+%%%
+%%% <ul>
+%%%   <li>Condition <tt>CommandId of < 16#800000000</tt> removed from guards
+%%%     in functions <a href="#pack-2">pack/2</a> and 
+%%%     <a href="#unpack-2">unpack/2</a>.
+%%%     <br/>
+%%%     There was one 0 too many on that conditions.
+%%%     <br/>
+%%%     Now the command_status is assumed to be always 0 on request PDUs.
+%%%    </li>
+%%% </ul>
+%%%
 %%% @copyright 2003 - 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 0.2, {19 Mar 2003} {@time}.
+%%% @version 1.2, {19 Mar 2003} {@time}.
 %%% @end
 -module(pdu_syntax).
 
@@ -171,11 +186,10 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %% @end
 pack(PduDict, Type) ->
     PackBody = 
-        fun (CommandId, CommandStatus, Dict) when CommandStatus == 0; 
-                                                  CommandId < 16#800000000 ->
+        fun (CommandId, CommandStatus, Dict) when CommandStatus == 0 ->
                 pack_body(Dict, Type#pdu.stds_types, Type#pdu.tlvs_types);
             (_CommandId, _CommandStatus, _Dict) ->   
-                % Ignore Body on erroneous responses
+                % Do NOT pack the body if CommandStatus != 0
                 {ok, <<>>}
         end,
     Status = dict:fetch(command_status,  PduDict),
@@ -236,11 +250,10 @@ pack(PduDict, Type) ->
 %% @end
 unpack(<<Len:32, Rest/binary>>, Type) when Len == size(Rest) + 4, Len >= 16 ->
     UnpackBody = 
-        fun (CommandId, CommandStatus, Bin) when CommandStatus == 0; 
-                                                 CommandId < 16#800000000 ->
+        fun (CommandId, CommandStatus, Bin) when CommandStatus == 0 ->
                 unpack_body(Bin, Type#pdu.stds_types, Type#pdu.tlvs_types);
             (_CommandId, _CommandStatus, _Bin) ->   
-                % Ignore Body on erroneous responses
+                % Do NOT unpack the body if CommandStatus != 0
                 {ok, []}
         end,
     case Rest of

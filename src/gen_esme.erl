@@ -31,19 +31,19 @@
 % <table width="100%" border="1">
 %   <tr>
 %     <td valign="top"><a href="#bound_receiver-3">bound_receiver/3</a></td>
-%     <td>The ESME binds as a receiver.</td>
+%     <td>The ESME just bound as a receiver.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
 %       <a href="#bound_transmitter-3">bound_transmitter/3</a>
 %     </td>
-%     <td>The ESME binds as a transmitter.</td>
+%     <td>The ESME just bound as a transmitter.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
 %       <a href="#bound_transceiver-3">bound_transceiver/3</a>
 %     </td>
-%     <td>The ESME binds as a transceiver.</td>
+%     <td>The ESME just bound as a transceiver.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top"><a href="#receiver_unbind-2">receiver_unbind/2</a></td>
@@ -63,47 +63,44 @@
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#receiver_mc_unavailable-4">receiver_mc_unavailable/4</a>
+%       <a href="#receiver_mc_unavailable-2">receiver_mc_unavailable/2</a>
 %     </td>
 %     <td>The MC is unavailable on the receiver session.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%      <a href="#transmitter_mc_unavailable-4">transmitter_mc_unavailable/4</a>
+%      <a href="#transmitter_mc_unavailable-2">transmitter_mc_unavailable/2</a>
 %     </td>
 %     <td>The MC becomes unavailable on the transmitter session.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%      <a href="#transceiver_mc_unavailable-4">transceiver_mc_unavailable/4</a>
+%      <a href="#transceiver_mc_unavailable-2">transceiver_mc_unavailable/2</a>
 %     </td>
 %     <td>The MC becomes unavailable on the transceiver session.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#receiver_can_not_resume-5">receiver_can_not_resume/5</a>
+%       <a href="#receiver_cannot_bind-3">receiver_cannot_bind/3</a>
 %     </td>
 %     <td>
-%       Cannot resume the receiver session, though the connection was
-%       successfully reestablished.
+%       Cannot bind on the receiver session.
 %     </td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%      <a href="#transmitter_can_not_resume-5">transmitter_can_not_resume/5</a>
+%      <a href="#transmitter_cannot_bind-3">transmitter_cannot_bind/3</a>
 %     </td>
 %     <td>
-%       Cannot resume the transmitter session, though the connection was
-%       successfully reestablished.
+%       Cannot bind on the transmitter session.
 %     </td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%      <a href="#transceiver_can_not_resume-5">transceiver_can_not_resume/5</a>
+%      <a href="#transceiver_cannot_bind-3">transceiver_cannot_bind/3</a>
 %     </td>
 %     <td>
-%       Cannot resume the transceiver session, though the connection was
-%       successfully reestablished.
+%       Cannot bind on the transceiver session.
 %     </td>
 %   </tr>
 %   <tr>
@@ -139,62 +136,113 @@
 %
 % <h3><a name="bound_receiver-3">bound_receiver/3</a></h3>
 %
-% <tt>bound_receiver(Pid, Sid, SystemId) -> ok</tt>
+% <tt>bound_receiver(Pid, Sid, PduResp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>SystemId = string()</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
 % </ul>
 %
-% <p>After an outbind request or a period during the MC was unreachable, if 
-% the ESME gets to (re)bind as a receiver to the MC, this callback is triggered
-% to notify.  Returning value is ignored by the ESME. The callback module
-% may start some initialization on response to this callback.</p>
+% <p>The ESME just bound as a receiver.</p>
 %
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  
-% <tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process
-% id.</p>
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
 % <p><b>See also:</b> <tt>callback_bound_receiver/2</tt></p>
 %
 %
 % <h3><a name="bound_transmitter-3">bound_transmitter/3</a></h3>
 %
-% <tt>bound_transmitter(Pid, Sid, SystemId) -> ok</tt>
+% <tt>bound_transmitter(Pid, Sid, PduResp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>SystemId = string()</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
 % </ul>
 %
-% <p>After a period during the MC was unreachable, if the ESME gets to 
-% rebind as a transmitter to the MC, this callback is triggered to notify.  
-% Returning value is ignored by the ESME.  The callback module may start some
-% initialization on response to this callback.</p>
+% <p>The ESME just bound as a transmitter.</p>
 %
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  
-% <tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process
-% id.</p>
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
 % <p><b>See also:</b> <tt>callback_bound_transmitter/2</tt></p>
 %
 %
 % <h3><a name="bound_transceiver-3">bound_transceiver/3</a></h3>
 %
-% <tt>bound_transceiver(Pid, Sid, SystemId) -> ok</tt>
+% <tt>bound_transceiver(Pid, Sid, PduResp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>SystemId = string()</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
 % </ul>
 %
-% <p>After an outbind request or a period during the MC was unreachable, if 
-% the ESME gets to (re)bind as a transceiver to the MC, this callback is 
-% triggered to notify.  Returning value is ignored by the ESME.  The callback 
-% module may start some initialization on response to this callback.</p>
+% <p>The ESME just bound as a transceiver.</p>
 %
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  
-% <tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process
-% id.</p>
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
 % <p><b>See also:</b> <tt>callback_bound_transceiver/2</tt></p>
+%
+%
+% <h3><a name="receiver_cannot_bind-3">receiver_cannot_bind/3</a></h3>
+%
+% <tt>receiver_cannot_bind(Pid, Eid, Error) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Error = term()</tt></li>
+% </ul>
+%
+% <p>Cannot bind on the receiver session.</p>
+% 
+% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_receiver_cannot_bind/2</tt></p>
+%
+%
+% <h3><a name="transmitter_cannot_bind-3">transmitter_cannot_bind/3</a></h3>
+%
+% <tt>transmitter_can_not_resume(Pid, Eid, Error) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Error = term()</tt></li>
+% </ul>
+%
+% <p>Cannot bind on the transmitter session.</p>
+% 
+% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_transmitter_cannot_bind/2</tt></p>
+%
+%
+% <h3><a name="transceiver_cannot_bind-3">transceiver_cannot_bind/3</a></h3>
+%
+% <tt>transceiver_cannot_bind(Pid, Eid, Error) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Error = term()</tt></li>
+% </ul>
+%
+% <p>Cannot bind on the transceiver session.</p>
+% 
+% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_transceiver_cannot_bind/2</tt></p>
 %
 %
 % <h3><a name="receiver_unbind-2">receiver_unbind/2</a></h3>
@@ -263,141 +311,68 @@
 % <p><b>See also:</b> <tt>callback_transceiver_unbind/1</tt></p>
 %
 %
-% <h3><a name="receiver_mc_unavailable-4">receiver_mc_unavailable/4</a></h3>
+% <h3><a name="receiver_mc_unavailable-2">receiver_mc_unavailable/2</a></h3>
 %
-% <tt>receiver_mc_unavailable(Pid, Eid, Address, Port) -> ok</tt>
+% <tt>receiver_mc_unavailable(Pid, Eid) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
 % </ul>
 %
 % <p>If the MC becomes unavailable on the receiver session, this circumstance
 % is notified with a call to this function.</p>
 %
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
+% <p>Notice that this callback may also be triggered after an unbind
+% operation, when the MC closes the underlying connection first.  The ESME must
 % handle these <i>undesired</i> callbacks appropriately.</p>
 % 
 % <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_receiver_mc_unavailable/3</tt></p>
+% <p><b>See also:</b> <tt>callback_receiver_mc_unavailable/1</tt></p>
 %
 %
 % <h3>
-%   <a name="transmitter_mc_unavailable-4">transmitter_mc_unavailable/4</a>
+%   <a name="transmitter_mc_unavailable-2">transmitter_mc_unavailable/2</a>
 % </h3>
 %
-% <tt>transmitter_mc_unavailable(Pid, Eid, Address, Port) -> ok</tt>
+% <tt>transmitter_mc_unavailable(Pid, Eid) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
 % </ul>
 %
 % <p>If the MC becomes unavailable on the transmitter session, this
 % circumstance is notified with a call to this function.</p>
 %
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
+% <p>Notice that this callback may also be triggered after an unbind
+% operation, when the MC closes the underlying connection first.  The ESME must
 % handle these <i>undesired</i> callbacks appropriately.</p>
 % 
 % <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_transmitter_mc_unavailable/3</tt></p>
+% <p><b>See also:</b> <tt>callback_transmitter_mc_unavailable/1</tt></p>
 %
 %
 % <h3>
-%   <a name="transceiver_mc_unavailable-4">transceiver_mc_unavailable/4</a>
+%   <a name="transceiver_mc_unavailable-2">transceiver_mc_unavailable/2</a>
 % </h3>
 %
-% <tt>transceiver_mc_unavailable(Pid, Eid, Address, Port) -> ok</tt>
+% <tt>transceiver_mc_unavailable(Pid, Eid) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
 % </ul>
 %
 % <p>If the MC becomes unavailable on the transceiver session, this
 % circumstance is notified with a call to this function.</p>
 %
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
+% <p>Notice that this callback may also be triggered after an unbind
+% operation, when the MC closes the underlying connection first.  The ESME must
 % handle these <i>undesired</i> callbacks appropriately.</p>
 % 
 % <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_transceiver_mc_unavailable/3</tt></p>
-%
-%
-% <h3><a name="receiver_can_not_resume-5">receiver_can_not_resume/5</a></h3>
-%
-% <tt>receiver_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Addr = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Err  = term()</tt></li>
-% </ul>
-%
-% <p>After a period of unavailability of the MC, once the underlying 
-% connection was recover, the receiver session failed to rebind to the MC with
-% error <tt>Err</tt>.  The callback module must take care of this 
-% situation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-%
-% <p><b>See also:</b> <tt>callback_receiver_can_not_resume/4</tt></p>
-%
-%
-% <h3>
-%   <a name="transmitter_can_not_resume-5">transmitter_can_not_resume/5</a>
-% </h3>
-%
-% <tt>transmitter_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Addr = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Err  = term()</tt></li>
-% </ul>
-%
-% <p>After a period of unavailability of the MC, once the underlying 
-% connection was recover, the transmitter session failed to rebind to the MC 
-% with error <tt>Err</tt>.  The callback module must take care of this 
-% situation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-%
-% <p><b>See also:</b> <tt>callback_transmitter_can_not_resume/4</tt></p>
-%
-%
-% <h3>
-%   <a name="transceiver_can_not_resume-5">transceiver_can_not_resume/5</a>
-% </h3>
-%
-% <tt>transceiver_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Addr = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Err  = term()</tt></li>
-% </ul>
-%
-% <p>After a period of unavailability of the MC, once the underlying 
-% connection was recover, the transceiver session failed to rebind to the MC 
-% with error <tt>Err</tt>.  The callback module must take care of this 
-% situation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-%
-% <p><b>See also:</b> <tt>callback_transceiver_can_not_resume/4</tt></p>
+% <p><b>See also:</b> <tt>callback_transceiver_mc_unavailable/1</tt></p>
 %
 %
 % <h3><a name="smpp_listen_error-3">smpp_listen_error/3</a></h3>
@@ -520,6 +495,12 @@
 %    </li>
 % </ul>
 %
+% [26 Feb 2004]
+%
+% <ul>
+%   <li>Completely redesigned.</li>
+% </ul>
+%
 %
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
@@ -528,7 +509,6 @@
 % @end
 %%
 -module(gen_esme).
-
 
 -behaviour(gen_server).
 -behaviour(gen_esme_session).
@@ -548,15 +528,27 @@
 %%--------------------------------------------------------------------
 -export([start_link/2, 
          start_link/3, 
-         listen/1,
-         listen/2,
-         listen/3,
-         bind_receiver/2,
-         bind_receiver/3,
-         bind_transmitter/2,
-         bind_transmitter/3,
-         bind_transceiver/2,
-         bind_transceiver/3,
+         listen_receiver/1,
+         listen_receiver/2,
+         listen_receiver/3,
+         listen_transmitter/1,
+         listen_transmitter/2,
+         listen_transmitter/3,
+         listen_transceiver/1,
+         listen_transceiver/2,
+         listen_transceiver/3,
+         open_receiver/2,
+         open_receiver/3,
+         open_receiver/4,
+         open_transmitter/2,
+         open_transmitter/3,
+         open_transmitter/4,
+         open_transceiver/2,
+         open_transceiver/3,
+         open_transceiver/4,
+         bind_receiver/1,
+         bind_transmitter/1,
+         bind_transceiver/1,
          broadcast_sm/2,
          cancel_broadcast_sm/2,
          cancel_sm/2,
@@ -569,6 +561,9 @@
          unbind_receiver/1,
          unbind_transmitter/1,
          unbind_transceiver/1,
+         close_receiver/1,
+         close_transmitter/1,
+         close_transceiver/1,
          stop/1]).
 
 %%%-------------------------------------------------------------------
@@ -598,6 +593,8 @@
 % Macros
 %%--------------------------------------------------------------------
 -define(SERVER, ?MODULE).
+-define(MC_LIST_ALLOW_ALL, [{'_', '_'}]).
+-define(MC_LIST_DENY_ALL,  []).
 
 %%%-------------------------------------------------------------------
 % Records
@@ -620,7 +617,8 @@
 %         SessionSetup, 
 %         RxSession,
 %         TxSession,
-%         McList}
+%         RxMcList,
+%         TxMcList}
 %    Parent           = pid()
 %    Self             = pid()
 %    CallbackModule   = atom()
@@ -637,9 +635,9 @@
 %    SessionSetup     = gen_esme_session_setup()
 %    RxSession        = pid()
 %    TxSession        = pid()
-%    McList           = [McId]
-%    McId             = {SystemId, Password, BindMode}
-%    BindMode         = receiver | transceiver
+%    RxMcList         = [McId]
+%    TxMcList         = [McId]
+%    McId             = {SystemId, Password}
 %
 % %@doc Representation of the server's state.
 %
@@ -690,8 +688,19 @@
 %   <dt>TxSession: </dt><dd>PID of the transmitter session.  If bound as a
 %     transceiver this parameters has the same value as <tt>RxSession</tt>.
 %   </dd>
-%   <dt>McList: </dt><dd>List with the identities of the MCs from where an
-%     outbind operation is accepted.  See listen/2 for more details.
+%   <dt>RxMcList: </dt><dd>List with the identities of the MCs from where an
+%     outbind operation is accepted.  In response to the outbind, a 
+%     bind_receiver/bind_transceiver operations is issued.  See 
+%     <a href="#listen_receiver-2">listen_receiver/2</a> and
+%     <a href="#listen_transceiver-2">listen_transceiver/2</a> for more
+%     details.
+%   </dd>
+%   <dt>TxMcList: </dt><dd>List with the identities of the MCs from where an
+%     outbind operation is accepted.  In response to the outbind, a 
+%     bind_transmitter/bind_transceiver operations is issued.  See 
+%     <a href="#listen_transmitter-2">listen_transmitter/2</a> and
+%     <a href="#listen_transceiver-2">listen_transceiver/2</a> for more
+%     details.
 %   </dd>
 % </dl>
 % %@end
@@ -713,7 +722,8 @@
          session_setup,
          rx_session,
          tx_session,
-         mc_list    = []}).
+         rx_mc_list = [],
+         tx_mc_list = []}).
 
 %%%===================================================================
 % External functions
@@ -735,22 +745,22 @@
 %%
 behaviour_info(callbacks) ->
      [{bound_receiver, 3}, 
-     {bound_transmitter, 3}, 
-     {bound_transceiver, 3}, 
-     {receiver_unbind, 2},
-     {transmitter_unbind, 2},
-     {transceiver_unbind, 2},
-     {receiver_mc_unavailable, 4}, 
-     {transmitter_mc_unavailable, 4}, 
-     {transceiver_mc_unavailable, 4}, 
-     {receiver_can_not_resume, 5}, 
-     {transmitter_can_not_resume, 5}, 
-     {transceiver_can_not_resume, 5}, 
-     {smpp_listen_error, 3},
-     {smpp_listen_recovery, 3},
-     {alert_notification, 3},
-     {deliver_sm, 3}, 
-     {deliver_data_sm, 3}];
+      {bound_transmitter, 3}, 
+      {bound_transceiver, 3}, 
+      {receiver_cannot_bind, 3}, 
+      {transmitter_cannot_bind, 3}, 
+      {transceiver_cannot_bind, 3}, 
+      {receiver_unbind, 2},
+      {transmitter_unbind, 2},
+      {transceiver_unbind, 2},
+      {receiver_mc_unavailable, 2}, 
+      {transmitter_mc_unavailable, 2}, 
+      {transceiver_mc_unavailable, 2}, 
+      {smpp_listen_error, 3},
+      {smpp_listen_recovery, 3},
+      {alert_notification, 3},
+      {deliver_sm, 3}, 
+      {deliver_data_sm, 3}];
 
 behaviour_info(_Other) ->
     undefined.
@@ -815,105 +825,265 @@ start_link(EName, Module, Setup) ->
 
 
 %%%
-% @spec listen(Eid) -> ok
-%    Eid      = pid()
+% @spec listen_receiver(Eid) -> ok
+%    Eid = pid()
 %
 % @doc
-% @see listen/2
-% @see listen/3
+% @see listen_receiver/3
 %
-% @equiv listen(Eid, [{'_', '_', receiver}])
+% @equiv listen_receiver(Eid, MC_LIST_ALLOW_ALL)
 % @end
 %%
-listen(Eid) ->
-    listen(Eid, [{'_', '_', receiver}]).
+listen_receiver(Eid) ->
+    listen_receiver(Eid, ?MC_LIST_ALLOW_ALL).
     
 
 %%%
-% @spec listen(Eid, McList) -> ok
+% @spec listen_receiver(Eid, McList) -> ok
 %    Eid      = pid()
 %    McList   = [McId]
-%    McId     = {SystemId, Password, BindMode}
+%    McId     = {SystemId, Password}
 %    SystemId = string()
 %    Password = string()
-%    BindMode = receiver | transceiver
 %
 % @doc
-% @see listen/1
-% @see listen/3
+% @see listen_receiver/3
 %
-% @equiv listen(Eid, DEFAULT_SMPP_PORT, McList)
+% @equiv listen_receiver(Eid, DEFAULT_SMPP_PORT, McList)
 % @end
 %%
-listen(Eid, McList) ->
-    listen(Eid, ?DEFAULT_SMPP_PORT, McList).
+listen_receiver(Eid, McList) ->
+    listen_receiver(Eid, ?DEFAULT_SMPP_PORT, McList).
 
 
 %%%
-% @spec listen(Eid, Port, McList) -> ok
+% @spec listen_receiver(Eid, Port, McList) -> ok
 %    Eid      = pid()
 %    Port     = int()
 %    McList   = [McId]
-%    McId     = {SystemId, Password, BindMode}
+%    McId     = {SystemId, Password}
 %    SystemId = string()
 %    Password = string()
-%    BindMode = receiver | transceiver
 %
-% @doc Puts a session to listen on the <tt>Port</tt>, on listen/1 and
-% listen/2 the default SMPP port is assumed (defined by ?DEFAULT_SMPP_PORT).
-% If an MC connects to this session and issues an outbind, the ESME, whose 
-% pid() is <tt>Eid</tt>, sends the bind request corresponding to the 
-% <tt>BindMode</tt> associated to the calling MC (identified on the
-% outbind by a <tt>SystemId</tt> and <tt>Password</tt>).
+% @doc Puts the receiver session to listen on <tt>Port</tt>. In 
+% <a href="#listen_receiver-1">listen_receiver/1</a> and
+% <a href="#listen_receiver-2">listen_receiver/2</a> the default SMPP port is 
+% assumed (defined by ?DEFAULT_SMPP_PORT).  If an authorized MC connects to 
+% this session and issues an outbind, the  corresponding bind_receiver request 
+% is sent to the calling MC (identified on the outbind by a <tt>SystemId</tt> 
+% and <tt>Password</tt>).
 %
-% <p>The <tt>McList</tt> is searched in sequence.  Whenever a tuple on 
+% <p>The <tt>McList</tt> is searched in sequence.  If a tuple on 
 % this list matches the system_id and password sent along with the outbind
-% PDU, a bind request of <tt>BindMode</tt> is issued, if it fails the
-% next entry on the <tt>McList</tt> is tried.  Notice that the atom
+% PDU, access is granted to the calling MC.  Notice that the atom
 % <tt>'_'</tt> is a system_id and/or password wild-card.  The MC list 
-% <tt>[{'_', '_', receiver}]</tt> matches any MC identity and triggers a
-% a bind_receiver request from the ESME, in fact this is the default 
-% <tt>McList</tt> assumed by listen/1.</p>
+% <tt>[{'_', '_'}]</tt> matches any MC identity, this is the default 
+% <tt>McList</tt> assumed by <a href="#listen_receiver-1">listen_receiver/1</a>
+% .</p>
 %
-% <p>If the MC authentication fails, or the bind operations for given bind
-% modes do not succeed, the session goes back to listening, until a successful
-% outbind arrives or any other action is explicitly stated.</p>
+% <p>If the MC authentication fails the underlying session is closed.</p>
 %
 % @see gen_server:call/3
-% @see listen/1
-% @see listen/2
+% @see listen_receiver/1
+% @see listen_receiver/2
 % @end
 %
 % %@equiv
 %%
-listen(Eid, Port, McList) ->
-    gen_server:call(Eid, {listen, Port, McList}, infinity).
+listen_receiver(Eid, Port, McList) ->
+    gen_server:call(Eid, {listen_receiver, Port, McList}, infinity).
 
 
 %%%
-% @spec bind_receiver(Eid, Address) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    Address = string() | atom() | ip_address()
-%    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+% @spec listen_transmitter(Eid) -> ok
+%    Eid = pid()
 %
 % @doc
-% @see bind_receiver/3
+% @see listen_transmitter/3
 %
-% @equiv bind_receiver(Eid, Address, DEFAULT_SMPP_PORT)
+% @equiv listen_transmitter(Eid, MC_LIST_ALLOW_ALL)
 % @end
 %%
-bind_receiver(Eid, Address) ->
-    bind_receiver(Eid, Address, ?DEFAULT_SMPP_PORT).
+listen_transmitter(Eid) ->
+    listen_transmitter(Eid, ?MC_LIST_ALLOW_ALL).
+    
+
+%%%
+% @spec listen_transmitter(Eid, McList) -> ok
+%    Eid      = pid()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%
+% @doc
+% @see listen_transmitter/3
+%
+% @equiv listen_transmitter(Eid, DEFAULT_SMPP_PORT, McList)
+% @end
+%%
+listen_transmitter(Eid, McList) ->
+    listen_transmitter(Eid, ?DEFAULT_SMPP_PORT, McList).
 
 
 %%%
-% @spec bind_receiver(Eid, Address, Port) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+% @spec listen_transmitter(Eid, Port, McList) -> ok
+%    Eid      = pid()
+%    Port     = int()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%
+% @doc Puts the receiver session to listen on <tt>Port</tt>. In 
+% <a href="#listen_transmitter-1">listen_transmitter/1</a> and
+% <a href="#listen_transmitter-2">listen_transmitter/2</a> the default SMPP 
+% port is assumed (defined by ?DEFAULT_SMPP_PORT).  If an authorized MC 
+% connects to this session and issues an outbind, the  corresponding 
+% bind_receiver request is sent to the calling MC (identified on the outbind 
+% by a <tt>SystemId</tt> and <tt>Password</tt>).
+%
+% <p>The <tt>McList</tt> is searched in sequence.  If a tuple on 
+% this list matches the system_id and password sent along with the outbind
+% PDU, access is granted to the calling MC.  Notice that the atom
+% <tt>'_'</tt> is a system_id and/or password wild-card.  The MC list 
+% <tt>[{'_', '_'}]</tt> matches any MC identity, this is the default 
+% <tt>McList</tt> assumed by 
+% <a href="#listen_transmitter-1">listen_transmitter/1</a>.</p>
+%
+% <p>If the MC authentication fails the underlying session is closed.</p>
+%
+% @see gen_server:call/3
+% @see listen_transmitter/1
+% @see listen_transmitter/2
+% @end
+%
+% %@equiv
+%%
+listen_transmitter(Eid, Port, McList) ->
+    gen_server:call(Eid, {listen_transmitter, Port, McList}, infinity).
+
+
+%%%
+% @spec listen_transceiver(Eid) -> ok
+%    Eid = pid()
+%
+% @doc
+% @see listen_transceiver/3
+%
+% @equiv listen_transceiver(Eid, MC_LIST_ALLOW_ALL)
+% @end
+%%
+listen_transceiver(Eid) ->
+    listen_transceiver(Eid, ?MC_LIST_ALLOW_ALL).
+    
+
+%%%
+% @spec listen_transceiver(Eid, McList) -> ok
+%    Eid      = pid()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%
+% @doc
+% @see listen_transceiver/3
+%
+% @equiv listen_transceiver(Eid, DEFAULT_SMPP_PORT, McList)
+% @end
+%%
+listen_transceiver(Eid, McList) ->
+    listen_transceiver(Eid, ?DEFAULT_SMPP_PORT, McList).
+
+
+%%%
+% @spec listen_transceiver(Eid, Port, McList) -> ok
+%    Eid      = pid()
+%    Port     = int()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%
+% @doc Puts the receiver session to listen on <tt>Port</tt>. In 
+% <a href="#listen_transceiver-1">listen_transceiver/1</a> and
+% <a href="#listen_transceiver-2">listen_transceiver/2</a> the default SMPP 
+% port is assumed (defined by ?DEFAULT_SMPP_PORT).  If an authorized MC 
+% connects to this session and issues an outbind, the  corresponding 
+% bind_receiver request is sent to the calling MC (identified on the outbind 
+% by a <tt>SystemId</tt> and <tt>Password</tt>).
+%
+% <p>The <tt>McList</tt> is searched in sequence.  If a tuple on 
+% this list matches the system_id and password sent along with the outbind
+% PDU, access is granted to the calling MC.  Notice that the atom
+% <tt>'_'</tt> is a system_id and/or password wild-card.  The MC list 
+% <tt>[{'_', '_'}]</tt> matches any MC identity, this is the default 
+% <tt>McList</tt> assumed by 
+% <a href="#listen_transceiver-1">listen_transceiver/1</a>.</p>
+%
+% <p>If the MC authentication fails the underlying session is closed.</p>
+%
+% @see gen_server:call/3
+% @see listen_transceiver/1
+% @see listen_transceiver/2
+% @end
+%
+% %@equiv
+%%
+listen_transceiver(Eid, Port, McList) ->
+    gen_server:call(Eid, {listen_transceiver, Port, McList}, infinity).
+
+
+%%%
+% @spec open_receiver(Eid, Address) -> {ok, PduResp} | {error, Error}
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    PduResp  = pdu()
+%    Error    = term()
+%
+% @doc
+% @see open_receiver/4
+%
+% @equiv open_receiver(Eid, Address, MC_LIST_DENY_ALL)
+% @end
+%%
+open_receiver(Eid, Address) ->
+    open_receiver(Eid, Address, ?MC_LIST_DENY_ALL).
+
+
+%%%
+% @spec open_receiver(Eid, Address, McList) -> {ok, PduResp} | {error, Error}
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    PduResp  = pdu()
+%    Error    = term()
+%
+% @doc
+% @see open_receiver/4
+%
+% @equiv open_receiver(Eid, Address, DEFAULT_SMPP_PORT, McList)
+% @end
+%%
+open_receiver(Eid, Address, McList) ->
+    open_receiver(Eid, Address, ?DEFAULT_SMPP_PORT, McList).
+
+
+%%%
+% @spec open_receiver(Eid, Address, Port, McList) -> Result
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    Port     = int()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    Result   = {ok, PduResp} | {error, Error}
+%    PduResp  = pdu()
+%    Error    = term()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_receiver request.
 %
@@ -923,39 +1093,67 @@ bind_receiver(Eid, Address) ->
 % stated.</p>
 %
 % @see gen_server:call/3
-% @see bind_receiver/2
+% @see open_receiver/2
+% @see open_receiver/3
 % @end
 %
 % %@equiv
 %%
-bind_receiver(Eid, Address, Port) ->
-    gen_server:call(Eid, {bind_receiver, Address, Port}, infinity).
+open_receiver(Eid, Address, Port, McList) ->
+    gen_server:call(Eid, {open_receiver, Address, Port, McList}, infinity).
 
 
 %%%
-% @spec bind_transmitter(Eid, Address) -> {ok, PduResp} | {error, Error}
+% @spec open_transmitter(Eid, Address) -> {ok, PduResp} | {error, Error}
 %    Eid     = pid()
 %    Address = string() | atom() | ip_address()
 %    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+%    Error   = term()
 %
 % @doc
-% @see bind_transmitter/3
+% @see open_transmitter/4
 %
-% @equiv bind_transmitter(Eid, Address, DEFAULT_SMPP_PORT)
+% @equiv open_transmitter(Eid, Address, MC_LIST_DENY_ALL)
 % @end
 %%
-bind_transmitter(Eid, Address) ->
-    bind_transmitter(Eid, Address, ?DEFAULT_SMPP_PORT).
+open_transmitter(Eid, Address) ->
+    open_transmitter(Eid, Address, ?MC_LIST_DENY_ALL).
 
 
 %%%
-% @spec bind_transmitter(Eid, Address, Port) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+% @spec open_transmitter(Eid, Address, McList) -> Result
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    Result   = {ok, PduResp} | {error, Error}
+%    PduResp  = pdu()
+%    Error    = term()
+%
+% @doc
+% @see open_transmitter/4
+%
+% @equiv open_transmitter(Eid, Address, DEFAULT_SMPP_PORT, McList)
+% @end
+%%
+open_transmitter(Eid, Address, McList) ->
+    open_transmitter(Eid, Address, ?DEFAULT_SMPP_PORT, McList).
+
+
+%%%
+% @spec open_transmitter(Eid, Address, Port, McList) -> Result
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    Port     = int()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    Result   = {ok, PduResp} | {error, Error}
+%    PduResp  = pdu()
+%    Error    = term()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_transmitter request.
 %
@@ -965,39 +1163,67 @@ bind_transmitter(Eid, Address) ->
 % stated.</p>
 %
 % @see gen_server:call/3
-% @see bind_transmitter/2
+% @see open_transmitter/2
+% @see open_transmitter/3
 % @end
 %
 % %@equiv
 %%
-bind_transmitter(Eid, Address, Port) ->
-    gen_server:call(Eid, {bind_transmitter, Address, Port}, infinity).
+open_transmitter(Eid, Address, Port, McList) ->
+    gen_server:call(Eid, {open_transmitter, Address, Port, McList}, infinity).
 
 
 %%%
-% @spec bind_transceiver(Eid, Address) -> {ok, PduResp} | {error, Error}
+% @spec open_transceiver(Eid, Address) -> {ok, PduResp} | {error, Error}
 %    Eid     = pid()
 %    Address = string() | atom() | ip_address()
 %    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+%    Error   = term()
 %
 % @doc
-% @see bind_transceiver/3
+% @see open_transceiver/4
 %
-% @equiv bind_transceiver(Eid, Address, DEFAULT_SMPP_PORT)
+% @equiv open_transceiver(Eid, Address, MC_LIST_DENY_ALL)
 % @end
 %%
-bind_transceiver(Eid, Address) ->
-    bind_transceiver(Eid, Address, ?DEFAULT_SMPP_PORT).
+open_transceiver(Eid, Address) ->
+    open_transceiver(Eid, Address, ?MC_LIST_DENY_ALL).
 
 
 %%%
-% @spec bind_transceiver(Eid, Address, Port) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    PduResp = pdu()
-%    Error   = session_not_started | {error_code, int()}
+% @spec open_transceiver(Eid, Address, McList) -> Result
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    Result   = {ok, PduResp} | {error, Error}
+%    PduResp  = pdu()
+%    Error    = term()
+%
+% @doc
+% @see open_transceiver/4
+%
+% @equiv open_transceiver(Eid, Address, DEFAULT_SMPP_PORT, McList)
+% @end
+%%
+open_transceiver(Eid, Address, McList) ->
+    open_transceiver(Eid, Address, ?DEFAULT_SMPP_PORT, McList).
+
+
+%%%
+% @spec open_transceiver(Eid, Address, Port, McList) -> Result
+%    Eid      = pid()
+%    Address  = string() | atom() | ip_address()
+%    Port     = int()
+%    McList   = [McId]
+%    McId     = {SystemId, Password}
+%    SystemId = string()
+%    Password = string()
+%    Result   = {ok, PduResp} | {error, Error}
+%    PduResp  = pdu()
+%    Error    = term()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_transceiver request.
 %
@@ -1008,13 +1234,77 @@ bind_transceiver(Eid, Address) ->
 % stated.</p>
 %
 % @see gen_server:call/3
+% @see open_transceiver/2
+% @see open_transceiver/3
+% @end
+%
+% %@equiv
+%%
+open_transceiver(Eid, Address, Port, McList) ->
+    gen_server:call(Eid, {open_transceiver, Address, Port, McList}, infinity).
+
+
+%%%
+% @spec bind_receiver(Eid) -> {ok, PduResp} | {error, Error}
+%    Eid     = pid()
+%    PduResp = pdu()
+%    Error   = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, issues a bind_receiver request.
+%
+% <p>The session must be already open.</p>
+%
+% @see open_receiver/4
+% @see gen_server:call/3
+% @see bind_receiver/2
+% @end
+%
+% %@equiv
+%%
+bind_receiver(Eid) ->
+    gen_server:call(Eid, bind_receiver, infinity).
+
+
+%%%
+% @spec bind_transmitter(Eid) -> {ok, PduResp} | {error, Error}
+%    Eid     = pid()
+%    PduResp = pdu()
+%    Error   = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, issues a bind_transmitter request.
+%
+% <p>The session must be already open.</p>
+%
+% @see open_transmitter/4
+% @see gen_server:call/3
+% @see bind_transmitter/2
+% @end
+%
+% %@equiv
+%%
+bind_transmitter(Eid) ->
+    gen_server:call(Eid, bind_transmitter, infinity).
+
+
+%%%
+% @spec bind_transceiver(Eid) -> {ok, PduResp} | {error, Error}
+%    Eid     = pid()
+%    PduResp = pdu()
+%    Error   = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, issues a bind_transceiver request.
+%
+% <p>The session must be already open.</p>
+%
+% @see open_transceiver/4
+% @see gen_server:call/3
 % @see bind_transceiver/2
 % @end
 %
 % %@equiv
 %%
-bind_transceiver(Eid, Address, Port) ->
-    gen_server:call(Eid, {bind_transceiver, Address, Port}, infinity).
+bind_transceiver(Eid) ->
+    gen_server:call(Eid, bind_transceiver, infinity).
 
 
 %%%
@@ -1025,7 +1315,7 @@ bind_transceiver(Eid, Address, Port) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a broadcast_sm operation on the ESME identified by <tt>Eid
 % </tt>.
@@ -1047,7 +1337,7 @@ broadcast_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a cancel_broadcast_sm operation on the ESME identified by
 % <tt>Eid</tt>.
@@ -1069,7 +1359,7 @@ cancel_broadcast_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a cancel_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
@@ -1090,7 +1380,7 @@ cancel_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a data_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
@@ -1111,7 +1401,7 @@ data_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a query_broadcast_sm operation on the ESME identified by
 % <tt>Eid</tt>.
@@ -1133,7 +1423,7 @@ query_broadcast_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a query_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
@@ -1154,7 +1444,7 @@ query_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a data_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
@@ -1175,7 +1465,7 @@ replace_sm(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a submit_multi operation on the ESME identified by <tt>Eid
 % </tt>.
@@ -1197,7 +1487,7 @@ submit_multi(Eid, ParamList) ->
 %    ParamValue = term()
 %    Result     = {ok, PduResp} | {error, Error}
 %    PduResp    = pdu()
-%    Error      = {error_code, int()} | atom()
+%    Error      = int() | atom()
 %
 % @doc Issues a submit_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
@@ -1214,7 +1504,7 @@ submit_sm(Eid, ParamList) ->
 % @spec unbind_receiver(Eid) -> {ok, PduResp} | {error, Error}
 %    Eid     = pid()
 %    PduResp = pdu()
-%    Error   = undefined_session | {error_code, int()}
+%    Error   = undefined_session | int()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the receiver
 % session.
@@ -1235,7 +1525,7 @@ unbind_receiver(Eid) ->
 % @spec unbind_transmitter(Eid) -> {ok, PduResp} | {error, Error}
 %    Eid     = pid()
 %    PduResp = pdu()
-%    Error   = undefined_session | {error_code, int()}
+%    Error   = undefined_session | int()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the transmitter
 % session.
@@ -1256,7 +1546,7 @@ unbind_transmitter(Eid) ->
 % @spec unbind_transceiver(Eid) -> {ok, PduResp} | {error, Error}
 %    Eid     = pid()
 %    PduResp = pdu()
-%    Error   = undefined_session | {error_code, int()}
+%    Error   = undefined_session | int()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the transceiver
 % session.
@@ -1271,6 +1561,54 @@ unbind_transmitter(Eid) ->
 %%
 unbind_transceiver(Eid) ->
     gen_server:call(Eid, unbind_transceiver, infinity).
+
+
+%%%
+% @spec close_receiver(Eid) -> ok | {error, Error}
+%    Eid   = pid()
+%    Error = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, closes the receiver session.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+close_receiver(Eid) ->
+    gen_server:call(Eid, close_receiver, infinity).
+
+
+%%%
+% @spec close_transmitter(Eid) -> ok | {error, Error}
+%    Eid   = pid()
+%    Error = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, closes the transmitter session.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+close_transmitter(Eid) ->
+    gen_server:call(Eid, close_transmitter, infinity).
+
+
+%%%
+% @spec close_transceiver(Eid) -> ok | {error, Error}
+%    Eid   = pid()
+%    Error = term()
+%
+% @doc The ESME with pid <tt>Eid</tt>, closes the transceiver session.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+close_transceiver(Eid) ->
+    gen_server:call(Eid, close_transceiver, infinity).
 
 
 %%%
@@ -1318,7 +1656,7 @@ init([Pid, Module, Setup]) ->
                    system_type     = Setup#gen_esme_setup.system_type,
                    session_setup   = ?GET_GEN_ESME_SESSION_SETUP(Setup)},
     process_flag(trap_exit, true),
-	{ok, State}.
+    {ok, State}.
 
 
 %%%
@@ -1349,123 +1687,46 @@ init([Pid, Module, Setup]) ->
 % @see terminate/2
 % @end
 %%
-handle_call({listen, Port, McList}, _From, State) ->
-    case do_listen(State#state.rx_session, Port, State#state.session_setup) of
-        {ok, RxSession} ->
-            {reply, ok, State#state{rx_session = RxSession, mc_list = McList}};
-        Error ->
-            {reply, Error, State}
-    end;
+handle_call(bind_receiver, _From, State) ->
+    {reply, do_bind_receiver(State), State};
 
-handle_call({bind_receiver, Address, Port}, _From, State) ->
-    Session = State#state.rx_session,
-    case do_open(Session, Address, Port, State#state.session_setup) of
-        {ok, RxSession} ->
-            case do_bind_receiver(State#state{rx_session = RxSession}) of
-                {ok, PduResp, NewState} ->
-                    {reply, {ok, PduResp}, NewState};
-                BindError ->
-                    {reply, BindError, State#state{rx_session = RxSession}}
-            end;
-        OpenError ->
-            {reply, OpenError, State}
-    end;
+handle_call(bind_transmitter, _From, State) ->
+    {reply, do_bind_transmitter(State), State};
 
-handle_call({bind_transmitter, Address, Port}, _From, State) ->
-    Session = State#state.tx_session,
-    case do_open(Session, Address, Port, State#state.session_setup) of
-        {ok, TxSession} ->
-            case do_bind_transmitter(State#state{tx_session = TxSession}) of
-                {ok, PduResp, NewState} ->
-                    {reply, {ok, PduResp}, NewState};
-                BindError ->
-                    {reply, BindError, State#state{tx_session = TxSession}}
-            end;
-        OpenError ->
-            {reply, OpenError, State}
-    end;
-
-handle_call({bind_transceiver, Address, Port}, _From, State) ->
-    Session = State#state.rx_session,
-    case do_open(Session, Address, Port, State#state.session_setup) of
-        {ok, TrxSession} ->
-            case do_bind_transceiver(State#state{rx_session = TrxSession}) of
-                {ok, PduResp, NewState} ->
-                    {reply, {ok, PduResp}, NewState};
-                BindError ->
-                    {reply, BindError, State#state{rx_session = TrxSession}}
-            end;
-        OpenError ->
-            {reply, OpenError, State}
-    end;
-
-handle_call({broadcast_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
+handle_call(bind_transceiver, _From, State) ->
+    {reply, do_bind_transceiver(State), State};
 
 handle_call({broadcast_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_broadcast_sm(ParamList, From, State) end),
     {noreply, State};
-        
-handle_call({cancel_broadcast_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
 
 handle_call({cancel_broadcast_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_cancel_broadcast_sm(ParamList, From, State) end),
     {noreply, State};
 
-handle_call({cancel_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
-
 handle_call({cancel_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_cancel_sm(ParamList, From, State) end),
     {noreply, State};
 
-handle_call({data_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
-
 handle_call({data_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_data_sm(ParamList, From, State) end),
     {noreply, State};
-         
-handle_call({query_broadcast_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
 
 handle_call({query_broadcast_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_query_broadcast_sm(ParamList, From, State) end),
     {noreply, State};
 
-handle_call({query_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
-
 handle_call({query_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_query_sm(ParamList, From, State) end),
     {noreply, State};
-
-handle_call({replace_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
 
 handle_call({replace_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_replace_sm(ParamList, From, State) end),
     {noreply, State};
 
-handle_call({submit_multi, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
-
 handle_call({submit_multi, ParamList}, From, State) ->
     spawn_link(fun() -> do_submit_multi(ParamList, From, State) end),
     {noreply, State};
-
-handle_call({submit_sm, _ParamList}, _From, State) 
-  when State#state.tx_session == undefined ->
-    {reply, {error, undefined_session}, State};
 
 handle_call({submit_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_submit_sm(ParamList, From, State) end),
@@ -1479,13 +1740,10 @@ handle_call(unbind_transmitter, From, #state{tx_session = S} = State) ->
     spawn_link(fun() -> do_unbind(From, S) end),
     {noreply, State};
 
-handle_call(unbind_transceiver, From, #state{rx_session = S, 
+handle_call(unbind_transceiver, From, #state{rx_session = S,
                                              tx_session = S} = State) ->
     spawn_link(fun() -> do_unbind(From, S) end),
     {noreply, State};
-
-handle_call(unbind_transceiver, _From, State) ->
-    {reply, {error, undefined_session}, State};
 
 handle_call({deliver_sm, Pdu}, From, State) -> 
     spawn_link(fun() -> do_deliver_sm(Pdu, From, State) end),
@@ -1507,9 +1765,69 @@ handle_call({unbind, S}, _From, #state{tx_session = S} = State) ->
     % The MC issues an unbind on the transmitter session.
     {reply, callback_transmitter_unbind(State), State};
 
-handle_call({unbind, _S}, _From, State) ->
-    % The MC issues an unbind on a session not currently used.
-    {reply, ok, State}.
+handle_call({open_receiver, Addr, Port, McList}, _From, State) ->
+    case do_open(State#state.rx_session,Addr,Port,State#state.session_setup) of
+        {ok, RxSession} ->
+            {reply, ok, State#state{rx_session=RxSession, rx_mc_list=McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call({open_transmitter, Addr, Port, McList}, _From, State) ->
+    case do_open(State#state.tx_session,Addr,Port,State#state.session_setup) of
+        {ok, TxSession} ->
+            {reply, ok, State#state{tx_session=TxSession, tx_mc_list=McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call({open_transceiver, Addr, Port, McList}, _From, State) ->
+    case do_open(State#state.rx_session,Addr,Port,State#state.session_setup) of
+        {ok, TrxSession} ->
+            {reply, ok, State#state{rx_session = TrxSession,
+                                    tx_session = TrxSession,
+                                    rx_mc_list = McList,
+                                    tx_mc_list = McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call({listen_receiver, Port, McList}, _From, State) ->
+    case do_listen(State#state.rx_session, Port, State#state.session_setup) of
+        {ok, RxSession} ->
+            {reply, ok, State#state{rx_session=RxSession, rx_mc_list=McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call({listen_transmitter, Port, McList}, _From, State) ->
+    case do_listen(State#state.tx_session, Port, State#state.session_setup) of
+        {ok, TxSession} ->
+            {reply, ok, State#state{tx_session=TxSession, tx_mc_list=McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call({listen_transceiver, Port, McList}, _From, State) ->
+    case do_listen(State#state.rx_session, Port, State#state.session_setup) of
+        {ok, TrxSession} ->
+            {reply, ok, State#state{rx_session = TrxSession, 
+                                    tx_session = TrxSession,
+                                    rx_mc_list = McList,
+                                    tx_mc_list = McList}};
+        Error ->
+            {reply, Error, State}
+    end;
+
+handle_call(close_receiver, _From, #state{rx_session = S} = State) ->
+    {reply, do_close(S), State};
+
+handle_call(close_transmitter, _From, #state{tx_session = S} = State) ->
+    {reply, do_close(S), State};
+
+handle_call(close_transceiver, _From, #state{rx_session = S, 
+                                             tx_session = S} = State) ->
+    {reply, do_close(S), State}.
 
 
 %%%
@@ -1532,91 +1850,68 @@ handle_call({unbind, _S}, _From, State) ->
 % @end
 %%
 handle_cast({alert_notification, Pdu}, State) ->
-    callback_alert_notification(Pdu, State),
+    spawn_link(fun() -> callback_alert_notification(Pdu, State) end),
     {noreply, State};
     
 handle_cast(die, #state{rx_session = S, tx_session = S} = State) ->
-    shutdown_session(S), 
+    stop_session(S), 
     {noreply, State};
     
 handle_cast(die, #state{rx_session = R, tx_session = T} = State) ->
-    shutdown_session(R), 
-    shutdown_session(T), 
+    stop_session(R), 
+    stop_session(T), 
+    {noreply, State};
+
+handle_cast({outbind, S, SystemId, Password}, #state{rx_session = S,
+                                                     tx_session = S} = State)->
+    case authenticate_mc(SystemId, Password, State#state.rx_mc_list) of
+        true ->
+            do_bind_transceiver(State);
+        false ->  % Permission denied
+            do_close(S)
+    end,
     {noreply, State};
 
 handle_cast({outbind, S, SystemId, Password}, #state{rx_session = S} = State)->
-    case authenticate_mc(SystemId, Password, State#state.mc_list) of
-        {ok, BindModes} ->
-            case bind_to_mc(State, BindModes) of
-                {ok, receiver,NewState} ->
-                    callback_bound_receiver(SystemId, State),
-                    {noreply, NewState};
-                {ok, transceiver, NewState} ->
-                    callback_bound_transceiver(SystemId, State),
-                    {noreply, NewState};
-                _Error ->
-                    {noreply, State}
-            end;
-        _Error ->  % Permission denied
-            gen_esme_session:do_close(S),
-            {noreply, State}
-    end;
-
-handle_cast({outbind, Session, _SystemId, _Password}, State) ->
-    gen_esme_session:do_close(Session),
+    case authenticate_mc(SystemId, Password, State#state.rx_mc_list) of
+        true ->
+            do_bind_receiver(State);
+        false ->  % Permission denied
+            do_close(S)
+    end,
     {noreply, State};
 
-handle_cast({mc_unavailable, S, Addr, Port}, #state{rx_session = S, 
-                                                    tx_session = S} = State) ->
-    callback_transceiver_mc_unavailable(Addr, Port, State),
+handle_cast({outbind, S, SystemId, Password}, #state{tx_session = S} = State)->
+    case authenticate_mc(SystemId, Password, State#state.rx_mc_list) of
+        true ->
+            do_bind_transmitter(State);
+        false ->  % Permission denied
+            do_close(S)
+    end,
     {noreply, State};
 
-handle_cast({mc_unavailable, S, Addr, Port}, #state{rx_session = S} = State) ->
-    callback_receiver_mc_unavailable(Addr, Port, State),
+handle_cast({mc_unavailable, S}, #state{rx_session=S, tx_session=S} = State) ->
+    callback_transceiver_mc_unavailable(State),
     {noreply, State};
 
-handle_cast({mc_unavailable, S, Addr, Port}, #state{tx_session = S} = State) ->
-    callback_transmitter_mc_unavailable(Addr, Port, State),
+handle_cast({mc_unavailable, S}, #state{rx_session = S} = State) ->
+    callback_receiver_mc_unavailable(State),
     {noreply, State};
 
-handle_cast({mc_unavailable, _S, _Addr, _Port}, State) ->
+handle_cast({mc_unavailable, S}, #state{tx_session = S} = State) ->
+    callback_transmitter_mc_unavailable(State),
     {noreply, State};
 
-handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S, 
-                                                    tx_session = S} = State) ->
-    case do_bind_transceiver(State) of
-        {ok, PduResp, NewState} ->
-            SystemId = operation:get_param(system_id, PduResp),
-            callback_bound_transceiver(SystemId, NewState),
-            {noreply, NewState};
-        Error ->
-            callback_transceiver_can_not_resume(Addr,Port,Error,State),
-            {noreply, State}
-    end;
+handle_cast({resume_service, S}, #state{rx_session=S, tx_session=S} = State) ->
+    do_bind_transceiver(State),
+    {noreply, State};
 
-handle_cast({resume_service, S, Addr, Port}, #state{rx_session = S} = State) ->
-    case do_bind_receiver(State) of
-        {ok, PduResp, NewState} ->
-            SystemId = operation:get_param(system_id, PduResp),
-            callback_bound_receiver(SystemId, NewState),
-            {noreply, NewState};
-        Error ->
-            callback_receiver_can_not_resume(Addr, Port, Error, State),
-            {noreply, State}
-    end;
+handle_cast({resume_service, S}, #state{rx_session = S} = State) ->
+    do_bind_receiver(State),
+    {noreply, State};
 
-handle_cast({resume_service, S, Addr, Port}, #state{tx_session = S} = State) ->
-    case do_bind_transmitter(State) of
-        {ok, PduResp, NewState} ->
-            SystemId = operation:get_param(system_id, PduResp),
-            callback_bound_transmitter(SystemId, NewState),
-            {noreply, NewState};
-        Error ->
-            callback_transmitter_can_not_resume(Addr,Port,Error,State),
-            {noreply, State}
-    end;
-
-handle_cast({resume_service, _S, _Addr, _Port}, State) ->
+handle_cast({resume_service, S}, #state{tx_session = S} = State) ->
+    do_bind_transmitter(State),
     {noreply, State};
 
 handle_cast({smpp_listen_error, Port}, State) ->
@@ -1625,10 +1920,8 @@ handle_cast({smpp_listen_error, Port}, State) ->
 
 handle_cast({smpp_listen_recovery, Port}, State) ->
     callback_smpp_listen_recovery(Port, State),
-    {noreply, State};
+    {noreply, State}.
 
-handle_cast(Request, State) ->
-   {noreply, State}.
 
 %%%
 % @doc Auxiliary function for handle_cast/2
@@ -1638,70 +1931,12 @@ handle_cast(Request, State) ->
 %
 % %@see
 %%
-authenticate_mc(SystemId, Password, McList) ->
-    authenticate_mc(SystemId, Password, McList, []).
-
-%%%
-% @doc Auxiliary function for authenticate_mc/3
-% @end
-%
-% %@see
-%%
-authenticate_mc(_, _, [], []) ->
-    {error, permission_denied};
-
-authenticate_mc(_, _, [], Acc) ->
-    {ok, lists:reverse(Acc)};
-
-authenticate_mc(I, P, [{I, P, M}|L], Acc) when M == receiver; 
-                                               M == transceiver -> 
-    authenticate_mc(I, P, L, [M|Acc]);
-
-authenticate_mc(I, P, [{I, '_', M}|L], Acc) when M == receiver; 
-                                                 M == transceiver -> 
-    authenticate_mc(I, P, L, [M|Acc]);
-
-authenticate_mc(I, P, [{'_', P, M}|L], Acc) when M == receiver; 
-                                                 M == transceiver ->  
-    authenticate_mc(I, P, L, [M|Acc]);
-
-authenticate_mc(I, P, [{'_', '_', M}|L], Acc) when M == receiver; 
-                                                   M == transceiver ->  
-    authenticate_mc(I, P, L, [M|Acc]);
-
-authenticate_mc(I, P, [_|L], Acc) -> 
-    authenticate_mc(I, P, L, Acc).
-
-%%%
-% @doc Auxiliary function for handle_cast/2
-%
-% <p>This function is only used on the outbind request.</p>
-% @end
-%
-% %@see
-%%
-bind_to_mc(State, [receiver|BindModes]) ->
-    case do_bind_receiver(State) of
-        {ok, _PduResp, NewState} ->
-            {ok, receiver, NewState};
-        {error, {error_code, ?ESME_RALYBND}} ->
-            {error, {error_code, ?ESME_RALYBND}};
-        _Error ->
-            bind_to_mc(State, BindModes)
-    end;
-
-bind_to_mc(State, [transceiver|BindModes]) ->
-    case do_bind_transceiver(State) of
-        {ok, _PduResp, NewState} ->
-            {ok, transceiver, NewState};
-        {error, {error_code, ?ESME_RALYBND}} ->
-            {error, {error_code, ?ESME_RALYBND}};
-        _Error ->
-            bind_to_mc(State, BindModes)
-    end;
-
-bind_to_mc(_State, _BindModes) ->
-    {error, bind_failed}.
+authenticate_mc(_, _, [])                -> false;
+authenticate_mc(Id, Pwd, [{Id,  Pwd}|_]) -> true;
+authenticate_mc(Id, Pwd, [{Id,  '_'}|_]) -> true;
+authenticate_mc(Id, Pwd, [{'_', Pwd}|_]) -> true;
+authenticate_mc(Id, Pwd, [{'_', '_'}|_]) -> true;
+authenticate_mc(Id, Pwd, [_|T])          -> authenticate_mc(Id, Pwd, T).
                       
 
 %%%
@@ -1732,7 +1967,8 @@ handle_info({'EXIT', S, Reason}, #state{rx_session = S} = State) ->
             {stop, normal, State#state{rx_session = undefined, 
                                        tx_session = undefined}};
         TxSession when Reason /= normal ->
-            shutdown_session(TxSession),
+            do_close(TxSession),
+            stop_session(TxSession),
             {noreply, State#state{rx_session = undefined}};
         _TxSession ->
             {noreply, State#state{rx_session = undefined}}
@@ -1746,7 +1982,8 @@ handle_info({'EXIT', S, Reason}, #state{tx_session = S} = State) ->
             {stop, normal, State#state{rx_session = undefined,
                                        tx_session = undefined}};
         RxSession when Reason /= normal ->
-            shutdown_session(RxSession),
+            do_close(RxSession),
+            stop_session(RxSession),
             {noreply, State#state{tx_session = undefined}};
         _RxSession ->
             {noreply, State#state{tx_session = undefined}}
@@ -1756,10 +1993,13 @@ handle_info({'EXIT', _Child, Reason}, State) when Reason /= normal ->
     % A child process terminates with abnormal status.
     if
         State#state.rx_session == State#state.tx_session ->
-            shutdown_session(State#state.rx_session);
+            do_close(State#state.rx_session),
+            stop_session(State#state.rx_session);
         true ->
-            shutdown_session(State#state.rx_session),
-            shutdown_session(State#state.tx_session)
+            do_close(State#state.rx_session),
+            stop_session(State#state.rx_session),
+            do_close(State#state.tx_session),
+            stop_session(State#state.tx_session)
     end,
     {noreply, State};
 
@@ -1878,8 +2118,8 @@ unbind(Pid, Sid) ->
 %
 % %@equiv
 %%
-mc_unavailable(Pid, Sid, Address, Port) ->
-    gen_server:cast(Pid, {mc_unavailable, Sid, Address, Port}).
+mc_unavailable(Pid, Sid, _Address, _Port) ->
+    gen_server:cast(Pid, {mc_unavailable, Sid}).
 
     
 %%%
@@ -1901,8 +2141,8 @@ mc_unavailable(Pid, Sid, Address, Port) ->
 %
 % %@equiv
 %%
-resume_service(Pid, Sid, Address, Port) ->
-    gen_server:cast(Pid, {resume_service, Sid, Address, Port}).
+resume_service(Pid, Sid, _Address, _Port) ->
+    gen_server:cast(Pid, {resume_service, Sid}).
 
 
 %%%
@@ -2038,61 +2278,20 @@ deliver_data_sm(Pid, _Sid, Pdu) ->
 % Internal functions
 %%--------------------------------------------------------------------
 %%%
-% @spec do_listen(Session, Port, SessionSetup) -> Result
-%    Session      = pid()
-%    Port         = int()
-%    SessionSetup = gen_esme_session_setup()
-%    Result       = {ok, LsnSession} | {error, Error}
-%    LsnSession   = pid()
-%    Error        = session_not_started | {error_code, int()}
-%
-% @doc Sets a session to listen on <tt>Port</tt>.
-%
-% <p>If <tt>Session</tt> is undefined a new SMPP session will be started.
-% </p>
-%
-% <p>Bound sessions cause the error <tt>{error_code, ?ESME_RINVBNDSTS}
-% </tt>.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-do_listen(undefined, Port, SessionSetup)->
-    case gen_esme_session:start_link(?MODULE, SessionSetup) of
-        {ok, Session} ->
-            do_listen(Session, Port, SessionSetup);
-        _Error ->
-            {error, session_not_started}
-    end;
-
-do_listen(Session, Port, _SessionSetup) ->
-    case gen_esme_session:do_listen(Session, Port) of
-        ok ->
-            {ok, Session};
-        {error, {already_listening, _}} ->
-            {ok, Session};
-        {error, Error} ->
-            {error, {error_code, Error}}
-    end.
-
-
-%%%
 % @spec do_open(Session, Address, Port, SessionSetup) -> Result
-%    Session     = pid() | undefined
-%    Address     = string() | atom() | ip_address()
-%    Port        = int()
-%    SessionSetup  = session_setup()
-%    Result      = {ok, OpenSession} | {error, Error}
-%    OpenSession = pid()
-%    Error       = session_not_started | {error_code, int()}
+%    Session      = pid() | undefined
+%    Address      = string() | atom() | ip_address()
+%    Port         = int()
+%    SessionSetup = session_setup()
+%    Result       = {ok, OpenSession} | {error, Error}
+%    OpenSession  = pid()
+%    Error        = term()
 %
-% @doc Opens a session.  If <tt>Session</tt> is undefined a new SMPP
-% session will be started.
+% @doc Opens the given <tt>Session</tt>.  If <tt>Session</tt> is the atom 
+% <tt>undefined</tt>, a new SMPP session will be started.
 %
-% <p>Bound sessions cause the error <tt>{error_code, ?ESME_RINVBNDSTS}
-% </tt>.</p>
+% <p>Issuing an open operation on bound sessions returns
+% <tt>{error, ?ESME_RINVBNDSTS}</tt>.</p>
 % @end
 %
 % %@see
@@ -2103,29 +2302,88 @@ do_open(undefined, Address, Port, SessionSetup) ->
     case gen_esme_session:start_link(?MODULE, SessionSetup) of
         {ok, Session} ->
             do_open(Session, Address, Port, SessionSetup);
-        _Error ->
-            {error, session_not_started}
+        Error ->
+            Error
     end;
 
 do_open(Session, Address, Port, _SessionSetup) ->
     case gen_esme_session:do_open(Session, Address, Port) of
         ok ->
             {ok, Session};
-        {error, {already_connected, _, _}} ->
-            {ok, Session};
-        {error, Error} ->
-            {error, {error_code, Error}}
+        Error ->
+            Error
     end.
+
+
+%%%
+% @spec do_listen(Session, Port, SessionSetup) -> Result
+%    Session      = pid()
+%    Port         = int()
+%    SessionSetup = gen_esme_session_setup()
+%    Result       = {ok, LsnSession} | {error, Error}
+%    LsnSession   = pid()
+%    Error        = term()
+%
+% @doc Sets a session to listen on <tt>Port</tt>.
+%
+% <p>If <tt>Session</tt> is undefined a new SMPP session will be started.
+% </p>
+%
+% <p>Issuing a listen operation on bound sessions returns
+% <tt>{error, ?ESME_RINVBNDSTS}</tt>.</p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+do_listen(undefined, Port, SessionSetup)->
+    case gen_esme_session:start_link(?MODULE, SessionSetup) of
+        {ok, Session} ->
+            do_listen(Session, Port, SessionSetup);
+        Error ->
+            Error
+    end;
+
+do_listen(Session, Port, _SessionSetup) ->
+    case gen_esme_session:do_listen(Session, Port) of
+        ok ->
+            {ok, Session};
+        Error ->
+            Error
+    end.
+
+
+%%%
+% @spec do_close(Session) -> Result
+%    Session = pid() | undefined
+%    Result  = ok | {error, Error}
+%    Error   = term()
+%
+% @doc Closes the given <tt>Session</tt>.  If <tt>Session</tt> is the atom 
+% <tt>undefined</tt> the function does nothing.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+do_close(undefined) -> 
+    ok;
+
+do_close(Session) ->
+    gen_esme_session:do_close(Session).
 
 
 %%%
 % @spec do_bind_receiver(State) -> Result
 %    State    = state()
-%    Result   = {ok, PduResp, NewState} | {error, {error_code, int()}}
+%    Result   = {ok, PduResp} | {error, int()}
 %    PduResp  = pdu()
-%    NewState = state()
 %
 % @doc Issues a bind_receiver request on the receiver session of the ESME.
+%
+% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2133,33 +2391,32 @@ do_open(Session, Address, Port, _SessionSetup) ->
 % %@equiv
 %%
 do_bind_receiver(#state{rx_session = RxSession} = State) ->
-    ParamList = [{system_id,     State#state.system_id},
-                 {password,      State#state.password},
-                 {system_type,   State#state.system_type},
-                 {addr_ton,      State#state.addr_ton},
-                 {addr_npi,      State#state.addr_npi},
-                 {address_range, State#state.address_range}],
-    case gen_esme_session:bind_receiver(RxSession, ParamList) of
+    EsmeParams = [{system_id,     State#state.system_id},
+                  {password,      State#state.password},
+                  {system_type,   State#state.system_type},
+                  {addr_ton,      State#state.addr_ton},
+                  {addr_npi,      State#state.addr_npi},
+                  {address_range, State#state.address_range}],
+    case gen_esme_session:bind_receiver(RxSession, EsmeParams) of
         {ok, PduResp} ->
-            case State#state.tx_session of
-                TxSession when TxSession == RxSession -> % Acting as Trx
-                    {ok, PduResp, State#state{tx_session = undefined}};
-                _TxSession ->                            % Different sessions
-                    {ok, PduResp, State}
-            end;
-        {error, Error} ->
-            {error, {error_code, Error}}
+            callback_bound_receiver(PduResp, State),
+            {ok, PduResp};
+        Error ->
+            callback_receiver_cannot_bind(Error, State),
+            Error
     end.
 
 
 %%%
 % @spec do_bind_transmitter(State) -> Result
 %    State    = state()
-%    Result   = {ok, PduResp, NewState} | {error, {error_code, int()}}
+%    Result   = {ok, PduResp, NewState} | {error, int()}
 %    PduResp  = pdu()
 %    NewState = state()
 %
 % @doc Issues a bind_transmitter request on transmitter session of the ESME.
+%
+% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2167,40 +2424,33 @@ do_bind_receiver(#state{rx_session = RxSession} = State) ->
 % %@equiv
 %%
 do_bind_transmitter(#state{tx_session = TxSession} = State) ->
-    ParamList = [{system_id,     State#state.system_id},
-                 {password,      State#state.password},
-                 {system_type,   State#state.system_type},
-                 {addr_ton,      State#state.addr_ton},
-                 {addr_npi,      State#state.addr_npi},
-                 {address_range, State#state.address_range}],
-    case gen_esme_session:bind_transmitter(TxSession, ParamList) of
+    EsmeParams = [{system_id,     State#state.system_id},
+                  {password,      State#state.password},
+                  {system_type,   State#state.system_type},
+                  {addr_ton,      State#state.addr_ton},
+                  {addr_npi,      State#state.addr_npi},
+                  {address_range, State#state.address_range}],
+    case gen_esme_session:bind_transmitter(TxSession, EsmeParams) of
         {ok, PduResp} ->
-            case State#state.rx_session of
-                RxSession when RxSession == TxSession -> % Acting as Trx
-                    {ok, PduResp, State#state{rx_session = undefined}};
-                _RxSession ->                            % Different sessions
-                    {ok, PduResp, State}
-            end;
-        {error, Error} ->
-            {error, {error_code, Error}}
+            callback_bound_transmitter(PduResp, State),
+            {ok, PduResp};
+        Error ->
+            callback_transmitter_cannot_bind(Error, State),
+            Error
     end.
 
 
 %%%
 % @spec do_bind_transceiver(State) -> Result
 %    State    = state()
-%    Result   = {ok, PduResp, NewState} | {error, {error_code, int()}}
+%    Result   = {ok, PduResp, NewState} | {error, int()}
 %    PduResp  = pdu()
 %    NewState = state()
 %
 % @doc Issues a bind_transceiver request on the receiver session of the ESME.
+% Assumes the receiver session acts also as the transmitter session.
 %
-% <p>If there is a transmitter session defined, and is not equal to the 
-% receiver one, this function tries to close any previous transmitter 
-% session in order to assign the same session on both sides (transceiver).  
-% If the pre-existing transmitter session rejects to close, course it's bound,
-% the closing error code is returned.  Previously, on the receiver session, 
-% which was bound as transceiver, an unbound request is issued.</p>
+% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2208,31 +2458,19 @@ do_bind_transmitter(#state{tx_session = TxSession} = State) ->
 % %@equiv
 %%
 do_bind_transceiver(#state{rx_session = RxSession} = State) ->
-    ParamList = [{system_id,     State#state.system_id},
-                 {password,      State#state.password},
-                 {system_type,   State#state.system_type},
-                 {addr_ton,      State#state.addr_ton},
-                 {addr_npi,      State#state.addr_npi},
-                 {address_range, State#state.address_range}],
-    case gen_esme_session:bind_transceiver(RxSession, ParamList) of
+    EsmeParams = [{system_id,     State#state.system_id},
+                  {password,      State#state.password},
+                  {system_type,   State#state.system_type},
+                  {addr_ton,      State#state.addr_ton},
+                  {addr_npi,      State#state.addr_npi},
+                  {address_range, State#state.address_range}],
+    case gen_esme_session:bind_transceiver(RxSession, EsmeParams) of
         {ok, PduResp} ->
-            case State#state.tx_session of
-                TxSession when TxSession == RxSession -> % As Trx already
-                    {ok, PduResp, State};
-                undefined ->                             % Acting as Rx only
-                    {ok, PduResp, State#state{tx_session = RxSession}};
-                TxSession ->                             % Different sessions
-                    case gen_esme_session:do_close(TxSession) of
-                        ok ->
-                            gen_esme_session:stop(TxSession),
-                            {ok, PduResp, State#state{tx_session = RxSession}};
-                        {error, CloseError} ->
-                            gen_esme_session:unbind(RxSession),
-                            {error, {error_code, CloseError}}            
-                    end
-            end;
-        {error, BindError} ->
-            {error, {error_code, BindError}}
+            callback_bound_transceiver(PduResp, State),
+            {ok, PduResp};
+        Error ->
+            callback_transceiver_cannot_bind(Error, State),
+            Error
     end.
 
 
@@ -2518,30 +2756,24 @@ do_submit_sm(ParamList, From, #state{tx_session = S} = State) ->
 %    Tag     = term()
 %    Session = undefined | pid()
 %    PduResp = pdu()
-%    Error   = undefined_session | {error_code, int()}
+%    Error   = int()
 %
 % @doc Requests an unbind for a given session.
+%
+% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-do_unbind(From, undefined) ->
-    gen_server:reply(From, {error, undefined_session});
-
 do_unbind(From, Session) ->
-    Reply = case gen_esme_session:unbind(Session) of
-                {ok, PduResp} ->
-                    {ok, PduResp};
-                {error, Error} ->
-                    {error, {error_code, Error}}
-            end,
+    Reply = gen_esme_session:unbind(Session),
     gen_server:reply(From, Reply).
 
 
 %%%
-% @spec shutdown_session(Session) -> ok
+% @spec stop_session(Session) -> ok
 %    Session = pid() | undefined
 %
 % @doc Stops an underlying session. 
@@ -2551,11 +2783,10 @@ do_unbind(From, Session) ->
 %
 % %@equiv
 %%
-shutdown_session(undefined) ->
+stop_session(undefined) ->
     ok;
 
-shutdown_session(Session) ->
-    gen_esme_session:do_close(Session),
+stop_session(Session) ->
     gen_esme_session:stop(Session).
 
 
@@ -2563,9 +2794,9 @@ shutdown_session(Session) ->
 % Callback wrappers
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %%%
-% @spec callback_bound_receiver(SystemId, State) -> ok
-%    SystemId = string()
-%    State    = state()
+% @spec callback_bound_receiver(PduResp, State) -> ok
+%    PduResp = pdu()
+%    State   = state()
 %
 % @doc Wrapper for CallbackModule:bound_receiver/3.
 % @end
@@ -2574,20 +2805,20 @@ shutdown_session(Session) ->
 %
 % %@equiv
 %%
-callback_bound_receiver(SystemId, State) ->
+callback_bound_receiver(PduResp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_receiver(Pid, Eid, SystemId) of
+    case catch Mod:bound_receiver(Pid, Eid, PduResp) of
         _Whatever ->
             ok
     end.
 
 
 %%%
-% @spec callback_bound_transmitter(SystemId, State) -> ok
-%    SystemId = string()
-%    State    = state()
+% @spec callback_bound_transmitter(PduResp, State) -> ok
+%    PduResp = pdu()
+%    State   = state()
 %
 % @doc Wrapper for CallbackModule:bound_transmitter/3.
 % @end
@@ -2596,21 +2827,20 @@ callback_bound_receiver(SystemId, State) ->
 %
 % %@equiv
 %%
-callback_bound_transmitter(SystemId, State) ->
+callback_bound_transmitter(PduResp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_transmitter(Pid, Eid, SystemId) of
+    case catch Mod:bound_transmitter(Pid, Eid, PduResp) of
         _Whatever ->
             ok
     end.
 
 
 %%%
-% @spec callback_bound_transceiver(SystemId, State) -> ok
-%    SystemId = string()
-%    Password = string()
-%    State    = state()
+% @spec callback_bound_transceiver(PduResp, State) -> ok
+%    PduResp = pdu()
+%    State   = state()
 %
 % @doc Wrapper for CallbackModule:bound_transceiver/3.
 % @end
@@ -2619,11 +2849,11 @@ callback_bound_transmitter(SystemId, State) ->
 %
 % %@equiv
 %%
-callback_bound_transceiver(SystemId, State) ->
+callback_bound_transceiver(PduResp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_transceiver(Pid, Eid, SystemId) of
+    case catch Mod:bound_transceiver(Pid, Eid, PduResp) of
         _Whatever ->
             ok
     end.
@@ -2708,141 +2938,129 @@ callback_transceiver_unbind(State) ->
 
     
 %%%
-% @spec callback_receiver_mc_unavailable(Address, Port, State) -> ok
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    State   = state()
-%
-% @doc Wrapper for CallbackModule:receiver_mc_unavailable/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_receiver_mc_unavailable(Address, Port, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:receiver_mc_unavailable(Pid, Eid, Address, Port) of
-        _Whatever ->
-            ok
-    end.
-
-    
-%%%
-% @spec callback_transmitter_mc_unavailable(Address, Port, State) -> ok
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    State   = state()
-%
-% @doc Wrapper for CallbackModule:transmitter_mc_unavailable/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transmitter_mc_unavailable(Address, Port, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transmitter_mc_unavailable(Pid, Eid, Address, Port) of
-        _Whatever ->
-            ok
-    end.
-
-    
-%%%
-% @spec callback_transceiver_mc_unavailable(Address, Port, State) -> ok
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    State   = state()
-%
-% @doc Wrapper for CallbackModule:transceiver_mc_unavailable/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transceiver_mc_unavailable(Address, Port, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transceiver_mc_unavailable(Pid, Eid, Address, Port) of
-        _Whatever ->
-            ok
-    end.
-    
-
-%%%
-% @spec callback_receiver_can_not_resume(Addr, Port, Err, State) -> ok
-%    Addr  = string() | atom() | ip_address()
-%    Port  = int()
-%    Err   = term()
+% @spec callback_receiver_mc_unavailable(State) -> ok
 %    State = state()
 %
-% @doc Wrapper for CallbackModule:receiver_can_not_resume/5.
+% @doc Wrapper for CallbackModule:receiver_mc_unavailable/2.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_receiver_can_not_resume(Addr, Port, Err, State) ->
+callback_receiver_mc_unavailable(State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:receiver_can_not_resume(Pid,Eid,Addr,Port,Err) of
+    case catch Mod:receiver_mc_unavailable(Pid, Eid) of
+        _Whatever ->
+            ok
+    end.
+
+    
+%%%
+% @spec callback_transmitter_mc_unavailable(State) -> ok
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:transmitter_mc_unavailable/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transmitter_mc_unavailable(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transmitter_mc_unavailable(Pid, Eid) of
+        _Whatever ->
+            ok
+    end.
+
+    
+%%%
+% @spec callback_transceiver_mc_unavailable(State) -> ok
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:transceiver_mc_unavailable/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transceiver_mc_unavailable(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transceiver_mc_unavailable(Pid, Eid) of
         _Whatever ->
             ok
     end.
     
 
 %%%
-% @spec callback_transmitter_can_not_resume(Addr, Port, Err, State) -> ok
-%    Addr  = string() | atom() | ip_address()
-%    Port  = int()
-%    Err   = term()
+% @spec callback_receiver_cannot_bind(Error, State) -> ok
+%    Error = term()
 %    State = state()
 %
-% @doc Wrapper for CallbackModule:transmitter_can_not_resume/5.
+% @doc Wrapper for CallbackModule:receiver_cannot_bind/3.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_transmitter_can_not_resume(Addr, Port, Err, State) ->
+callback_receiver_cannot_bind(Error, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:transmitter_can_not_resume(Pid,Eid,Addr,Port,Err) of
+    case catch Mod:receiver_cannot_bind(Pid, Eid, Error) of
+        _Whatever ->
+            ok
+    end.
+    
+
+%%%
+% @spec callback_transmitter_cannot_bind(Error, State) -> ok
+%    Error = term()
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:transmitter_cannot_bind/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transmitter_cannot_bind(Error, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transmitter_cannot_bind(Pid, Eid, Error) of
         _Whatever ->
             ok
     end.
    
 
 %%%
-% @spec callback_transceiver_can_not_resume(Addr, Port, Err, State) -> ok
-%    Addr  = string() | atom() | ip_address()
-%    Port  = int()
-%    Err   = term()
+% @spec callback_transceiver_cannot_bind(Error, State) -> ok
+%    Error = term()
 %    State = state()
 %
-% @doc Wrapper for CallbackModule:transceiver_can_not_resume/5.
+% @doc Wrapper for CallbackModule:transceiver_cannot_bind/3.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_transceiver_can_not_resume(Addr, Port, Err, State) ->
+callback_transceiver_cannot_bind(Error, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:transceiver_can_not_resume(Pid,Eid,Addr,Port,Err) of
+    case catch Mod:transceiver_cannot_bind(Pid, Eid, Error) of
         _Whatever ->
             ok
     end.

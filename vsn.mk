@@ -1,1 +1,1 @@
-OSERL_VSN = 0.1
+OSERL_VSN = 0.2

@@ -10,7 +10,7 @@ include ../../vsn.mk
 VSN = $(OSERL_VSN)
 
 
-MODULES = echo_esme
+MODULES = echo_esme code_lock_esme
 
 
 ERL_FLAGS += -W
@@ -25,6 +25,8 @@ clean:
 	  	cd $$d; $(MAKE) clean; \
 	done
 	$(RM) $(EBIN)/*.beam
+
+realclean: clean
 
 $(EBIN)/%.beam:	%.erl
 	$(ERLC) $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o $(EBIN) $<

@@ -16,15 +16,17 @@ numbers on [SMPP 5.0].</p>
 <ol>
   <li><a href="#intro">Introduction</a></li>
   <li><a href="#overview">SMPP protocol implementation overview</a></li>
+  <li><a href="#install">Install OSERL</a></li>
   <li><a href="#howto">Developing SMS based applications with OSERL</a>
     <ol>
-      <li><a href="#howto_esme">How to implement an ESME with OSERL</a>
+      <li><a href="#howto_esme">How to implement an ESME</a>
         <ol>
           <li><a href="#echo">Sample echo ESME</a></li>
-        </ol>
+          <li><a href="#code_lock">Code lock ESME example</a></li>
+        </ol> 
       </li>
-      <li><a href="#howto_mc">How to implement a MC with OSERL</a></li>
-      <li><a href="#fit">Fitting OSERL to your needs</a>
+      <li><a href="#howto_mc">How to implement a MC</a></li>
+      <li><a href="#tune">Fine tune OSERL's SMPP implementation</a>
         <ol>
           <li><a href="#smpp_pdu">smpp_pdu.hrl</a></li>
           <li><a href="#smpp_param">smpp_param.hrl</a></li>
@@ -166,6 +168,35 @@ module on top of the PDU syntax.  This module hides the type descriptors of
 the SMPP specification to higher layers.</p>
 
 
+<h2><a name="install">Install OSERL</a></h2>
+
+Install common_lib package:
+
+<pre>
+  tar -zxvf common_lib-0.1.tar.gz
+  cd common_lib-0.1
+  make
+</pre>
+
+<p>Install oserl package:
+</p>
+
+<pre>
+  tar -zxvf oserl-0.1.tar.gz
+  cd oserl-0.1
+  make
+</pre>
+
+<p>Put the ebin directory of both packages in your code path.
+</p>
+<p>To compile an erlang program using oserl, don't forget to add a reference to
+the include directory:
+</p>
+
+<pre>
+   -I &lt;path-to-oserl&gt;/include 
+</pre>
+
 
 <h2><a name="howto">Developing SMS based applications with OSERL</a></h2>
 
@@ -174,277 +205,981 @@ Open SMPP Erlang Library.
 
 <p>Even if you don't have any prior experience with it, I strongly recommend 
 you considering erlang as the programming language for the development of 
-your ESME/MC or RE.</p>
-
+your ESME/MC or RE.
+</p>
 <p>If you are reluctant to experience with a new (and better) development 
 environment, you may want to consider using OSERL anyway.  Erlang has 
 <a href="http://www.erlang.org/doc/r9c/doc/tutorial/part_frame.html">mechanisms
-to talk to other languages</a> such us C or java.</p>
+to talk to other languages</a> such us C or java.
+</p>
+<p>Examples below only apply to erlang development.
+</p>
 
-<p>Examples below only apply to erlang development.</p>
 
+<h3><a name="howto_esme">How to implement an ESME</a></h3>
 
-<h3><a name="howto_esme">How to implement an ESME with OSERL</a></h3>
+This is a long read.  Hope the examples I've include here complement the rest 
+of the documentation (I realize there was a lack of code samples on it).
 
-Implementing a robust ESME (External Short Message Entity) using OSERL is 
-quite easy.
-
-<p>A generic ESME is provided by OSERL as a behavior.  This behavior, called
-<a href="gen_esme.html">gen_esme</a>, takes care of most of the cumbersome
-details associated to an ESME implementation, such us timers, error 
-checking/responses, link enquires, PDU sequencing, recovering/reconnection 
-strategies and so forth.</p>
-
-<p>By using this behavior, developers only need to implement those callbacks,
-exported on the <a href="gen_esme.html">gen_esme</a> module, that are relevant 
-to the particular service their ESME is intended to offer.</p>
-
-<p>A typical ESME implementation requires at least the following functions to
-be implemented (you may call your start/stop functions as you wish).</p>
-<ul>
-  <li><b>start_link</b> function.  Starts up the ESME and binds to the MC.
-
-    <p>This function must issue a call to 
-    <a href="gen_esme.html#start_link-2">gen_esme:start_link/2</a> or
-    <a href="gen_esme.html#start_link-3">gen_esme:start_link/3</a> to start
-    the ESME, and then binds to the MC as a 
-    <a href="gen_esme.html#bind_transceiver-3">transceiver</a>,
-    <a href="gen_esme.html#bind_transmitter-3">transmitter</a> or/and
-    <a href="gen_esme.html#bind_receiver-3">receiver</a> by means of the
-	appropriate bind functions: 
-    <a href="gen_esme.html#bind_transceiver-2">gen_esme:bind_transceiver/2</a>,
-    <a href="gen_esme.html#bind_transceiver-3">gen_esme:bind_transceiver/3</a>,
-    <a href="gen_esme.html#bind_transmitter-2">gen_esme:bind_transmitter/2</a>,
-    <a href="gen_esme.html#bind_transmitter-3">gen_esme:bind_transmitter/3</a>,
-    <a href="gen_esme.html#bind_receiver-2">gen_esme:bind_receiver/2</a>,
-    <a href="gen_esme.html#bind_receiver-3">gen_esme:bind_receiver/3</a>.</p>
-  </li>
-  <li><b>stop</b> function.  Unbinds from the MC and cleanly stops the ESME.
-
-    <p>Inside the body of this function, the appropriate unbind operation(s)
-    must be accomplished.  Using the corresponding functions to those for
-	binding at startup: 
-    <a href="gen_esme.html#unbind_transceiver-1">gen_esme:unbind_transceiver/1
-    </a>,
-    <a href="gen_esme.html#unbind_transmitter-1">gen_esme:unbind_transmitter/1
-    </a>,
-    <a href="gen_esme.html#unbind_receiver-1">gen_esme:unbind_receiver/1</a>.
-    Once unbounded from the MC, the ESME must be cleanly stopped by calling
-	<a href="gen_esme.html#stop-1">gen_esme:stop/1</a>.</p>
-  </li>
-</ul>
-
-<p>After the start/stop sequences are defined, developers should implement the
-callbacks their ESME is going to take care of.  Leaving a callback undefined
-retains the default behavior, which should be OK if that callback doesn't need 
-to be handled by that particular ESME implementation.</p> 
-
-<p>For example, if we want our ESME to perform some additional operations 
-when the connection to the MC goes down, by default <a href="gen_esme.html">
-gen_esme</a> behavior will try to rebind until the MC becomes again reachable, 
-we should implement the <a href="gen_esme.html#transceiver_mc_unavailable-4">
-gen_esme:transceiver_mc_unavailable/4</a>, 
-<a href="gen_esme.html#receiver_mc_unavailable-4">receiver_mc_unavailable/4
-</a> or/and the <a href="gen_esme.html#transmitter_mc_unavailable-4">
-transmitter_mc_unavailable/4</a> callbacks as needed.</p>
-
-<p>Most of the callbacks are used by the <a href="gen_esme.html">gen_esme</a>
-behavior to notify different events:  The other peer unbinds, the connection
-to the MC is lost...  Other should be implemented in order to handle SMPP
-operations such us <a href="gen_esme.html#deliver_sm-3">deliver_sm</a>, 
-<a href="gen_esme.html#deliver_data_sm-3">data_sm</a> or
-<a href="gen_esme.html#alert_notification-3">alert_notification</a>.  These
-operation callbacks receive the associated PDU as an argument.  Only correct 
-PDUs can trigger these callbacks.  If a PDU can not be successfully decoded, 
-the appropriate error is automatically notified to the MC from the session and 
-<i>no callback is forward</i> to the ESME.  Developers do not need to care 
-about SMPP errors at all, they are just responsible for implementing the logic 
-associated to those operations for their particular ESME.  PDUs are received 
-by callbacks as <a href="http://www.erlang.se/doc/doc-5.0.1/lib/stdlib-1.9.1/doc/">dictionaries</a>, thus their parameters are easily accessible by name.  See
-<a href="#storage">below</a> for further details.</p>
-
-<p>Section <a href="#echo">Sample echo ESME</a> shows a complete 
-example of an echo ESME implementation using OSERL.  This example may be also 
-found under <tt>doc/examples/</tt> in OSERL's directory structure.</p>
-
-<p>Please refer to <a href="gen_esme.html">gen_esme</a> documentation for
-a detailed information about functions and callbacks exported by this
-behavior.</p>
-
+<p>I assume you have OSERL installed and you are already familiar with 
+<a href="http://www.erlang.org/doc/r9c/doc/design_principles/part_frame.html">
+OTP behaviors</a>.  Should you encounter any problems installing OSERL, please 
+let me know.
+</p>
+<p>To implement an ESME I recommend using the <a href="gen_esme.html">gen_esme
+</a> behavior.  This is a custom behavior (provided within OSERL), which 
+automatically handles many of the cumbersome details associated to an ESME 
+implementation.  If you use this behavior you won't need to care about SMPP 
+timers, PDU sequencing, link enquires, PDU encoding/decoding, error checking, 
+error responses, recovering/reconnection strategies  and so forth.  The 
+<a href="gen_esme.html">gen_esme behavior</a> takes care of these things 
+for you.
+</p>
+<p>Let us see how the whole thing works by example.  First, we'll examine the
+<a href="examples/echo_esme.erl">echo_esme.erl</a> example.  Next we'll find 
+out how to implement a more complex ESME.
+</p>
 
 <h4><a name="echo">Sample echo ESME</a></h4>
 
-<p>Code below shows a <i>complete</i> working implementation of an ESME 
-providing an echo service.  This service returns received message to the 
-caller.</p>
+The echo ESME offers a very simple (and useless) service to subscribers.  
+Whenever a subscriber sends a Short Message to this service, the ESME responds
+to it sending back the exact same Short Message.
+
+<p>Please, read the comments along with the erlang code for the echo ESME shown
+below.  This example may be also found in <a href="examples/echo_esme.erl">
+doc/examples/echo_esme.erl</a>.
+</p>
 
 <pre>
-%%%
-% @doc Echo ESME.
-%
-% &lt;p>A complete echo ESME.&lt;/p>
-%
-% @copyright 2003 Enrique Marcote Peña
-% @author Enrique Marcote Peña &lt;mpquique@udc.es%gt;
-%         [http://www.des.udc.es/~mpquique/]
-% @version 1.0, {18 Jul 2003} 22:37:35.
-% @end
-%%
 -module(echo_esme).
 
--behaviour(gen_esme).
+% The module echo_esme implements the gen_esme behavior.  You need to include 
+% gen_esme.hrl to get the gen_esme_setup record definition.
 
-%%%-------------------------------------------------------------------
-% Include files
-%%--------------------------------------------------------------------
+-behaviour(gen_esme). 
+
 -include("gen_esme.hrl").
 
-%%%-------------------------------------------------------------------
-% External exports
-%%--------------------------------------------------------------------
+% Every ESME needs a start and stop function.  You may call these functions
+% as you wish.
+
 -export([start_link/5, stop/0]).
 
-%%%-------------------------------------------------------------------
-% Internal exports
-%%--------------------------------------------------------------------
--export([]).
+% You shall implement the callbacks you need for your particular ESME.
+% In this case, our ESME only cares about deliver_sm operations, thus we only
+% need to implement this callback.
 
-%%%-------------------------------------------------------------------
-% Internal gen_esme exports
-%%--------------------------------------------------------------------
--export([deliver_sm/3, deliver_data_sm/3]).
+-export([deliver_sm/3]).
 
-%%%-------------------------------------------------------------------
-% Macros
-%%--------------------------------------------------------------------
-
-%%%-------------------------------------------------------------------
-% Records
-%%--------------------------------------------------------------------
-
-%%%===================================================================
-% External functions
-%%====================================================================
-%%%
-% @spec start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -> ok
-%    SystemId = string()
-%    Password = string()
-%    AddrRange = string()
-%    SourceAddr = string()
-%    McAddr = string() | atom() | ip_address()
+% See what the start_link function does.
 %
-% @doc Starts the echo ESME and binds as a receiver and transmitter to McAddr.
-% @end
+% Gets a few parameters with the identity of the ESME and the MC address.
 %
-% %@see
+% Builds the gen_esme_setup record from the parameters using the macro
+% GEN_ESME_SETUP.  Look into gen_esme.hrl to see this macro definition and all
+% the fields available on the setup record.
 %
-% %@equiv
-%%
-start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
+% Starts the gen_esme using the gen_esme:start_link/3 function.  Notice that
+% the third argument is the Setup record.  The first and second arguments are
+% common to the start_link function on most of the OTP behaviors.
+%
+% If the call to gen_esme:start_link succeeds, the echo ESME binds to the SMSC
+% as a receiver and as a transmitter.
+
+start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -&gt;
+    io:format("Starting the echo ESME...", []),
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
     case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
-        {ok, Eid} ->
+        {ok, Eid} -&gt;
             gen_esme:bind_receiver(echo_esme, McAddr),
             gen_esme:bind_transmitter(echo_esme, McAddr),
+            io:format("bound as receiver/transceiver~n", []),
             {ok, Eid};
-        Error ->
+        Error -&gt;
+            Error
+    end.
+
+% No big deal.  The stop function does the opposite to the start_link.
+%
+% Once unbounded from the MC, the ESME must be cleanly stopped by calling
+% gen_esme:stop/1.
+
+stop() -&gt;
+    io:format("Stopping the echo ESME...", []),
+    gen_esme:unbind_receiver(echo_esme),
+    gen_esme:unbind_transmitter(echo_esme),
+    gen_esme:stop(echo_esme),
+    io:format("done~n", []).
+
+
+
+% This callback handles deliver_sm operations.  The gen_esme behavior will 
+% trigger this callback whenever receives a deliver_sm PDU from the SMSC.  
+% Developers must implement this function if they want to handle this SMPP 
+% operation on their ESME.
+% 
+% Since we want our echo ESME to respond to these PDUs, by sending back to the
+% subscriber the same short message we are receiving, we do so in the body 
+% of this function.
+%
+% Notice we have access to received PDU in the third argument of the callback. 
+% PDUs are internally represented as dictionaries.  Should you need to get any 
+% parameter of a PDU, you may use the pdu_syntax:get_value/2 function.
+%
+% Important.  PDUs received by callbacks are *guarantee* to be correct.  
+% Malformed PDUs are discarded at the session layer (where the appropriate
+% response PDU is sent back to the MC, indicating encountered error), thus
+% you do not need to care about checking PDU parameters, you can safely assume
+% PDUs you handle are correct.
+%
+% See how we send back our response issuing a submit_sm operation.  Read below
+% to see how the submit_sm (and other SMPP operation functions) work. 
+
+deliver_sm(_Pid, Eid, Pdu) -&gt; 
+    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    io:format("Echoing SM: ~p~n", [Mesg]),
+    spawn(fun() -&gt; gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+</pre>
+
+<p>You may copy this sample into a file called "echo_esme.erl" and compile:
+</p>
+
+<pre>
+    erlc -W -I /home/quique/projects/oserl/include echo_esme.erl
+</pre>
+
+<p>Now, open an erlang shell and test the echo ESME:
+</p>
+
+<pre>
+    ~$ erl
+    Erlang (BEAM) emulator version 5.2 [source] [hipe]
+
+    Eshell V5.2  (abort with ^G)
+    1&gt; executing user profile in HOME/.erlang
+    .erlang rc finished
+
+    1&gt; echo_esme:start_link("banana\0", "secret\0", "1948\0", "1948\0", {193, 144, 50, 51}).
+    Starting the echo ESME...bound as receiver/transceiver
+    {ok,&lt;0.29.0&gt;}
+</pre>
+
+<p>To test your applications you may use the <a href="http://www.mobilelandscape.co.uk">SMPPSim SMSC simulator by logica</a>.  I have this SMSC simulator 
+running on 193.144.50.51, so starting the echo ESME as shown above should work 
+for you also (if you have internet access).   You may use this machine for your
+tests, although be aware we use that box for testing just about everything over
+here, so it might not work properly.  You may install the SMPPSim on your own 
+system, then you will have access to the SMSC log also, which I find very 
+helpful.  You can download SMPPSim from <a href="http://www.mobilelandscape.co.uk/">http://www.mobilelandscape.co.uk</a>
+</p>
+<p>A couple of notes here.  On my .erlang I have:
+</p>
+<pre>
+    ~$ cat .erlang
+    io:format("executing user profile in HOME/.erlang\n",[]).
+    code:add_path("/usr/local/lib/erlang/lib/syntax_tools-1.3/ebin").
+    code:add_path("/usr/local/lib/erlang/lib/xmerl-0.19/ebin").
+    code:add_path("/usr/local/lib/erlang/lib/edoc-0.4/ebin").
+    code:add_path("/home/quique/projects/common_lib/ebin").
+    code:add_path("/home/quique/projects/oserl/ebin").
+    io:format(".erlang rc finished\n",[]).
+</pre>
+
+<p>To test the examples using the SMSC simulator mentioned above,  you may use 
+<a href="examples/send_oserl.html">this HTML form</a>, and try sending short 
+messages to your echo ESME.  Notice the address of the echo service is 1948 
+by default, if you decide to start the ESME with another address, you will 
+need to change the destination address in the HTML form.  Of course, if you are
+running the SMPPSim SMSC simulator on your own machine (recommended), you will 
+also need to update the IP address  in the HTML form (to point to your SMSC).
+</p>
+<p>Type the message <quote>hello</quote> in the HTML form and click the button 
+&lt;send&gt;.  You won't get the echo response back in your browser phone, or 
+whatever it looks like :-).  SMPPSim SMSC simulator doesn't support that, this 
+tool just listens on a HTTP port, but cannot send SM responses back.  Anyway 
+you should see the following message in your browser:
+</p>
+
+<pre>
+    DELIVER_SM invoked OK
+</pre>
+
+<p>This means the message was successfully forwarded to your ESME.  We can 
+confirm that looking on the erlang shell, where the following message should be
+displayed:
+</p>
+
+<pre>
+    Echoing SM: {short_message,"hello"}
+</pre>
+
+<p>Let's give it another try (send another message with text <quote>bye</quote>
+and stop the ESME).
+</p>
+
+<pre>
+    Echoing SM: {short_message,"bye"}
+    2&gt; echo_esme:stop().
+    Stopping the echo ESME...done
+    ok
+</pre>
+
+<p>During this session, the log of the SMSC simulator shows something like:
+</p>
+
+<pre>
+2004.02.07 11:25:43 668 INFO    CH8: BIND_RECEIVER:
+2004.02.07 11:25:43 668 INFO    Hex dump (39) bytes:
+2004.02.07 11:25:43 668 INFO    00000027:00000001:00000000:00000001:
+2004.02.07 11:25:43 668 INFO    62616E61:6E610073:65637265:74000050:
+2004.02.07 11:25:43 669 INFO    01013139:343800
+2004.02.07 11:25:43 669 INFO
+2004.02.07 11:25:43 670 INFO    SMPPReceiver: setting address range to 1948
+2004.02.07 11:25:43 670 INFO    CH8: BIND_RECEIVER_RESP:
+2004.02.07 11:25:43 671 INFO    Hex dump (24) bytes:
+2004.02.07 11:25:43 671 INFO    00000018:80000001:00000000:00000001:
+2004.02.07 11:25:43 671 INFO    534D5050:53696D00:
+2004.02.07 11:25:43 671 INFO
+2004.02.07 11:25:43 671 INFO    1 receivers connected and bound
+2004.02.07 11:25:43 674 INFO    ConnectionHandler CH9 accepted a connection
+2004.02.07 11:25:43 677 INFO    CH9: BIND_TRANSMITTER:
+2004.02.07 11:25:43 677 INFO    Hex dump (39) bytes:
+2004.02.07 11:25:43 677 INFO    00000027:00000002:00000000:00000001:
+2004.02.07 11:25:43 677 INFO    62616E61:6E610073:65637265:74000050:
+2004.02.07 11:25:43 677 INFO    01013139:343800
+2004.02.07 11:25:43 677 INFO
+2004.02.07 11:25:43 678 INFO    CH9: BIND_TRANSMITTER_RESP:
+2004.02.07 11:25:43 678 INFO    Hex dump (24) bytes:
+2004.02.07 11:25:43 678 INFO    00000018:80000002:00000000:00000001:
+2004.02.07 11:25:43 678 INFO    534D5050:53696D00:
+2004.02.07 11:25:43 678 INFO
+2004.02.07 11:25:49 022 INFO    HC0 accepted connection
+2004.02.07 11:25:49 023 INFO    HC0: DELIVER_SM
+2004.02.07 11:25:49 024 INFO    DELIVER_SM:
+2004.02.07 11:25:49 024 INFO    Hex dump (51) bytes:
+2004.02.07 11:25:49 024 INFO    00000033:00000005:00000000:00000006:
+2004.02.07 11:25:49 024 INFO    00000031:32333435:36373839:00000031:
+2004.02.07 11:25:49 024 INFO    39343800:00000000:00000000:00056865:
+2004.02.07 11:25:49 024 INFO    6C6C6F
+2004.02.07 11:25:49 025 INFO
+2004.02.07 11:25:49 025 INFO    HTTPController HC0 waiting for connection
+2004.02.07 11:25:49 030 INFO    CH8: DELIVER_SM_RESP:
+2004.02.07 11:25:49 030 INFO    Hex dump (27) bytes:
+2004.02.07 11:25:49 030 INFO    0000001B:80000005:00000000:00000006:
+2004.02.07 11:25:49 030 INFO    00001D00:01000428:000100
+2004.02.07 11:25:49 030 INFO
+2004.02.07 11:25:49 035 INFO    CH9: SUBMIT_SM:
+2004.02.07 11:25:49 035 INFO    Hex dump (117) bytes:
+2004.02.07 11:25:49 035 INFO    00000075:00000004:00000000:00000002:
+2004.02.07 11:25:49 035 INFO    00010131:39343800:00003132:33343536:
+2004.02.07 11:25:49 035 INFO    37383900:00000000:00000003:00056865:
+2004.02.07 11:25:49 035 INFO    6C6C6F00:05000100:00070001:01000600:
+2004.02.07 11:25:49 035 INFO    01010008:00020000:04240000:00190001:
+2004.02.07 11:25:49 035 INFO    00020F00:0101020E:00010104:21000101:
+2004.02.07 11:25:49 035 INFO    000D0001:00000F00:0101000E:00010100:
+2004.02.07 11:25:49 035 INFO    10000200:00
+2004.02.07 11:25:49 035 INFO
+2004.02.07 11:25:49 036 INFO    CH9:SUBMIT_SM_RESP:
+2004.02.07 11:25:49 036 INFO    Hex dump (25) bytes:
+2004.02.07 11:25:49 036 INFO    00000019:80000004:00000000:00000002:
+2004.02.07 11:25:49 037 INFO    37353333:33373232:00
+2004.02.07 11:25:49 037 INFO
+2004.02.07 11:25:56 460 INFO    HC0 accepted connection
+2004.02.07 11:25:56 461 INFO    HC0: DELIVER_SM
+2004.02.07 11:25:56 463 INFO    DELIVER_SM:
+2004.02.07 11:25:56 464 INFO    Hex dump (49) bytes:
+2004.02.07 11:25:56 464 INFO    00000031:00000005:00000000:00000007:
+2004.02.07 11:25:56 464 INFO    00000031:32333435:36373839:00000031:
+2004.02.07 11:25:56 464 INFO    39343800:00000000:00000000:00036279:
+2004.02.07 11:25:56 464 INFO    65
+2004.02.07 11:25:56 464 INFO
+2004.02.07 11:25:56 464 INFO    HTTPController HC0 waiting for connection
+2004.02.07 11:25:56 468 INFO    CH8: DELIVER_SM_RESP:
+2004.02.07 11:25:56 468 INFO    Hex dump (27) bytes:
+2004.02.07 11:25:56 468 INFO    0000001B:80000005:00000000:00000007:
+2004.02.07 11:25:56 468 INFO    00001D00:01000428:000100
+2004.02.07 11:25:56 468 INFO
+2004.02.07 11:25:56 469 INFO    CH9: SUBMIT_SM:
+2004.02.07 11:25:56 469 INFO    Hex dump (115) bytes:
+2004.02.07 11:25:56 469 INFO    00000073:00000004:00000000:00000003:
+2004.02.07 11:25:56 469 INFO    00010131:39343800:00003132:33343536:
+2004.02.07 11:25:56 469 INFO    37383900:00000000:00000003:00036279:
+2004.02.07 11:25:56 469 INFO    65000500:01000007:00010100:06000101:
+2004.02.07 11:25:56 470 INFO    00080002:00000424:00000019:00010002:
+2004.02.07 11:25:56 470 INFO    0F000101:020E0001:01042100:0101000D:
+2004.02.07 11:25:56 470 INFO    00010000:0F000101:000E0001:01001000:
+2004.02.07 11:25:56 470 INFO    020000
+2004.02.07 11:25:56 470 INFO
+2004.02.07 11:25:56 471 INFO    CH9:SUBMIT_SM_RESP:
+2004.02.07 11:25:56 471 INFO    Hex dump (25) bytes:
+2004.02.07 11:25:56 471 INFO    00000019:80000004:00000000:00000003:
+2004.02.07 11:25:56 471 INFO    36363137:36343538:00
+2004.02.07 11:25:56 471 INFO
+2004.02.07 11:26:07 273 INFO    CH8: UNBIND
+2004.02.07 11:26:07 273 INFO    Hex dump (16) bytes:
+2004.02.07 11:26:07 273 INFO    00000010:00000006:00000000:00000002:
+2004.02.07 11:26:07 273 INFO
+2004.02.07 11:26:07 273 INFO
+2004.02.07 11:26:07 275 INFO    0 receivers connected and bound
+2004.02.07 11:26:07 277 INFO    CH8: UNBIND_RESP
+2004.02.07 11:26:07 277 INFO    Hex dump (16) bytes:
+2004.02.07 11:26:07 277 INFO    00000010:80000006:00000000:00000002:
+2004.02.07 11:26:07 277 INFO
+2004.02.07 11:26:07 277 INFO
+2004.02.07 11:26:07 277 INFO    CH8 closing connection
+2004.02.07 11:26:07 277 INFO    ConnectionHandler CH8 waiting for connection
+2004.02.07 11:26:07 280 INFO    CH9: UNBIND
+2004.02.07 11:26:07 280 INFO    Hex dump (16) bytes:
+2004.02.07 11:26:07 281 INFO    00000010:00000006:00000000:00000004:
+2004.02.07 11:26:07 281 INFO
+2004.02.07 11:26:07 281 INFO
+2004.02.07 11:26:07 281 INFO    CH9: UNBIND_RESP
+2004.02.07 11:26:07 281 INFO    Hex dump (16) bytes:
+2004.02.07 11:26:07 281 INFO    00000010:80000006:00000000:00000004:
+2004.02.07 11:26:07 281 INFO
+2004.02.07 11:26:07 281 INFO
+2004.02.07 11:26:07 281 INFO    CH9 closing connection
+2004.02.07 11:26:07 281 INFO    ConnectionHandler CH9 waiting for connection
+</pre>
+
+<p>Now that we have our ESME stopped, and unbound from the SMSC simulator, if
+you try to send another message through your browser, you'll get:
+</p>
+
+<pre>
+    No receiver available to deliver messageHTTP/1.1 200
+
+    DELIVER_SM invoked OK
+</pre>
+
+<p>Let's dig into the details of the echo ESME implementation.
+</p>
+
+<p>If you look at the documentation for the <a href="gen_esme.html">gen_esme
+</a> behavior you will find all the exported functions and callbacks available 
+for this behavior.  Notice there is an exported function for every SMPP 
+operation an ESME may issue.  Among others, these functions are exported:
+</p>
+
+<ul>
+  <li>alert_notification</li>
+  <li>bind_receiver</li>
+  <li>bind_transceiver</li>
+  <li>bind_transmitter</li>
+  <li>broadcast_sm</li>
+  <li>cancel_broadcast_sm</li>
+  <li>cancel_sm</li>
+  <li>data_sm</li>
+  <li>query_broadcast_sm</li>
+  <li>query_sm</li>
+  <li>replace_sm</li>
+  <li>submit_multi</li>
+  <li>submit_sm</li>
+  <li>unbind_receiver</li>
+  <li>unbind_transceiver</li>
+  <li>unbind_transmitter</li>
+</ul>
+
+<p>As we mention, there are some other functions, most of them need to be 
+exported to implement the gen_esme_session behavior (notice the 
+<a href="gen_esme.html">gen_esme</a> behavior is implemented on top of the 
+<a href="gen_esme_session.html">gen_esme_session</a> behavior, which in turn 
+was built on top of the <a href="gen_connection.html">gen_connection</a> 
+behavior).  Let us ignore the rest of the exported functions at this moment.
+</p>
+
+<p>Recall the <a href="gen_esme.html#submit_sm-2">submit_sm</a> function and 
+how it was used in our <a href="#echo">echo_esme</a> example.
+</p>
+
+<pre>
+deliver_sm(_Pid, Eid, Pdu) -&gt;
+    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    io:format("Echoing SM: ~p~n", [Mesg]),
+    spawn(fun() -&gt; gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+</pre>
+
+<p>Notice how to submit a short message from your ESME.  Just need to call
+<a href="gen_esme.html#submit_sm-2">gen_esme:submit_sm/2</a>.  This function 
+is declared as follows:
+</p>
+
+<p><tt>submit_sm(Eid::Eid, ParamList::ParamList) -&gt; Result</tt>
+</p>
+
+<ul>
+  <li>Eid = pid()</li>
+  <li>ParamList = [{ParamName, ParamValue}]</li>
+  <li>ParamName = atom()</li>
+  <li>ParamValue = term()</li>
+  <li>Result = {ok, PduResp} | {error, Error}</li>
+  <li>PduResp = pdu()</li>
+  <li>Error = {error_code, int()} | atom()</li>
+</ul>
+
+<p>The first argument is the <tt>pid()</tt> (or name) of our ESME; most of the 
+OTP behaviors need also this type argument on their functions.  The second 
+argument (<tt>ParamList</tt>) holds the parameter values we are going to send 
+along in our PDU.  This argument is an assoc list; the items on this list are 
+pairs in the format <tt>{ParamName, ParamValue}</tt>.
+</p>
+
+<p>Let me rewrite the code above without using the sm module, so you can see
+all the details:
+</p>
+
+<pre>
+deliver_sm(_Pid, Eid, Pdu) -&gt;
+    % First of all, lets get the source address.
+
+    SourceAddrTon = pdu_syntax:get_value(source_addr_ton, Pdu),
+    SourceAddrNpi = pdu_syntax:get_value(source_addr_npi, Pdu),
+    SourceAddr    = pdu_syntax:get_value(source_addr,     Pdu),
+
+    % Get the message payload from the incoming PDU. 
+    % Since we don't know if the SMSC sends the short message using the
+    % short_message or the message_payload parameter, we have to look which
+    % one is used.
+    %
+    %  We'd also want to respond using the same parameter the SMSC uses.
+
+    MessageUserData = 
+        case pdu_syntax:get_value(short_message, Pdu) of
+            ShortMessage when ShortMessage == ""; ShortMessage == undefined -&gt;
+                {message_payload, pdu_syntax:get_value(message_payload, Pdu)};
+            ShortMessage -&gt;
+                {short_message, ShortMessage}
+        end,
+
+    % Now we're ready to create the parameter list for our response
+
+    ResponseAddr = [{dest_addr_ton,    SourceAddrTon},
+                    {dest_addr_npi,    SourceAddrNpi},
+                    {destination_addr, SourceAddr}],
+
+    ParamList = [MessageUserData|ResponseAddr],
+
+    io:format("Echoing SM: ~p~n", [MessageUserData]),
+
+    spawn(fun() -&gt; gen_esme:submit_sm(Eid, ParamList) end), 
+    {ok, []}.
+</pre>
+
+<p>Since getting the message_payload and creating the response address from the
+source address are common operations, both have been implemented in 
+<a href="sm.html">sm.erl</a> module by the functions 
+<a href="sm.html#message_user_data-1">sm:message_user_data/1</a> and 
+<a href="sm.html#reply_address-1">sm:reply_address/1</a> respectively.
+</p>
+
+<p>The <a href="gen_esme.htmlsubmit_sm-2">gen_esme:submit_sm/2</a> function 
+creates the <i>submit_sm</i> PDU using the values in the parameter list.  For 
+those parameters not defined in the parameter list, the default value is used. 
+Default values for every PDU are defined in <b>smpp_pdu.hrl</b>.  The values 
+on the parameter list override the defaults.
+</p>
+
+<p>Parameter names and types are those in the SMPP specification, should you 
+find any problems assigning values to an specific parameter, check their exact
+names and types in <b>smpp_param.hrl</b> and <b>smpp_base.hrl</b>.
+</p>
+
+<p>SMPP composite parameters were defined as records.  For example, values for 
+the <i>schedule_delivery_time</i> parameter must be defined by means of the 
+time record (defined in <b>smpp_base.hrl</b>).  Refer to to 
+<b>smpp_base.hrl</b> and <b>smpp_param.hrl</b> for greater details on 
+composite parameters.
+</p>
+
+<pre>
+-record(time,
+        {year,
+         month,
+         day,
+         hour,
+         minute,
+         second,
+         tenths_of_second,
+         difference,
+         relation_to_utc,
+         null_terminator = ?NULL_C_OCTET_STRING}).
+</pre>
+
+<p>The rest of the SMPP operation functions, have also a <tt>ParamList</tt> 
+argument and work pretty much like <a href="gen_esme.html#submit_sm-2">
+gen_esme:submit_sm/2</a>.
+</p>
+
+<p>Look at the callbacks exported by the <a href="gen_esme.html">gen_esme</a> 
+behavior.  That's where you implement the logic associated to your particular 
+ESME.  
+</p>
+
+<p>Under a connection failure, the <a href="gen_esme.html">gen_esme</a> 
+behavior will try to reestablish the sessions to the SMSC for ever.  If we 
+want to change this behavior for our echo ESME, we have to implement the 
+callbacks: <a href="gen_esme.html#receiver_mc_unavailable-4">gen_esme:receiver_mc_unavailable/4</a> and/or <a href="gen_esme.html#transmitter_mc_unavailable/4">gen_esme:transmitter_mc_unavailable/4</a>.  For instance, if we want our 
+echo ESME to notify the error somewhere and then halt, whenever the receiver 
+session goes down, just do:
+</p>
+
+<pre>
+receiver_mc_unavailable(Pid, Eid, Address, Port) -&gt;
+    % Notify the error 
+    ...
+
+    stop().
+</pre>
+
+<p>Look at the callbacks exported by the gen_esme behavior, to see how much you
+can customize your particular ESME implementation.
+</p>
+
+<p>Developers should implement the callbacks their ESME is going to take care 
+of. Leaving a callback undefined retains the default behavior, which should be 
+OK if you don't want your ESME to handle that operation.
+</p>
+
+<h4><a name="code_lock">Code lock ESME example</a></h4>
+
+Now lets look at the code_lock FSM example presented in the 
+<a href="http://www.erlang.org/doc/r9c/doc/design_principles/part_frame.html">Design Principles</a>.
+
+<pre>
+-module(code_lock).
+-behaviour(gen_fsm).
+
+-export([start_link/1, stop/0]).
+-export([button/1]).
+-export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
+
+start_link(Code) -&gt;
+    gen_fsm:start_link({local, code_lock}, code_lock, Code, []).
+
+stop() -&gt;
+    gen_fsm:send_all_state_event(code_lock, stop).
+
+
+button(Digit) -&gt;
+    gen_fsm:send_event(code_lock, {button, Digit}).
+
+init(Code) -&gt;
+    {ok, closed, {[], Code}}.
+
+closed({button, Digit}, {SoFar, Code}) -&gt;
+    case [Digit|SoFar] of
+        Code -&gt;
+            do_open(),
+            {next_state, open, {[], Code}, 3000};
+        Incomplete when length(Incomplete) &lt; length(Code) -&gt;
+            {next_state, closed, {Incomplete, Code}};
+        _Wrong -&gt;
+            {next_state, closed, {[], Code}}
+    end.
+
+open(timeout, State) -&gt;
+    do_close(),
+    {next_state, closed, State}.
+
+handle_event(stop, _StateName, StateData) -&gt;
+    {stop, normal, StateData}.
+
+terminate(normal, StateName, StateData) -&gt;
+    ok.
+ 
+do_open() -&gt;
+    io:format("do open~n", []).
+
+do_close() -&gt;
+    io:format("do close~n", []).
+</pre>    
+
+<p>Let's save this code in a module called <b>code_lock.erl</b>, compile it, 
+and see how it works:
+</p>
+
+<pre>
+    ~$ erl
+    Erlang (BEAM) emulator version 5.2 [source] [hipe]
+
+    Eshell V5.2  (abort with ^G)
+    1&gt; code_lock:start_link([1,2]).
+    {ok,&lt;0.34.0&gt;}
+    2&gt; code_lock:button(2).
+    ok
+    3&gt; code_lock:button(1).
+    do open
+    ok
+    do close
+    4&gt; code_lock:stop().
+    ok
+    5&gt;
+</pre>
+
+<p>Imagine now we want to make an ESME that let us open this door through SMS.
+The user must send all the digits in sequence to unlock the door, one digit per
+short message.  Not too useful I know, but this is just another weird example.
+</p>
+<p>We will also implement a rudimentary mechanism to let a user keep the 
+control of the door until he/she enters all the digits.  In the meanwhile, 
+messages from other users shall be ignored.
+</p>
+<p>The source code for such an ESME could be (this example is also available
+in <a href="examples/code_lock_esme.erl">examples/code_lock_esme.erl</a>)
+</p>
+
+<pre>
+-module(code_lock_esme).
+-behaviour(gen_fsm).
+-behaviour(gen_esme).
+
+-include("gen_esme.hrl").
+
+-export([start_link/6, stop/0]).
+-export([deliver_sm/3]).
+-export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
+
+
+start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) -&gt;
+	io:format("Starting the code lock ESME...", []),
+    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+    case gen_esme:start_link({local, code_lock_esme}, ?MODULE, Setup) of
+        {ok, Eid} -&gt;
+            gen_esme:bind_receiver(code_lock_esme, McAddr),
+            gen_esme:bind_transmitter(code_lock_esme, McAddr),
+            io:format("bound as receiver/transceiver.~n", []),
+            gen_fsm:start_link({local, code_lock_fsm}, ?MODULE, Code, []),
+            {ok, Eid};
+        Error -&gt;
             Error
     end.
 
 
-%%%
-% @spec stop() -> ok
-%
-% @doc Unbinds and stops the echo ESME.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-stop() ->
-    gen_esme:unbind_receiver(echo_esme),
-    gen_esme:unbind_transmitter(echo_esme),
-    gen_esme:stop(echo_esme).
+stop() -&gt;
+    io:format("Stopping the code lock ESME...", []),
+    gen_esme:unbind_receiver(code_lock_esme),
+    gen_esme:unbind_transmitter(code_lock_esme),
+    gen_esme:stop(code_lock_esme),
+    gen_fsm:send_all_state_event(code_lock_fsm, stop),
+	io:format("done~n", []).
 
 
-%%%===================================================================
-% ESME functions
-%%====================================================================
-%%%
-% @spec deliver_sm(Pid, Eid, Pdu) -> Result
-%    Pid        = pid()
-%    Eid        = pid()
-%    Pdu        = pdu()
-%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%    ParamList  = [{ParamName, ParamValue}]
-%    ParamName  = atom()
-%    ParamValue = term()
-%
-% @doc Short messages delivered by the ESME via this callback are enclosed
-% inside a deliver_sm PDU.
-%
-% &lt;p>The &lt;tt>ParamList&lt;/tt> included in the response is used to construct
-% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term &lt;tt>{error, Error, ParamList}&lt;/tt>, where &lt;tt>Error&lt;/tt> is the
-% desired command_status error code.&lt;/p>
-% 
-% &lt;p>&lt;tt>Pid&lt;/tt> is the ESME's parent id, &lt;tt>Eid&lt;/tt> as the ESME process id.
-% &lt;/p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-deliver_sm(_Pid, Eid, Pdu) -> 
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
-    spawn(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+deliver_sm(_Pid, _Eid, Pdu) -&gt; 
+    Caller = sm:reply_address(Pdu),
+    Digit  = list_to_integer(element(2, sm:message_user_data(Pdu))),
+    io:format("Digit: ~p~nCaller: ~p~n", [Digit, Caller]),
+    gen_fsm:send_event(code_lock_fsm, {button, Digit, Caller}),
     {ok, []}.
 
 
-%%%
-% @spec deliver_data_sm(Pid, Eid, Pdu) -> Result
-%    Pid        = pid()
-%    Eid        = pid()
-%    Pdu        = pdu()
-%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%    ParamList  = [{ParamName, ParamValue}]
-%    ParamName  = atom()
-%    ParamValue = term()
-%
-% @doc Short messages delivered by the ESME via this callback are enclosed
-% inside a data_sm PDU.
-%
-% &lt;p>The &lt;tt>ParamList&lt;/tt> included in the response is used to construct
-% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term &lt;tt>{error, Error, ParamList}&lt;/tt>, where &lt;tt>Error&lt;/tt> is the
-% desired command_status error code.&lt;/p>
-% 
-% &lt;p>&lt;tt>Pid&lt;/tt> is the ESME's parent id, &lt;tt>Eid&lt;/tt> as the ESME process id.
-% &lt;/p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-deliver_data_sm(_Pid, Eid, Pdu) -> 
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
-    spawn(fun() -> gen_esme:data_sm(Eid, [Mesg|Dest]) end), 
-    {ok, []}.
+init(Code) -&gt;
+    process_flag(trap_exit, true),
+    {ok, closed, {[], Code, undefined}}.
+
+
+closed({button, Digit, Caller}, {SoFar, Code, Who}) when Who == undefined;
+                                                         Who == Caller -&gt;
+    case [Digit|SoFar] of
+        Code -&gt;
+            do_open(Caller),
+            {next_state, open, {[], Code, Caller}, 3000};
+        Incomplete when length(Incomplete) &lt; length(Code) -&gt;
+            {next_state, closed, {Incomplete, Code, Caller}};
+        _Wrong -&gt;
+            {next_state, closed, {[], Code, undefined}}
+    end;
+closed({button, Digit, Caller}, {SoFar, Code, Who}) -&gt;
+    submit_sm("Please, wait your turn", Caller),
+	{next_state, closed, {SoFar, Code, Who}}.
+
+	
+
+open(timeout, {SoFar, Code, Who}) -&gt;
+    do_close(Who),
+    {next_state, closed, {SoFar, Code, undefined}};
+open({button, _Digit, Caller}, State) -&gt;
+    submit_sm("Another user is now entering. Please, wait your turn", Caller).
+
+
+handle_event(stop, _StateName, StateData) -&gt;
+    {stop, normal, StateData}.
+
+
+terminate(Reason, StateName, StateData) -&gt;
+    ok.
+
+ 
+do_open(Who) -&gt;
+    submit_sm("Came in please.  The door is open", Who).
+
+
+do_close(Who) -&gt;
+    submit_sm("Closing the door. Please, hurry up.", Who).
+
+
+submit_sm(Mesg, Dest) -&gt;
+	io:format("Submitted SM: ~p~nDestination: ~p~n", [Mesg, Dest]),
+    ParamList = [{short_message, Mesg}|Dest],
+    spawn(fun() -&gt; gen_esme:submit_sm(code_lock_esme, ParamList) end).
 </pre>
 
-<p>This server handles <i>deliver_sm</i> and <i>data_sm</i> deliveries.  The
-rest of the callbacks are left undefined, thus default behaviour is preserved.
+<p>Now it time to put this ESME to work.  Save it as code_lock_esme.erl, 
+compile it, and test it.  
+</p>
+<p>If you are planning to bind against the SMSC simulator used later, you may
+use the same html to send your testing short messages.
+</p>
+
+<pre>
+    ~$ erl
+    Erlang (BEAM) emulator version 5.2 [source] [hipe]
+
+    Eshell V5.2  (abort with ^G)
+    1&gt; executing user profile in HOME/.erlang
+    .erlang rc finished
+
+    1&gt; code_lock_esme:start_link("banana\0", "secret\0", "1949\0", "1949\0", {193, 144, 50, 51}, [1,2]).
+    Starting the code lock ESME...bound as receiver/transceiver
+    {ok,&lt;0.29.0&gt;}
+</pre>
+
+<p>This service is available at the address 1949.  A short message with the 
+text <quote>2</quote> arrives (sender has the address 981654321)
+</p>
+
+<pre>
+    Digit: 2
+    Caller: [{dest_addr_ton,0},
+             {dest_addr_npi,0},
+             {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+</pre>
+
+<p>At this point the user with address 981654321 has the control.  If 
+another user, with address 981123456, tries to unlock the door...
+</p>
+<pre>
+    Digit: 2
+    Caller: [{dest_addr_ton,0},
+             {dest_addr_npi,0},
+             {destination_addr,[57,56,49,49,50,51,52,53,54,0]}]
+    Submitted SM: "Please, wait your turn"
+    Destination: [{dest_addr_ton,0},
+                  {dest_addr_npi,0},
+                  {destination_addr,[57,56,49,49,50,51,52,53,54,0]}]
+</pre>
+
+<p>Send the second digit from 981654321 gets to our code lock ESME:
+</p>
+
+<pre>
+    Digit: 1
+    Caller: [{dest_addr_ton,0},
+             {dest_addr_npi,0},
+             {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+    Submitted SM: "Came in please.  The door is open"
+    Destination: [{dest_addr_ton,0},
+                  {dest_addr_npi,0},
+                  {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+    Submitted SM: "Closing the door. Please, hurry up."
+    Destination: [{dest_addr_ton,0},
+                  {dest_addr_npi,0},
+                  {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+    2> code_lock_esme:stop().
+    Stopping the code lock ESME...done
+    ok
+</pre>
+
+<p>In the meanwhile, this is what the SMSC log looks like:
+</p>
+
+<pre>
+2004.02.07 11:33:48 539 INFO    CH10: BIND_RECEIVER:
+2004.02.07 11:33:48 539 INFO    Hex dump (39) bytes:
+2004.02.07 11:33:48 539 INFO    00000027:00000001:00000000:00000001:
+2004.02.07 11:33:48 539 INFO    62616E61:6E610073:65637265:74000050:
+2004.02.07 11:33:48 539 INFO    01013139:343900
+2004.02.07 11:33:48 539 INFO
+2004.02.07 11:33:48 540 INFO    SMPPReceiver: setting address range to 1949
+2004.02.07 11:33:48 540 INFO    CH10: BIND_RECEIVER_RESP:
+2004.02.07 11:33:48 540 INFO    Hex dump (24) bytes:
+2004.02.07 11:33:48 540 INFO    00000018:80000001:00000000:00000001:
+2004.02.07 11:33:48 540 INFO    534D5050:53696D00:
+2004.02.07 11:33:48 540 INFO
+2004.02.07 11:33:48 540 INFO    1 receivers connected and bound
+2004.02.07 11:33:48 544 INFO    ConnectionHandler CH11 accepted a connection
+2004.02.07 11:33:48 546 INFO    CH11: BIND_TRANSMITTER:
+2004.02.07 11:33:48 546 INFO    Hex dump (39) bytes:
+2004.02.07 11:33:48 546 INFO    00000027:00000002:00000000:00000001:
+2004.02.07 11:33:48 547 INFO    62616E61:6E610073:65637265:74000050:
+2004.02.07 11:33:48 547 INFO    01013139:343900
+2004.02.07 11:33:48 547 INFO
+2004.02.07 11:33:48 551 INFO    CH11: BIND_TRANSMITTER_RESP:
+2004.02.07 11:33:48 551 INFO    Hex dump (24) bytes:
+2004.02.07 11:33:48 551 INFO    00000018:80000002:00000000:00000001:
+2004.02.07 11:33:48 551 INFO    534D5050:53696D00:
+2004.02.07 11:33:48 551 INFO
+2004.02.07 11:34:16 733 INFO    HC0 accepted connection
+2004.02.07 11:34:16 736 INFO    HC0: DELIVER_SM
+2004.02.07 11:34:16 737 INFO    DELIVER_SM:
+2004.02.07 11:34:16 737 INFO    Hex dump (47) bytes:
+2004.02.07 11:34:16 737 INFO    0000002F:00000005:00000000:00000008:
+2004.02.07 11:34:16 737 INFO    00000039:38313635:34333231:00000031:
+2004.02.07 11:34:16 737 INFO    39343900:00000000:00000000:000132
+2004.02.07 11:34:16 737 INFO
+2004.02.07 11:34:16 737 INFO    HTTPController HC0 waiting for connection
+2004.02.07 11:34:16 740 INFO    CH10: DELIVER_SM_RESP:
+2004.02.07 11:34:16 740 INFO    Hex dump (27) bytes:
+2004.02.07 11:34:16 741 INFO    0000001B:80000005:00000000:00000008:
+2004.02.07 11:34:16 741 INFO    00001D00:01000428:000100
+2004.02.07 11:34:16 741 INFO
+2004.02.07 11:34:43 900 INFO    HC0 accepted connection
+2004.02.07 11:34:43 901 INFO    HC0: DELIVER_SM
+2004.02.07 11:34:43 902 INFO    DELIVER_SM:
+2004.02.07 11:34:43 902 INFO    Hex dump (47) bytes:
+2004.02.07 11:34:43 903 INFO    0000002F:00000005:00000000:00000009:
+2004.02.07 11:34:43 903 INFO    00000039:38313132:33343536:00000031:
+2004.02.07 11:34:43 903 INFO    39343900:00000000:00000000:000132
+2004.02.07 11:34:43 904 INFO
+2004.02.07 11:34:43 904 INFO    HTTPController HC0 waiting for connection
+2004.02.07 11:34:43 908 INFO    CH10: DELIVER_SM_RESP:
+2004.02.07 11:34:43 908 INFO    Hex dump (27) bytes:
+2004.02.07 11:34:43 908 INFO    0000001B:80000005:00000000:00000009:
+2004.02.07 11:34:43 908 INFO    00001D00:01000428:000100
+2004.02.07 11:34:43 908 INFO
+2004.02.07 11:34:43 909 INFO    CH11: SUBMIT_SM:
+2004.02.07 11:34:43 909 INFO    Hex dump (134) bytes:
+2004.02.07 11:34:43 909 INFO    00000086:00000004:00000000:00000002:
+2004.02.07 11:34:43 909 INFO    00010131:39343900:00003938:31313233:
+2004.02.07 11:34:43 909 INFO    34353600:00000000:00000003:0016506C:
+2004.02.07 11:34:43 909 INFO    65617365:2C207761:69742079:6F757220:
+2004.02.07 11:34:43 909 INFO    7475726E:00050001:00000700:01010006:
+2004.02.07 11:34:43 909 INFO    00010100:08000200:00042400:00001900:
+2004.02.07 11:34:43 909 INFO    0100020F:00010102:0E000101:04210001:
+2004.02.07 11:34:43 910 INFO    01000D00:0100000F:00010100:0E000101:
+2004.02.07 11:34:43 910 INFO    00100002:0000
+2004.02.07 11:34:43 910 INFO
+2004.02.07 11:34:43 911 INFO    CH11:SUBMIT_SM_RESP:
+2004.02.07 11:34:43 911 INFO    Hex dump (25) bytes:
+2004.02.07 11:34:43 911 INFO    00000019:80000004:00000000:00000002:
+2004.02.07 11:34:43 911 INFO    31353730:33353535:00
+2004.02.07 11:34:43 911 INFO
+</pre>
+
+<p>One comment here, notice there is one minute of inactivity since last 
+submit, while in the demonstration above, I've intentionally waited 1 minute 
+before sending the last SM, see how the gen_esme behavior transparently 
+handles inactivity timers (look at the enquire links in both sessions).
+</p>
+ 
+<pre>
+2004.02.07 11:35:43 916 INFO    CH11: ENQUIRE_LINK:
+2004.02.07 11:35:43 916 INFO    Hex dump (16) bytes:
+2004.02.07 11:35:43 916 INFO    00000010:00000015:00000000:00000003:
+2004.02.07 11:35:43 916 INFO
+2004.02.07 11:35:43 917 INFO
+2004.02.07 11:35:43 917 INFO    CH11: ENQUIRE_LINK_RESP:
+2004.02.07 11:35:43 917 INFO    Hex dump (16) bytes:
+2004.02.07 11:35:43 917 INFO    00000010:80000015:00000000:00000003:
+2004.02.07 11:35:43 917 INFO
+2004.02.07 11:35:43 917 INFO
+2004.02.07 11:35:43 917 INFO    CH10: ENQUIRE_LINK:
+2004.02.07 11:35:43 917 INFO    Hex dump (16) bytes:
+2004.02.07 11:35:43 917 INFO    00000010:00000015:00000000:00000002:
+2004.02.07 11:35:43 917 INFO
+2004.02.07 11:35:43 917 INFO
+2004.02.07 11:35:43 918 INFO    CH10: ENQUIRE_LINK_RESP:
+2004.02.07 11:35:43 918 INFO    Hex dump (16) bytes:
+2004.02.07 11:35:43 918 INFO    00000010:80000015:00000000:00000002:
+2004.02.07 11:35:43 918 INFO
+2004.02.07 11:35:43 918 INFO
+2004.02.07 11:35:46 591 INFO    HC0 accepted connection
+2004.02.07 11:35:46 592 INFO    HC0: DELIVER_SM
+2004.02.07 11:35:46 595 INFO    DELIVER_SM:
+2004.02.07 11:35:46 595 INFO    Hex dump (47) bytes:
+2004.02.07 11:35:46 595 INFO    0000002F:00000005:00000000:0000000A:
+2004.02.07 11:35:46 595 INFO    00000039:38313635:34333231:00000031:
+2004.02.07 11:35:46 595 INFO    39343900:00000000:00000000:000131
+2004.02.07 11:35:46 595 INFO
+2004.02.07 11:35:46 595 INFO    HTTPController HC0 waiting for connection
+2004.02.07 11:35:46 599 INFO    CH10: DELIVER_SM_RESP:
+2004.02.07 11:35:46 599 INFO    Hex dump (27) bytes:
+2004.02.07 11:35:46 599 INFO    0000001B:80000005:00000000:0000000A:
+2004.02.07 11:35:46 599 INFO    00001D00:01000428:000100
+2004.02.07 11:35:46 599 INFO
+2004.02.07 11:35:46 600 INFO    CH11: SUBMIT_SM:
+2004.02.07 11:35:46 600 INFO    Hex dump (145) bytes:
+2004.02.07 11:35:46 600 INFO    00000091:00000004:00000000:00000004:
+2004.02.07 11:35:46 600 INFO    00010131:39343900:00003938:31363534:
+2004.02.07 11:35:46 601 INFO    33323100:00000000:00000003:00214361:
+2004.02.07 11:35:46 601 INFO    6D652069:6E20706C:65617365:2E202054:
+2004.02.07 11:35:46 601 INFO    68652064:6F6F7220:6973206F:70656E00:
+2004.02.07 11:35:46 604 INFO    05000100:00070001:01000600:01010008:
+2004.02.07 11:35:46 604 INFO    00020000:04240000:00190001:00020F00:
+2004.02.07 11:35:46 604 INFO    0101020E:00010104:21000101:000D0001:
+2004.02.07 11:35:46 604 INFO    00000F00:0101000E:00010100:10000200:
+2004.02.07 11:35:46 604 INFO    00
+2004.02.07 11:35:46 604 INFO
+2004.02.07 11:35:46 605 INFO    CH11:SUBMIT_SM_RESP:
+2004.02.07 11:35:46 605 INFO    Hex dump (25) bytes:
+2004.02.07 11:35:46 605 INFO    00000019:80000004:00000000:00000004:
+2004.02.07 11:35:46 605 INFO    33373838:30383434:00
+2004.02.07 11:35:46 605 INFO
+2004.02.07 11:35:49 616 INFO    CH11: SUBMIT_SM:
+2004.02.07 11:35:49 617 INFO    Hex dump (147) bytes:
+2004.02.07 11:35:49 617 INFO    00000093:00000004:00000000:00000005:
+2004.02.07 11:35:49 617 INFO    00010131:39343900:00003938:31363534:
+2004.02.07 11:35:49 617 INFO    33323100:00000000:00000003:0023436C:
+2004.02.07 11:35:49 617 INFO    6F73696E:67207468:6520646F:6F722E20:
+2004.02.07 11:35:49 617 INFO    506C6561:73652C20:68757272:79207570:
+2004.02.07 11:35:49 617 INFO    2E000500:01000007:00010100:06000101:
+2004.02.07 11:35:49 617 INFO    00080002:00000424:00000019:00010002:
+2004.02.07 11:35:49 617 INFO    0F000101:020E0001:01042100:0101000D:
+2004.02.07 11:35:49 617 INFO    00010000:0F000101:000E0001:01001000:
+2004.02.07 11:35:49 617 INFO    020000
+2004.02.07 11:35:49 617 INFO
+2004.02.07 11:35:49 618 INFO    CH11:SUBMIT_SM_RESP:
+2004.02.07 11:35:49 618 INFO    Hex dump (25) bytes:
+2004.02.07 11:35:49 618 INFO    00000019:80000004:00000000:00000005:
+2004.02.07 11:35:49 618 INFO    36393535:30323330:00
+2004.02.07 11:35:49 618 INFO
+2004.02.07 11:36:05 991 INFO    CH10: UNBIND
+2004.02.07 11:36:05 991 INFO    Hex dump (16) bytes:
+2004.02.07 11:36:05 992 INFO    00000010:00000006:00000000:00000003:
+2004.02.07 11:36:05 992 INFO
+2004.02.07 11:36:05 992 INFO
+2004.02.07 11:36:05 992 INFO    0 receivers connected and bound
+2004.02.07 11:36:05 992 INFO    CH10: UNBIND_RESP
+2004.02.07 11:36:05 992 INFO    Hex dump (16) bytes:
+2004.02.07 11:36:05 992 INFO    00000010:80000006:00000000:00000003:
+2004.02.07 11:36:05 992 INFO
+2004.02.07 11:36:05 992 INFO
+2004.02.07 11:36:05 992 INFO    CH10 closing connection
+2004.02.07 11:36:05 992 INFO    ConnectionHandler CH10 waiting for connection
+2004.02.07 11:36:05 995 INFO    CH11: UNBIND
+2004.02.07 11:36:05 997 INFO    Hex dump (16) bytes:
+2004.02.07 11:36:05 997 INFO    00000010:00000006:00000000:00000006:
+2004.02.07 11:36:05 997 INFO
+2004.02.07 11:36:05 997 INFO
+2004.02.07 11:36:05 998 INFO    CH11: UNBIND_RESP
+2004.02.07 11:36:05 998 INFO    Hex dump (16) bytes:
+2004.02.07 11:36:05 998 INFO    00000010:80000006:00000000:00000006:
+2004.02.07 11:36:05 998 INFO
+2004.02.07 11:36:05 998 INFO
+2004.02.07 11:36:05 998 INFO    CH11 closing connection
+2004.02.07 11:36:05 998 INFO    ConnectionHandler CH11 waiting for connection
+</pre>
+
+<p>Hope these examples help.  If you need further information, I'll be glad to
+send it to you, you only need to ask.
 </p>
 
 
-<h3><a name="howto_mc">How to implement a MC with OSERL</a></h3>
+<h3><a name="howto_mc">How to implement a MC</a></h3>
 
 Since current version of the library doesn't provide a MC behavior yet, MC
 developing requires a greater effort at the moment.
@@ -459,7 +1194,7 @@ and then implement a generic MC behavior on top of it, just like
 to include them on the next release.</p>
 
 
-<h3><a name="fit">Fitting OSERL to your needs</a></h3>
+<h3><a name="tune">Fine tune OSERL's SMPP implementation</a></h3>
 
 In order to fit OSERL to your particular needs, you may want to fine tune
 some parameters and/or PDU definitions of the SMPP protocol.
@@ -1267,7 +2002,8 @@ PDU fields definitions are more readable using these macros.</p>
 -define(SIZED_LIST(Type, Size), 
         #list{type = Type, size = Size}).
 
--define(SET(List), ?UNION(lists:map(fun(C) -> ?CONSTANT(C) end, List))).</pre>
+-define(SET(List), ?UNION(lists:map(fun(C) -&gt; ?CONSTANT(C) end, List))).
+</pre>
 
 
 <h2><a name="param">Param Syntax</a></h2>

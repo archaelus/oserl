@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Phone</title>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+</head>
+
+<body>
+<p>Don't forget to update the source code of this HTML form in order to list in
+the <b>destination_addr</b> options the address you are using for your ESME.
+I'll be a good idea to use your own destination address if you plan to use
+the SMSC simulator I mention below.
+</p>
+<p>Check that the IP address in the form <b>action</b> points to your 
+SMPPSim SMSC simulator.
+</p>
+<p>If you don't want to set up a SMSC simulator on your own, you may keep the 
+default action IP address, and use the simulator I usually have running on that
+machine.
+</p>
+<form name="form1" action="http://192.168.1.2:10099/">
+<table cellpadding="2" cellspacing="2" border="0" width="200" bgcolor="Black">
+  <tr align="center">
+    <td><font color="#ffffff">OSERL</font></td>
+  </tr>
+  <tr>
+    <td>
+      <table border="0" width="100%" bgcolor="Green" title="pantalla">
+        <tr>
+          <td colspan="2">
+            <font color="#ffffcc"><b>menssage to send:</b></font>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <textarea name="short_message" rows=6 cols=28 wrap=soft></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td><font size="-2">Destination address:</font></td> 
+          <td>
+            <select name="destination_addr">
+              <option value="1948">Echo ESME (1948)</option>
+              <option value="1949">Code Lock ESME (1949)</option>
+            </select>
+          </td>
+        </tr>
+        <tr> 
+          <td><font size="-2">Source address:</font></td>
+          <td>
+            <input size="20" maxlength="40" type=text 
+                   name="source_addr" value="123456789"/>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr align="center">
+    <td><font color="#ffffff">Simulator</font></td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <table border="0" width="100%" bgcolor="Black" title="buttons">
+        <tr>
+          <td valign="top" align="center">
+            <input type=submit name="send" value="send">
+          </td>
+          <td valign="top" align="center">
+            <input type=submit name="----" value="----">
+          </td>
+          <td valign="top" align="center">
+            <input type=reset name="clear" value="clear">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <table border="1" width="100%" bgcolor="Black" title="teclado">
+        <tr>
+          <td align="center"><font color="#ffffff">1</font></td>
+          <td align="center"><font color="#ffffff">2</font></td>
+          <td align="center"><font color="#ffffff">3</font></td>
+        </tr>
+        <tr>
+          <td align="center"><font color="#ffffff">4</font></td>
+          <td align="center"><font color="#ffffff">5</font></td>
+          <td align="center"><font color="#ffffff">6</font></td>
+        </tr>
+        <tr>
+          <td align="center"><font color="#ffffff">7</font></td>
+          <td align="center"><font color="#ffffff">8</font></td>
+          <td align="center"><font color="#ffffff">9</font></td>
+        </tr>
+        <tr>
+          <td align="center"><font color="#ffffff">*</font></td>
+          <td align="center"><font color="#ffffff">0</font></td>
+          <td align="center"><font color="#ffffff">#</font></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</form>
+
+</body>
+</html>

@@ -5,7 +5,7 @@ include vsn.mk
 VSN = $(OSERL_VSN)
 
 APPNAME = oserl
-SUB_DIRECTORIES = src
+SUB_DIRECTORIES = src doc/examples
 DOCDIR = doc
 DOC_OPTS = [{title,"Open SMPP Erlang Library"}]
 
@@ -49,6 +49,7 @@ release:
 	cp -p doc/img/*.png $(BASE_REL)/doc/img/
 	mkdir $(BASE_REL)/doc/examples
 	cp -p doc/examples/*.erl $(BASE_REL)/doc/examples/
+	cp -p doc/examples/send_oserl.html $(BASE_REL)/doc/examples/
 	cp -p doc/examples/Makefile $(BASE_REL)/doc/examples/
 	mkdir $(BASE_REL)/priv
 	mkdir $(BASE_REL)/include

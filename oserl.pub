@@ -1,5 +1,5 @@
 {name, "oserl"}.
-{vsn, {0,1}}.
+{vsn, {0,2}}.
 {summary, "SMPP v5.0 implementation"}.
 {author, "Enrique Marcote Peña", "mpquique@udc.es", "030627"}.
 {keywords, ["SMPP", "SMS", "ESME", "MC", "RE"]}.

@@ -20,11 +20,12 @@ EDOC_MODULES = \
 	sm \
 	gen_connection \
 	gen_esme_session \
-	gen_esme        
+	gen_esme \
+	gen_mc_session
 
 MODULES = $(EDOC_MODULES)
 
-EXTERNAL_HEADERS = gen_esme
+EXTERNAL_HEADERS = oserl
 
 INTERNAL_HEADERS = \
 	e164 \
@@ -34,8 +35,7 @@ INTERNAL_HEADERS = \
 	smpp_globals \
 	smpp_base \
 	smpp_param \
-	smpp_pdu \
-	gen_esme_session
+	smpp_pdu
 
 ERL_FILES = $(MODULES:%=%.erl)
 HRL_FILES = $(EXTERNAL_HEADERS:%=$(INCLUDE)/%.hrl) $(INTERNAL_HEADERS:%=$(INCLUDE)/%.hrl)
@@ -107,14 +107,7 @@ $(EBIN)/param_syntax.beam:../include/param_syntax.hrl
 $(EBIN)/pdu_syntax.beam:../include/smpp_globals.hrl
 $(EBIN)/pdu_syntax.beam:../include/pdu_syntax.hrl
 $(EBIN)/operation.beam:../include/smpp_globals.hrl
-$(EBIN)/operation.beam:../include/base_syntax.hrl
-$(EBIN)/operation.beam:../include/param_syntax.hrl
-$(EBIN)/operation.beam:../include/pdu_syntax.hrl
-$(EBIN)/operation.beam:../include/smpp_base.hrl
-$(EBIN)/operation.beam:../include/smpp_param.hrl
 $(EBIN)/operation.beam:../include/smpp_pdu.hrl
-$(EBIN)/gen_esme_session.beam:../include/smpp_globals.hrl
 $(EBIN)/gen_esme_session.beam:../include/oserl.hrl
-$(EBIN)/gen_esme.beam:../include/smpp_globals.hrl
-$(EBIN)/gen_esme.beam:../include/smpp_base.hrl
 $(EBIN)/gen_esme.beam:../include/oserl.hrl
+$(EBIN)/gen_mc_session.beam:../include/oserl.hrl

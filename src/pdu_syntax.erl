@@ -34,6 +34,15 @@
 %    </li>
 % </ul>
 %
+% [01 Mar 2004]
+%
+% <ul>
+%   <li><i>command_id</i> is now included into the PDU descriptor.</li>
+%   <li>New functions <a href="#command_id-1">command_id/1</a> and.
+%     <a href="#sequence_number-1">sequence_number/1</a> 
+%   </li>
+% </ul>
+%
 %
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
@@ -52,7 +61,7 @@
 %%%-------------------------------------------------------------------
 % External exports
 %%--------------------------------------------------------------------
--export([new_pdu/4, pack/3, unpack/3]).
+-export([command_id/1, sequence_number/1, new_pdu/4, pack/2, unpack/2]).
 
 %%%-------------------------------------------------------------------
 % Internal exports
@@ -70,6 +79,48 @@
 %%%===================================================================
 % External functions
 %%====================================================================
+%%%
+% @spec command_id(Pdu) -> int()
+%    Pdu = bin() | dictionary()
+%
+% @doc Gets the <i>command_id</i> of a PDU (binary or dictionary).
+%
+% <p>If the PDU is malformed and the <i>command_id</i> can not be found, the
+% function crashes.</p>
+% @end 
+%
+% % @see
+%
+% % @equiv
+%%
+command_id(<<_Len:32, CmdId:32, _Status:32, _SeqNum:32, _Body/binary>>) ->
+	CmdId;
+
+command_id(PduDict) -> 
+	dict:fetch(command_id,  PduDict).
+
+
+%%%
+% @spec sequence_number(Pdu) -> int()
+%    Pdu = bin() | dictionary()
+%
+% @doc Gets the <i>sequence_number</i> of a PDU (binary or dictionary).
+%
+% <p>If the PDU is malformed and the <i>sequence_number</i> can not be found, 
+% the function crashes.</p>
+% @end 
+%
+% % @see
+%
+% % @equiv
+%%
+sequence_number(<<_Len:32, _CmdId:32, _Status:32, SeqNum:32, _Body/binary>>) ->
+	SeqNum;
+
+sequence_number(PduDict) -> 
+	dict:fetch(sequence_number,  PduDict).
+
+
 %%%
 % @spec new_pdu(CommandId, CommandStatus, SequenceNumber, Body) -> PduDict
 %    CommandId      = int()
@@ -104,9 +155,8 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 
 
 %%%
-% @spec pack(PduDict, CmdId, PduType) -> Result
+% @spec pack(PduDict, PduType) -> Result
 %    PduDict        = dictionary()
-%    CmdId          = int()
 %    PduType        = {pdu, StdsTypes, TlvsTypes}
 %    StdsTypes      = [standard()]
 %    TlvsTypes      = [tlv()]
@@ -119,7 +169,7 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %    SequenceNumber = int()
 % 
 % @doc Packs an SMPP PDU dictionary into the corresponding byte stream
-% given the command_id (<tt>CmdId</tt>) and the <tt>PduType</tt>.
+% given the <tt>PduType</tt>.
 %
 % <p>This function generates an exception if <tt>command_id</tt>, 
 % <tt>command_status</tt>, <tt>sequence_number</tt> are not present
@@ -142,12 +192,12 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %   </li>
 % </ul>
 %
-% @see pack_body/2
+% @see pack_body/3
 % @end
 %
 % % @equiv
 %%
-pack(PduDict, CmdId, Type) ->
+pack(PduDict, Type) ->
     PackBody = 
         fun (CommandId, CommandStatus, Dict) when CommandStatus == 0; 
                                                   CommandId < 16#800000000 ->
@@ -159,7 +209,7 @@ pack(PduDict, CmdId, Type) ->
     Status = dict:fetch(command_status,  PduDict),
     SeqNum = dict:fetch(sequence_number, PduDict),
     case dict:fetch(command_id, PduDict) of
-        CmdId ->
+        CmdId when CmdId == Type#pdu.command_id ->
             case PackBody(CmdId, Status, PduDict) of
                 {ok, Body} ->
                     Len = size(Body) + 16,
@@ -172,9 +222,8 @@ pack(PduDict, CmdId, Type) ->
     end.
 
 %%%
-% @spec unpack(BinaryPdu, CmdId, PduType) -> Result
+% @spec unpack(BinaryPdu, PduType) -> Result
 %    BinaryPdu      = bin()
-%    CmdId          = int()
 %    PduType        = {pdu, StdsTypes, TlvsTypes}
 %    StdsTypes      = [standard()]
 %    TlvsTypes      = [tlv()]
@@ -187,8 +236,7 @@ pack(PduDict, CmdId, Type) ->
 %    SequenceNumber = int()
 % 
 % @doc Unpacks an SMPP Binary PDU (octet stream) into the corresponding 
-% PDU dictionary using the given command_id (<tt>CmdId</tt>) and the 
-% <tt>PduType</tt> descriptor.
+% PDU dictionary according to <tt>PduType</tt>.
 %
 % <p>This function returns:</p>
 %
@@ -212,13 +260,12 @@ pack(PduDict, CmdId, Type) ->
 %   </li>
 % </ul>
 %
-% @see unpack_body/2
+% @see unpack_body/3
 % @end
 %
 % % @equiv
 %%
-unpack(<<Len:32, Rest/binary>>, CmdId, Type) when Len == size(Rest) + 4, 
-                                                  Len >= 16 ->
+unpack(<<Len:32, Rest/binary>>, Type) when Len == size(Rest) + 4, Len >= 16 ->
     UnpackBody = 
         fun (CommandId, CommandStatus, Bin) when CommandStatus == 0; 
                                                  CommandId < 16#800000000 ->
@@ -228,7 +275,8 @@ unpack(<<Len:32, Rest/binary>>, CmdId, Type) when Len == size(Rest) + 4,
                 {ok, []}
         end,
     case Rest of
-        <<CmdId:32, Status:32, SeqNum:32, Body/binary>> ->
+        <<CmdId:32, Status:32, SeqNum:32, Body/binary>> 
+          when CmdId == Type#pdu.command_id ->
             case UnpackBody(CmdId, Status, Body) of
                 {ok, BodyPairs} ->
                     {ok, new_pdu(CmdId, Status, SeqNum, BodyPairs)};
@@ -239,7 +287,7 @@ unpack(<<Len:32, Rest/binary>>, CmdId, Type) when Len == size(Rest) + 4,
             {error, Other, ?ESME_RINVCMDID, SeqNum}
     end;
 
-unpack(_BinaryPdu, _CmdId, _PduType) ->
+unpack(_BinaryPdu, _PduType) ->
     {error, undefined, ?ESME_RINVCMDLEN, 0}.
 
 

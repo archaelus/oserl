@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -26,6 +26,27 @@
 % the corresponding section number on [SMPP 5.0].</p>
 %
 %
+% <h2>Parameters default value</h2>
+%
+% <p>Feel free to customize the default value of any parameter to fit the
+% particular needs of your implementation.  You may also want to change the
+% mandatory status of some TLVs.</p>
+%
+% <p><b>Important Note:</b> <i>Don't forget to recompile the module
+% <a href="operation.html">operation.erl</a> for the changes on this file to 
+% take effect.</i></p>
+%
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [17 Feb 2004]
+% 
+% <ul>
+%   <li>Default values added to Standard parameters.</li>
+%   <li>Default values for TLVs reviewed.</li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification. 
@@ -38,7 +59,7 @@
 % </dl>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {27 Apr 2003} {@time}.
@@ -71,18 +92,22 @@
 -define(ADDR_TON,        
         ?STANDARD(addr_ton, 
                   ?ADDR_TON_DOMAIN,
+                  ?TON_INTERNATIONAL,
                   undefined)).
 -define(SOURCE_ADDR_TON, 
         ?STANDARD(source_addr_ton, 
                   ?SOURCE_ADDR_TON_DOMAIN,
+                  ?TON_INTERNATIONAL,
                   ?ESME_RINVSRCTON)).
 -define(DEST_ADDR_TON,   
         ?STANDARD(dest_addr_ton, 
                   ?DEST_ADDR_TON_DOMAIN, 
+                  ?TON_INTERNATIONAL,
                   ?ESME_RINVDSTTON)).
 -define(ESME_ADDR_TON,   
         ?STANDARD(esme_addr_ton, 
                   ?ESME_ADDR_TON_DOMAIN, 
+                  ?TON_INTERNATIONAL,
                   undefined)).
 
 %%%
@@ -95,18 +120,22 @@
 -define(ADDR_NPI,        
         ?STANDARD(addr_npi, 
                   ?ADDR_NPI_DOMAIN, 
+                  ?NPI_ISDN,
                   undefined)).
 -define(SOURCE_ADDR_NPI, 
         ?STANDARD(source_addr_npi, 
                   ?SOURCE_ADDR_NPI_DOMAIN, 
+                  ?NPI_ISDN,
                   ?ESME_RINVSRCNPI)).
 -define(DEST_ADDR_NPI,   
         ?STANDARD(dest_addr_npi, 
                   ?DEST_ADDR_NPI_DOMAIN, 
+                  ?NPI_ISDN,
                   ?ESME_RINVDSTNPI)).
 -define(ESME_ADDR_NPI,   
         ?STANDARD(esme_addr_npi, 
                   ?ESME_ADDR_NPI_DOMAIN,  
+                  ?NPI_ISDN,
                   undefined)).
 
 %%%
@@ -125,6 +154,7 @@
 -define(ADDRESS_RANGE, 
         ?STANDARD(address_range, 
                   ?ADDRESS_RANGE_DOMAIN, 
+                  ?NULL_C_OCTET_STRING,
                   undefined)).
 
 %%%
@@ -141,6 +171,7 @@
 % -define(COMMAND_ID, 
 %         ?STANDARD(command_id, 
 %                   ?COMMAND_ID_DOMAIN, 
+%                   undefined,
 %                   ?ESME_RINVCMDID)).
 
 %%%
@@ -159,10 +190,12 @@
 % -define(COMMAND_STATUS,    
 %         ?STANDARD(command_status, 
 %                   ?COMMAND_STATUS_DOMAIN, 
+%                   undefined, 
 %                   undefined)).
 -define(ERROR_STATUS_CODE, 
         ?STANDARD(error_status_code, 
-                  ?ERROR_STATUS_CODE_DOMAIN, 
+                  ?ERROR_STATUS_CODE_DOMAIN,
+                  undefined, 
                   undefined)).
 
 %%%
@@ -175,7 +208,8 @@
 %%
 -define(DATA_CODING, 
         ?STANDARD(data_coding, 
-                  ?DATA_CODING_DOMAIN, 
+                  ?DATA_CODING_DOMAIN,
+                  ?ENCODING_SCHEME_LATIN_1, 
                   ?ESME_RINVDCS)).
 
 %%%
@@ -189,10 +223,12 @@
 -define(DESTINATION_ADDR_21, 
         ?STANDARD(destination_addr, 
                   ?DESTINATION_ADDR_21_DOMAIN, 
+                  undefined,
                   ?ESME_RINVDSTADR)).
 -define(DESTINATION_ADDR_65,
         ?STANDARD(destination_addr, 
                   ?DESTINATION_ADDR_65_DOMAIN, 
+                  undefined,
                   ?ESME_RINVDSTADR)).
 
 %%%
@@ -206,6 +242,7 @@
 -define(DEST_ADDRESS,
         ?STANDARD(dest_address, 
                   ?DEST_ADDRESS_DOMAIN,
+                  undefined,
                   ?ESME_RINVDSTADR)).
 
 %%%
@@ -217,7 +254,8 @@
 %%
 -define(ESME_ADDR, 
         ?STANDARD(esme_addr, 
-                  ?ESME_ADDR_DOMAIN, 
+                  ?ESME_ADDR_DOMAIN,
+                  ?NULL_C_OCTET_STRING, 
                   undefined)).
 
 %%%
@@ -231,7 +269,8 @@
 %%
 -define(ESM_CLASS, 
         ?STANDARD(esm_class, 
-                  ?ESM_CLASS_DOMAIN, 
+                  ?ESM_CLASS_DOMAIN,
+                  ?ESM_CLASS_DEFAULT, 
                   ?ESME_RINVESMCLASS)).
 
 %%%
@@ -243,7 +282,8 @@
 %%
 -define(INTERFACE_VERSION, 
         ?STANDARD(interface_version, 
-                  ?INTERFACE_VERSION_DOMAIN, 
+                  ?INTERFACE_VERSION_DOMAIN,
+                  ?SMPP_VERSION_5_0,
                   undefined)).
 
 %%%
@@ -259,6 +299,7 @@
 -define(MESSAGE_ID, 
         ?STANDARD(message_id, 
                   ?MESSAGE_ID_DOMAIN, 
+                  ?NULL_C_OCTET_STRING,
                   ?ESME_RINVMSGID)).
 
 %%%
@@ -269,7 +310,8 @@
 %%
 -define(MESSAGE_STATE, 
         ?STANDARD(message_state, 
-                  ?MESSAGE_STATE_DOMAIN, 
+                  ?MESSAGE_STATE_DOMAIN,
+                  ?MESSAGE_STATE_ENROUTE, 
                   undefined)).
 
 %%%
@@ -283,7 +325,8 @@
 %%
 -define(PASSWORD, 
         ?STANDARD(password, 
-                  ?PASSWORD_DOMAIN, 
+                  ?PASSWORD_DOMAIN,
+                  ?NULL_C_OCTET_STRING, 
                   ?ESME_RINVPASWD)).
 
 %%%
@@ -295,6 +338,7 @@
 -define(PRIORITY_FLAG, 
         ?STANDARD(priority_flag, 
                   ?PRIORITY_FLAG_DOMAIN,
+                  ?PRIORITY_FLAG_GSM_SMS_NON_PRIORITY,
                   ?ESME_RINVPRTFLG)).
 
 %%%
@@ -311,6 +355,7 @@
 -define(PROTOCOL_ID, 
         ?STANDARD(protocol_id, 
                   ?PROTOCOL_ID_DOMAIN,
+                  ?PROTOCOL_IDENTIFIER_GSM,
                   ?ESME_RINVPRTFLG)).
 
 %%%
@@ -326,6 +371,7 @@
 -define(REGISTERED_DELIVERY, 
         ?STANDARD(registered_delivery, 
                   ?REGISTERED_DELIVERY_DOMAIN,
+                  ?REGISTERED_DELIVERY_DEFAULT,
                   ?ESME_RINVREGDLVFLG)).
 
 %%%
@@ -341,6 +387,7 @@
 -define(REPLACE_IF_PRESENT_FLAG,
         ?STANDARD(replace_if_present_flag,
                   ?REPLACE_IF_PRESENT_FLAG_DOMAIN,
+                  ?REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE,
                   ?ESME_RINVREPFLAG)).
 
 %%%
@@ -355,7 +402,8 @@
 %%
 -define(SCHEDULE_DELIVERY_TIME,
         ?STANDARD(schedule_delivery_time,
-                  ?SCHEDULE_DELIVERY_TIME_DOMAIN, 
+                  ?SCHEDULE_DELIVERY_TIME_DOMAIN,
+                  ?SCHEDULE_DELIVERY_TIME_IMMEDIATE, 
                   ?ESME_RINVSCHED)).
 
 %%%
@@ -371,7 +419,8 @@
 %%
 -define(VALIDITY_PERIOD, 
         ?STANDARD(validity_period, 
-                  ?VALIDITY_PERIOD_DOMAIN, 
+                  ?VALIDITY_PERIOD_DOMAIN,
+                  ?VALIDITY_PERIOD_DEFAULT,
                   ?ESME_RINVEXPIRY)).
 
 %%%
@@ -387,6 +436,7 @@
 -define(FINAL_DATE, 
         ?STANDARD(final_date, 
                   ?FINAL_DATE_DOMAIN,
+                  ?FINAL_DATE_FINAL_STATE_NOT_REACHED,
                   undefined)).
 
 %%%
@@ -403,6 +453,7 @@
 % -define(SEQUENCE_NUMBER, 
 %         ?STANDARD(sequence_number, 
 %                   ?SEQUENCE_NUMBER_DOMAIN, 
+%                   undefined,
 %                   undefined)).
 
 %%%
@@ -417,7 +468,8 @@
 %%
 -define(SERVICE_TYPE, 
         ?STANDARD(service_type, 
-                  ?SERVICE_TYPE_DOMAIN, 
+                  ?SERVICE_TYPE_DOMAIN,
+                  ?SERVICE_TYPE_NULL, 
                   ?ESME_RINVSERTYP)).
 
 %%%
@@ -431,7 +483,8 @@
 %%
 -define(SHORT_MESSAGE, 
         ?STANDARD(short_message, 
-                  ?SHORT_MESSAGE_DOMAIN, 
+                  ?SHORT_MESSAGE_DOMAIN,
+                  ?NULL_OCTET_STRING, 
                   ?ESME_RINVMSGLEN)).
 
 %%%
@@ -444,7 +497,8 @@
 %%
 -define(SM_DEFAULT_MSG_ID, 
         ?STANDARD(sm_default_msg_id, 
-                  ?SM_DEFAULT_MSG_ID_DOMAIN, 
+                  ?SM_DEFAULT_MSG_ID_DOMAIN,
+                  ?NULL_INTEGER, 
                   ?ESME_RINVDFTMSGID)).
 
 %%%
@@ -456,11 +510,13 @@
 %%
 -define(SOURCE_ADDR_21, 
         ?STANDARD(source_addr, 
-                  ?SOURCE_ADDR_21_DOMAIN, 
+                  ?SOURCE_ADDR_21_DOMAIN,
+                  ?NULL_C_OCTET_STRING, 
                   ?ESME_RINVSRCADR)).
 -define(SOURCE_ADDR_65, 
         ?STANDARD(source_addr, 
                   ?SOURCE_ADDR_65_DOMAIN, 
+                  ?NULL_C_OCTET_STRING,
                   ?ESME_RINVSRCADR)).
 
 %%%
@@ -471,7 +527,8 @@
 %%
 -define(SYSTEM_ID, 
         ?STANDARD(system_id, 
-                  ?SYSTEM_ID_DOMAIN, 
+                  ?SYSTEM_ID_DOMAIN,
+                  undefined, 
                   ?ESME_RINVSYSID)).
 
 %%%
@@ -487,7 +544,8 @@
 %%
 -define(SYSTEM_TYPE, 
         ?STANDARD(system_type, 
-                  ?SYSTEM_TYPE_DOMAIN, 
+                  ?SYSTEM_TYPE_DOMAIN,
+                  ?NULL_C_OCTET_STRING, 
                   ?ESME_RINVSYSTYP)).
 
 %%%
@@ -500,10 +558,11 @@
 -define(ERROR_CODE, 
         ?STANDARD(error_code, 
                   ?ERROR_CODE_DOMAIN, 
+                  ?NULL_INTEGER,
                   undefined)).
 
 %%%
-% unsuccess_sme_multi
+% unsuccess_sme
 %
 % %@doc This field is a composite field containing an SME address and an error
 % code.  Additionally this field can be encoded multiple times.
@@ -511,7 +570,8 @@
 %%
 -define(UNSUCCESS_SME, 
         ?STANDARD(unsuccess_sme, 
-                  ?UNSUCCESS_SME_DOMAIN, 
+                  ?UNSUCCESS_SME_DOMAIN,
+                  undefined, 
                   ?ESME_RINVDSTADR)).
 
 
@@ -761,7 +821,7 @@
                        16#0604, 
                        ?BROADCAST_REP_NUM_DOMAIN, 
                        ?BROADCAST_REP_NUM_RESERVED, 
-                       undefined, 
+                       ?BROADCAST_REP_NUM_DEFAULT, 
                        ?ESME_RINVBCAST_REP)).
 
 %%%
@@ -899,7 +959,7 @@
                       16#0613, 
                       ?DEST_ADDR_NP_COUNTRY_DOMAIN, 
                       ?DEST_ADDR_NP_COUNTRY_RESERVED, 
-                      undefined, 
+                      undefined, % ?COUNTRY_CODE_SPAIN
                       undefined)).
 
 %%%
@@ -966,7 +1026,7 @@
                       16#0007, 
                       ?DEST_BEARER_TYPE_DOMAIN, 
                       ?DEST_BEARER_TYPE_RESERVED, 
-                      undefined, 
+                      ?BEARER_TYPE_UNKNOWN, 
                       undefined)).
 
 %%%
@@ -1005,7 +1065,7 @@
                       16#0006, 
                       ?DEST_NETWORK_TYPE_DOMAIN, 
                       ?DEST_NETWORK_TYPE_RESERVED, 
-                      undefined, 
+                      ?NETWORK_TYPE_UNKNOWN, 
                       undefined)).
 
 %%%
@@ -1182,7 +1242,7 @@
                       16#020D, 
                       ?LANGUAGE_INDICATOR_DOMAIN, 
                       ?LANGUAGE_INDICATOR_RESERVED, 
-                      undefined, 
+                      ?LANGUAGE_INDICATOR_UNSPECIFIED, 
                       undefined)).
 
 %%%
@@ -1529,7 +1589,7 @@
                       16#0210, 
                       ?SC_INTERFACE_VERSION_DOMAIN, 
                       ?SC_INTERFACE_VERSION_RESERVED, 
-                      undefined, 
+                      ?SMPP_VERSION_5_0, 
                       undefined)).
 
 %%%
@@ -1586,7 +1646,7 @@
                       16#000D,
                       ?SOURCE_ADDR_SUBUNIT_DOMAIN,
                       ?SOURCE_ADDR_SUBUNIT_RESERVED,
-                      undefined,
+                      ?ADDR_SUBUNIT_UNKNOWN,
                       ?ESME_RINVSRCADDRSUBUNIT)).
 
 
@@ -1606,7 +1666,7 @@
                       16#000F, 
                       ?SOURCE_BEARER_TYPE_DOMAIN, 
                       ?SOURCE_BEARER_TYPE_RESERVED, 
-                      undefined, 
+                      ?BEARER_TYPE_UNKNOWN, 
                       undefined)).
 
 %%%
@@ -1645,7 +1705,7 @@
                       16#000E, 
                       ?SOURCE_NETWORK_TYPE_DOMAIN, 
                       ?SOURCE_NETWORK_TYPE_RESERVED, 
-                      undefined, 
+                      ?NETWORK_TYPE_UNKNOWN, 
                       undefined)).
 
 %%%
@@ -1767,8 +1827,8 @@
         ?OPTIONAL_TLV(user_response_code,
                       16#0205, 
                       ?USER_RESPONSE_CODE_TDMA_DOMAIN,  % Do not uncomment both
+%                      ?USER_RESPONSE_CODE_CDMA_DOMAIN,  % Do not uncomment both 
                       ?USER_RESPONSE_CODE_RESERVED, 
-%                      ?USER_RESPONSE_CODE_CDMA_DOMAIN, 
                       undefined, 
                       undefined)).
 

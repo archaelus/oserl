@@ -51,6 +51,12 @@ Index
 
 - Remove unused (commented out) macros from hrls.
 
+- Define a couple of MACROS for every composite parameter.  One to assign
+  default (record) values, and the other to hide record definition to higher
+  layers.
+
+  DEST_TELEMATICS_ID_DEFAULT_VALUE
+  DEST_TELEMATICS_ID_VALUE(...)
 
 2. Version 1.0
 

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -172,13 +172,14 @@
 % into "param syntax" as follows:</p>
 %
 % <pre>
-% -define(DEST_ADDRESS_MULTI,
+% -define(DEST_ADDRESS,
 %         ?STANDARD(dest_address, 
-%                   ?DEST_ADDRESS_MULTI_DOMAIN,
+%                   ?DEST_ADDRESS_DOMAIN,
+%                   undefined,
 %                   ?ESME_RINVDSTADR)).
 % </pre>
 %
-% <p>Notice that <tt>DEST_ADDRESS_MULTI</tt> embraces the definition of both
+% <p>Notice that <tt>DEST_ADDRESS</tt> embraces the definition of both
 % fields; <tt>number_of_dests</tt> and <tt>dest_address</tt>, since a the base
 % type is a list and this type is encoded in a Length ++ List fashion, thus
 % <tt>number_of_dests</tt> doesn't need to be explicitly declared.</p>
@@ -208,6 +209,18 @@
 % further details.</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [17 Feb 2004]
+% 
+% <ul>
+%   <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.
+%   <br/>
+%   <br/><tt>STANDARD</tt> macro accordingly updated.
+%   </li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -216,7 +229,7 @@
 % </dl>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {14 Mar 2003} {@time}.
@@ -238,17 +251,22 @@
 % %@see sections 3.2.1.5 and 3.2.1.6 on [SMPP 5.0]
 % %@end
 %%
--define(STANDARD(Name, Domain, Error), 
-        #standard{name = Name, domain = Domain, error = Error}).
+-define(STANDARD(Name, Domain, Default, Error), 
+        #standard{
+            name    = Name, 
+            domain  = Domain, 
+            default = Default, 
+            error   = Error}).
 -define(TLV(Name, Tag, Domain, Reserved, Mandatory, Multiple, Default, Error), 
-        #tlv{name      = Name,
-             tag       = Tag, 
-             domain    = Domain,
-             reserved  = Reserved, 
-             mandatory = Mandatory,
-             multiple  = Multiple,
-             default   = Default, 
-             error     = Error}).
+        #tlv{
+            name      = Name,
+            tag       = Tag, 
+            domain    = Domain,
+            reserved  = Reserved, 
+            mandatory = Mandatory,
+            multiple  = Multiple,
+            default   = Default, 
+            error     = Error}).
 
 %%%
 % %@doc Simplified TLV Macros for Readability.
@@ -270,18 +288,18 @@
 % Records
 %%--------------------------------------------------------------------
 %%%
-% %@spec {standard, Name, Domain, Error}
-%    Name   = atom()
-%    Domain = Type
-%    Type   = empty()          |
-%             constant()       | 
-%             integer()        | 
-%             c_octet_string() | 
-%             octet_string()   |
-%             multivalue()     |
-%             composite()      |
-%             polymorphic()
-%    Error  = int()
+% %@spec {standard, Name, Domain, Default, Error}
+%    Name    = atom()
+%    Domain  = Type
+%    Default = term()
+%    Type    = constant()       | 
+%              integer()        | 
+%              c_octet_string() | 
+%              octet_string()   |
+%              multivalue()     |
+%              composite()      |
+%              polymorphic()
+%    Error   = int()
 %
 % %@doc Standard Parameter declaration.
 %
@@ -289,6 +307,9 @@
 %   <dt>Name: </dt><dd>Name of the parameter.</dd>
 %   <dt>Domain: </dt><dd>Domain of the parameter.  Defined by means of the
 %     base syntax (<b>base_syntax.hrl</b>).
+%   </dd>
+%   <dt>Default: </dt><dd>Default value for the parameter.  Used by the 
+%     encoding whenever the parameter is left undefined.
 %   </dd>
 %   <dt>Error: </dt><dd>Error code associated to the parameter.</dd>
 % </dl>
@@ -299,15 +320,14 @@
 % readability.
 % %@end
 %%
--record(standard, {name, domain, error}).
+-record(standard, {name, domain, default, error}).
 
 %%%
 % %@spec {tlv, Name, Tag, Domain, Reserved, Mandatory, Multiple, Default,Error}
 %    Name      = atom()
 %    Tag       = int()
 %    Domain    = Type
-%    Type      = empty()          |
-%                constant()       | 
+%    Type      = constant()       | 
 %                integer()        | 
 %                c_octet_string() | 
 %                octet_string()   |

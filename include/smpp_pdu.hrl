@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -36,6 +36,20 @@
 % versions of the protocol, where the definition of any PDU may change, so
 % PDUs that today are identical, could be different in the future.
 %
+% 
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [17 Feb 2004]
+% 
+% <ul>
+%   <li>Default values moved to smpp_param.hrl.</li>
+%   <li>Field <i>number_of_messages</i> added to <i>submit_sm</i>, 
+%     <i>data_sm</i> and <i>submit_multi_sm</i>.
+%   </li>
+%   <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification. 
@@ -48,7 +62,7 @@
 % </dl>
 %%
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {12 May 2003} {@time}.
@@ -72,7 +86,8 @@
 % %@doc SMPP PDU Type Declarations.
 %
 % <p>Macros declaring SMPP PDU definitions and their default values.  Refer 
-% to <b>operation.erl</b> to find out how these macros are used.</p>
+% to <a href="operation.html">operation.erl</a> to find out how these macros
+% are used.</p>
 %
 %
 % <h2>PDU declaration</h2>
@@ -93,7 +108,7 @@
 %     desired TLV in order to fit the needs of a particular implementation.
 %     Notice that having declared unused TLVs doesn't do any harm, comment
 %     them out or remove'em from the TLV list on the PDU declaration only for
-%     efficiency sake.
+%     efficiency sake.</p>
 %   </dd>
 % </dl>
 %
@@ -124,19 +139,7 @@
 % </pre>
 %
 % <p>Notice that a <tt>command_length</tt> element is not included on the 
-% dictionary.
-%
-%
-% <h2>PDU default value list</h2>
-%
-% <p>Feel free to customize the default value list of any PDU to fit the
-% particular needs of your implementation.  Just take care that the
-% values are given in the form <tt>{ParamName, ParamValue}</tt>, where
-% <tt>ParamName</tt> must be the name given for that particular parameter
-% on its type specifier, found in <b>smpp_param.hrl</b>.</p>
-%
-% <b>Important Note: </b><i>Don't forget to recompile the module
-% <b>operation.erl</b> for the changes on this file to take effect.</i>
+% dictionary.</p>
 %
 % %@see sections 4.1 to 4.6 on [SMPP 5.0]
 % %@end
@@ -154,14 +157,6 @@
               ?ADDRESS_RANGE],
              [])).
 
--define(BIND_TRANSMITTER_DEFAULTS, 
-        [{password,          ?NULL_C_OCTET_STRING},
-         {system_type,       ?NULL_C_OCTET_STRING},
-         {interface_version, ?SMPP_VERSION_5_0},
-         {addr_ton,          ?TON_INTERNATIONAL},
-         {addr_npi,          ?NPI_ISDN},
-         {address_range,     ?NULL_C_OCTET_STRING}]).
-
 %%%
 % bind_transmitter_resp
 %%
@@ -169,9 +164,6 @@
         ?PDU([?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
-
--define(BIND_TRANSMITTER_RESP_DEFAULTS, 
-        [{sc_interface_version, ?SMPP_VERSION_5_0}]).
 
 %%%
 % bind_receiver
@@ -186,14 +178,6 @@
               ?ADDRESS_RANGE],
              [])).
 
--define(BIND_RECEIVER_DEFAULTS, 
-        [{password,          ?NULL_C_OCTET_STRING},
-         {system_type,       ?NULL_C_OCTET_STRING},
-         {interface_version, ?SMPP_VERSION_5_0},
-         {addr_ton,          ?TON_INTERNATIONAL},
-         {addr_npi,          ?NPI_ISDN},
-         {address_range,     ?NULL_C_OCTET_STRING}]).
-
 %%%
 % bind_receiver_resp
 %%
@@ -201,9 +185,6 @@
         ?PDU([?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
-
--define(BIND_RECEIVER_RESP_DEFAULTS, 
-        [{sc_interface_version, ?SMPP_VERSION_5_0}]).
 
 %%%
 % bind_transceiver
@@ -218,14 +199,6 @@
               ?ADDRESS_RANGE],
              [])).
 
--define(BIND_TRANSCEIVER_DEFAULTS, 
-        [{password,          ?NULL_C_OCTET_STRING},
-         {system_type,       ?NULL_C_OCTET_STRING},
-         {interface_version, ?SMPP_VERSION_5_0},
-         {addr_ton,          ?TON_INTERNATIONAL},
-         {addr_npi,          ?NPI_ISDN},
-         {address_range,     ?NULL_C_OCTET_STRING}]).
-
 %%%
 % bind_transceiver_resp
 %%
@@ -233,9 +206,6 @@
         ?PDU([?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
-
--define(BIND_TRANSCEIVER_RESP_DEFAULTS, 
-        [{sc_interface_version, ?SMPP_VERSION_5_0}]).
 
 %%%
 % outbind
@@ -245,18 +215,12 @@
               ?PASSWORD],
              [])).
 
-
--define(OUTBIND_DEFAULTS, 
-        [{password, ?NULL_C_OCTET_STRING}]).
-
 %%%
 % unbind
 %%
 -define(UNBIND, 
         ?PDU([], 
              [])).
-
--define(UNBIND_DEFAULTS, []).
 
 %%%
 % unbind_resp
@@ -265,8 +229,6 @@
         ?PDU([],
              [?CONGESTION_STATE])).
 
--define(UNBIND_RESP_DEFAULTS, []).
-
 %%%
 % enquire_link
 %%
@@ -274,16 +236,12 @@
         ?PDU([],
              [])).
 
--define(ENQUIRE_LINK_DEFAULTS, []).
-
 %%%
 % enquire_link_resp
 %%
 -define(ENQUIRE_LINK_RESP, 
         ?PDU([],
              [?CONGESTION_STATE])).
-
--define(ENQUIRE_LINK_RESP_DEFAULTS, []).
 
 %%%
 % alert_notification
@@ -297,23 +255,12 @@
               ?ESME_ADDR],
              [?MS_AVAILABILITY_STATUS])).
 
--define(ALERT_NOTIFICATION_DEFAULTS, 
-        [{source_addr_ton,        ?TON_INTERNATIONAL},
-         {source_addr_npi,        ?NPI_ISDN},
-         {source_addr,            ?NULL_C_OCTET_STRING},
-         {esme_addr_ton,          ?TON_INTERNATIONAL},
-         {esme_addr_npi,          ?NPI_ISDN},
-         {esme_addr,              ?NULL_C_OCTET_STRING},
-         {ms_availability_status, ?MS_AVAILABILITY_STATUS_AVAILABLE}]).
-
 %%%
 % generic_nack
 %%
 -define(GENERIC_NACK, 
         ?PDU([],
              [])).
-
--define(GENERIC_NACK_DEFAULTS, []). 
 
 %%%
 % submit_sm
@@ -336,90 +283,50 @@
               ?DATA_CODING,
               ?SM_DEFAULT_MSG_ID,
               ?SHORT_MESSAGE],
-             [% ?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
+             [?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
               ?BILLING_IDENTIFICATION,
               ?CALLBACK_NUM,
-              % ?CALLBACK_NUM_ATAG,         % (TDMA)
-              % ?CALLBACK_NUM_PRES_IND,     % (TDMA)
-              % ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
+              ?CALLBACK_NUM_ATAG,         % (TDMA)
+              ?CALLBACK_NUM_PRES_IND,     % (TDMA)
+              ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
+              ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
+              ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
               ?DEST_ADDR_SUBUNIT,
               ?DEST_BEARER_TYPE,
               ?DEST_NETWORK_ID,
               ?DEST_NETWORK_TYPE,
               ?DEST_NODE_ID,
-              % ?DEST_SUBADDRESS,           % (CDMA, TDMA)
+              ?DEST_SUBADDRESS,           % (CDMA, TDMA)
               ?DEST_TELEMATICS_ID,
               ?DEST_PORT,
-              % ?DISPLAY_TIME,              % (CDMA, TDMA)
-              % ?ITS_REPLY_TYPE,            % (CDMA)
-              % ?ITS_SESSION_INFO,          % (CDMA)
-              % ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
+              ?DISPLAY_TIME,              % (CDMA, TDMA)
+              ?ITS_REPLY_TYPE,            % (CDMA)
+              ?ITS_SESSION_INFO,          % (CDMA)
+              ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
               ?OPTIONAL_MESSAGE_PAYLOAD,  % Notice that it's optional
               ?MORE_MESSAGES_TO_SEND,
               ?MS_MSG_WAIT_FACILITIES,
-              % ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?NUMBER_OF_MESSAGES,
               ?PAYLOAD_TYPE,
-              % ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
+              ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
               ?QOS_TIME_TO_LIVE,
               ?SAR_MSG_REF_NUM,
               ?SAR_SEGMENT_SEQNUM,
               ?SAR_TOTAL_SEGMENTS,
               ?SET_DPF,
-              % ?SMS_SIGNAL,                % (TDMA)
+              ?SMS_SIGNAL,                % (TDMA)
               ?SOURCE_ADDR_SUBUNIT,
               ?SOURCE_BEARER_TYPE,
               ?SOURCE_NETWORK_ID,
               ?SOURCE_NETWORK_TYPE,
               ?SOURCE_NODE_ID,
               ?SOURCE_PORT,
-              % ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
+              ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
               ?SOURCE_TELEMATICS_ID,
               ?USER_MESSAGE_REFERENCE,
-              % ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
+              ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
               ?USSD_SERVICE_OP])).
-
--define(SUBMIT_SM_DEFAULTS, 
-        [{service_type,            ?SERVICE_TYPE_NULL},
-         {source_addr_ton,         ?TON_INTERNATIONAL},
-         {source_addr_npi,         ?NPI_ISDN},
-         {source_addr,             ?NULL_C_OCTET_STRING},
-         {dest_addr_ton,           ?TON_INTERNATIONAL},
-         {dest_addr_npi,           ?NPI_ISDN},
-         {esm_class,               ?ESM_CLASS_DEFAULT},
-         {protocol_id,             ?PROTOCOL_IDENTIFIER_GSM},
-         {priority_flag,           ?PRIORITY_FLAG_GSM_SMS_NON_PRIORITY},
-         {schedule_delivery_time,  ?SCHEDULE_DELIVERY_TIME_IMMEDIATE},
-         {validity_period,         ?VALIDITY_PERIOD_DEFAULT},
-         {registered_delivery,     ?REGISTERED_DELIVERY_DEFAULT},
-         {replace_if_present_flag, ?REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE},
-         {data_coding,             ?ENCODING_SCHEME_LATIN_1},
-         {sm_default_msg_id,       ?NULL_INTEGER},
-         {short_message,           ?NULL_OCTET_STRING},
-         % {alert_on_msg_delivery,   ?ALERT_ON_MESSAGE_DELIVERY_DEFAULT},
-         {callback_num,            []},
-         % {callback_num_atag,       []},
-         % {callback_num_pres_ind,   []},
-         % {dest_addr_np_country,    ?COUNTRY_CODE_SPAIN},
-         % {dest_addr_np_resolution, ?DEST_ADDR_NP_RESOLUTION_NO_QUERY_PERFORMED},
-         {dest_addr_subunit,       ?ADDR_SUBUNIT_UNKNOWN},
-         {dest_bearer_type,        ?BEARER_TYPE_SMS},
-         {dest_network_type,       ?NETWORK_TYPE_GSM},
-         {dest_telematics_id,      #telematics_id{}},  % record defaults
-         % {display_time,            ?DISPLAY_TIME_DEFAULT},
-         % {language_indicator,      ?LANGUAGE_INDICATOR_UNSPECIFIED},
-         {message_payload,         ?NULL_OCTET_STRING},
-         % {ms_validity,             #ms_validity_absolute{}},  % record defaults
-         {payload_type,            ?PAYLOAD_TYPE_DEFAULT},
-         % {privacy_indicator,       ?PRIVACY_INDICATOR_NOT_RESTRICTED},
-         {sar_segment_seqnum,      1},
-         {sar_total_segments,      1},
-         {set_dpf,                 ?SET_DPF_REQUESTED},
-         {source_addr_subunit,     ?ADDR_SUBUNIT_UNKNOWN},
-         {source_bearer_type,      ?BEARER_TYPE_SMS},
-         {source_network_type,     ?NETWORK_TYPE_GSM},
-         {source_telematics_id,    #telematics_id{}}]).  % record defaults
 
 %%%
 % submit_sm_resp
@@ -430,13 +337,9 @@
         ?PDU([?MESSAGE_ID],
              [?ADDITIONAL_STATUS_INFO_TEXT,         
               ?CONGESTION_STATE,
-              % ?DELIVERY_FAILURE_REASON,   % data_sm_resp only
+              ?DELIVERY_FAILURE_REASON,   % data_sm_resp only
               ?DPF_RESULT,
               ?NETWORK_ERROR_CODE])).
-
--define(SUBMIT_SM_RESP_DEFAULTS, 
-        [{additional_status_info_text, ?NULL_C_OCTET_STRING},
-         {dpf_result,                  ?DPF_RESULT_NOT_SET}]).
 
 %%%
 % data_sm Syntax
@@ -452,84 +355,50 @@
               ?ESM_CLASS,
               ?REGISTERED_DELIVERY,
               ?DATA_CODING],
-             [% ?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
+             [?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
               ?BILLING_IDENTIFICATION,
               ?CALLBACK_NUM,
-              % ?CALLBACK_NUM_ATAG,         % (TDMA)
-              % ?CALLBACK_NUM_PRES_IND,     % (TDMA)
-              % ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
+              ?CALLBACK_NUM_ATAG,         % (TDMA)
+              ?CALLBACK_NUM_PRES_IND,     % (TDMA)
+              ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
+              ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
+              ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
               ?DEST_ADDR_SUBUNIT,
               ?DEST_BEARER_TYPE,
               ?DEST_NETWORK_ID,
               ?DEST_NETWORK_TYPE,
               ?DEST_NODE_ID,
-              % ?DEST_SUBADDRESS,           % (CDMA, TDMA)
+              ?DEST_SUBADDRESS,           % (CDMA, TDMA)
               ?DEST_TELEMATICS_ID,
               ?DEST_PORT,
-              % ?DISPLAY_TIME,              % (CDMA, TDMA)
-              % ?ITS_REPLY_TYPE,            % (CDMA)
-              % ?ITS_SESSION_INFO,          % (CDMA)
-              % ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
+              ?DISPLAY_TIME,              % (CDMA, TDMA)
+              ?ITS_REPLY_TYPE,            % (CDMA)
+              ?ITS_SESSION_INFO,          % (CDMA)
+              ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
               ?MANDATORY_MESSAGE_PAYLOAD, % Notice that it's mandatory
               ?MORE_MESSAGES_TO_SEND,
               ?MS_MSG_WAIT_FACILITIES,
-              % ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?NUMBER_OF_MESSAGES,
               ?PAYLOAD_TYPE,
-              % ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
+              ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
               ?QOS_TIME_TO_LIVE,
               ?SAR_MSG_REF_NUM,
               ?SAR_SEGMENT_SEQNUM,
               ?SAR_TOTAL_SEGMENTS,
               ?SET_DPF,
-              % ?SMS_SIGNAL,                % (TDMA)
+              ?SMS_SIGNAL,                % (TDMA)
               ?SOURCE_ADDR_SUBUNIT,
               ?SOURCE_BEARER_TYPE,
               ?SOURCE_NETWORK_ID,
               ?SOURCE_NETWORK_TYPE,
               ?SOURCE_NODE_ID,
               ?SOURCE_PORT,
-              % ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
+              ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
               ?SOURCE_TELEMATICS_ID,
               ?USER_MESSAGE_REFERENCE,
-              % ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
+              ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
               ?USSD_SERVICE_OP])).
-
--define(DATA_SM_DEFAULTS, 
-        [{service_type,            ?SERVICE_TYPE_NULL},
-         {source_addr_ton,         ?TON_INTERNATIONAL},
-         {source_addr_npi,         ?NPI_ISDN},
-         {source_addr,             ?NULL_C_OCTET_STRING},
-         {dest_addr_ton,           ?TON_INTERNATIONAL},
-         {dest_addr_npi,           ?NPI_ISDN},
-         {esm_class,               ?ESM_CLASS_DEFAULT},
-         {registered_delivery,     ?REGISTERED_DELIVERY_DEFAULT},
-         {data_coding,             ?ENCODING_SCHEME_LATIN_1},
-         % {alert_on_msg_delivery,   ?ALERT_ON_MESSAGE_DELIVERY_DEFAULT},
-         {callback_num,            []},
-         % {callback_num_atag,       []},
-         % {callback_num_pres_ind,   []},
-         % {dest_addr_np_country,    ?COUNTRY_CODE_SPAIN},
-         % {dest_addr_np_resolution, ?DEST_ADDR_NP_RESOLUTION_NO_QUERY_PERFORMED},
-         {dest_addr_subunit,       ?ADDR_SUBUNIT_UNKNOWN},
-         {dest_bearer_type,        ?BEARER_TYPE_SMS},
-         {dest_network_type,       ?NETWORK_TYPE_GSM},
-         {dest_telematics_id,      #telematics_id{}},  % record defaults
-         % {display_time,            ?DISPLAY_TIME_DEFAULT},
-         % {language_indicator,      ?LANGUAGE_INDICATOR_UNSPECIFIED},
-         {message_payload,         ?NULL_OCTET_STRING},
-         {more_messages_to_send,   ?MORE_MESSAGES_TO_SEND_YES},
-         % {ms_validity,             #ms_validity_absolute{}},  % record defaults
-         {payload_type,            ?PAYLOAD_TYPE_DEFAULT},
-         % {privacy_indicator,       ?PRIVACY_INDICATOR_NOT_RESTRICTED},
-         {sar_segment_seqnum,      1},
-         {sar_total_segments,      1},
-         {set_dpf,                 ?SET_DPF_REQUESTED},
-         {source_addr_subunit,     ?ADDR_SUBUNIT_UNKNOWN},
-         {source_bearer_type,      ?BEARER_TYPE_SMS},
-         {source_network_type,     ?NETWORK_TYPE_GSM},
-         {source_telematics_id,    #telematics_id{}}]).  % record defaults
 
 %%%
 % data_sm_resp
@@ -541,11 +410,6 @@
               ?DELIVERY_FAILURE_REASON,
               ?DPF_RESULT,
               ?NETWORK_ERROR_CODE])).
-
--define(DATA_SM_RESP_DEFAULTS, 
-        [{message_id,                  ?NULL_C_OCTET_STRING},
-         {additional_status_info_text, ?NULL_C_OCTET_STRING},
-         {dpf_result,                  ?DPF_RESULT_NOT_SET}]).
 
 %%%
 % submit_multi
@@ -568,89 +432,50 @@
               ?DATA_CODING,
               ?SM_DEFAULT_MSG_ID,
               ?SHORT_MESSAGE],
-             [% ?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
+             [?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
               ?BILLING_IDENTIFICATION,
               ?CALLBACK_NUM,
-              % ?CALLBACK_NUM_ATAG,         % (TDMA)
-              % ?CALLBACK_NUM_PRES_IND,     % (TDMA)
-              % ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
+              ?CALLBACK_NUM_ATAG,         % (TDMA)
+              ?CALLBACK_NUM_PRES_IND,     % (TDMA)
+              ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
+              ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
+              ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
               ?DEST_ADDR_SUBUNIT,
               ?DEST_BEARER_TYPE,
               ?DEST_NETWORK_ID,
               ?DEST_NETWORK_TYPE,
               ?DEST_NODE_ID,
-              % ?DEST_SUBADDRESS,           % (CDMA, TDMA)
+              ?DEST_SUBADDRESS,           % (CDMA, TDMA)
               ?DEST_TELEMATICS_ID,
               ?DEST_PORT,
-              % ?DISPLAY_TIME,              % (CDMA, TDMA)
-              % ?ITS_REPLY_TYPE,            % (CDMA)
-              % ?ITS_SESSION_INFO,          % (CDMA)
-              % ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
+              ?DISPLAY_TIME,              % (CDMA, TDMA)
+              ?ITS_REPLY_TYPE,            % (CDMA)
+              ?ITS_SESSION_INFO,          % (CDMA)
+              ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
               ?OPTIONAL_MESSAGE_PAYLOAD,  % Notice that it's optional
-              % ?MORE_MESSAGES_TO_SEND,   % makes sense on submit multi?
+              ?MORE_MESSAGES_TO_SEND,     % makes sense on submit multi?
               ?MS_MSG_WAIT_FACILITIES,
-              % ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?NUMBER_OF_MESSAGES,
               ?PAYLOAD_TYPE,
-              % ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
+              ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
               ?QOS_TIME_TO_LIVE,
               ?SAR_MSG_REF_NUM,
               ?SAR_SEGMENT_SEQNUM,
               ?SAR_TOTAL_SEGMENTS,
-              % ?SET_DPF,                 % makes sense on submit multi?
-              % ?SMS_SIGNAL,                % (TDMA)
+              ?SET_DPF,                   % makes sense on submit multi?
+              ?SMS_SIGNAL,                % (TDMA)
               ?SOURCE_ADDR_SUBUNIT,
               ?SOURCE_BEARER_TYPE,
               ?SOURCE_NETWORK_ID,
               ?SOURCE_NETWORK_TYPE,
               ?SOURCE_NODE_ID,
               ?SOURCE_PORT,
-              % ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
+              ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
               ?SOURCE_TELEMATICS_ID,
               ?USER_MESSAGE_REFERENCE,
-              % ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
+              ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
               ?USSD_SERVICE_OP])).
-
--define(SUBMIT_MULTI_DEFAULTS, 
-        [{service_type,            ?SERVICE_TYPE_NULL},
-         {source_addr_ton,         ?TON_INTERNATIONAL},
-         {source_addr_npi,         ?NPI_ISDN},
-         {source_addr,             ?NULL_C_OCTET_STRING},
-         {esm_class,               ?ESM_CLASS_DEFAULT},
-         {protocol_id,             ?PROTOCOL_IDENTIFIER_GSM},
-         {priority_flag,           ?PRIORITY_FLAG_GSM_SMS_NON_PRIORITY},
-         {schedule_delivery_time,  ?SCHEDULE_DELIVERY_TIME_IMMEDIATE},
-         {validity_period,         ?VALIDITY_PERIOD_DEFAULT},
-         {registered_delivery,     ?REGISTERED_DELIVERY_DEFAULT},
-         {replace_if_present_flag, ?REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE},
-         {data_coding,             ?ENCODING_SCHEME_LATIN_1},
-         {sm_default_msg_id,       ?NULL_INTEGER},
-         {short_message,           ?NULL_OCTET_STRING},
-         % {alert_on_msg_delivery,   ?ALERT_ON_MESSAGE_DELIVERY_DEFAULT},
-         {callback_num,            []},
-         % {callback_num_atag,       []},
-         % {callback_num_pres_ind,   []},
-         % {dest_addr_np_country,    ?COUNTRY_CODE_SPAIN},
-         % {dest_addr_np_resolution, ?DEST_ADDR_NP_RESOLUTION_NO_QUERY_PERFORMED},
-         {dest_addr_subunit,       ?ADDR_SUBUNIT_UNKNOWN},
-         {dest_bearer_type,        ?BEARER_TYPE_SMS},
-         {dest_network_type,       ?NETWORK_TYPE_GSM},
-         {dest_telematics_id,      #telematics_id{}},  % record defaults
-         % {display_time,            ?DISPLAY_TIME_DEFAULT},
-         % {language_indicator,      ?LANGUAGE_INDICATOR_UNSPECIFIED},
-         {message_payload,         ?NULL_OCTET_STRING},
-         % {more_messages_to_send,   ?MORE_MESSAGES_TO_SEND_YES},
-         % {ms_validity,             #ms_validity_absolute{}},  % record defaults
-         {payload_type,            ?PAYLOAD_TYPE_DEFAULT},
-         % {privacy_indicator,       ?PRIVACY_INDICATOR_NOT_RESTRICTED},
-         {sar_segment_seqnum,      1},
-         {sar_total_segments,      1},
-         % {set_dpf,                 ?SET_DPF_REQUESTED},
-         {source_addr_subunit,     ?ADDR_SUBUNIT_UNKNOWN},
-         {source_bearer_type,      ?BEARER_TYPE_SMS},
-         {source_network_type,     ?NETWORK_TYPE_GSM},
-         {source_telematics_id,    #telematics_id{}}]).  % record defaults
 
 %%%
 % %@doc submit_multi_resp.
@@ -709,10 +534,6 @@
               ?DPF_RESULT,
               ?NETWORK_ERROR_CODE])).
 
--define(SUBMIT_MULTI_RESP_DEFAULTS, 
-        [{additional_status_info_text, ?NULL_C_OCTET_STRING},
-         {dpf_result,                  ?DPF_RESULT_NOT_SET}]).
-
 %%%
 % deliver_sm
 %%
@@ -736,25 +557,25 @@
               ?SHORT_MESSAGE],
              [?CALLBACK_NUM,
               ?CALLBACK_NUM,
-              % ?CALLBACK_NUM_ATAG,         % (TDMA)
-              % ?CALLBACK_NUM_PRES_IND,     % (TDMA)
-              % ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
-              % ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
+              ?CALLBACK_NUM_ATAG,         % (TDMA)
+              ?CALLBACK_NUM_PRES_IND,     % (TDMA)
+              ?DEST_ADDR_NP_COUNTRY,      % (CDMA, TDMA)
+              ?DEST_ADDR_NP_INFORMATION,  % (CDMA, TDMA)
+              ?DEST_ADDR_NP_RESOLUTION,   % (CDMA, TDMA)
               ?DEST_ADDR_SUBUNIT,
               ?DEST_NETWORK_ID,
               ?DEST_NODE_ID,
-              % ?DEST_SUBADDRESS,           % (CDMA, TDMA)
+              ?DEST_SUBADDRESS,           % (CDMA, TDMA)
               ?DEST_PORT,
               ?DPF_RESULT,
-              % ?ITS_REPLY_TYPE,            % (CDMA)
-              % ?ITS_SESSION_INFO,          % (CDMA)
-              % ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
+              ?ITS_REPLY_TYPE,            % (CDMA)
+              ?ITS_SESSION_INFO,          % (CDMA)
+              ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
               ?OPTIONAL_MESSAGE_PAYLOAD,  % Notice that it's optional
               ?OPTIONAL_MESSAGE_STATE,
               ?NETWORK_ERROR_CODE,
               ?PAYLOAD_TYPE,
-               % ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
+              ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
               ?RECEIPTED_MESSAGE_ID,
               ?SAR_MSG_REF_NUM,
               ?SAR_SEGMENT_SEQNUM,
@@ -763,42 +584,10 @@
               ?SOURCE_NETWORK_ID,
               ?SOURCE_NODE_ID,
               ?SOURCE_PORT,
-              % ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
+              ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
               ?USER_MESSAGE_REFERENCE,
-              % ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
+              ?USER_RESPONSE_CODE,        % (CDMA, TDMA)
               ?USSD_SERVICE_OP])).
-
--define(DELIVER_SM_DEFAULTS,
-        [{service_type,            ?SERVICE_TYPE_NULL},
-         {source_addr_ton,         ?TON_INTERNATIONAL},
-         {source_addr_npi,         ?NPI_ISDN},
-         {source_addr,             ?NULL_C_OCTET_STRING},
-         {dest_addr_ton,           ?TON_INTERNATIONAL},
-         {dest_addr_npi,           ?NPI_ISDN},
-         {esm_class,               ?ESM_CLASS_DEFAULT},
-         {protocol_id,             ?PROTOCOL_IDENTIFIER_GSM},
-         {priority_flag,           ?PRIORITY_FLAG_GSM_SMS_NON_PRIORITY},
-         {schedule_delivery_time,  ?SCHEDULE_DELIVERY_TIME_IMMEDIATE},
-         {validity_period,         ?VALIDITY_PERIOD_DEFAULT},
-         {registered_delivery,     ?REGISTERED_DELIVERY_DEFAULT},
-         {replace_if_present_flag, ?REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE},
-         {data_coding,             ?ENCODING_SCHEME_LATIN_1},
-         {sm_default_msg_id,       ?NULL_INTEGER},
-         {short_message,           ?NULL_OCTET_STRING},
-         {callback_num,            []},
-         % {callback_num_atag,       []},
-         % {callback_num_pres_ind,   []},
-         % {dest_addr_np_country,    ?COUNTRY_CODE_SPAIN},
-         % {dest_addr_np_resolution, ?DEST_ADDR_NP_RESOLUTION_NO_QUERY_PERFORMED},
-         {dest_addr_subunit,       ?ADDR_SUBUNIT_UNKNOWN},
-         {dpf_result,              ?DPF_RESULT_NOT_SET},
-         % {language_indicator,      ?LANGUAGE_INDICATOR_UNSPECIFIED},
-         {message_payload,         ?NULL_OCTET_STRING},
-         {payload_type,            ?PAYLOAD_TYPE_DEFAULT},
-         % {privacy_indicator,       ?PRIVACY_INDICATOR_NOT_RESTRICTED},
-         {sar_segment_seqnum,      1},
-         {sar_total_segments,      1},
-         {source_addr_subunit,     ?ADDR_SUBUNIT_UNKNOWN}]).
 
 %%%
 % deliver_sm_resp Syntax
@@ -809,10 +598,6 @@
               ?CONGESTION_STATE,
               ?DELIVERY_FAILURE_REASON,
               ?NETWORK_ERROR_CODE])).
-
--define(DELIVER_SM_RESP_DEFAULTS, 
-        [{message_id,                  ?NULL_C_OCTET_STRING},
-         {additional_status_info_text, ?NULL_C_OCTET_STRING}]).
 
 %%%
 % broadcast_sm Syntax
@@ -835,58 +620,28 @@
               ?MANDATORY_BROADCAST_CONTENT_TYPE,
               ?BROADCAST_REP_NUM,
               ?BROADCAST_FREQUENCY_INTERVAL,
-              % ?ALERT_ON_MESSAGE_DELIVERY, % (CDMA)
+              ?ALERT_ON_MESSAGE_DELIVERY,   % (CDMA)
               ?BROADCAST_CHANNEL_INDICATOR,
-              % ?BROADCAST_CONTENT_TYPE_INFO, (CDMA, TDMA)
+              ?BROADCAST_CONTENT_TYPE_INFO, % (CDMA, TDMA)
               ?BROADCAST_MESSAGE_CLASS,
-              % ?BROADCAST_SERVICE_GROUP,   % (CDMA, TDMA)
+              ?BROADCAST_SERVICE_GROUP,     % (CDMA, TDMA)
               ?CALLBACK_NUM,
-              % ?CALLBACK_NUM_ATAG,         % (TDMA)
-              % ?CALLBACK_NUM_PRES_IND,     % (TDMA)
+              ?CALLBACK_NUM_ATAG,           % (TDMA)
+              ?CALLBACK_NUM_PRES_IND,       % (TDMA)
               ?DEST_ADDR_SUBUNIT,
-              % ?DEST_SUBADDRESS,           % (CDMA, TDMA)
+              ?DEST_SUBADDRESS,             % (CDMA, TDMA)
               ?DEST_PORT,
-              % ?DISPLAY_TIME,              % (CDMA, TDMA)
-              % ?LANGUAGE_INDICATOR,        % (CDMA, TDMA)
-              ?MANDATORY_MESSAGE_PAYLOAD,  % Notice that it's mandatory
-              % ?MS_VALIDITY,               % (CDMA, TDMA)
+              ?DISPLAY_TIME,                % (CDMA, TDMA)
+              ?LANGUAGE_INDICATOR,          % (CDMA, TDMA)
+              ?MANDATORY_MESSAGE_PAYLOAD,   % Notice that it's mandatory
+              ?MS_VALIDITY,                 % (CDMA, TDMA)
               ?PAYLOAD_TYPE,
-              % ?PRIVACY_INDICATOR,         % (CDMA, TDMA)
-              % ?SMS_SIGNAL,                % (TDMA)
+              ?PRIVACY_INDICATOR,           % (CDMA, TDMA)
+              ?SMS_SIGNAL,                  % (TDMA)
               ?SOURCE_ADDR_SUBUNIT,
               ?SOURCE_PORT,
-              % ?SOURCE_SUBADDRESS,         % (CDMA, TDMA)
+              ?SOURCE_SUBADDRESS,           % (CDMA, TDMA)
               ?USER_MESSAGE_REFERENCE])).
-
--define(BROADCAST_SM_DEFAULTS, 
-        [{service_type,              ?SERVICE_TYPE_NULL},
-         {source_addr_ton,           ?TON_INTERNATIONAL},
-         {source_addr_npi,           ?NPI_ISDN},
-         {source_addr,               ?NULL_C_OCTET_STRING},
-         {message_id,                ?NULL_C_OCTET_STRING},
-         {priority_flag,             ?PRIORITY_FLAG_GSM_SMS_NON_PRIORITY},
-         {schedule_delivery_time,    ?SCHEDULE_DELIVERY_TIME_IMMEDIATE},
-         {validity_period,           ?VALIDITY_PERIOD_DEFAULT},
-         {replace_if_present_flag,   ?REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE},
-         {data_coding,               ?ENCODING_SCHEME_LATIN_1},
-         {sm_default_msg_id,         ?NULL_INTEGER},
-         {broadcast_area_identifier, []},
-         {broadcast_content_type,    #broadcast_content_type{}},
-         {broadcast_rep_num,         ?BROADCAST_REP_NUM_DEFAULT},
-         % {alert_on_msg_delivery,       ?ALERT_ON_MESSAGE_DELIVERY_DEFAULT},
-         {broadcast_channel_indicator, ?BROADCAST_CHANNEL_INDICATOR_BASIC},
-         {broadcast_message_class,     ?BROADCAST_MESSAGE_CLASS_NO_CLASS},
-         {callback_num,            []},
-         % {callback_num_atag,       []},
-         % {callback_num_pres_ind,   []},
-         {dest_addr_subunit,       ?ADDR_SUBUNIT_UNKNOWN},
-         % {display_time,            ?DISPLAY_TIME_DEFAULT},
-         % {language_indicator,      ?LANGUAGE_INDICATOR_UNSPECIFIED},
-         {message_payload,         ?NULL_OCTET_STRING},
-         % {ms_validity,             #ms_validity_absolute{}},
-         {payload_type,            ?PAYLOAD_TYPE_DEFAULT},
-         % {privacy_indicator,       ?PRIVACY_INDICATOR_NOT_RESTRICTED},
-         {source_addr_subunit,     ?ADDR_SUBUNIT_UNKNOWN}]).
 
 %%%
 % broadcast_sm_resp Syntax
@@ -896,8 +651,6 @@
              [?BROADCAST_ERROR_STATUS,
               ?CONGESTION_STATE, 
               ?FAILED_BROADCAST_AREA_IDENTIFIER])).
-
--define(BROADCAST_SM_RESP_DEFAULTS, []).
 
 %%%
 % cancel_sm Syntax
@@ -913,22 +666,12 @@
               ?DESTINATION_ADDR_21],
              [])).
 
--define(CANCEL_SM_DEFAULTS, 
-        [{service_type,    ?SERVICE_TYPE_NULL},
-         {source_addr_ton, ?TON_INTERNATIONAL},
-         {source_addr_npi, ?NPI_ISDN},
-         {source_addr,     ?NULL_C_OCTET_STRING},
-         {dest_addr_ton,   ?TON_INTERNATIONAL},
-         {dest_addr_npi,   ?NPI_ISDN}]).
-
 %%%
 % cancel_sm_resp Syntax
 %%
 -define(CANCEL_SM_RESP, 
         ?PDU([],
              [?CONGESTION_STATE])).
-
--define(CANCEL_SM_RESP_DEFAULTS, []). 
 
 %%%
 % query_sm Syntax
@@ -940,11 +683,6 @@
               ?SOURCE_ADDR_21],
              [])).
 
--define(QUERY_SM_DEFAULTS, 
-        [{source_addr_ton, ?TON_INTERNATIONAL},
-         {source_addr_npi, ?NPI_ISDN},
-         {source_addr,     ?NULL_C_OCTET_STRING}]).
-
 %%%
 % query_sm_resp Syntax
 %%
@@ -954,11 +692,6 @@
               ?MESSAGE_STATE,
               ?ERROR_CODE],
              [?CONGESTION_STATE])).
-
--define(QUERY_SM_RESP_DEFAULTS, 
-        [{final_date,    ?FINAL_DATE_FINAL_STATE_NOT_REACHED},
-         {message_state, ?MESSAGE_STATE_ENROUTE},
-         {error_code,    ?NULL_INTEGER}]).
 
 %%%
 % replace_sm Syntax
@@ -975,25 +708,12 @@
               ?SHORT_MESSAGE],
              [?OPTIONAL_MESSAGE_PAYLOAD])).  % Notice that it's optional
 
--define(REPLACE_SM_DEFAULTS, 
-        [{source_addr_ton,        ?TON_INTERNATIONAL},
-         {source_addr_npi,        ?NPI_ISDN},
-         {source_addr,            ?NULL_C_OCTET_STRING},
-         {schedule_delivery_time, ?SCHEDULE_DELIVERY_TIME_IMMEDIATE},
-         {validity_period,        ?VALIDITY_PERIOD_DEFAULT},
-         {registered_delivery,    ?REGISTERED_DELIVERY_DEFAULT},
-         {sm_default_msg_id,      ?NULL_INTEGER},
-         {short_message,          ?NULL_OCTET_STRING},
-         {message_payload,        ?NULL_OCTET_STRING}]).
-
 %%%
 % replace_sm_resp Syntax
 %%
 -define(REPLACE_SM_RESP, 
         ?PDU([],
              [?CONGESTION_STATE])).
-
--define(REPLACE_SM_RESP_DEFAULTS, []).
 
 %%%
 % query_broadcast_sm Syntax
@@ -1004,11 +724,6 @@
               ?SOURCE_ADDR_NPI,
               ?SOURCE_ADDR_21],
              [?USER_MESSAGE_REFERENCE])).
-
--define(QUERY_BROADCAST_SM_DEFAULTS, 
-        [{source_addr_ton, ?TON_INTERNATIONAL},
-         {source_addr_npi, ?NPI_ISDN},
-         {source_addr,     ?NULL_C_OCTET_STRING}]).
 
 %%%
 % query_broadcast_sm_resp Syntax
@@ -1022,11 +737,6 @@
               ?BROADCAST_END_TIME, 
               ?USER_MESSAGE_REFERENCE])).
 
--define(QUERY_BROADCAST_SM_RESP_DEFAULTS, 
-        [{message_state,             ?MESSAGE_STATE_ENROUTE},
-         {broadcast_area_identifier, []},
-         {broadcast_area_success,    []}]).
-
 %%%
 % cancel_broadcast_sm Syntax
 %%
@@ -1039,21 +749,12 @@
              [?OPTIONAL_BROADCAST_CONTENT_TYPE, 
               ?USER_MESSAGE_REFERENCE])).
 
-
--define(CANCEL_BROADCAST_SM_DEFAULTS, 
-        [{service_type,    ?SERVICE_TYPE_NULL},
-         {source_addr_ton, ?TON_INTERNATIONAL},
-         {source_addr_npi, ?NPI_ISDN},
-         {source_addr,     ?NULL_C_OCTET_STRING}]).
-
 %%%
 % cancel_broadcast_sm_resp Syntax
 %%
 -define(CANCEL_BROADCAST_SM_RESP,
         ?PDU([],
              [?CONGESTION_STATE])).
-
--define(CANCEL_BROADCAST_SM_RESP_DEFAULTS, []).
 
 
 %%%-------------------------------------------------------------------

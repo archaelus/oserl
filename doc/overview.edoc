@@ -50,7 +50,10 @@ numbers on [SMPP 5.0].</p>
       <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a>
         <ol>
           <li><a href="#changes0_1-0_2-base_syntax">base_syntax.hrl</a></li>
+          <li><a href="#changes0_1-0_2-param_syntax">param_syntax.hrl</a></li>
           <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
+          <li><a href="#changes0_1-0_2-smpp_param">smpp_param.hrl</a></li>
+          <li><a href="#changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></li>
           <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
           <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
           <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
@@ -1290,14 +1293,6 @@ are used.</p>
 <p>Notice that a <tt>command_length</tt> element is not included on the 
 dictionary.</p>
 
-<p>On this header, default values for every PDU are also defined.</p>
-
-<p>Feel free to customize the default value list of any PDU to fit the
-particular needs of your implementation.  Just take care that the
-values are given in the form <tt>{ParamName, ParamValue}</tt>, where
-<tt>ParamName</tt> must be the name given for that particular parameter
-on its type specifier, found in <a href="#smpp_param">smpp_param.hrl</a>.</p>
-
 
 <h4><a name="smpp_param">smpp_param.hrl</a></h4>
 
@@ -1305,10 +1300,15 @@ SMPP Standard and TLV Parameters descriptor.  These descriptors are defined by
 means of the base types declared on <a href="#smpp_base">smpp_base</a>,
 and using the syntax defined in <i>param_syntax.hrl</i>.
 
-<p>A parameter descriptor defines the parameter name, base type and error code 
-associated to it.</p>
+<p>A parameter descriptor defines the parameter name, base type, default value
+and error code associated to it.</p>
 
-<p>Feel free to adjust parameter descriptors to your particular needs.</p>
+<p>Feel free to adjust parameter descriptors to your particular needs.  You may
+want to change the default value or the mandatory status of some TLVs.</p>
+
+<p><b>Important Note:</b> <i>Don't forget to recompile the module
+<a href="operation.html">operation.erl</a> for the changes on this file to 
+take effect.</i></p>
 
 
 <h4><a name="smpp_base">smpp_base.hrl</a></h4>
@@ -2300,6 +2300,16 @@ Find OSERL's PICS proforma in openoffice format
 </ul>
 
 
+<h4><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h4>
+
+<ul>
+  <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br/>
+  <br/>
+  <tt>STANDARD</tt> macro accordingly updated.
+  </li>
+</ul>
+
+
 <h4><a name="changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></h4>
 
 <ul>
@@ -2312,6 +2322,25 @@ Find OSERL's PICS proforma in openoffice format
 </ul>
 
 
+<h4><a name="changes0_1-0_2-smpp_param">smpp_param.hrl</a></h4>
+
+<ul>
+  <li>Default values added to Standard parameters.</li>
+  <li>Default values for TLVs reviewed.</li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></h4>
+
+<ul>
+  <li>Default values moved to smpp_param.hrl.</li>
+  <li>Field <i>number_of_messages</i> added to <i>submit_sm</i>, <i>data_sm</i>
+    and <i>submit_multi_sm</i>.
+  </li>
+  <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
+</ul>
+
+
 <h4><a name="changes0_1-0_2-operation">operation.erl</a></h4>
 
 <ul>
@@ -2320,6 +2349,7 @@ Find OSERL's PICS proforma in openoffice format
     <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
     respectively.
   </li>
+  <li>new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.</li>
 </ul>
 
 
@@ -2365,6 +2395,10 @@ Find OSERL's PICS proforma in openoffice format
     </li>
     <li>Try to put the <tt>command_id</tt> back into the PDU descriptor in an
       efficient manner.
+    </li>
+    <li>Automatically add/remove trailing '\0' in C-Octet Strings.</li>
+    <li>Assign default values to standard parameters in smpp_param.hrl 
+      (just like for TLVs).
     </li>
   </ol>
   </li>

@@ -1475,35 +1475,35 @@ smsc_unpack(BinaryPdu) ->
 request_command_id(ResponseCommandId) when integer(ResponseCommandId) ->
     ResponseCommandId - 16#80000000;
 request_command_id(bind_transmitter_resp) -> 
-	?COMMAND_ID_BIND_TRANSMITTER;
+    ?COMMAND_ID_BIND_TRANSMITTER;
 request_command_id(bind_receiver_resp) -> 
-	?COMMAND_ID_BIND_RECEIVER;
+    ?COMMAND_ID_BIND_RECEIVER;
 request_command_id(bind_transceiver_resp) ->
-	?COMMAND_ID_BIND_TRANSCEIVER;
+    ?COMMAND_ID_BIND_TRANSCEIVER;
 request_command_id(unbind_resp) -> 
-	?COMMAND_ID_UNBIND;
+    ?COMMAND_ID_UNBIND;
 request_command_id(enquire_link_resp) ->
-	?COMMAND_ID_ENQUIRE_LINK;
+    ?COMMAND_ID_ENQUIRE_LINK;
 request_command_id(submit_sm_resp) ->
-	?COMMAND_ID_SUBMIT_SM;
+    ?COMMAND_ID_SUBMIT_SM;
 request_command_id(data_sm_resp) ->
-	?COMMAND_ID_DATA_SM;
+    ?COMMAND_ID_DATA_SM;
 request_command_id(submit_multi_resp) -> 
-	?COMMAND_ID_SUBMIT_MULTI;
+    ?COMMAND_ID_SUBMIT_MULTI;
 request_command_id(deliver_sm_resp) ->
-	?COMMAND_ID_DELIVER_SM;
+    ?COMMAND_ID_DELIVER_SM;
 request_command_id(broadcast_sm_resp) -> 
-	?COMMAND_ID_BROADCAST_SM;
+    ?COMMAND_ID_BROADCAST_SM;
 request_command_id(cancel_sm_resp) ->
-	?COMMAND_ID_CANCEL_SM;
+    ?COMMAND_ID_CANCEL_SM;
 request_command_id(query_sm_resp) ->
-	?COMMAND_ID_QUERY_SM;
+    ?COMMAND_ID_QUERY_SM;
 request_command_id(replace_sm_resp) ->
-	?COMMAND_ID_REPLACE_SM;
+    ?COMMAND_ID_REPLACE_SM;
 request_command_id(query_broadcast_sm_resp) ->
-	?COMMAND_ID_QUERY_BROADCAST_SM;
+    ?COMMAND_ID_QUERY_BROADCAST_SM;
 request_command_id(cancel_broadcast_sm_resp) ->
-	?COMMAND_ID_CANCEL_BROADCAST_SM.
+    ?COMMAND_ID_CANCEL_BROADCAST_SM.
 
 
 %% @spec request_command_name(ResponseCommandName) -> RequestCommandName
@@ -1541,21 +1541,51 @@ request_command_id(cancel_broadcast_sm_resp) ->
 %% @doc Returns the request command name related to a given response command
 %% name.
 %% @end
-request_command_name(bind_transmitter_resp)    -> bind_transmitter;
-request_command_name(bind_receiver_resp)       -> bind_receiver;
-request_command_name(bind_transceiver_resp)    -> bind_transceiver;
-request_command_name(unbind_resp)              -> unbind;
-request_command_name(enquire_link_resp)        -> enquire_link;
-request_command_name(submit_sm_resp)           -> submit_sm;
-request_command_name(data_sm_resp)             -> data_sm;
-request_command_name(submit_multi_resp)        -> submit_multi;
-request_command_name(deliver_sm_resp)          -> deliver_sm;
-request_command_name(broadcast_sm_resp)        -> broadcast_sm;
-request_command_name(cancel_sm_resp)           -> cancel_sm;
-request_command_name(query_sm_resp)            -> query_sm;
-request_command_name(replace_sm_resp)          -> replace_sm;
-request_command_name(query_broadcast_sm_resp)  -> query_broadcast_sm;
-request_command_name(cancel_broadcast_sm_resp) -> cancel_broadcast_sm.
+request_command_name(Cmd) when Cmd == bind_transmitter_resp;
+                               Cmd == ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+    bind_transmitter;
+request_command_name(Cmd) when Cmd == bind_receiver_resp;
+                               Cmd == ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+    bind_receiver;
+request_command_name(Cmd) when Cmd == bind_transceiver_resp;
+                               Cmd == ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+    bind_transceiver;
+request_command_name(Cmd) when Cmd == unbind_resp;
+                               Cmd == ?COMMAND_ID_UNBIND_RESP -> 
+    unbind;
+request_command_name(Cmd) when Cmd == enquire_link_resp;
+                               Cmd == ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+    enquire_link;
+request_command_name(Cmd) when Cmd == submit_sm_resp;
+                               Cmd == ?COMMAND_ID_SUBMIT_SM_RESP -> 
+    submit_sm;
+request_command_name(Cmd) when Cmd == data_sm_resp;
+                               Cmd == ?COMMAND_ID_DATA_SM_RESP ->
+    data_sm;
+request_command_name(Cmd) when Cmd == submit_multi_resp;
+                               Cmd == ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
+    submit_multi;
+request_command_name(Cmd) when Cmd == deliver_sm_resp;
+                               Cmd == ?COMMAND_ID_DELIVER_SM_RESP -> 
+    deliver_sm;
+request_command_name(Cmd) when Cmd == broadcast_sm_resp;
+                               Cmd == ?COMMAND_ID_BROADCAST_SM_RESP -> 
+    broadcast_sm;
+request_command_name(Cmd) when Cmd == cancel_sm_resp;
+                               Cmd == ?COMMAND_ID_CANCEL_SM_RESP -> 
+    cancel_sm;
+request_command_name(Cmd) when Cmd == query_sm_resp;
+                               Cmd == ?COMMAND_ID_QUERY_SM_RESP -> 
+    query_sm;
+request_command_name(Cmd) when Cmd == replace_sm_resp;
+                               Cmd == ?COMMAND_ID_REPLACE_SM_RESP -> 
+    replace_sm;
+request_command_name(Cmd) when Cmd == query_broadcast_sm_resp;
+                               Cmd == ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
+    query_broadcast_sm;
+request_command_name(Cmd) when Cmd == cancel_broadcast_sm_resp;
+                               Cmd == ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+    cancel_broadcast_sm.
 
 
 %% @spec response_command_id(RequestCommandId) -> ResponseCommandId
@@ -1567,35 +1597,35 @@ request_command_name(cancel_broadcast_sm_resp) -> cancel_broadcast_sm.
 response_command_id(RequestCommandId) when integer(RequestCommandId) ->
     RequestCommandId + 16#80000000;
 response_command_id(bind_transmitter) -> 
-	?COMMAND_ID_BIND_TRANSMITTER_RESP;
+    ?COMMAND_ID_BIND_TRANSMITTER_RESP;
 response_command_id(bind_receiver) -> 
-	?COMMAND_ID_BIND_RECEIVER_RESP;
+    ?COMMAND_ID_BIND_RECEIVER_RESP;
 response_command_id(bind_transceiver) ->
-	?COMMAND_ID_BIND_TRANSCEIVER_RESP;
+    ?COMMAND_ID_BIND_TRANSCEIVER_RESP;
 response_command_id(unbind) -> 
-	?COMMAND_ID_UNBIND_RESP;
+    ?COMMAND_ID_UNBIND_RESP;
 response_command_id(enquire_link) ->
-	?COMMAND_ID_ENQUIRE_LINK_RESP;
+    ?COMMAND_ID_ENQUIRE_LINK_RESP;
 response_command_id(submit_sm) ->
-	?COMMAND_ID_SUBMIT_SM_RESP;
+    ?COMMAND_ID_SUBMIT_SM_RESP;
 response_command_id(data_sm) ->
-	?COMMAND_ID_DATA_SM_RESP;
+    ?COMMAND_ID_DATA_SM_RESP;
 response_command_id(submit_multi) -> 
-	?COMMAND_ID_SUBMIT_MULTI_RESP;
+    ?COMMAND_ID_SUBMIT_MULTI_RESP;
 response_command_id(deliver_sm) ->
-	?COMMAND_ID_DELIVER_SM_RESP;
+    ?COMMAND_ID_DELIVER_SM_RESP;
 response_command_id(broadcast_sm) -> 
-	?COMMAND_ID_BROADCAST_SM_RESP;
+    ?COMMAND_ID_BROADCAST_SM_RESP;
 response_command_id(cancel_sm) ->
-	?COMMAND_ID_CANCEL_SM_RESP;
+    ?COMMAND_ID_CANCEL_SM_RESP;
 response_command_id(query_sm) ->
-	?COMMAND_ID_QUERY_SM_RESP;
+    ?COMMAND_ID_QUERY_SM_RESP;
 response_command_id(replace_sm) ->
-	?COMMAND_ID_REPLACE_SM_RESP;
+    ?COMMAND_ID_REPLACE_SM_RESP;
 response_command_id(query_broadcast_sm) ->
-	?COMMAND_ID_QUERY_BROADCAST_SM_RESP;
+    ?COMMAND_ID_QUERY_BROADCAST_SM_RESP;
 response_command_id(cancel_broadcast_sm) ->
-	?COMMAND_ID_CANCEL_BROADCAST_SM_RESP.
+    ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP.
 
 
 %% @spec response_command_name(RequestCommand) -> ResponseCommandName
@@ -1635,50 +1665,50 @@ response_command_id(cancel_broadcast_sm) ->
 %% name or id.
 %% @end
 response_command_name(Cmd) when Cmd == bind_transmitter;
-							    Cmd == ?COMMAND_ID_BIND_TRANSMITTER -> 
-	bind_transmitter_resp;
+                                Cmd == ?COMMAND_ID_BIND_TRANSMITTER -> 
+    bind_transmitter_resp;
 response_command_name(Cmd) when Cmd == bind_receiver;
-							    Cmd == ?COMMAND_ID_BIND_RECEIVER -> 
-	bind_receiver_resp;
+                                Cmd == ?COMMAND_ID_BIND_RECEIVER -> 
+    bind_receiver_resp;
 response_command_name(Cmd) when Cmd == bind_transceiver;
-							    Cmd == ?COMMAND_ID_BIND_TRANSCEIVER -> 
-	bind_transceiver_resp;
+                                Cmd == ?COMMAND_ID_BIND_TRANSCEIVER -> 
+    bind_transceiver_resp;
 response_command_name(Cmd) when Cmd == unbind;
-								Cmd == ?COMMAND_ID_UNBIND -> 
-	unbind_resp;
+                                Cmd == ?COMMAND_ID_UNBIND -> 
+    unbind_resp;
 response_command_name(Cmd) when Cmd == enquire_link;
-								Cmd == ?COMMAND_ID_ENQUIRE_LINK -> 
-	enquire_link_resp;
+                                Cmd == ?COMMAND_ID_ENQUIRE_LINK -> 
+    enquire_link_resp;
 response_command_name(Cmd) when Cmd == submit_sm;
-								Cmd == ?COMMAND_ID_SUBMIT_SM -> 
-	submit_sm_resp;
+                                Cmd == ?COMMAND_ID_SUBMIT_SM -> 
+    submit_sm_resp;
 response_command_name(Cmd) when Cmd == data_sm;
-							    Cmd == ?COMMAND_ID_DATA_SM ->
-	data_sm_resp;
+                                Cmd == ?COMMAND_ID_DATA_SM ->
+    data_sm_resp;
 response_command_name(Cmd) when Cmd == submit_multi;
-								Cmd == ?COMMAND_ID_SUBMIT_MULTI -> 
-	submit_multi_resp;
+                                Cmd == ?COMMAND_ID_SUBMIT_MULTI -> 
+    submit_multi_resp;
 response_command_name(Cmd) when Cmd == deliver_sm;
-							    Cmd == ?COMMAND_ID_DELIVER_SM -> 
-	deliver_sm_resp;
+                                Cmd == ?COMMAND_ID_DELIVER_SM -> 
+    deliver_sm_resp;
 response_command_name(Cmd) when Cmd == broadcast_sm;
-							    Cmd == ?COMMAND_ID_BROADCAST_SM -> 
-	broadcast_sm_resp;
+                                Cmd == ?COMMAND_ID_BROADCAST_SM -> 
+    broadcast_sm_resp;
 response_command_name(Cmd) when Cmd == cancel_sm;
-							    Cmd == ?COMMAND_ID_CANCEL_SM -> 
-	cancel_sm_resp;
+                                Cmd == ?COMMAND_ID_CANCEL_SM -> 
+    cancel_sm_resp;
 response_command_name(Cmd) when Cmd == query_sm;
-								Cmd == ?COMMAND_ID_QUERY_SM -> 
-	query_sm_resp;
+                                Cmd == ?COMMAND_ID_QUERY_SM -> 
+    query_sm_resp;
 response_command_name(Cmd) when Cmd == replace_sm;
-								Cmd == ?COMMAND_ID_REPLACE_SM -> 
-	replace_sm_resp;
+                                Cmd == ?COMMAND_ID_REPLACE_SM -> 
+    replace_sm_resp;
 response_command_name(Cmd) when Cmd == query_broadcast_sm;
-								Cmd == ?COMMAND_ID_QUERY_BROACAST_SM -> 
-	query_broadcast_sm_resp;
+                                Cmd == ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+    query_broadcast_sm_resp;
 response_command_name(Cmd) when Cmd == cancel_broadcast_sm;
-							    Cmd == ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
-	cancel_broadcast_sm_resp.
+                                Cmd == ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+    cancel_broadcast_sm_resp.
 
 
 %% @spec request_failure_code(CommandId) -> CommandStatus

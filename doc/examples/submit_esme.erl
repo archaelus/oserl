@@ -382,7 +382,7 @@ read_decimal(Prompt) ->
 % @doc Reads a time record from the standard input.
 %
 % <p>Times (absolute or relative) are defined as time() records.
-% First we get the values for every field "YYMMDDhhmmsstdr", for instance
+% First we get the values for every field "YYMMDDhhmmsstddr", for instance
 % "040209203214000R", then we build the time() record.
 % </p>
 % @end 

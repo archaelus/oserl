@@ -348,7 +348,8 @@
 % %@spec {c_octet_string, Fixed, Size, Format} 
 %    Fixed  = bool()
 %    Size   = int()
-%    Format = free | hex | dec
+%    Format = free | hex | dec | Pred
+%    Pred   = fun(string()) -> bool()
 %
 % %@doc C-Octet String data-type declaration.  A C-Octet String must always 
 % be NULL terminated, thus the minimun length allowed is 1 octet.
@@ -364,6 +365,9 @@
 %       <li>free: a free fomat string.</li>
 %       <li>hex: the string represents an hexadecimal digit sequence.</li>
 %       <li>dec: the string represents a decimal digit sequence.</li>
+%       <li>Pred: is a fun(string()) -> bool(), returning <tt>true</tt> if the
+%         <tt>string()</tt> is in the desired format, <tt>false</tt> otherwise.
+%       </li>
 %     </ul>
 %   </dd>
 % </dl>
@@ -377,7 +381,8 @@
 % %@spec {octet_string, Fixed, Size, Format} 
 %    Fixed  = bool()
 %    Size   = int()
-%    Format = free | hex | dec
+%    Format = free | hex | dec | Pred
+%    Pred   = fun(string()) -> bool()
 %
 % %@doc Octet String data-type declaration.  An Octet String is not necessary
 % to be NULL terminated, thus the minimun length allowed is 0 octets.
@@ -393,6 +398,9 @@
 %       <li>free: a free fomat string.</li>
 %       <li>hex: the string represents an hexadecimal digit sequence.</li>
 %       <li>dec: the string represents a decimal digit sequence.</li>
+%       <li>Pred: is a fun(string()) -> bool(), returning <tt>true</tt> if the
+%         <tt>string()</tt> is in the desired format, <tt>false</tt> otherwise.
+%       </li>
 %     </ul>
 %   </dd>
 % </dl>
@@ -415,7 +423,8 @@
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = free | hex | dec
+%    Format   = free | hex | dec | Pred
+%    Pred     = fun(string()) -> bool()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -507,7 +516,8 @@
 %    Min      = int()
 %    Max      = int()
 %    Fixed    = bool()
-%    Format   = free | hex | dec
+%    Format   = free | hex | dec | Pred
+%    Pred     = fun(string()) -> bool()
 %    Name     = atom()
 %    Tuple    = term()
 %

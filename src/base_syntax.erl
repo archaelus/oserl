@@ -137,7 +137,7 @@
 % using the binary_to_list BIF.</p>
 %
 % <p>On variable length strings every octet until the NULL_CHARACTER is taken
-% using the function <tt>smpp_base:take_until/3</tt>.  The result is
+% using the function <tt>base_syntax:take_until/3</tt>.  The result is
 % translated to a list with the BIF binary_to_list.  Notice that the resulting
 % Value must be smaller or  equal to Size characters long.</p>
 %

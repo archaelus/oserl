@@ -26,13 +26,18 @@ Index
   appropriate pack/unpack function by means of the command_id and remove 
   pdu_type/1 function.
 
-- Put the command_id back into the PDU descriptor.
+- Try to put the command_id back into the PDU descriptor.
+
+- Move is_hex_string, is_dec_string to my_string.erl (common_lib)
 
 - Automatically add/remove trailing '\0' in C-Octet Strings.
 
   Pay special attention to C-Octet String parameteres defined as composites
   (records), such us TIME_DOMAIN.  Create a MACRO to assing values to 
   parameters represented as records.
+
+  Pensar si será mejor crear un nuevo format dentro de los strings, como
+  hex o dec, un subtipo atime o rtime.
 
   Cambios en base_syntax.erl
 

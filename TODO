@@ -2,10 +2,10 @@ TODO - OSERL Version 0.1                                     February 09, 2004
 
                     http://sourceforge.net/projects/oserl/
 
-Enrique Marcote Peña <mpquique@udc.es>
+                    Enrique Marcote Peña <mpquique@udc.es>
 
 
-Index
+Contents
 
 1. Version 0.2
 2. Version 1.0
@@ -27,25 +27,6 @@ Index
   pdu_type/1 function.
 
 - Try to put the command_id back into the PDU descriptor.
-
-- Move is_hex_string, is_dec_string to my_string.erl (common_lib)
-
-- Automatically add/remove trailing '\0' in C-Octet Strings.
-
-  Pay special attention to C-Octet String parameteres defined as composites
-  (records), such us TIME_DOMAIN.  Create a MACRO to assing values to 
-  parameters represented as records.
-
-  Pensar si será mejor crear un nuevo format dentro de los strings, como
-  hex o dec, un subtipo atime o rtime.
-
-  Cambios en base_syntax.erl
-
-  Modificar la función take_until, ojo con los comentarios que hacen referncia
-  a smpp_base: cambiarlos por base_syntax.
-
-  Cambios en los hrls, modificar todos los valores por defecto que incluyen el
-  NULL_CHARACTER explícitamente.  El NULL_C_OCTET_STRING es ahora un "".
 
 - Define a couple of MACROS for every composite parameter.  One to assign
   default (record) values, and the other to hide record definition to higher

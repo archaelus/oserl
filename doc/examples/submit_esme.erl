@@ -28,6 +28,10 @@
 % 
 % <ul>
 %   <li>Trailing $\0 removed from the c_octet_string values.</li>
+%   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time 
+%     record finally removed.  Time manipulation is now much more natural... 
+%     and easy.
+%   </li>
 % </ul>
 %
 %
@@ -241,8 +245,8 @@ submit_sm(MobileNumber, UserMessage) ->
     ServiceType = read_string("Service type> "),
     SourceAddress = read_string("Source> "),
     ReplaceIfPresentFlag = read_decimal("Replace if present flag> "),
-    ScheduleDeliveryTime = read_time("Schedule delivery time> "),
-    ValidityPeriod = read_time("Validity period> "),
+    ScheduleDeliveryTime = read_string("Schedule delivery time> "),
+    ValidityPeriod = read_string("Validity period> "),
     EsmClass = read_decimal("Esm class> "),
     ProtocolId = 0,
     PriorityFlag = read_decimal("Priority flag> "),
@@ -377,35 +381,6 @@ read_decimal(Prompt) ->
         Error ->
             Error
     end.
-
-
-%%%
-% @spec read_time(Prompt) -> Result
-%     Prompt = string()
-%     Result = time() | {error, What} | eof
-%     What   = term()
-%
-% @doc Reads a time record from the standard input.
-%
-% <p>Times (absolute or relative) are defined as time() records.
-% First we get the values for every field "YYMMDDhhmmsstddr", for instance
-% "040209203214000R", then we build the time() record.
-% </p>
-% @end 
-%
-% % @see
-%
-% % @equiv
-%%
-read_time(Prompt) ->
-    case io:fread(Prompt, "~2s~2s~2s~2s~2s~2s~1s~2s~1s") of
-        {ok, InputList} ->
-            % Notice the trailing NULL character...release 0.2 suppresses that.
-            list_to_tuple([time|InputList ++ ["\0"]]);
-        Error ->
-            Error
-    end.
-
 
 % Erlang shell
 

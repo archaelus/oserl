@@ -46,6 +46,9 @@
 % 
 % <ul>
 %   <li>Trailing $\0 removed from the c_octet_string values.</li>
+%   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time
+%     record removed.  Time manipulation is now much more natural... and easy.
+%   </li>
 % </ul>
 %
 %
@@ -504,148 +507,6 @@
                     ?TELEMATICS_ID_RESERVED_DOMAIN})).
 -define(TELEMATICS_ID_RESERVED, ?EMPTY).
 
-%%%
-% time_relative, time_absolute and time
-%
-% %@doc Specifies either absolute time format or relative time from the 
-% current MC time.  "YYMMDDhhmmsstnnp"
-%
-% <p>Used on: schedule_delivery_time, validity_period, final_date</p>
-%
-% %@see time record definition below
-% %@end
-%%
--define(TIME_YEAR_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_YEAR_DOMAIN,   ?FIXED_DEC_OCTET_STRING(2)).
-
--define(TIME_MONTH_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_MONTH_DOMAIN, 
-        ?SET(["01","02","03","04","05","06","07","08","09","10","11","12"])).
-
--define(TIME_DAY_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_DAY_DOMAIN,              
-        ?SET(["01","02","03","04","05","06","07","08","09","10",
-              "11","12","13","14","15","16","17","18","19","20",
-              "21","22","23","24","25","26","27","28","29","30","31"])).
-
--define(TIME_HOUR_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_HOUR_DOMAIN,
-        ?SET(["00","01","02","03","04","05","06","07","08","09",
-              "10","11","12","13","14","15","16","17","18","19",
-              "20","21","22","23"])).
-
--define(TIME_MINUTE_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_MINUTE_DOMAIN,
-        ?SET(["00","01","02","03","04","05","06","07","08","09",
-              "10","11","12","13","14","15","16","17","18","19",
-              "20","21","22","23","24","25","26","27","28","29",
-              "30","31","32","33","34","35","36","37","38","39",
-              "40","41","42","43","44","45","46","47","48","49",
-              "50","51","52","53","54","55","56","57","58","59"])).
-
--define(TIME_SECONDS_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_SECONDS_DOMAIN,
-        ?SET(["00","01","02","03","04","05","06","07","08","09",
-              "10","11","12","13","14","15","16","17","18","19",
-              "20","21","22","23","24","25","26","27","28","29",
-              "30","31","32","33","34","35","36","37","38","39",
-              "40","41","42","43","44","45","46","47","48","49",
-              "50","51","52","53","54","55","56","57","58","59"])).
-
--define(TIME_TENTHS_OF_SECOND_ABSOLUTE_DATATYPE, ?FIXED_DEC_OCTET_STRING(1)).
--define(TIME_TENTHS_OF_SECOND_ABSOLUTE_DOMAIN,   ?FIXED_DEC_OCTET_STRING(1)).
-
--define(TIME_TENTHS_OF_SECOND_RELATIVE_DATATYPE, ?FIXED_DEC_OCTET_STRING(1)).
--define(TIME_TENTHS_OF_SECOND_RELATIVE_DOMAIN,   ?CONSTANT("0")).
-
--define(TIME_DIFFERENCE_ABSOLUTE_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_DIFFERENCE_ABSOLUTE_DOMAIN, 
-        ?SET(["00","01","02","03","04","05","06","07","08","09",
-              "10","11","12","13","14","15","16","17","18","19",
-              "20","21","22","23","24","25","26","27","28","29",
-              "30","31","32","33","34","35","36","37","38","39",
-              "40","41","42","43","44","45","46","47","48"])).
-
--define(TIME_DIFFERENCE_RELATIVE_DATATYPE, ?FIXED_DEC_OCTET_STRING(2)).
--define(TIME_DIFFERENCE_RELATIVE_DOMAIN,   ?CONSTANT("00")).
-
--define(TIME_RELATION_RELATIVE_DATATYPE, ?CONSTANT("R")).
--define(TIME_RELATION_RELATIVE_DOMAIN,   ?CONSTANT("R")).
-
--define(TIME_RELATION_ABSOLUTE_DATATYPE, ?SET(["+", "-"])).
--define(TIME_RELATION_ABSOLUTE_DOMAIN,   ?SET(["+", "-"])).
-
--define(TIME_NULL_TERMINATOR_DATATYPE, ?CONSTANT("\0")).
--define(TIME_NULL_TERMINATOR_DOMAIN,   ?CONSTANT("\0")).
-
--define(TIME_COMPOSITE_RELATIVE_DATATYPE,
-        ?COMPOSITE(time,
-                   {?TIME_YEAR_DATATYPE, 
-                    ?TIME_MONTH_DATATYPE,
-                    ?TIME_DAY_DATATYPE,
-                    ?TIME_HOUR_DATATYPE,
-                    ?TIME_MINUTE_DATATYPE,
-                    ?TIME_SECONDS_DATATYPE,
-                    ?TIME_TENTHS_OF_SECOND_RELATIVE_DATATYPE,
-                    ?TIME_DIFFERENCE_RELATIVE_DATATYPE,
-                    ?TIME_RELATION_RELATIVE_DATATYPE,
-                    ?TIME_NULL_TERMINATOR_DATATYPE})).
--define(TIME_COMPOSITE_RELATIVE_DOMAIN,
-        ?COMPOSITE(time,
-                   {?TIME_YEAR_DOMAIN, 
-                    ?TIME_MONTH_DOMAIN,
-                    ?TIME_DAY_DOMAIN,
-                    ?TIME_HOUR_DOMAIN,
-                    ?TIME_MINUTE_DOMAIN,
-                    ?TIME_SECONDS_DOMAIN,
-                    ?TIME_TENTHS_OF_SECOND_RELATIVE_DOMAIN,
-                    ?TIME_DIFFERENCE_RELATIVE_DOMAIN,
-                    ?TIME_RELATION_RELATIVE_DOMAIN,
-                    ?TIME_NULL_TERMINATOR_DOMAIN})).
-
--define(TIME_COMPOSITE_ABSOLUTE_DATATYPE,
-        ?COMPOSITE(time,
-                   {?TIME_YEAR_DATATYPE, 
-                    ?TIME_MONTH_DATATYPE,
-                    ?TIME_DAY_DATATYPE,
-                    ?TIME_HOUR_DATATYPE,
-                    ?TIME_MINUTE_DATATYPE,
-                    ?TIME_SECONDS_DATATYPE,
-                    ?TIME_TENTHS_OF_SECOND_ABSOLUTE_DATATYPE,
-                    ?TIME_DIFFERENCE_ABSOLUTE_DATATYPE,
-                    ?TIME_RELATION_ABSOLUTE_DATATYPE,
-                    ?TIME_NULL_TERMINATOR_DATATYPE})).
--define(TIME_COMPOSITE_ABSOLUTE_DOMAIN,
-        ?COMPOSITE(time,
-                   {?TIME_YEAR_DOMAIN, 
-                    ?TIME_MONTH_DOMAIN,
-                    ?TIME_DAY_DOMAIN,
-                    ?TIME_HOUR_DOMAIN,
-                    ?TIME_MINUTE_DOMAIN,
-                    ?TIME_SECONDS_DOMAIN,
-                    ?TIME_TENTHS_OF_SECOND_ABSOLUTE_DOMAIN,
-                    ?TIME_DIFFERENCE_ABSOLUTE_DOMAIN,
-                    ?TIME_RELATION_ABSOLUTE_DOMAIN,
-                    ?TIME_NULL_TERMINATOR_DOMAIN})).
-
--define(TIME_RELATIVE_DATATYPE, ?TIME_COMPOSITE_RELATIVE_DATATYPE).
--define(TIME_RELATIVE_DOMAIN, 
-        ?UNION([?CONSTANT("\0"), ?TIME_COMPOSITE_RELATIVE_DOMAIN])).
--define(TIME_RELATIVE_RESERVED, ?EMPTY).
-
--define(TIME_ABSOLUTE_DATATYPE, ?TIME_COMPOSITE_ABSOLUTE_DATATYPE).
--define(TIME_ABSOLUTE_DOMAIN, 
-        ?UNION([?CONSTANT("\0"), ?TIME_COMPOSITE_ABSOLUTE_DOMAIN])).
--define(TIME_ABSOLUTE_RESERVED, ?EMPTY).
-
--define(TIME_DATATYPE, 
-        ?UNION([?TIME_COMPOSITE_ABSOLUTE_DATATYPE,
-                ?TIME_COMPOSITE_RELATIVE_DATATYPE])).
--define(TIME_DOMAIN, 
-        ?UNION([?CONSTANT("\0"), 
-                ?TIME_COMPOSITE_ABSOLUTE_DOMAIN,
-                ?TIME_COMPOSITE_RELATIVE_DOMAIN])).
--define(TIME_RESERVED, ?EMPTY).
 
 %%%
 % ton 
@@ -1095,46 +956,42 @@
 % schedule_delivery_time
 %
 % %@doc Either absolute or relative.
-%
-% %@see time definition above
 % %@end
 %%
--define(SCHEDULE_DELIVERY_TIME_DATATYPE, ?TIME_DATATYPE).
--define(SCHEDULE_DELIVERY_TIME_DOMAIN,   ?TIME_DOMAIN).
--define(SCHEDULE_DELIVERY_TIME_RESERVED, ?TIME_RESERVED).
+-define(SCHEDULE_DELIVERY_TIME_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
+-define(SCHEDULE_DELIVERY_TIME_DOMAIN,   ?UNION([?ATIME_C_OCTET_STRING, 
+		                                         ?RTIME_C_OCTET_STRING])).
+-define(SCHEDULE_DELIVERY_TIME_RESERVED, ?EMPTY).
 
 % schedule_delivery_time Values
--define(SCHEDULE_DELIVERY_TIME_IMMEDIATE, "\0").  % Immediate
+-define(SCHEDULE_DELIVERY_TIME_IMMEDIATE, ?NULL_C_OCTET_STRING).  % Immediate
 
 %%%
 % validity_period
 %
 % %@doc Either absolute or relative.
-%
-% %@see time definition above
 % %@end
 %%
--define(VALIDITY_PERIOD_DATATYPE, ?TIME_DATATYPE).
--define(VALIDITY_PERIOD_DOMAIN,   ?TIME_DOMAIN).
--define(VALIDITY_PERIOD_RESERVED, ?TIME_RESERVED).
+-define(VALIDITY_PERIOD_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
+-define(VALIDITY_PERIOD_DOMAIN,   ?UNION([?ATIME_C_OCTET_STRING, 
+                                          ?RTIME_C_OCTET_STRING])).
+-define(VALIDITY_PERIOD_RESERVED, ?EMPTY).
 
 % validity_period Values
--define(VALIDITY_PERIOD_DEFAULT, "\0").  % Use MC defaults
+-define(VALIDITY_PERIOD_DEFAULT, ?NULL_C_OCTET_STRING).  % Use MC defaults
 
 %%%
 % final_date
 %
 % %@doc It must be specified in absolute time format.
-%
-% %@see time_absolute definition above
 % %@end
 %%
--define(FINAL_DATE_DATATYPE, ?TIME_ABSOLUTE_DATATYPE).
--define(FINAL_DATE_DOMAIN,   ?TIME_ABSOLUTE_DOMAIN).
--define(FINAL_DATE_RESERVED, ?TIME_ABSOLUTE_RESERVED).
+-define(FINAL_DATE_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
+-define(FINAL_DATE_DOMAIN,   ?ATIME_C_OCTET_STRING).
+-define(FINAL_DATE_RESERVED, ?EMPTY).
 
 % final_date Values
--define(FINAL_DATE_FINAL_STATE_NOT_REACHED, "\0").
+-define(FINAL_DATE_FINAL_STATE_NOT_REACHED, ?NULL_C_OCTET_STRING).
 
 %%%
 % sequence_number
@@ -1479,13 +1336,11 @@
 % broadcast_end_time
 %
 % %@doc It must be specified in absolute time format "YYMMDDhhmmsstnnp"
-%
-% %@see time_absolute definition above
 % %@end
 %%
--define(BROADCAST_END_TIME_DATATYPE, ?TIME_ABSOLUTE_DATATYPE).
--define(BROADCAST_END_TIME_DOMAIN,   ?TIME_ABSOLUTE_DOMAIN).
--define(BROADCAST_END_TIME_RESERVED, ?TIME_ABSOLUTE_RESERVED).
+-define(BROADCAST_END_TIME_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
+-define(BROADCAST_END_TIME_DOMAIN,   ?ATIME_C_OCTET_STRING).
+-define(BROADCAST_END_TIME_RESERVED, ?EMPTY).
 
 %%%
 % broadcast_error_status
@@ -2382,86 +2237,6 @@
         {dest_flag = ?DEST_FLAG_DL,
          dl_name}).
 
-%%%
-% %@spec {time, 
-%         Year,
-%         Month,
-%         Day,
-%         Hour,
-%         Minute,
-%         Second,
-%         TenthsOfSecond,
-%         Difference,
-%         RelationToUtc,
-%         NullTerminator}
-%    Year           = DecimalString
-%    DecimalString  = [Digit, Digit]
-%    Digit          = $0 | $1 | $2 | $3 | $4 | $5 | $6 | $7 | $8 | $9
-%    Month          = DecimalString
-%    Day            = DecimalString
-%    Hour           = DecimalString
-%    Minute         = DecimalString
-%    Second         = DecimalString
-%    TenthsOfSecond = Digit
-%    Difference     = DecimalString
-%    RelationToUtc  = "+" | "-" | "R"
-%    NullTerminator = "\0"
-%
-% %@doc time composite record definition.
-%
-% <p>The macro ?TIME_DATATYPE defines the syntax for this field.</p>
-%
-% <dl>
-%   <dt>Year: </dt><dd>Last two digits of the year.  Decimal Octet String, 
-%     Fixed 2 octets.
-%   </dd>
-%   <dt>Month: </dt><dd>Digits of the month.  Decimal Octet String, Fixed 2 
-%     octets.
-%   </dd>
-%   <dt>Day: </dt><dd>Digits of the day.  Decimal Octet String, Fixed 2 octets.
-%   </dd>
-%   <dt>Hour: </dt><dd>Digits of the hour.  Decimal Octet String, Fixed 2
-%     octets.
-%   </dd>
-%   <dt>Minute: </dt><dd>Digits of the minute.  Decimal Octet String, Fixed 2
-%     octets.
-%   </dd>
-%   <dt>Second: </dt><dd>Digits of the second.  Decimal Octet String, Fixed 2
-%     octets.
-%   </dd>
-%   <dt>Tenths of Second: </dt><dd>Digit of the tenths of second.  Decimal 
-%     Octet String, Fixed 1 octet.
-%   </dd>
-%   <dt>Difference: </dt><dd>Time difference in quarter hours between local
-%     time (as expressed in the first 13 octets) and UTC (Universal Time 
-%     Constant) time (00-48).  Decimal Octet String, Fixed 2 octets.
-%   </dd>
-%   <dt>RelationToUtc: </dt><dd>Local time is in quarter hours advanced "+" or
-%     retarded "-" in relation to UTC time or relative to the current MC time
-%     "R".  Octet String, Fixed 1 octet.
-%   </dd>
-%   <dt>NullTerminator: </dt><dd>A dummy field holding the NULL terminating 
-%     character of the C-Octet String representing the time.  Constant 
-%     "\0".
-%
-%     <p>This field is always initialized to the correct value and must be 
-%     ignored by the programmer using this type definition.  It's only present
-%     to let this record fulfill the SMPP time declarations. 
-%   </dd>
-% </dl>
-% %@end
-%%
--record(time, 
-        {year,
-         month,
-         day,
-         hour,
-         minute,
-         second,
-         tenths_of_second,
-         difference,
-         relation_to_utc,
-         null_terminator = "\0"}).
 
 %%%
 % %@spec {unsuccess_sme, 

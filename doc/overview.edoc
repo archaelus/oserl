@@ -2,8 +2,8 @@
 	OSERL overview page
 
 @author Enrique Marcote Peña <mpquique@udc.es> [http://www.des.udc.es/~mpquique/]
-@copyright 2003 Enrique Marcote Peña
-@version 0.1 alpha
+@copyright 2003 - 2004 Enrique Marcote Peña
+@version 0.2 alpha
 
 @doc OSERL is an Erlang implementation of the Short Message Peer to Peer 
 Protocol version 5.0.
@@ -47,21 +47,7 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#pics">PICS Proforma</a></li>
   <li><a href="#changes">Changes</a>
     <ol>
-      <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a>
-        <ol>
-          <li><a href="#changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></li>
-          <li><a href="#changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></li>
-          <li><a href="#changes0_1-0_2-param_syntax">param_syntax.erl</a></li>
-          <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
-          <li><a href="#changes0_1-0_2-smpp_param">smpp_param.hrl</a></li>
-          <li><a href="#changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></li>
-          <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
-          <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
-          <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
-          <li><a href="#changes0_1-0_2-gen_esme">gen_esme.erl</a></li>
-          <li><a href="#changes0_1-0_2-other">Other changes</a></li>
-        </ol> 
-      </li>
+      <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></li>
     </ol>
   </li>
   <li><a href="#todo">TODO</a></li>
@@ -2300,115 +2286,8 @@ Find OSERL's PICS proforma in openoffice format
   </li>
 </ul>
 
-<p>How these changes affected individual files is described below.</p>
-
-
-<h4><a name="changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></h4>
-
-<ul>
-  <li><tt>empty</tt> base type record definition removed.</li>
-  <li><tt>EMPTY</tt> macro now defined as<br/>
-    <br/>
-    <tt>-define(EMPTY, ?UNION([])).</tt>
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></h4>
-
-<ul>
-  <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br/>
-  <br/>
-  <tt>STANDARD</tt> macro accordingly updated.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h4>
-
-<ul>
-  <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible for 
-    encoding default values on standard and mandatory tlvs respectively.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></h4>
-
-<ul>
-  <li>Removed <tt>get_value/2</tt> and <tt>set_value/3</tt>.  Using dictionary
-    API instead.<br/>
-    <br/>
-    <a href="pdu_syntax.html">pdu_syntax</a> functions are no longer used 
-    beyond <a href="operation.html">operation</a> API.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-smpp_param">smpp_param.hrl</a></h4>
-
-<ul>
-  <li>Default values added to Standard parameters.</li>
-  <li>Default values for TLVs reviewed.</li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></h4>
-
-<ul>
-  <li>Default values moved to smpp_param.hrl.</li>
-  <li>Field <i>number_of_messages</i> added to <i>submit_sm</i>, <i>data_sm</i>
-    and <i>submit_multi_sm</i>.
-  </li>
-  <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-operation">operation.erl</a></h4>
-
-<ul>
-  <li>Implemented <a href="operation.html#get_param-2">get_param/2</a> and 
-    <a href="operation.html#set_param-3">set_param/3</a>, replacements for 
-    <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
-    respectively.
-  </li>
-  <li>new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.</li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-sm">sm.erl</a></h4>
-
-<ul>
-  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
-    <a href="operation.html#get_param-2">operation:get_param/2</a>.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></h4>
-
-<ul>
-  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
-    <a href="operation.html#get_param-2">operation:get_param/2</a>.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-gen_esme">gen_esme.erl</a></h4>
-
-<ul>
-  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
-    <a href="operation.html#get_param-2">operation:get_param/2</a>.
-  </li>
-</ul>
-
-
-<h4><a name="changes0_1-0_2-other">Other changes</a></h4>
-
-<ul>
-  <li>Makefiles were fixed to find compiled behaviors.</li>
-</ul>
-
+<p>How these changes affected individual files is described 
+<a href="changes.html">here</a>.</p>
 
 
 <h2><a name="todo">TODO</a></h2>
@@ -2427,7 +2306,6 @@ Find OSERL's PICS proforma in openoffice format
     <li>Try to put the <tt>command_id</tt> back into the PDU descriptor in an
       efficient manner.
     </li>
-    <li>Automatically add/remove trailing '\0' in C-Octet Strings.</li>
   </ol>
   </li>
   <li>Version 1.0

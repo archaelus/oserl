@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Open SMPP Erlang Library (change log)</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css">
+</head>
+<body bgcolor="white">
+<h1>Change Log</h1>
+<p>Copyright © 2003 - 2004 Enrique Marcote Peña</p>
+<p><b>Version:</b> 0.2 alpha
+</p>
+<p><b>Authors:</b> Enrique Marcote Peña (<a href="mailto:mpquique@udc.es"><tt>mpquique@udc.es</tt></a>) [<em>web site:</em> <tt><a href="http://www.des.udc.es/~mpquique/">http://www.des.udc.es/~mpquique/</a></tt>].</p>
+
+<h2><a name="contents">Contents</a></h2>
+<ol>
+  <li><a href="#changes0_1-0_2">Changes 0.1 -> 0.2</a>
+    <ol>
+      <li><a href="#changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></li>
+      <li><a href="#changes0_1-0_2-base_syntax">base_syntax.erl</a></li>
+      <li><a href="#changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></li>
+      <li><a href="#changes0_1-0_2-param_syntax">param_syntax.erl</a></li>
+      <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
+      <li><a href="#changes0_1-0_2-smpp_globals-hrl">smpp_globals.hrl</a></li>
+      <li><a href="#changes0_1-0_2-smpp_base-hrl">smpp_base.hrl</a></li>
+      <li><a href="#changes0_1-0_2-smpp_param">smpp_param.hrl</a></li>
+      <li><a href="#changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></li>
+      <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
+      <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
+      <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
+      <li><a href="#changes0_1-0_2-gen_esme">gen_esme.erl</a></li>
+      <li><a href="#changes0_1-0_2-sample">Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)</a></li>
+      <li><a href="#changes0_1-0_2-other">Other changes</a></li>
+    </ol> 
+  </li>
+
+<h2><a name="changes0_1-0_2">Changes 0.1 -> 0.2</a></h2>
+
+<ul>
+  <li>Default values of standard parameters were included in the parameter
+    descriptor (just like in TLVs).  Lists of PDUs default values do no longer
+    exist.<br>
+    <br>
+    Refer to <i>smpp_param.hrl</i> if you want to change the default value of 
+    any parameter.
+  </li>
+  <li>Trailing <tt>NULL_CHARACTER</tt> in C-Octet Strings are transparently 
+    handled by encoding/decoding functions.  Application layer does not handle 
+    terminating NULLs no more.
+  </li>
+  <li>Absolute and relative time formats are now pure C-Octet Strings (Not 
+    records).  <tt>time</tt> record is no longer used.  (Refer to 
+    <a href="base_syntax.html">base_syntax.erl</a>, base_syntax.hrl and 
+    smpp_base.hrl for further details).
+  </li>
+</ul>
+
+<p>How these changes affected individual files is described below.</p>
+
+
+<h3><a name="changes0_1-0_2-base_syntax-hrl">base_syntax.hrl</a></h3>
+
+<ul>
+  <li><tt>empty</tt> base type record definition removed.</li>
+  <li><tt>EMPTY</tt> macro now defined as<br>
+    <br>
+    <tt>-define(EMPTY, ?UNION([])).</tt>
+  </li>
+  <li><tt>format</tt> field in strings is now a Fun. Much more powerful and
+    elegant than before.
+  </li>
+  <li><tt>HEX_C_OCTET_STRING</tt>, <tt>DEC_C_OCTET_STRING</tt>, 
+    <tt>HEX_OCTET_STRING</tt> and <tt>DEC_OCTET_STRING</tt> macros redefined 
+    using new format feature for strings.
+  </li>
+  <li><tt>ATIME_C_OCTET_STRING</tt> and <tt>RTIME_C_OCTET_STRING</tt>
+    macros defined using new format feature for strings.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-base_syntax">base_syntax.erl</a></h3>
+
+<ul>
+  <li>Trailing <tt>NULL_CHARACTER</tt> is transparetly handled by 
+    <a href="#encode-2">base_syntax:encode/2</a> and
+    <a href="#decode-2">base_syntax:decode/2</a> functions.
+  </li>
+  <li>
+    <a href="http://oserl.sourceforge.net/common_lib/binary.html#take_until-3">
+    take_until/3</a> moved to module <a href="binary.html">binary.erl</a> of 
+    the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+    </a>.
+  </li>
+  <li>
+    <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_dec-1">
+    is_dec/1</a> and 
+    <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_hex-1">
+    is_hex/1</a> moved to module <a href="my_string.html">my_string.erl</a> of 
+    the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+    </a>.
+  </li>
+  <li><tt>format</tt> field in strings is now a Fun. Much more powerful and
+    elegant than before.<br/>
+    <br/>
+    <a href="#decode-2">decode/2</a> and <a href="#encode-2">encode/2</a> 
+    changed (simplified :-) accordingly.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></h3>
+
+<ul>
+  <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br>
+  <br>
+  <tt>STANDARD</tt> macro accordingly updated.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-param_syntax">param_syntax.hrl</a></h3>
+
+<ul>
+  <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible for 
+    encoding default values on standard and mandatory tlvs respectively.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></h3>
+
+<ul>
+  <li>Removed <tt>get_value/2</tt> and <tt>set_value/3</tt>.  Using dictionary
+    API instead.<br>
+    <br>
+    <a href="pdu_syntax.html">pdu_syntax</a> functions are no longer used 
+    beyond <a href="operation.html">operation</a> API.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-smpp_globals-hrl">smpp_globals.hrl</a></h3>
+
+<ul>
+  <li>$\0 removed from the <tt>NULL_C_OCTET_STRING</tt> macro.</li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-smpp_base-hrl">smpp_base.hrl</a></h3>
+
+<ul>
+  <li>Trailing $\0 removed from the c_octet_string values.</li>
+  <li>Absolute/relative time implemented as pure C-Octet Strings.  Time
+    record removed.  Time manipulation is now much more natural... and easy.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-smpp_param">smpp_param.hrl</a></h3>
+
+<ul>
+  <li>Default values added to Standard parameters.</li>
+  <li>Default values for TLVs reviewed.</li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></h3>
+
+<ul>
+  <li>Default values moved to smpp_param.hrl.</li>
+  <li>Field <i>number_of_messages</i> added to <i>submit_sm</i>, <i>data_sm</i>
+    and <i>submit_multi_sm</i>.
+  </li>
+  <li>CDMA and TDMA specific TLVs are no longer commented out.</li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-operation">operation.erl</a></h3>
+
+<ul>
+  <li>Implemented <a href="operation.html#get_param-2">get_param/2</a> and 
+    <a href="operation.html#set_param-3">set_param/3</a>, replacements for 
+    <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
+    respectively.
+  </li>
+  <li>new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.</li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-sm">sm.erl</a></h3>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></h3>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-gen_esme">gen_esme.erl</a></h3>
+
+<ul>
+  <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
+    <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-sample">
+  Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
+</a></h3>
+
+<ul>
+  <li>Trailing $\0 removed from the c_octet_string values.</li>
+  <li>Absolute/relative time implemented as pure C-Octet Strings.  Time 
+    record finally removed.  Time manipulation is now much more natural... 
+    and easy.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_1-0_2-other">Other changes</a></h3>
+
+<ul>
+  <li>Makefiles were fixed to find compiled behaviors.</li>
+</ul>
+
+</body>
+</html>

@@ -213,6 +213,21 @@
 %   </li>
 % </ul>
 %
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li><tt>format</tt> field in strings is now a Fun. Much more powerful and
+%     elegant than before.
+%   </li>
+%   <li><tt>HEX_C_OCTET_STRING</tt>, <tt>DEC_C_OCTET_STRING</tt>, 
+%     <tt>HEX_OCTET_STRING</tt> and <tt>DEC_OCTET_STRING</tt> macros redefined 
+%     using new format feature for strings.
+%   </li>
+%   <li><tt>ATIME_C_OCTET_STRING</tt> and <tt>RTIME_C_OCTET_STRING</tt>
+%     macros defined using new format feature for strings.
+%   </li>
+% </ul>
+%
 %
 % <h2>References</h2>
 % <dl>
@@ -248,10 +263,10 @@
         #constant{value = Value}).
 -define(INTEGER(Size), 
         #integer{size = Size, min = 0, max = math:pow(256, Size) - 1}).
--define(C_OCTET_STRING(Fixed, Size),
-        #c_octet_string{fixed = Fixed, size = Size, format = free}).
+-define(C_OCTET_STRING(Fixed, Size), 
+        #c_octet_string{fixed = Fixed, size = Size, format = undefined}).
 -define(OCTET_STRING(Fixed, Size),
-        #octet_string{fixed = Fixed, size = Size, format = free}).
+        #octet_string{fixed = Fixed, size = Size, format = undefined}).
 -define(LIST(Type), 
         #list{type = Type, size = 255}).
 -define(COMPOSITE(Name, Tuple), 
@@ -272,14 +287,26 @@
         #integer{size = Size, min = Min, max = Max}).
 
 -define(HEX_C_OCTET_STRING(Fixed, Size),
-        #c_octet_string{fixed = Fixed, size = Size, format = hex}).
+        #c_octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_hex(Str) end}).
 -define(HEX_OCTET_STRING(Fixed, Size),
-        #octet_string{fixed = Fixed, size = Size, format = hex}).
+        #octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_hex(Str) end}).
 
 -define(DEC_C_OCTET_STRING(Fixed, Size),
-        #c_octet_string{fixed = Fixed, size = Size, format = dec}).
+        #c_octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_dec(Str) end}).
 -define(DEC_OCTET_STRING(Fixed, Size),
-        #octet_string{fixed = Fixed, size = Size, format = dec}).
+        #octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_dec(Str) end}).
 
 -define(ANONYMOUS_COMPOSITE(Tuple), #composite{tuple = Tuple}).
 
@@ -300,6 +327,20 @@
 
 -define(SIZED_LIST(Type, Size), 
         #list{type = Type, size = Size}).
+
+%%%
+% Time strings
+%%
+-define(ATIME_C_OCTET_STRING,
+        #c_octet_string{
+            fixed  = true, 
+            size   = 17,
+            format = fun(Str) -> my_string:is_atime(Str) end}).
+-define(RTIME_C_OCTET_STRING,
+        #c_octet_string{
+            fixed  = true, 
+            size   = 17,
+            format = fun(Str) -> my_string:is_rtime(Str) end}).
 
 %%%
 % Sets
@@ -348,8 +389,8 @@
 % %@spec {c_octet_string, Fixed, Size, Format} 
 %    Fixed  = bool()
 %    Size   = int()
-%    Format = free | hex | dec | Pred
-%    Pred   = fun(string()) -> bool()
+%    Format = fun(Str) -> bool()
+%    Str    = string()
 %
 % %@doc C-Octet String data-type declaration.  In SMPP, a C-Octet String must 
 % always be NULL terminated, thus the minimun length allowed is 1 octet.
@@ -373,15 +414,8 @@
 %     be from 1 up to Size octets long.
 %   </dd>
 %   <dt>Size: </dt><dd>Size in octets including trailing NULL_CHARACTER.</dd>
-%   <dt>Format: </dt><dd>
-%     <ul>
-%       <li>free: a free fomat string.</li>
-%       <li>hex: the string represents an hexadecimal digit sequence.</li>
-%       <li>dec: the string represents a decimal digit sequence.</li>
-%       <li>Pred: is a fun(string()) -> bool(), returning <tt>true</tt> if the
-%         <tt>string()</tt> is in the desired format, <tt>false</tt> otherwise.
-%       </li>
-%     </ul>
+%   <dt>Format: </dt><dd>If a format predicate is given, the string will be
+%     valid if the C-Octet String satisfies <tt>Format</tt>.
 %   </dd>
 % </dl>
 %
@@ -394,8 +428,8 @@
 % %@spec {octet_string, Fixed, Size, Format} 
 %    Fixed  = bool()
 %    Size   = int()
-%    Format = free | hex | dec | Pred
-%    Pred   = fun(string()) -> bool()
+%    Format = fun(Str) -> bool()
+%    Str    = string()
 %
 % %@doc Octet String data-type declaration.  An Octet String is not necessary
 % to be NULL terminated, thus the minimun length allowed is 0 octets.
@@ -406,15 +440,8 @@
 %     be from 0 up to Size octets long.
 %   </dd>
 %   <dt>Size: </dt><dd>Size in octets.</dd>
-%   <dt>Format: </dt><dd>
-%     <ul>
-%       <li>free: a free fomat string.</li>
-%       <li>hex: the string represents an hexadecimal digit sequence.</li>
-%       <li>dec: the string represents a decimal digit sequence.</li>
-%       <li>Pred: is a fun(string()) -> bool(), returning <tt>true</tt> if the
-%         <tt>string()</tt> is in the desired format, <tt>false</tt> otherwise.
-%       </li>
-%     </ul>
+%   <dt>Format: </dt><dd>If a format predicate is given, the string will be
+%     valid if the C-Octet String satisfies <tt>Format</tt>.
 %   </dd>
 % </dl>
 %
@@ -436,8 +463,8 @@
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = free | hex | dec | Pred
-%    Pred     = fun(string()) -> bool()
+%    Format   = fun(Str) -> bool()
+%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -529,8 +556,8 @@
 %    Min      = int()
 %    Max      = int()
 %    Fixed    = bool()
-%    Format   = free | hex | dec | Pred
-%    Pred     = fun(string()) -> bool()
+%    Format   = fun(Str) -> bool()
+%    Str      = string()
 %    Name     = atom()
 %    Tuple    = term()
 %

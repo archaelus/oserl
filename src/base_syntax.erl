@@ -48,6 +48,12 @@
 %   the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
 %   </a>.
 %   </li>
+%   <li><tt>format</tt> field in strings is now a Fun. Much more powerful and
+%     elegant than before.<br/>
+%     <br/>
+%      <a href="#decode-2">decode/2</a> and <a href="#encode-2">encode/2</a>
+%     changed (simplified :-) accordingly.
+%   </li>
 % </ul>
 %
 %
@@ -106,7 +112,8 @@
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = free | hex | dec
+%    Format   = fun(Str) -> bool()
+%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -229,8 +236,6 @@
 % @see decode_list/2
 % @see decode_try/2
 % @see binary:take_until/3
-% @see my_string:is_dec/1
-% @see my_string:is_hex/1
 % @end
 %%
 decode(Binary, #constant{value = Value} = Type) ->
@@ -262,23 +267,10 @@ decode(Binary, #integer{size = Size} = Type) ->
             {error, {type_mismatch, Type, Binary}}
     end;
 
-decode(Binary, #c_octet_string{format = hex} = Type) ->
-    case decode(Binary, Type#c_octet_string{format = free}) of
+decode(Binary, #c_octet_string{format = F} = Type) when F /= undefined ->
+    case decode(Binary, Type#c_octet_string{format = undefined}) of
         {ok, Value, Rest} ->
-            case my_string:is_hex(Value) of
-                true ->
-                    {ok, Value, Rest};
-                false ->
-                    {error, {type_mismatch, Type, Value}}
-            end;
-        Error ->
-            Error
-    end;
-
-decode(Binary, #c_octet_string{format = dec} = Type) ->
-    case decode(Binary, Type#c_octet_string{format = free}) of
-        {ok, Value, Rest} ->
-            case my_string:is_dec(Value) of
+            case F(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -309,24 +301,10 @@ decode(Binary, #c_octet_string{fixed = false, size = Size} = Type) ->
             {error, {type_mismatch, Type, binary_to_list(UntilSize)}}
     end;
 
-
-decode(Binary, #octet_string{format = hex} = Type) ->
-    case decode(Binary, Type#octet_string{format = free}) of
+decode(Binary, #octet_string{format = F} = Type) when F /= undefined ->
+    case decode(Binary, Type#octet_string{format = undefined}) of
         {ok, Value, Rest} ->
-            case my_string:is_hex(Value) of
-                true ->
-                    {ok, Value, Rest};
-                false ->
-                    {error, {type_mismatch, Type, Value}}
-            end;
-        Error ->
-            Error
-    end;
-
-decode(Binary, #octet_string{format = dec} = Type) ->
-    case decode(Binary, Type#octet_string{format = free}) of
-        {ok, Value, Rest} ->
-            case my_string:is_dec(Value) of
+            case F(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -521,7 +499,8 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = free | hex | dec
+%    Format   = fun(Str) -> bool()
+%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()
@@ -633,8 +612,6 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 % @see encode_iter/2
 % @see encode_list/2
 % @see encode_try/2
-% @see my_string:is_dec/1
-% @see my_string:is_hex/1
 % @end
 %%
 encode(Value, #constant{value = Value}) when list(Value) -> 
@@ -650,18 +627,10 @@ encode(Value, #integer{size = Size, min = Min, max = Max})
   when integer(Value), Value >= Min, Value =< Max  ->
     {ok, <<Value:Size/integer-unit:8>>};
 
-encode(Value, #c_octet_string{format = hex} = Type) ->
-    case my_string:is_hex(Value) of
+encode(Value, #c_octet_string{format = F} = Type) when F /= undefined ->
+    case F(Value) of
         true ->
-            encode(Value, Type#c_octet_string{format = free});
-        false ->
-            {error, {type_mismatch, Type, Value}}
-    end;
-
-encode(Value, #c_octet_string{format = dec} = Type) ->
-    case my_string:is_dec(Value) of
-        true ->
-            encode(Value, Type#c_octet_string{format = free});
+            encode(Value, Type#c_octet_string{format = undefined});
         false ->
             {error, {type_mismatch, Type, Value}}
     end;
@@ -674,18 +643,10 @@ encode(Value, #c_octet_string{size = Size})
   when list(Value), length(Value) < Size -> % was =<
     {ok, list_to_binary(Value ++ [?NULL_CHARACTER])};
 
-encode(Value, #octet_string{format = hex} = Type) ->
-    case my_string:is_hex(Value) of
+encode(Value, #octet_string{format = F} = Type) when F /= undefined ->
+    case F(Value) of
         true ->
-            encode(Value, Type#octet_string{format = free});
-        false ->
-            {error, {type_mismatch, Type, Value}}
-    end;
-
-encode(Value, #octet_string{format = dec} = Type) ->
-    case my_string:is_dec(Value) of
-        true ->
-            encode(Value, Type#octet_string{format = free});
+            encode(Value, Type#octet_string{format = undefined});
         false ->
             {error, {type_mismatch, Type, Value}}
     end;
@@ -850,7 +811,8 @@ encode_try(Value, [Type|Types], Error, Priority) ->
 %    Size     = int()
 %    Min      = int()
 %    Max      = int()
-%    Format   = free | hex | dec
+%    Format   = fun(Str) -> bool()
+%    Str      = string()
 %    Fixed    = bool()
 %    Name     = atom()
 %    Tuple    = term()

@@ -1,7 +1,7 @@
 
 	OSERL overview page
 
-@author Enrique Marcote Peña <mpquique@udc.es> [http://www.des.udc.es/~mpquique/]
+@author Enrique Marcote Peña <mpquique@users.sourceforge.net> [http://www.des.udc.es/~mpquique/]
 @copyright 2003 - 2004 Enrique Marcote Peña
 @version 0.2 alpha
 
@@ -21,6 +21,7 @@ numbers on [SMPP 5.0].</p>
     <ol>
       <li><a href="#howto_esme">How to implement an ESME</a>
         <ol>
+          <li><a href="#submit">Submit SM sample (java vs. erlang)</a></li>
           <li><a href="#echo">Sample echo ESME</a></li>
           <li><a href="#code_lock">Code lock ESME example</a></li>
         </ol> 
@@ -245,168 +246,286 @@ for you.
 out how to implement a more complex ESME.
 </p>
 
-<h4><a name="echo">Sample echo ESME</a></h4>
+<h4><a name="submit">Submit SM sample (java vs. erlang)</a></h4>
 
-The echo ESME offers a very simple (and useless) service to subscribers.  
-Whenever a subscriber sends a Short Message to this service, the ESME responds
-to it sending back the exact same Short Message.
+<p>If you are a SMPP developer, you will be familiar with java or C SMPP APIs, 
+and wondering how does an equivalent erlang code to a given java example, 
+looks like.  Such a comparison is shown in <a href="examples/submit_esme.erl">
+doc/examples/submit_esme.erl</a>, where a <i>submit_sm</i> java code is
+directly translated into erlang, using OSERL.</p>
 
-<p>Please, read the comments along with the erlang code for the echo ESME shown
-below.  This example may be also found in <a href="examples/echo_esme.erl">
-doc/examples/echo_esme.erl</a>.
-</p>
+<p>The original java sample had too many I/O instructions, since these kind of
+instructions are pretty much the same in any language, you'll find both
+implementations very similar.  I believe this <i>submit_sm</i> example 
+doesn't show the real strength of a SMPP erlang implementation.  To find out 
+the advantages of OSERL, I encourage you to implement the ESME examples below 
+(<a href="#echo">echo_esme</a> and <a href="#code_lock">code_lock_esme</a>) in 
+a language such us java, and compare the result with the erlang implementations
+given below (I think you'll find erlang implementation much more readable and 
+compact).</p>
 
+<table width="100%" border="1">
+  <tr>
+    <th width="50%" align="center">java submit_sm</th>
+    <th width="50%" align="center">erlang submit_sm</th>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
 <pre>
--module(echo_esme).
+public String  submit(String mobileNumber, String userMessage) {
+    SubmitSM request = new SubmitSM();
+    SubmitSMResp response;
+  
+    // input values
+    serviceType = getParam("Service type", serviceType);
+    sourceAddress = getAddress("Source",sourceAddress);
+    destAddress = getAddress("Destination",new Address(mobileNumber));
+    replaceIfPresentFlag = getParam("Replace if present flag", 
+                                     replaceIfPresentFlag);
+    shortMessage = userMessage;
+    scheduleDeliveryTime = getParam("Schedule delivery time", 
+                                    scheduleDeliveryTime);
+    validityPeriod = getParam("Validity period", validityPeriod);
+    esmClass = getParam("Esm class", esmClass);
+    protocolId = 0;
+    priorityFlag = getParam("Priority flag", priorityFlag);
+    registeredDelivery = getParam("Registered delivery", 
+                                   registeredDelivery);
+    dataCoding = 0x10; // For Flash Message
+    smDefaultMsgId = getParam("Sm default msg id", smDefaultMsgId);
 
-% The module echo_esme implements the gen_esme behavior.  You need to include 
-% gen_esme.hrl to get the gen_esme_setup record definition.
+    // set values
+    request.setServiceType(serviceType);
+    request.setSourceAddr(sourceAddress);
+    request.setDestAddr(destAddress);
+    request.setReplaceIfPresentFlag(replaceIfPresentFlag);
+    request.setShortMessage(shortMessage);
+    request.setScheduleDeliveryTime(scheduleDeliveryTime);
+    request.setValidityPeriod(validityPeriod);
+    request.setEsmClass(esmClass);
+    request.setProtocolId(protocolId);
+    request.setPriorityFlag(priorityFlag);
+    request.setRegisteredDelivery(registeredDelivery);
+    request.setDataCoding(dataCoding);
+    request.setSmDefaultMsgId(smDefaultMsgId);
 
--behaviour(gen_esme). 
+    // send the request
+    int count = 1;
+    System.out.println();
+    count = getParam("How many times to submit this message (load test)",
+                     count);
+    for (int i = 0; i&lt;count; i++) {
+        request.assignSequenceNumber(true);
+        //System.out.print("#"+i+"  ");
+        System.out.println("Submit request " + request.debugString());
+        if (asynchronous) {
+            //session.submit(request);  
+            response = session.submit(request);
+            messageId = response.getMessageId();
+            //System.out.println();
+            return messageId;
+        } else {
+            response = session.submit(request);                    
+            messageId = response.getMessageId();
+            System.out.println("Submit response " + 
+                               response.debugString() + 
+                               " MESSAGE ID : " + 
+                               messageId);
+            return messageId;
+        }
+    }   
+    return messageId;            
+}
+</pre>
+    </td>
+    <td width="50%" valign="top">
+<pre>
+submit_sm(MobileNumber, UserMessage) ->
 
--include("gen_esme.hrl").
 
-% Every ESME needs a start and stop function.  You may call these functions
-% as you wish.
 
--export([start_link/5, stop/0]).
+    % input values
+    ServiceType = read_string("Service type> "),
+    SourceAddress = read_string("Source> "),
 
-% You shall implement the callbacks you need for your particular ESME.
-% In this case, our ESME only cares about deliver_sm operations, thus we only
-% need to implement this callback.
+    ReplaceIfPresentFlag = read_decimal("Replace if present flag> "),
 
--export([deliver_sm/3]).
 
-% See what the start_link function does.
-%
-% Gets a few parameters with the identity of the ESME and the MC address.
-%
-% Builds the gen_esme_setup record from the parameters using the macro
-% GEN_ESME_SETUP.  Look into gen_esme.hrl to see this macro definition and all
-% the fields available on the setup record.
-%
-% Starts the gen_esme using the gen_esme:start_link/3 function.  Notice that
-% the third argument is the Setup record.  The first and second arguments are
-% common to the start_link function on most of the OTP behaviors.
-%
-% If the call to gen_esme:start_link succeeds, the echo ESME binds to the SMSC
-% as a receiver and as a transmitter.
+    ScheduleDeliveryTime = read_string("Schedule delivery time> "),
 
-start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -&gt;
-    io:format("Starting the echo ESME...", []),
-    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
-    case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
-        {ok, Eid} -&gt;
-            gen_esme:bind_receiver(echo_esme, McAddr),
-            gen_esme:bind_transmitter(echo_esme, McAddr),
-            io:format("bound as receiver/transceiver~n", []),
-            {ok, Eid};
-        Error -&gt;
-            Error
+    ValidityPeriod = read_string("Validity period> "),
+    EsmClass = read_decimal("Esm class> "),
+    ProtocolId = 0,
+    PriorityFlag = read_decimal("Priority flag> "),
+    RegisteredDelivery = read_decimal("Registered delivery> "),
+
+    DataCoding = 2#10,  % For Flash Message
+    SmDefaultMsgId = read_decimal("Sm default msg id> "),
+
+    % set values (create the ParamList)
+    ParamList = [{service_type, ServiceType},
+                 {source_addr, SourceAddress},
+                 {destination_addr, MobileNumber},
+                 {replace_if_present_flag, ReplaceIfPresentFlag},
+                 {short_message, UserMessage},
+                 {schedule_delivery_time, ScheduleDeliveryTime},
+                 {validity_period, ValidityPeriod},
+                 {esm_class, EsmClass},
+                 {protocol_id, ProtocolId},
+                 {priority_flag, PriorityFlag},
+                 {registered_delivery, RegisteredDelivery},
+                 {data_coding, DataCoding},
+                 {sm_default_msg_id, SmDefaultMsgId}],
+
+    % send the request
+    case read_decimal("How many times to submit this message (load test)") of
+        Count when integer(Count) -> submit_sm_async_iter(ParamList, Count);
+        _Error                    -> submit_sm_async_iter(ParamList, 1)
     end.
 
-% No big deal.  The stop function does the opposite to the start_link.
-%
-% Once unbounded from the MC, the ESME must be cleanly stopped by calling
-% gen_esme:stop/1.
 
-stop() -&gt;
-    io:format("Stopping the echo ESME...", []),
-    gen_esme:unbind_receiver(echo_esme),
-    gen_esme:unbind_transmitter(echo_esme),
-    gen_esme:stop(echo_esme),
-    io:format("done~n", []).
+submit_sm_async_iter(ParamList, 0) -> 
+    ok;
+submit_sm_async_iter(ParamList, Count) ->
+    spawn(fun() -> submit_sm(ParamList) end),
+    submit_sm_async_iter(ParamList, Count - 1).
 
 
-
-% This callback handles deliver_sm operations.  The gen_esme behavior will 
-% trigger this callback whenever receives a deliver_sm PDU from the SMSC.  
-% Developers must implement this function if they want to handle this SMPP 
-% operation on their ESME.
-% 
-% Since we want our echo ESME to respond to these PDUs, by sending back to the
-% subscriber the same short message we are receiving, we do so in the body 
-% of this function.
-%
-% Notice we have access to received PDU in the third argument of the callback. 
-% PDUs are internally represented as dictionaries.  Should you need to get any 
-% parameter of a PDU, you may use the operation:get_param/2 function.
-%
-% Important.  PDUs received by callbacks are *guarantee* to be correct.  
-% Malformed PDUs are discarded at the session layer (where the appropriate
-% response PDU is sent back to the MC, indicating encountered error), thus
-% you do not need to care about checking PDU parameters, you can safely assume
-% PDUs you handle are correct.
-%
-% See how we send back our response issuing a submit_sm operation.  Read below
-% to see how the submit_sm (and other SMPP operation functions) work. 
-
-deliver_sm(_Pid, Eid, Pdu) -&gt; 
-    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
-    spawn(fun() -&gt; gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
-    {ok, []}.
+submit_sm(ParamList) -> 
+    case gen_esme:submit_sm(?ESME_NAME, ParamList) of
+        {ok, Response} -> 
+            % See how to get a parameter value
+            MessageId = operation:get_param(message_id, Response),
+            io:format("Message ID: ~p~n", [MessageId]);
+        {error, Error} ->
+            io:format("Submit operation failed with ~p~n", [Error])
+    end.
 </pre>
+    </td>
+  </tr>
+</table>
 
-<p>You may copy this sample into a file called "echo_esme.erl" and compile:
-</p>
+<p><a href="submit_esme.html">submit_esme</a> is not just an erlang 
+<i>submit_sm</i> function, but a complete ESME implementation.  This ESME
+binds as a transmitter, behaves asynchronously, controls congestion and 
+connection failures, and transparently handles SMPP timers and other
+aspects defined in the SMPP protocol.</p>
+
+<p>Get into doc/examples directory and compile the <a href="submit_esme.html">
+submit_esme</a> example by</p>
 
 <pre>
-    erlc -W -I /home/quique/projects/oserl/include echo_esme.erl
+    $ erlc -W -I ../../include -pz ../../ebin submit_esme.erl
 </pre>
 
-<p>Now, open an erlang shell and test the echo ESME:
-</p>
+<p>Now, open an erlang shell and test it:</p>
 
 <pre>
-    ~$ erl
+    $ erl
     Erlang (BEAM) emulator version 5.2 [source] [hipe]
 
     Eshell V5.2  (abort with ^G)
     1&gt; executing user profile in HOME/.erlang
     .erlang rc finished
-
-    1&gt; echo_esme:start_link("banana\0", "secret\0", "1948\0", "1948\0", {193, 144, 50, 51}).
-    Starting the echo ESME...bound as receiver/transceiver
-    {ok,&lt;0.29.0&gt;}
 </pre>
 
-<p>To test your applications you may use the <a href="http://www.mobilelandscape.co.uk">SMPPSim SMSC simulator by logica</a>.  I have this SMSC simulator 
-running on 193.144.50.51, so starting the echo ESME as shown above should work 
-for you also (if you have internet access).   You may use this machine for your
-tests, although be aware we use that box for testing just about everything over
-here, so it might not work properly.  You may install the SMPPSim on your own 
-system, then you will have access to the SMSC log also, which I find very 
-helpful.  You can download SMPPSim from <a href="http://www.mobilelandscape.co.uk/">http://www.mobilelandscape.co.uk</a>
-</p>
-<p>A couple of notes here.  On my .erlang I have:
-</p>
+<p>Assuming you've untared the <i>common_lib</i> in the same subdirectory
+than <i>oserl</i>.</p>
+
 <pre>
-    ~$ cat .erlang
-    io:format("executing user profile in HOME/.erlang\n",[]).
-    code:add_path("/usr/local/lib/erlang/lib/syntax_tools-1.3/ebin").
-    code:add_path("/usr/local/lib/erlang/lib/xmerl-0.19/ebin").
-    code:add_path("/usr/local/lib/erlang/lib/edoc-0.4/ebin").
-    code:add_path("/home/quique/projects/common_lib/ebin").
-    code:add_path("/home/quique/projects/oserl/ebin").
-    io:format(".erlang rc finished\n",[]).
+    1&gt; code:add_path("../../../common_lib/ebin").
+    true
+    2&gt; code:add_path("../../ebin").
+    true
 </pre>
 
-<p>To test the examples using the SMSC simulator mentioned above,  you may use 
+<p>and finally do</p>
+
+<pre>
+    3&gt; submit_esme:start().
+    {ok,&lt;0.21.0&gt;}
+    4&gt;  submit_esme:submit_sm("123456789", "hello there").
+    "Service type> "CMT
+    "Source> "1959
+    "Replace if present flag> "0
+    "Schedule delivery time> "040207105523000+
+    "Validity period> "040208105523000+
+    "Esm class> "0
+    "Priority flag> "0
+    "Registered delivery> "0
+    "Sm default msg id> "0
+    "How many times to submit this message (load test)"5
+    ok
+    Message ID: "34800629"
+    Message ID: "24512469"
+    Message ID: "49646623"
+    Message ID: "34236909"
+    Message ID: "64973652"
+    4&gt; submit_esme:stop().
+    ok
+</pre>
+
+<p>To test your applications you may use the <a href="http://www.mobilelandscape.co.uk">SMPPSim SMSC simulator by logica</a>.  We usually have this SMSC 
+simulator running on 193.144.50.51 (which is the default IP address used by 
+<a href="submit_esme.html#start-0">start/0</a>), so starting the submit ESME as
+shown above should work for you also (if you have internet access).   You may 
+use this machine for your tests, although be aware we use that box for testing 
+just about everything over here, so it might not work properly.  You may 
+install SMPPSim on your own system, then you will have access to the SMSC 
+log also, which I find very helpful.  You can download SMPPSim from 
+<a href="http://www.mobilelandscape.co.uk/">http://www.mobilelandscape.co.uk
+</a></p>
+
+
+<h4><a name="echo">Sample echo ESME</a></h4>
+
+<a href="echo_esme.html">echo_esme</a> offers a very simple (and useless) 
+service to subscribers.  Whenever a client sends a Short Message to this 
+service, the ESME responds sending back the exact same Short Message.
+
+<p>You may find this example under <a href="examples/echo_esme.erl">
+doc/examples/echo_esme.erl</a>.</p>
+
+<p>Get into doc/examples directory compile and test this new example:</p>
+
+<pre>
+    $ erlc -W -I ../../include -pz ../../ebin echo_esme.erl
+
+    $ erl
+    Erlang (BEAM) emulator version 5.2 [source] [hipe]
+
+    Eshell V5.2  (abort with ^G)
+    1&gt; executing user profile in HOME/.erlang
+    .erlang rc finished
+    1&gt; code:add_path("../../../common_lib/ebin").
+    true
+    2&gt; code:add_path("../../ebin").
+    true
+    3&gt; echo_esme:start().
+    Bound as transmitter to "SMPPSim"
+    {ok,&lt;0.41.0&gt;}
+    Bound as receiver to "SMPPSim"
+</pre>
+
+<p>To test the next two examples using the SMSC simulator mentioned in the
+<a href="submit_esme.html">submit_esme</a> example, you may use 
 <a href="examples/send_oserl.html">this HTML form</a>, and try sending short 
-messages to your echo ESME.  Notice the address of the echo service is 1948 
-by default, if you decide to start the ESME with another address, you will 
-need to change the destination address in the HTML form.  Of course, if you are
-running the SMPPSim SMSC simulator on your own machine (recommended), you will 
-also need to update the IP address  in the HTML form (to point to your SMSC).
-</p>
-<p>Type the message <quote>hello</quote> in the HTML form and click the button 
-&lt;send&gt;.  You won't get the echo response back in your browser phone, or 
-whatever it looks like :-).  SMPPSim SMSC simulator doesn't support that, this 
-tool just listens on a HTTP port, but cannot send SM responses back.  Anyway 
-you should see the following message in your browser:
-</p>
+messages to your test ESMEs.</p>
+
+<p>Notice the address of the echo service is <i>1948</i> by default.  If you 
+decide to start the ESME in another address, you will need to change the 
+destination address in the HTML form (this is a good idea if you're planning 
+to use the online SMSC testing simulator above mentioned, other users doing 
+their online tests might be using the same ESME address, so it'll be wise to 
+change it).  Of course, if you are running the SMPPSim SMSC simulator on your 
+own machine (recommended), you will need to update the IP address in the HTML 
+form instead (to point it to your SMSC).</p>
+
+<p>Type the message "hello" in the HTML form and click the 
+button &lt;send&gt;.  You won't get the echo response back in your browser 
+phone, or whatever it looks like :-).  SMPPSim SMSC simulator doesn't support 
+that, this tool just listens on a HTTP port, but cannot send SM responses back.
+Anyway, you should see the following message in your browser:</p>
 
 <pre>
     DELIVER_SM invoked OK
@@ -414,26 +533,24 @@ you should see the following message in your browser:
 
 <p>This means the message was successfully forwarded to your ESME.  We can 
 confirm that looking on the erlang shell, where the following message should be
-displayed:
-</p>
+displayed:</p>
 
 <pre>
     Echoing SM: {short_message,"hello"}
 </pre>
 
-<p>Let's give it another try (send another message with text <quote>bye</quote>
-and stop the ESME).
-</p>
+<p>Let's give it another try (send another message with text "bye" and stop
+the ESME).</p>
 
 <pre>
     Echoing SM: {short_message,"bye"}
-    2&gt; echo_esme:stop().
-    Stopping the echo ESME...done
+    4&gt; echo_esme:stop().
+    Unbound as receiver.
+    Unbound as transmitter.
     ok
 </pre>
 
-<p>During this session, the log of the SMSC simulator shows something like:
-</p>
+<p>During this session, the log of the SMSC simulator shows something like:</p>
 
 <pre>
 2004.02.07 11:25:43 668 INFO    CH8: BIND_RECEIVER:
@@ -551,8 +668,7 @@ and stop the ESME).
 </pre>
 
 <p>Now that we have our ESME stopped, and unbound from the SMSC simulator, if
-you try to send another message through your browser, you'll get:
-</p>
+you try to send another message through your browser, you'll get:</p>
 
 <pre>
     No receiver available to deliver messageHTTP/1.1 200
@@ -560,14 +676,12 @@ you try to send another message through your browser, you'll get:
     DELIVER_SM invoked OK
 </pre>
 
-<p>Let's dig into the details of the echo ESME implementation.
-</p>
+<p>Let's dig into the details of the echo ESME implementation.</p>
 
 <p>If you look at the documentation for the <a href="gen_esme.html">gen_esme
-</a> behavior you will find all the exported functions and callbacks available 
-for this behavior.  Notice there is an exported function for every SMPP 
-operation an ESME may issue.  Among others, these functions are exported:
-</p>
+</a> behavior, you will find all the exported functions and callbacks available
+on this behavior.  Notice there is an exported function for every SMPP 
+operation an ESME may issue.  Among others, these functions are exported:</p>
 
 <ul>
   <li>alert_notification</li>
@@ -589,16 +703,15 @@ operation an ESME may issue.  Among others, these functions are exported:
 </ul>
 
 <p>As we mention, there are some other functions, most of them need to be 
-exported to implement the gen_esme_session behavior (notice the 
-<a href="gen_esme.html">gen_esme</a> behavior is implemented on top of the 
-<a href="gen_esme_session.html">gen_esme_session</a> behavior, which in turn 
-was built on top of the <a href="gen_connection.html">gen_connection</a> 
-behavior).  Let us ignore the rest of the exported functions at this moment.
-</p>
+exported to implement the <a href="gen_esme_session.html">gen_esme_session</a> 
+behavior (notice that <a href="gen_esme.html">gen_esme</a> behavior is 
+implemented on top of the <a href="gen_esme_session.html">gen_esme_session</a> 
+behavior, which in turn was built on top of the <a href="gen_connection.html">
+gen_connection</a> behavior).  Let us ignore the rest of the exported 
+functions at this moment.</p>
 
-<p>Recall the <a href="gen_esme.html#submit_sm-2">submit_sm</a> function and 
-how it was used in our <a href="#echo">echo_esme</a> example.
-</p>
+<p>Recall <a href="gen_esme.html#submit_sm-2">gen_esme:submit_sm/2</a> function
+and how it was used in our <a href="echo_esme.html">echo_esme</a> example.</p>
 
 <pre>
 deliver_sm(_Pid, Eid, Pdu) -&gt;
@@ -609,10 +722,9 @@ deliver_sm(_Pid, Eid, Pdu) -&gt;
     {ok, []}.
 </pre>
 
-<p>Notice how to submit a short message from your ESME.  Just need to call
+<p>See how we submit a short message from our ESME.  Just need to call
 <a href="gen_esme.html#submit_sm-2">gen_esme:submit_sm/2</a>.  This function 
-is declared as follows:
-</p>
+is declared as follows:</p>
 
 <p><tt>submit_sm(Eid::Eid, ParamList::ParamList) -&gt; Result</tt>
 </p>
@@ -627,15 +739,15 @@ is declared as follows:
   <li>Error = {error_code, int()} | atom()</li>
 </ul>
 
-<p>The first argument is the <tt>pid()</tt> (or name) of our ESME; most of the 
-OTP behaviors need also this type argument on their functions.  The second 
+<p>The first argument is the <tt>pid()</tt> (or name) of our ESME; most of 
+OTP behaviors need this argument on their functions.  The second 
 argument (<tt>ParamList</tt>) holds the parameter values we are going to send 
 along in our PDU.  This argument is an assoc list; the items on this list are 
 pairs in the format <tt>{ParamName, ParamValue}</tt>.
 </p>
 
-<p>Let me rewrite the code above without using the sm module, so you can see
-all the details:
+<p>Let me rewrite the code above without using the <a href="sm.html">sm</a> 
+module, so you can see all the details:
 </p>
 
 <pre>
@@ -675,62 +787,85 @@ deliver_sm(_Pid, Eid, Pdu) -&gt;
     {ok, []}.
 </pre>
 
-<p>Since getting the message_payload and creating the response address from the
-source address are common operations, both have been implemented in 
+<p>Since getting the <i>message_payload</i> and creating the response address 
+from the source address are common operations, both have been implemented in 
 <a href="sm.html">sm.erl</a> module by the functions 
 <a href="sm.html#message_user_data-1">sm:message_user_data/1</a> and 
-<a href="sm.html#reply_address-1">sm:reply_address/1</a> respectively.
-</p>
+<a href="sm.html#reply_address-1">sm:reply_address/1</a> respectively.</p>
 
-<p>The <a href="gen_esme.htmlsubmit_sm-2">gen_esme:submit_sm/2</a> function 
-creates the <i>submit_sm</i> PDU using the values in the parameter list.  For 
-those parameters not defined in the parameter list, the default value is used. 
-Default values for every PDU are defined in <b>smpp_pdu.hrl</b>.  The values 
-on the parameter list override the defaults.
-</p>
+<p><a href="gen_esme.htmlsubmit_sm-2">gen_esme:submit_sm/2</a> creates a 
+<i>submit_sm</i> PDU using the values in the parameter list.  For those 
+parameters not defined in the parameter list, the default value is used. 
+Default values for every parameter are defined in 
+<a href="../../include/smpp_param.hrl">smpp_param.hrl</a>.  Values in 
+<tt>ParamList</tt> override defaults.</p>
 
 <p>Parameter names and types are those in the SMPP specification, should you 
 find any problems assigning values to an specific parameter, check their exact
-names and types in <b>smpp_param.hrl</b> and <b>smpp_base.hrl</b>.
+names and types in <a href="../../include/smpp_param.hrl">smpp_param.hrl</a>.
 </p>
 
 <p>SMPP composite parameters were defined as records.  For example, values for 
-the <i>schedule_delivery_time</i> parameter must be defined by means of the 
-time record (defined in <b>smpp_base.hrl</b>).  Refer to to 
-<b>smpp_base.hrl</b> and <b>smpp_param.hrl</b> for greater details on 
-composite parameters.
-</p>
+<i>unsuccess_sme</i> parameters must be defined by means of the 
+<tt>unsuccess_sme</tt> record (defined in 
+<a href="../../include/smpp_base.hrl">smpp_base.hrl</a>).</p>
 
 <pre>
--record(time,
-        {year,
-         month,
-         day,
-         hour,
-         minute,
-         second,
-         tenths_of_second,
-         difference,
-         relation_to_utc,
-         null_terminator = ?NULL_C_OCTET_STRING}).
+%%%
+% %@spec {unsuccess_sme,
+%         DestAddrTon,
+%         DestAddrNpi,
+%         DestinationAddr,
+%         ErrorStatusCode}
+%    DestAddrTon     = int()
+%    DestAddrNpi     = int()
+%    DestinationAddr = string()
+%    ErrorStatusCode = int()
+%
+% %@doc unsuccess_sme composite record definition.
+%
+% &lt;p&gt;The macro ?UNSUCCESS_SME_DATATYPE defines the type specifier for this
+% field.&lt;/p&gt;
+%
+% &lt;dl&gt;
+%   &lt;dt&gt;DestAddrTon: &lt;/dt&gt;&lt;dd&gt;Indicates Type of Number for destination.
+%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
+%   &lt;/dd&gt;
+%   &lt;dt&gt;DestAddrNpi: &lt;/dt&gt;&lt;dd&gt;Numbering Plan Indicator for destination.
+%     Integer, 1 octet  (default is ?NPI_ISDN).
+%   &lt;/dd&gt;
+%   &lt;dt&gt;DestinationAddr: &lt;/dt&gt;&lt;dd&gt;Destination address of this short message.
+%     For mobile terminated messages, this is the directory number of the
+%     recipient MS.  C-Octet String, Var. max 21 octets.
+%   &lt;/dd&gt;
+%   &lt;dt&gt;ErrorStatusCode: &lt;/dt&gt;&lt;dd&gt;Indicates the success or failure of the
+%     submit_multi request to this SME address.  Check command_status
+%     macros for a complete list of SMPP Error codes.  Integer, 4 octets.
+%   &lt;/dd&gt;
+% &lt;/dl&gt;
+% %@end
+%%
+-record(unsuccess_sme,
+        {dest_addr_ton     = ?TON_INTERNATIONAL,
+         dest_addr_npi     = ?NPI_ISDN,
+         destination_addr,
+         error_status_code}).
 </pre>
 
-<p>The rest of the SMPP operation functions, have also a <tt>ParamList</tt> 
-argument and work pretty much like <a href="gen_esme.html#submit_sm-2">
-gen_esme:submit_sm/2</a>.
-</p>
+<p>The rest of SMPP operation functions have a <tt>ParamList</tt> 
+argument also, and work much like <a href="gen_esme.html#submit_sm-2">
+gen_esme:submit_sm/2</a> does.</p>
 
-<p>Look at the callbacks exported by the <a href="gen_esme.html">gen_esme</a> 
-behavior.  That's where you implement the logic associated to your particular 
-ESME.  
-</p>
+<p>Now let's take a look at the callbacks exported by 
+<a href="gen_esme.html">gen_esme</a>.  That's where you implement the logic 
+associated to your particular ESME.</p>
 
 <p>Under a connection failure, the <a href="gen_esme.html">gen_esme</a> 
 behavior will try to reestablish the sessions to the SMSC for ever.  If we 
-want to change this behavior for our echo ESME, we have to implement the 
-callbacks: <a href="gen_esme.html#receiver_mc_unavailable-4">gen_esme:receiver_mc_unavailable/4</a> and/or <a href="gen_esme.html#transmitter_mc_unavailable/4">gen_esme:transmitter_mc_unavailable/4</a>.  For instance, if we want our 
+wanted to change this behavior for our echo ESME, we needed to implement the 
+callbacks: <a href="gen_esme.html#receiver_mc_unavailable-4">gen_esme:receiver_mc_unavailable/4</a> and/or <a href="gen_esme.html#transmitter_mc_unavailable/4">gen_esme:transmitter_mc_unavailable/4</a>.  For instance, if we wanted our 
 echo ESME to notify the error somewhere and then halt, whenever the receiver 
-session goes down, just do:
+session goes down, just need to do:
 </p>
 
 <pre>
@@ -741,18 +876,18 @@ receiver_mc_unavailable(Pid, Eid, Address, Port) -&gt;
     stop().
 </pre>
 
-<p>Look at the callbacks exported by the gen_esme behavior, to see how much you
-can customize your particular ESME implementation.
-</p>
+<p>Look at the callbacks exported by the <a href="gen_esme.html">gen_esme</a> 
+behavior, to see how much you can customize your particular ESME 
+implementation.</p>
 
 <p>Developers should implement the callbacks their ESME is going to take care 
 of. Leaving a callback undefined retains the default behavior, which should be 
-OK if you don't want your ESME to handle that operation.
-</p>
+OK if you don't want your ESME to handle that operation.</p>
+
 
 <h4><a name="code_lock">Code lock ESME example</a></h4>
 
-Now lets look at the code_lock FSM example presented in the 
+We'll look now at the code_lock FSM example presented in the 
 <a href="http://www.erlang.org/doc/r9c/doc/design_principles/part_frame.html">Design Principles</a>.
 
 <pre>
@@ -804,164 +939,68 @@ do_close() -&gt;
     io:format("do close~n", []).
 </pre>    
 
-<p>Let's save this code in a module called <b>code_lock.erl</b>, compile it, 
-and see how it works:
-</p>
+<p>Save this code in a module called <b>code_lock.erl</b>, compile it, 
+and see how it works:</p>
 
 <pre>
-    ~$ erl
+    $ erl
     Erlang (BEAM) emulator version 5.2 [source] [hipe]
 
     Eshell V5.2  (abort with ^G)
-    1&gt; code_lock:start_link([1,2]).
-    {ok,&lt;0.34.0&gt;}
-    2&gt; code_lock:button(2).
+    1&gt; c(code_lock).
     ok
-    3&gt; code_lock:button(1).
+    2&gt; code_lock:start_link([1,2]).
+    {ok,&lt;0.34.0&gt;}
+    3&gt; code_lock:button(2).
+    ok
+    4&gt; code_lock:button(1).
     do open
     ok
     do close
-    4&gt; code_lock:stop().
+    5&gt; code_lock:stop().
     ok
-    5&gt;
+    6&gt;
 </pre>
 
-<p>Imagine now we want to make an ESME that let us open this door through SMS.
+<p>Imagine now we want to implement an ESME to open this door through SMS.
 The user must send all the digits in sequence to unlock the door, one digit per
 short message.  Not too useful I know, but this is just another weird example.
 </p>
+
 <p>We will also implement a rudimentary mechanism to let a user keep the 
 control of the door until he/she enters all the digits.  In the meanwhile, 
-messages from other users shall be ignored.
-</p>
-<p>The source code for such an ESME could be (this example is also available
-in <a href="examples/code_lock_esme.erl">examples/code_lock_esme.erl</a>)
-</p>
+messages from other users shall be ignored.</p>
+
+<p>The source code for such an ESME is shown at 
+<a href="examples/code_lock_esme.erl">doc/examples/code_lock_esme.erl</a>.</p>
+
+<p>Compile it and test it just like previous examples.</p>
 
 <pre>
--module(code_lock_esme).
--behaviour(gen_fsm).
--behaviour(gen_esme).
+    $ erlc -W -I ../../include -pz ../../ebin code_lock_esme.erl
 
--include("gen_esme.hrl").
-
--export([start_link/6, stop/0]).
--export([deliver_sm/3]).
--export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
-
-
-start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) -&gt;
-	io:format("Starting the code lock ESME...", []),
-    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
-    case gen_esme:start_link({local, code_lock_esme}, ?MODULE, Setup) of
-        {ok, Eid} -&gt;
-            gen_esme:bind_receiver(code_lock_esme, McAddr),
-            gen_esme:bind_transmitter(code_lock_esme, McAddr),
-            io:format("bound as receiver/transceiver.~n", []),
-            gen_fsm:start_link({local, code_lock_fsm}, ?MODULE, Code, []),
-            {ok, Eid};
-        Error -&gt;
-            Error
-    end.
-
-
-stop() -&gt;
-    io:format("Stopping the code lock ESME...", []),
-    gen_esme:unbind_receiver(code_lock_esme),
-    gen_esme:unbind_transmitter(code_lock_esme),
-    gen_esme:stop(code_lock_esme),
-    gen_fsm:send_all_state_event(code_lock_fsm, stop),
-	io:format("done~n", []).
-
-
-deliver_sm(_Pid, _Eid, Pdu) -&gt; 
-    Caller = sm:reply_address(Pdu),
-    Digit  = list_to_integer(element(2, sm:message_user_data(Pdu))),
-    io:format("Digit: ~p~nCaller: ~p~n", [Digit, Caller]),
-    gen_fsm:send_event(code_lock_fsm, {button, Digit, Caller}),
-    {ok, []}.
-
-
-init(Code) -&gt;
-    process_flag(trap_exit, true),
-    {ok, closed, {[], Code, undefined}}.
-
-
-closed({button, Digit, Caller}, {SoFar, Code, Who}) when Who == undefined;
-                                                         Who == Caller -&gt;
-    case [Digit|SoFar] of
-        Code -&gt;
-            do_open(Caller),
-            {next_state, open, {[], Code, Caller}, 3000};
-        Incomplete when length(Incomplete) &lt; length(Code) -&gt;
-            {next_state, closed, {Incomplete, Code, Caller}};
-        _Wrong -&gt;
-            {next_state, closed, {[], Code, undefined}}
-    end;
-closed({button, Digit, Caller}, {SoFar, Code, Who}) -&gt;
-    submit_sm("Please, wait your turn", Caller),
-	{next_state, closed, {SoFar, Code, Who}}.
-
-	
-
-open(timeout, {SoFar, Code, Who}) -&gt;
-    do_close(Who),
-    {next_state, closed, {SoFar, Code, undefined}};
-open({button, _Digit, Caller}, State) -&gt;
-    submit_sm("Another user is now entering. Please, wait your turn", Caller).
-
-
-handle_event(stop, _StateName, StateData) -&gt;
-    {stop, normal, StateData}.
-
-
-terminate(Reason, StateName, StateData) -&gt;
-    ok.
-
- 
-do_open(Who) -&gt;
-    submit_sm("Came in please.  The door is open", Who).
-
-
-do_close(Who) -&gt;
-    submit_sm("Closing the door. Please, hurry up.", Who).
-
-
-submit_sm(Mesg, Dest) -&gt;
-	io:format("Submitted SM: ~p~nDestination: ~p~n", [Mesg, Dest]),
-    ParamList = [{short_message, Mesg}|Dest],
-    spawn(fun() -&gt; gen_esme:submit_sm(code_lock_esme, ParamList) end).
-</pre>
-
-<p>Now it time to put this ESME to work.  Save it as code_lock_esme.erl, 
-compile it, and test it.  
-</p>
-<p>If you are planning to bind against the SMSC simulator used later, you may
-use the same html to send your testing short messages.
-</p>
-
-<pre>
-    ~$ erl
+    $ erl
     Erlang (BEAM) emulator version 5.2 [source] [hipe]
 
     Eshell V5.2  (abort with ^G)
     1&gt; executing user profile in HOME/.erlang
     .erlang rc finished
-
-    1&gt; code_lock_esme:start_link("banana\0", "secret\0", "1949\0", "1949\0", {193, 144, 50, 51}, [1,2]).
+    1&gt; code:add_path("../../../common_lib/ebin").
+    true
+    2&gt; code:add_path("../../ebin").
+    true
+    3&gt; code_lock_esme:start().
     Starting the code lock ESME...bound as receiver/transceiver
     {ok,&lt;0.29.0&gt;}
 </pre>
 
-<p>This service is available at the address 1949.  A short message with the 
-text <quote>2</quote> arrives (sender has the address 981654321)
+<p>This service is available at address <i>1949</i>.  A short message with the 
+text "2" arrives (sender has the address 981654321)
 </p>
 
 <pre>
     Digit: 2
-    Caller: [{dest_addr_ton,0},
-             {dest_addr_npi,0},
-             {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+    Caller: [{dest_addr_ton,0},{dest_addr_npi,0},{destination_addr,"981654321"}]
 </pre>
 
 <p>At this point the user with address 981654321 has the control.  If 
@@ -969,38 +1008,33 @@ another user, with address 981123456, tries to unlock the door...
 </p>
 <pre>
     Digit: 2
-    Caller: [{dest_addr_ton,0},
-             {dest_addr_npi,0},
-             {destination_addr,[57,56,49,49,50,51,52,53,54,0]}]
+    Caller: [{dest_addr_ton,0},{dest_addr_npi,0},{destination_addr,"981123456"}]
     Submitted SM: "Please, wait your turn"
     Destination: [{dest_addr_ton,0},
                   {dest_addr_npi,0},
-                  {destination_addr,[57,56,49,49,50,51,52,53,54,0]}]
+                  {destination_addr,"981123456"}]
 </pre>
 
-<p>Send the second digit from 981654321 gets to our code lock ESME:
-</p>
+<p>Send the second digit (a Short Message with the text "1" from 981654321) 
+gets to our code lock ESME:</p>
 
 <pre>
     Digit: 1
-    Caller: [{dest_addr_ton,0},
-             {dest_addr_npi,0},
-             {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+    Caller: [{dest_addr_ton,0},{dest_addr_npi,0},{destination_addr,"981654321"}]
     Submitted SM: "Came in please.  The door is open"
     Destination: [{dest_addr_ton,0},
                   {dest_addr_npi,0},
-                  {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
+                  {destination_addr,"981654321"}]
     Submitted SM: "Closing the door. Please, hurry up."
     Destination: [{dest_addr_ton,0},
                   {dest_addr_npi,0},
-                  {destination_addr,[57,56,49,54,53,52,51,50,49,0]}]
-    2> code_lock_esme:stop().
-    Stopping the code lock ESME...done
-    ok
+                  {destination_addr,"981654321"}]
+    4&gt; code_lock_esme:stop().
+    Stopping the code lock ESME...ok
+    done
 </pre>
 
-<p>In the meanwhile, this is what the SMSC log looks like:
-</p>
+<p>In the meanwhile, this is what the SMSC log looks like:</p>
 
 <pre>
 2004.02.07 11:33:48 539 INFO    CH10: BIND_RECEIVER:
@@ -1077,9 +1111,9 @@ another user, with address 981123456, tries to unlock the door...
 
 <p>One comment here, notice there is one minute of inactivity since last 
 submit, while in the demonstration above, I've intentionally waited 1 minute 
-before sending the last SM, see how the gen_esme behavior transparently 
-handles inactivity timers (look at the enquire links in both sessions).
-</p>
+before sending the last SM, see how the <a href="gen_esme.html">gen_esme</a> 
+behavior transparently handles inactivity timers (look at the enquire links in 
+both sessions).</p>
  
 <pre>
 2004.02.07 11:35:43 916 INFO    CH11: ENQUIRE_LINK:
@@ -1178,10 +1212,6 @@ handles inactivity timers (look at the enquire links in both sessions).
 2004.02.07 11:36:05 998 INFO    CH11 closing connection
 2004.02.07 11:36:05 998 INFO    ConnectionHandler CH11 waiting for connection
 </pre>
-
-<p>Hope these examples help.  If you need further information, I'll be glad to
-send it to you, you only need to ask.
-</p>
 
 
 <h3><a name="howto_mc">How to implement a MC</a></h3>
@@ -2281,9 +2311,20 @@ Find OSERL's PICS proforma in openoffice format
     descriptor (just like in TLVs).  Lists of PDUs default values do no longer
     exist.<br/>
     <br/>
-    Refer to <i>smpp_param.hrl</i> if you want to change the default value of 
-    any parameter.
+    Refer to <a href="../include/smpp_param.hrl">smpp_param.hrl</a> if you 
+    want to change the default value of any parameter.
   </li>
+  <li>Trailing <tt>NULL_CHARACTERs</tt> in C-Octet Strings are transparently 
+    handled by encoding/decoding functions.  Application layer does not handle 
+    terminating NULLs any more.
+  </li>
+  <li>Absolute and relative time formats are now pure C-Octet Strings (Not 
+    records).  <tt>time</tt> record removed.  (Refer to 
+    <a href="base_syntax.html">base_syntax.erl</a>, 
+    <a href="../include/base_syntax.hrl">base_syntax.hrl</a> and 
+    <a href="../include/smpp_base.hrl">smpp_base.hrl</a> for further details).
+  </li>
+  <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
 </ul>
 
 <p>How these changes affected individual files is described 
@@ -2295,7 +2336,6 @@ Find OSERL's PICS proforma in openoffice format
 <ul>
   <li>Version 0.2
   <ol>
-    <li>Review the <tt>timeout</tt> event on <tt>get_esme_session</tt></li>
     <li>Don't like current PDU packing/unpacking mechanism using the 
       <tt>pdu_type/1</tt> function.
 

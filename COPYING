@@ -1,8 +1,8 @@
  
  oserl - Open SMPP Erlang Library
- Copyright (C) 2003 Universidad de La Coruña
+ Copyright (C) 2003 - 2004 Universidad de La Coruña
 
- Written 2003 by Enrique Marcote Peña <mpquique@udc.es>
+ Written 2003 - 2004 by Enrique Marcote Peña <mpquique@users.sourceforge.net>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2 as

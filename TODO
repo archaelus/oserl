@@ -2,7 +2,7 @@ TODO - OSERL Version 0.1                                     February 09, 2004
 
                     http://sourceforge.net/projects/oserl/
 
-                    Enrique Marcote Peña <mpquique@udc.es>
+             Enrique Marcote Peña <mpquique@users.sourceforge.net>
 
 
 Contents
@@ -33,8 +33,6 @@ Contents
   DEST_TELEMATICS_ID_DEFAULT_VALUE
   DEST_TELEMATICS_ID_VALUE(...)
 
-- Implement the functions (do_)open_receiver/open_transmitter/open_transceiver
-  and (do_)close_receiver/close_transmitter/close_transceiver in gen_esme.
 
 2. Version 1.0
 

@@ -39,20 +39,22 @@
 <ul>
   <li>Default values of standard parameters were included in the parameter
     descriptor (just like in TLVs).  Lists of PDUs default values do no longer
-    exist.<br>
-    <br>
-    Refer to <i>smpp_param.hrl</i> if you want to change the default value of 
-    any parameter.
+    exist.<br/>
+    <br/>
+    Refer to <a href="../include/smpp_param.hrl">smpp_param.hrl</a> if you 
+    want to change the default value of any parameter.
   </li>
-  <li>Trailing <tt>NULL_CHARACTER</tt> in C-Octet Strings are transparently 
+  <li>Trailing <tt>NULL_CHARACTERs</tt> in C-Octet Strings are transparently 
     handled by encoding/decoding functions.  Application layer does not handle 
-    terminating NULLs no more.
+    terminating NULLs any more.
   </li>
   <li>Absolute and relative time formats are now pure C-Octet Strings (Not 
-    records).  <tt>time</tt> record is no longer used.  (Refer to 
-    <a href="base_syntax.html">base_syntax.erl</a>, base_syntax.hrl and 
-    smpp_base.hrl for further details).
+    records).  <tt>time</tt> record removed.  (Refer to 
+    <a href="base_syntax.html">base_syntax.erl</a>, 
+    <a href="../include/base_syntax.hrl">base_syntax.hrl</a> and 
+    <a href="../include/smpp_base.hrl">smpp_base.hrl</a> for further details).
   </li>
+  <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
 </ul>
 
 <p>How these changes affected individual files is described below.</p>
@@ -62,8 +64,8 @@
 
 <ul>
   <li><tt>empty</tt> base type record definition removed.</li>
-  <li><tt>EMPTY</tt> macro now defined as<br>
-    <br>
+  <li><tt>EMPTY</tt> macro now defined as<br/>
+    <br/>
     <tt>-define(EMPTY, ?UNION([])).</tt>
   </li>
   <li><tt>format</tt> field in strings is now a Fun. Much more powerful and
@@ -112,8 +114,8 @@
 <h3><a name="changes0_1-0_2-param_syntax-hrl">param_syntax.hrl</a></h3>
 
 <ul>
-  <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br>
-  <br>
+  <li>Field <tt>default</tt> added to <tt>standard</tt> record definition.<br/>
+  <br/>
   <tt>STANDARD</tt> macro accordingly updated.
   </li>
 </ul>
@@ -132,8 +134,8 @@
 
 <ul>
   <li>Removed <tt>get_value/2</tt> and <tt>set_value/3</tt>.  Using dictionary
-    API instead.<br>
-    <br>
+    API instead.<br/>
+    <br/>
     <a href="pdu_syntax.html">pdu_syntax</a> functions are no longer used 
     beyond <a href="operation.html">operation</a> API.
   </li>

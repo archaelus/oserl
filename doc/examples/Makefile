@@ -1,34 +1,62 @@
-ERLC = erlc
-EMULATOR = beam
-EBIN = .
-EBIN_OSERL = ../../ebin
-RM = rm -f
-
 # ----------------------------------------------------
 # Common Macros
 # ----------------------------------------------------
-include ../../vsn.mk
-VSN = $(OSERL_VSN)
+include ../../common.mk
+
+EBIN = .
+EBIN_OSERL = ../../ebin
+INCLUDE = ../../include
+DOCDIR = ..
+
+EDOC_OPTS = [{dir, "$(DOCDIR)"}]
 
 
-MODULES = echo_esme code_lock_esme submit_esme
+# ----------------------------------------------------
+# Target Specs
+# ----------------------------------------------------
+EDOC_MODULES = echo_esme code_lock_esme submit_esme
+
+MODULES = $(EDOC_MODULES)
+
+ERL_FILES = $(MODULES:%=%.erl)
+
+DOC_TARGET_FILES = $(EDOC_MODULES:%=$(DOCDIR)/%.html)
+TARGET_FILES = $(MODULES:%=$(EBIN)/%.$(EMULATOR))
 
 
+# ----------------------------------------------------
+# FLAGS
+# ----------------------------------------------------
 ERL_FLAGS += -W
-ERL_COMPILE_FLAGS += $(DEBUG) -I ../../include -pz $(EBIN_OSERL)
+ERL_COMPILE_FLAGS += $(DEBUG) -I $(INCLUDE) -pz $(EBIN_OSERL)
 
-SUB_DIRECTORIES = 
 
-all:   $(MODULES:%=$(EBIN)/%.$(EMULATOR))
+# ----------------------------------------------------
+# Targets
+# ----------------------------------------------------
+all:	$(TARGET_FILES)
+
+doc:	$(DOC_TARGET_FILES)
 
 clean:
-	@for d in $(SUB_DIRECTORIES); do \
-	  	cd $$d; $(MAKE) clean; \
-	done
-	$(RM) $(EBIN)/*.beam
+	$(RM) $(TARGET_FILES)
 
 realclean: clean
+	$(RM) $(DOC_TARGET_FILES)
 
+
+# ----------------------------------------------------
+# Special Build Targets
+# ----------------------------------------------------
 $(EBIN)/%.beam:	%.erl
 	$(ERLC) $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o $(EBIN) $<
 
+$(DOCDIR)/%.html:	%.erl
+	$(ERL) -noshell $(EDOC_PATHS) -run edoc_run file "'$<'" '$(EDOC_OPTS)' \
+		-s erlang halt
+
+
+# ----------------------------------------------------
+# .hrl dependencies
+# ----------------------------------------------------
+$(EBIN)/echo_esme.beam:../../include/gen_esme.hrl

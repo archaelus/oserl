@@ -48,55 +48,166 @@
 -behaviour(gen_fsm).
 -behaviour(gen_esme).
 
+%%%-------------------------------------------------------------------
+% Include files
+%%--------------------------------------------------------------------
 -include("gen_esme.hrl").
 
+%%%-------------------------------------------------------------------
+% External exports
+%%--------------------------------------------------------------------
 -export([start/0, start_link/6, stop/0]).
+
+%%%-------------------------------------------------------------------
+% Internal gen_esme exports
+%%--------------------------------------------------------------------
 -export([deliver_sm/3]).
+
+%%%-------------------------------------------------------------------
+% Internal gen_fsm exports
+%%--------------------------------------------------------------------
 -export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
 
+%%%-------------------------------------------------------------------
+% Macros
+%%--------------------------------------------------------------------
+-define(MC_ADDR, {193, 144, 50, 51}).
+-define(ESME_NAME, code_lock_esme).
+-define(FSM_NAME, code_lock_fsm).
+
+
+%%%===================================================================
+% External functions
+%%====================================================================
+%%%
+% @spec start() -> ok
+%
+% @doc Starts the echo ESME.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
 start() ->
-    start_link("banana", "secret", "1949", "1949", {193, 144, 50, 51}, [1,2]).
+    start_link("code_lock_esme", "secret", "1949", "1949", ?MC_ADDR, [1,2]).
 
+
+%%%
+% @spec start_link(SystemId,Password,AddrRange,SourceAddr,McAddr,Code) -> ok
+%    SystemId = string()
+%    Password = string()
+%    AddrRange = string()
+%    SourceAddr = string()
+%    McAddr = string() | atom() | ip_address()
+%    Code = [int()]
+%
+% @doc Starts the code lock ESME and binds as a receiver and transmitter to
+% McAddr.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) ->
-    io:format("Starting the code lock ESME...", []),
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
-    case gen_esme:start_link({local, code_lock_esme}, ?MODULE, Setup) of
-        {ok, Eid} ->
-            gen_esme:open_transmitter(code_lock_esme, McAddr),
-            gen_esme:bind_transmitter(code_lock_esme),
-            gen_esme:open_receiver(code_lock_esme, McAddr),
-            gen_esme:bind_receiver(code_lock_esme),
-            io:format("bound as receiver/transceiver~n", []),
-            gen_fsm:start_link({local, code_lock_fsm}, ?MODULE, Code, []),
-            {ok, Eid};
-        Error ->
-            Error
-    end.
+    gen_fsm:start_link({local, ?FSM_NAME}, ?MODULE, [Code, Setup, McAddr], []).
 
 
+%%%
+% @spec stop() -> ok
+%
+% @doc Unbinds and stops the code lock ESME.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
 stop() ->
-    io:format("Stopping the code lock ESME...", []),
-    gen_esme:unbind_receiver(code_lock_esme),
-    gen_esme:close_receiver(code_lock_esme),
-    gen_esme:unbind_transmitter(code_lock_esme),
-    gen_esme:close_transmitter(code_lock_esme),
-    gen_esme:stop(code_lock_esme),
-    gen_fsm:send_all_state_event(code_lock_fsm, stop),
-    io:format("done~n", []).
+    gen_fsm:send_all_state_event(?FSM_NAME, stop).
 
 
+%%%===================================================================
+% ESME functions
+%%====================================================================
+%%%
+% @spec deliver_sm(Pid, Eid, Pdu) -> Result
+%    Pid        = pid()
+%    Eid        = pid()
+%    Pdu        = pdu()
+%    Result     = {ok, ParamList} | {error, Error, ParamList}
+%    ParamList  = [{ParamName, ParamValue}]
+%    ParamName  = atom()
+%    ParamValue = term()
+%
+% @doc <a href="gen_esme.html#deliver_sm-3">gen_esme - deliver_sm/3</a>
+% callback implementation.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
 deliver_sm(_Pid, _Eid, Pdu) -> 
     Caller = sm:reply_address(Pdu),
     Digit  = list_to_integer(element(2, sm:message_user_data(Pdu))),
     io:format("Digit: ~p~nCaller: ~p~n", [Digit, Caller]),
-    gen_fsm:send_event(code_lock_fsm, {button, Digit, Caller}),
+    gen_fsm:send_event(?FSM_NAME, {button, Digit, Caller}),
     {ok, []}.
 
 
-init(Code) ->
-    process_flag(trap_exit, true),
-    {ok, closed, {[], Code, undefined}}.
+%%%===================================================================
+% FSM functions
+%%====================================================================
+%%%
+% @spec init(Args) -> Result
+%    Args       = term()
+%    Result     = {ok, StateName, StateData}          |
+%                 {ok, StateName, StateData, Timeout} |
+%                 ignore                              |
+%                 {stop, StopReason}                   
+%    StateName  = atom()
+%    StateData  = term()
+%    Timeout    = int()
+%    StopReason = term()
+%
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - init/1</a> callback implementation. Initializes the the fsm.
+% @end
+%%
+init([Code, Setup, McAddr]) ->
+    io:format("Starting the code lock ESME...", []),
+    case gen_esme:start_link({local, ?ESME_NAME}, ?MODULE, Setup) of
+        {ok, _Eid} ->
+            gen_esme:open_transmitter(?ESME_NAME, McAddr),
+            gen_esme:bind_transmitter(?ESME_NAME),
+            gen_esme:open_receiver(?ESME_NAME, McAddr),
+            gen_esme:bind_receiver(?ESME_NAME),
+            io:format("bound as receiver/transceiver~n", []),
+            process_flag(trap_exit, true),
+            {ok, closed, {[], Code, undefined}};
+        Error ->
+            {stop, Error}
+    end.
 
+
+%%%
+% @spec closed(Event, StateData) -> Result
+%    Event         = timeout | term()
+%    StateData     = term()
+%    Result        = {next_state, NextStateName, NextStateData}          |
+%                    {next_state, NextStateName, NextStateData, Timeout} |
+%                    {stop, Reason, NewStateData}
+%    NextStateName = atom()
+%    NextStateData = term()
+%    Timeout       = int() | infinity
+%    Reason        = term()
+%
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name closed.
+% @end
+%%
 closed({button, Digit, Caller}, {SoFar, Code, Who}) when Who == undefined;
                                                          Who == Caller ->
     case [Digit|SoFar] of
@@ -113,6 +224,22 @@ closed({button, Digit, Caller}, {SoFar, Code, Who}) ->
     {next_state, closed, {SoFar, Code, Who}}.
     
 
+%%%
+% @spec open(Event, StateData) -> Result
+%    Event         = timeout | term()
+%    StateData     = term()
+%    Result        = {next_state, NextStateName, NextStateData}          |
+%                    {next_state, NextStateName, NextStateData, Timeout} |
+%                    {stop, Reason, NewStateData}
+%    NextStateName = atom()
+%    NextStateData = term()
+%    Timeout       = int() | infinity
+%    Reason        = term()
+%
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name open.
+% @end
+%%
 open(timeout, {SoFar, Code, Who}) ->
     do_close(Who),
     {next_state, closed, {SoFar, Code, undefined}};
@@ -120,13 +247,52 @@ open({button, _Digit, Caller}, State) ->
     submit_sm("Another user is now entering. Please, wait your turn", Caller).
 
 
+%%%
+% @spec handle_event(Event, StateName, StateData) -> Result
+%    Event         = die | term()
+%    StateName     = atom()
+%    StateData     = term()
+%    Result        = {next_state, NextStateName, NextStateData}          |
+%                    {next_state, NextStateName, NextStateData, Timeout} |
+%                    {stop, Reason, NewStateData}                         
+%    NextStateName = atom()
+%    NextStateData = term()
+%    Timeout       = int() | infinity
+%    Reason        = term()
+%
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_event/3</a> callback implementation.  Handles
+% events received by <tt>gen_fsm:send_all_state_event/2</tt>.
+% @end
+%%
 handle_event(stop, _StateName, StateData) ->
+    io:format("Stopping the code lock ESME...", []),
+    gen_esme:unbind_receiver(?ESME_NAME),
+    gen_esme:close_receiver(?ESME_NAME),
+    gen_esme:unbind_transmitter(?ESME_NAME),
+    gen_esme:close_transmitter(?ESME_NAME),
+    gen_esme:stop(?ESME_NAME),
+    io:format("done~n", []),
     {stop, normal, StateData}.
 
+
+%%%
+% @spec terminate(Reason, StateName, StateData) -> true
+%    Reason    = normal | shutdown | term()
+%    StateName = atom()
+%    StateData = term()
+%
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - terminate/3</a> callback implementation.  Shutdown the fsm.
+%
+% <p>Return value is ignored by the server.</p>
+% @end
+%%
 terminate(Reason, StateName, StateData) ->
     ok.
 
  
+%%%===================================================================
+% Internal functions
+%%====================================================================
 do_open(Who) ->
     submit_sm("Came in please.  The door is open", Who).
 
@@ -138,5 +304,6 @@ do_close(Who) ->
 submit_sm(Mesg, Dest) ->
     io:format("Submitted SM: ~p~nDestination: ~p~n", [Mesg, Dest]),
     ParamList = [{short_message, Mesg}|Dest],
-    spawn(fun() -> gen_esme:submit_sm(code_lock_esme, ParamList) end).
+    spawn(fun() -> gen_esme:submit_sm(?ESME_NAME, ParamList) end).
     
+

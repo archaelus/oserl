@@ -2,7 +2,7 @@ changes.txt - OSERL Version 0.2                              February 18, 2004
 
                     http://sourceforge.net/projects/oserl/
 
-                    Enrique Marcote Peña <mpquique@udc.es>
+             Enrique Marcote Peña <mpquique@users.sourceforge.net>
 
 
 (Find a HTML version of this document in doc/changes.html)
@@ -39,12 +39,13 @@ Contents
 
   Refer to smpp_param.hrl if you want to change the default value of any
   parameter.
-- Trailing NULL_CHARACTER in C-Octet Strings are transparently handled
+- Trailing NULL_CHARACTERs in C-Octet Strings are transparently handled
   by encoding/decoding functions.  Application layer does not handle 
-  terminating NULLs no more.
+  terminating NULLs any more.
 - Absolute and relative time formats are now pure C-Octet Strings (Not 
-  records).  Time record is no longer used.  (Refer to base_syntax.erl, 
+  records).  time record removed.  (Refer to base_syntax.erl, 
   base_syntax.hrl and smpp_base.hrl for further details).
+- gen_esme callback interface redefined.
 
 How these changes affected individual files is described below.
 
@@ -142,7 +143,6 @@ How these changes affected individual files is described below.
   {error, {already_listening, Address, Port}} is returned for a request to 
   connect to Address on Port (instead of ok).
 - Changes in comments.
-
 
 
 1.13 gen_esme_session.erl

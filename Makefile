@@ -1,23 +1,26 @@
 # ----------------------------------------------------
 # Common Macros
 # ----------------------------------------------------
-include vsn.mk
-VSN = $(OSERL_VSN)
+include common.mk
 
-APPNAME = oserl
 SUB_DIRECTORIES = src doc/examples
-DOCDIR = doc
-DOC_OPTS = [{title,"Open SMPP Erlang Library"}]
 
-SPECIAL_TARGETS = 
+OTHER_FILES = COPYING Makefile README TODO changes.txt common.mk $(APPNAME).pub
 
+BASE_REL = /var/tmp/$(APPNAME)-$(VSN)
+
+# ----------------------------------------------------
+# Targets
+# ----------------------------------------------------
 all:
 	@for d in $(SUB_DIRECTORIES); do \
 	  	(cd $$d; $(MAKE)); \
 	done
 
 docs:
-	erl -noshell -pa "$(BINDIR)" -run edoc_run application "'$(APPNAME)'" '"."' '$(DOC_OPTS)' -s erlang halt
+	@for d in $(SUB_DIRECTORIES); do \
+		(cd $$d; $(MAKE) doc); \
+	done
 
 clean:
 	@for d in $(SUB_DIRECTORIES); do \
@@ -34,8 +37,6 @@ debug:
 	  	(cd $$d; $(MAKE) DEBUG=-Ddebug=1); \
 	done
 
-BASE_REL = /var/tmp/$(APPNAME)-$(VSN)
-OTHER_FILES = COPYING Makefile README TODO vsn.mk $(APPNAME).pub 
 release:
 	mkdir $(BASE_REL)
 	cp -p $(OTHER_FILES) $(BASE_REL)

@@ -1,39 +1,17 @@
-# FIXME These variables should be automatically set when compiling
-ERL = erl
-ERLC = erlc
-ETAGS = etags
-EMULATOR = beam
+# ----------------------------------------------------
+# Common Macros
+# ----------------------------------------------------
+include ../common.mk
+
 EBIN = ../ebin
 INCLUDE = ../include
-ESRC = ./
 DOCDIR = ../doc
-RM = rm -f
-INSTALL = /usr/bin/install -c
-INSTALL_DIR = /usr/bin/install -c -d
-INSTALL_DATA = ${INSTALL} -m 644
 
-
-### oserl use eDoc for documentation, to regenerate update paths as needed!
-OSERL_APP = ..
-EDOC_APP = /usr/local/lib/erlang/lib/edoc-0.4
-SYNTAX_TOOLS_APP = /usr/local/lib/erlang/lib/syntax_tools-1.3
-
-
-
-# ----------------------------------------------------
-# Release directory specification
-# ----------------------------------------------------
-include ../vsn.mk
-VSN=$(OSERL_VSN)
-APPNAME = oserl
-
-RELSYSDIR = $(RELEASE_PATH)/lib/$(APPNAME)-$(VSN)
-
+EDOC_OPTS = [{title,"Open SMPP Erlang Library"}]
 
 # ----------------------------------------------------
 # Target Specs
 # ----------------------------------------------------
-
 EDOC_MODULES = \
 	base_syntax \
 	param_syntax \
@@ -45,7 +23,6 @@ EDOC_MODULES = \
 	gen_esme        
 
 MODULES = $(EDOC_MODULES)
-
 
 EXTERNAL_HEADERS = gen_esme
 
@@ -60,14 +37,12 @@ INTERNAL_HEADERS = \
 	smpp_pdu \
 	gen_esme_session
 
-
 ERL_FILES = $(MODULES:%=%.erl)
-
 HRL_FILES = $(EXTERNAL_HEADERS:%=$(INCLUDE)/%.hrl) $(INTERNAL_HEADERS:%=$(INCLUDE)/%.hrl)
-
 
 DOC_TARGET_FILES = $(EDOC_MODULES:%=$(DOCDIR)/%.html)
 TARGET_FILES = $(MODULES:%=$(EBIN)/%.$(EMULATOR))
+
 
 # ----------------------------------------------------
 # FLAGS
@@ -81,7 +56,9 @@ ERL_COMPILE_FLAGS += $(DEBUG) -I $(INCLUDE) -pz $(EBIN)
 # ----------------------------------------------------
 all:	$(TARGET_FILES)
 
-doc:	$(DOC_TARGET_FILES)
+doc:	
+	$(ERL) -noshell $(EDOC_PATHS) -run edoc_run application \
+		"'$(APPNAME)'" '".."' '$(EDOC_OPTS)' -s erlang halt
 
 opt build: $(TARGET_FILES) 
 
@@ -97,30 +74,23 @@ realclean: clean
 	$(RM) $(DOCDIR)/packages-frame.html
 	$(RM) $(DOCDIR)/stylesheet.css
 
+
 # ----------------------------------------------------
 # Special Build Targets
 # ----------------------------------------------------
-EDOC_PATHS = \
-	-pa $(EDOC_APP)/ebin -pa $(OSERL_APP)/ebin -pa $(SYNTAX_TOOLS_APP)/ebin
-
-
 $(EBIN)/%.beam:	%.erl
 	$(ERLC) $(ERL_FLAGS) $(ERL_COMPILE_FLAGS) -o $(EBIN) $<
-
-
-
-$(DOCDIR)/%.html:	%.erl
-	$(ERL) $(EDOC_PATHS) -s edoc file $< ['{dir,"$(DOCDIR)"}'] -s erlang halt
 
 
 # ----------------------------------------------------
 # Release Target
 # ---------------------------------------------------- 
+RELSYSDIR = $(RELEASE_PATH)/lib/$(APPNAME)-$(VSN)
+
 release_src:
 	$(INSTALL_DATA) $(ERL_FILES) $(RELSYSDIR)/src
 	$(INSTALL_DATA) $(HRL_FILES) $(RELSYSDIR)/include
 	$(INSTALL_DATA) Makefile $(RELSYSDIR)/src
-
 
 release_spec: opt
 	$(INSTALL_DIR) $(RELSYSDIR)/ebin

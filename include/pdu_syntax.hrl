@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -22,8 +22,17 @@
 % <p>SMPP PDU syntax definition.  This syntax extends the <i>param syntax</i>
 % and gives support to PDU defintions.</p>
 %
+% 
+% <h2>Changes 0.1 -&gt; 0.2</h2>
 %
-% @copyright 2003 Enrique Marcote Peña
+% [01 Mar 2004]
+%
+% <ul>
+%   <li><i>command_id</i> added to PDU descriptors.</li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {17 Mar 2003} {@time}.
@@ -43,21 +52,25 @@
 % record declaration for a complete description of the fields.
 % %@end
 %%
--define(PDU(StdsTypes, TlvsTypes),
-        #pdu{stds_types = StdsTypes, tlvs_types = TlvsTypes}).
+-define(PDU(CommandId, StdsTypes, TlvsTypes),
+        #pdu{command_id = CommandId,
+			 stds_types = StdsTypes, 
+			 tlvs_types = TlvsTypes}).
 
 
 %%%-------------------------------------------------------------------
 % Records
 %%--------------------------------------------------------------------
 %%%
-% %@spec {pdu, StdsTypes, TlvsTypes}
+% %@spec {pdu, CommandId, StdsTypes, TlvsTypes}
+%    CommandId = int()
 %    StdsTypes = [standard()]
 %    TlvsTypes = [tlv()]
 %    
 % %@doc PDU definitions.
 %
 % <dl>
+%   <dt>CommandId: </dt><dd>SMPP <i>command_id</i>.</dd>
 %   <dt>StdsTypes: </dt><dd>List with the types of the standard parameters.
 %     There is one descriptor per standard parameter on the PDU.  This list
 %     must have the same exact order than the one defined on the SMPP protocol
@@ -74,7 +87,7 @@
 % </dl>
 % %@end
 %%
--record(pdu, {stds_types, tlvs_types}).
+-record(pdu, {command_id, stds_types, tlvs_types}).
 
 -endif.  % -ifndef(pdu_syntax)
 

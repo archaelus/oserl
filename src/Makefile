@@ -20,11 +20,12 @@ EDOC_MODULES = \
 	sm \
 	gen_connection \
 	gen_tcp_connection \
-#	echo_server \
-#	echo_client \
 	gen_esme_session \
+	gen_smsc_session \
 	gen_esme \
 	gen_mc_session
+#	echo_server \
+#	echo_client \
 
 MODULES = $(EDOC_MODULES)
 

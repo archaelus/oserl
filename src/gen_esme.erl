@@ -30,36 +30,36 @@
 %
 % <table width="100%" border="1">
 %   <tr>
-%     <td valign="top"><a href="#bound_receiver-3">bound_receiver/3</a></td>
-%     <td>The ESME just bound as a receiver.</td>
+%     <td valign="top">
+%       <a href="#bind_receiver_resp-3">bind_receiver_resp/3</a>
+%     </td>
+%     <td>Forwards bind_receiver responses.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#bound_transmitter-3">bound_transmitter/3</a>
+%       <a href="#bind_transmitter_resp-3">bind_transmitter_resp/3</a>
 %     </td>
-%     <td>The ESME just bound as a transmitter.</td>
+%     <td>Forwards bind_transmitter responses.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#bound_transceiver-3">bound_transceiver/3</a>
+%       <a href="#bind_transceiver_resp-3">bind_transceiver_resp/3</a>
 %     </td>
-%     <td>The ESME just bound as a transceiver.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top"><a href="#receiver_unbind-2">receiver_unbind/2</a></td>
-%     <td>Unbinds on the receiver session.</td>
+%     <td>Forwards bind_transceiver responses.</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#transmitter_unbind-2">transmitter_unbind/2</a>
+%       <a href="#alert_notification-3">alert_notification/3</a>
 %     </td>
-%     <td>Unbinds on the transmitter session.</td>
+%     <td>Handles received SMPP alert_notification PDUs.</td>
 %   </tr>
 %   <tr>
-%     <td valign="top">
-%       <a href="#transceiver_unbind-2">transceiver_unbind/2</a>
-%     </td>
-%     <td>Unbinds on the transceiver session.</td>
+%     <td valign="top"><a href="#deliver_sm-3">deliver_sm/3</a></td>
+%     <td>Handles received SMPP deliver_sm PDUs</td>
+%   </tr>
+%   <tr>
+%     <td valign="top"><a href="#deliver_data_sm-3">deliver_data_sm/3</a></td>
+%     <td>Handles received SMPP data_sm PDUs</td>
 %   </tr>
 %   <tr>
 %     <td valign="top">
@@ -81,30 +81,6 @@
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#receiver_cannot_bind-3">receiver_cannot_bind/3</a>
-%     </td>
-%     <td>
-%       Cannot bind on the receiver session.
-%     </td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%      <a href="#transmitter_cannot_bind-3">transmitter_cannot_bind/3</a>
-%     </td>
-%     <td>
-%       Cannot bind on the transmitter session.
-%     </td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%      <a href="#transceiver_cannot_bind-3">transceiver_cannot_bind/3</a>
-%     </td>
-%     <td>
-%       Cannot bind on the transceiver session.
-%     </td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
 %       <a href="#smpp_listen_error-3">smpp_listen_error/3</a>
 %     </td>
 %     <td>An error occur while listening for outbind.</td>
@@ -117,198 +93,193 @@
 %   </tr>
 %   <tr>
 %     <td valign="top">
-%       <a href="#alert_notification-3">alert_notification/3</a>
+%       <a href="#receiver_mc_unbind-2">receiver_mc_unbind/2</a>
 %     </td>
-%     <td>Handles received SMPP alert_notification PDUs.</td>
+%     <td>Forwards unbind requests (issued by the MC) on the receiver session.
+%     </td>
 %   </tr>
 %   <tr>
-%     <td valign="top"><a href="#deliver_sm-3">deliver_sm/3</a></td>
-%     <td>Handles received SMPP deliver_sm PDUs</td>
+%     <td valign="top">
+%       <a href="#transmitter_mc_unbind-2">transmitter_mc_unbind/2</a>
+%     </td>
+%     <td>Forwards unbind requests (issued by the MC) on the transmitter 
+%       session.
+%     </td>
 %   </tr>
 %   <tr>
-%     <td valign="top"><a href="#deliver_data_sm-3">deliver_data_sm/3</a></td>
-%     <td>Handles received SMPP data_sm PDUs</td>
+%     <td valign="top">
+%       <a href="#transceiver_mc_unbind-2">transceiver_mc_unbind/2</a>
+%     </td>
+%     <td>Forwards unbind requests (issued by the MC) on the transceiver 
+%       session.
+%     </td>
+%   </tr>
+%   <tr>
+%     <td valign="top">
+%       <a href="#unbind_receiver_resp-3">unbind_receiver_resp/3</a>
+%     </td>
+%     <td>Forwards unbind_receiver responses.</td>
+%   </tr>
+%   <tr>
+%     <td valign="top">
+%       <a href="#unbind_transmitter_resp-3">unbind_transmitter_resp/3</a>
+%     </td>
+%     <td>Forwards unbind_transmitter responses.</td>
+%   </tr>
+%   <tr>
+%     <td valign="top">
+%       <a href="#unbind_transceiver_resp-3">unbind_transceiver_resp/3</a>
+%     </td>
+%     <td>Forwards unbind_transceiver responses.</td>
 %   </tr>
 % </table>
 %
 %
 % <h2>Callback Function Details</h2>
 %
-% <h3><a name="bound_receiver-3">bound_receiver/3</a></h3>
+% <h3><a name="bind_receiver_resp-3">bind_receiver_resp/3</a></h3>
 %
-% <tt>bound_receiver(Pid, Sid, PduResp) -> ok</tt>
+% <tt>bind_receiver_resp(Pid, Sid, Resp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
 %   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>The ESME just bound as a receiver.</p>
+% <p>Forwards bind_receiver responses.</p>
 %
 % <p>Returning value is ignored by the ESME. The callback module may start
 % some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the bind operation.</p>
 %
 % <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
 % ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_bound_receiver/2</tt></p>
+% <p><b>See also:</b> <tt>callback_bind_receiver_resp/2</tt></p>
 %
 %
-% <h3><a name="bound_transmitter-3">bound_transmitter/3</a></h3>
+% <h3><a name="bind_transmitter_resp-3">bind_transmitter_resp/3</a></h3>
 %
-% <tt>bound_transmitter(Pid, Sid, PduResp) -> ok</tt>
+% <tt>bind_transmitter_resp(Pid, Sid, PduResp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
 %   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>The ESME just bound as a transmitter.</p>
+% <p>Forwards bind_transmitter responses.</p>
 %
 % <p>Returning value is ignored by the ESME. The callback module may start
 % some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the bind operation.</p>
 %
 % <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
 % ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_bound_transmitter/2</tt></p>
+% <p><b>See also:</b> <tt>callback_bind_transmitter_resp/2</tt></p>
 %
 %
-% <h3><a name="bound_transceiver-3">bound_transceiver/3</a></h3>
+% <h3><a name="bind_transceiver_resp-3">bind_transceiver_resp/3</a></h3>
 %
-% <tt>bound_transceiver(Pid, Sid, PduResp) -> ok</tt>
+% <tt>bind_transceiver_resp(Pid, Sid, PduResp) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
 %   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>The ESME just bound as a transceiver.</p>
+% <p>Forwards bind_transceiver responses.</p>
 %
 % <p>Returning value is ignored by the ESME. The callback module may start
 % some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the bind operation.</p>
 %
 % <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
 % ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_bound_transceiver/2</tt></p>
+% <p><b>See also:</b> <tt>callback_bind_transceiver_resp/2</tt></p>
 %
 %
-% <h3><a name="receiver_cannot_bind-3">receiver_cannot_bind/3</a></h3>
+% <h3><a name="alert_notification-3">alert_notification/3</a></h3>
 %
-% <tt>receiver_cannot_bind(Pid, Eid, Error) -> ok</tt>
+% <tt>alert_notification(Pid, Eid, Pdu) -> ok</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = term()</tt></li>
+%   <li><tt>Pdu = pdu()</tt></li>
 % </ul>
 %
-% <p>Cannot bind on the receiver session.</p>
-% 
-% <p><tt>Error</tt> is the error returned by the bind operation.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
+% <p>Alert notifications are forwarded by the ESME using this callback.  The
+% alert_notification PDU is given along.</p>
 %
-% <p><b>See also:</b> <tt>callback_receiver_cannot_bind/2</tt></p>
-%
-%
-% <h3><a name="transmitter_cannot_bind-3">transmitter_cannot_bind/3</a></h3>
-%
-% <tt>transmitter_can_not_resume(Pid, Eid, Error) -> ok</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = term()</tt></li>
-% </ul>
-%
-% <p>Cannot bind on the transmitter session.</p>
-% 
-% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% <p>The callback module is responsible of initiating the appropriate actions
+% associated to the alert notification.</p>
 % 
 % <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_transmitter_cannot_bind/2</tt></p>
+% <p><b>See also:</b> <tt>callback_alert_notification/2</tt></p>
 %
 %
-% <h3><a name="transceiver_cannot_bind-3">transceiver_cannot_bind/3</a></h3>
+% <h3><a name="deliver_sm-3">deliver_sm/3</a></h3>
 %
-% <tt>transceiver_cannot_bind(Pid, Eid, Error) -> ok</tt>
+% <tt>deliver_sm(Pid, Eid, Pdu) -> Result</tt>
 % <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = term()</tt></li>
+%   <li><tt>Pid        = pid()</tt></li>
+%   <li><tt>Eid        = pid()</tt></li>
+%   <li><tt>Pdu        = pdu()</tt></li>
+%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt></li>
+%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%   <li><tt>ParamName  = atom()</tt></li>
+%   <li><tt>ParamValue = term()</tt></li>
 % </ul>
 %
-% <p>Cannot bind on the transceiver session.</p>
-% 
-% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% <p>Short messages delivered by the ESME via this callback are enclosed
+% inside a deliver_sm PDU.</p>
+%
+% <p>The <tt>ParamList</tt> included in the response is used to construct
+% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+% desired command_status error code.</p>
 % 
 % <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_transceiver_cannot_bind/2</tt></p>
+% <p><b>See also:</b> <tt>callback_deliver_sm/2</tt></p>
 %
 %
-% <h3><a name="receiver_unbind-2">receiver_unbind/2</a></h3>
+% <h3><a name="deliver_data_sm-3">deliver_data_sm/3</a></h3>
 %
-% <tt>receiver_unbind(Pid, Eid) -> ok | {error, Error}</tt>
+% <tt>deliver_data_sm(Pid, Eid, Pdu) -> Result</tt>
 % <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = int()</tt></li>
+%   <li><tt>Pid        = pid()</tt></li>
+%   <li><tt>Eid        = pid()</tt></li>
+%   <li><tt>Pdu        = pdu()</tt></li>
+%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt></li>
+%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%   <li><tt>ParamName  = atom()</tt></li>
+%   <li><tt>ParamValue = term()</tt></li>
 % </ul>
 %
-% <p>This callback forwards an unbind request (issued by the MC) to the 
-% receiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_rx state.</p>
+% <p>Short messages delivered by the ESME via this callback are enclosed
+% inside a data_sm PDU.</p>
 %
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
+% <p>The <tt>ParamList</tt> included in the response is used to construct
+% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+% desired command_status error code.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_receiver_unbind/1</tt></p>
-%
-%
-% <h3><a name="transmitter_unbind-2">transmitter_unbind/2</a></h3>
-%
-% <tt>transmitter_unbind(Pid, Eid) -> ok | {error, Error}</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = int()</tt></li>
-% </ul>
-%
-% <p>This callback forwards an unbind request (issued by the MC) to the 
-% transmitter session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_tx state.</p>
-%
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-%
-% <p><b>See also:</b> <tt>callback_transmitter_unbind/1</tt></p>
-%
-%
-% <h3><a name="transceiver_unbind-2">transceiver_unbind/2</a></h3>
-%
-% <tt>transceiver_unbind(Pid, Eid) -> ok | {error, Error}</tt>
-% <ul>
-%   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Error = int()</tt></li>
-% </ul>
-%
-% <p>This callback forwards an unbind request (issued by the MC) to the 
-% transceiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_trx state.</p>
-%
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
-% process id.</p>
-%
-% <p><b>See also:</b> <tt>callback_transceiver_unbind/1</tt></p>
+% <p><b>See also:</b> <tt>callback_deliver_data_sm/2</tt></p>
 %
 %
 % <h3><a name="receiver_mc_unavailable-2">receiver_mc_unavailable/2</a></h3>
@@ -409,80 +380,139 @@
 % <p><b>See also:</b> <tt>callback_smpp_listen_recovery/2</tt></p>
 %
 %
-% <h3><a name="alert_notification-3">alert_notification/3</a></h3>
+% <h3><a name="receiver_mc_unbind-2">receiver_mc_unbind/2</a></h3>
 %
-% <tt>alert_notification(Pid, Eid, Pdu) -> ok</tt>
+% <tt>receiver_mc_unbind(Pid, Eid) -> ok | {error, Error}</tt>
 % <ul>
 %   <li><tt>Pid = Eid = pid()</tt></li>
-%   <li><tt>Pdu = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>Alert notifications are forwarded by the ESME using this callback.  The
-% alert_notification PDU is given along.</p>
+% <p>This callback forwards unbind requests (issued by the MC) on the 
+% receiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
+% with a ESME_ROK command_status is sent to the MC and the session moves 
+% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
+% the ESME, the response PDU sent by the session to the MC will have an 
+% <tt>Error</tt> command_status and the session will remain on it's 
+% current bound_rx state.</p>
 %
-% <p>The callback module is responsible of initiating the appropriate actions
-% associated to the alert notification.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_alert_notification/2</tt></p>
+% <p><b>See also:</b> <tt>callback_receiver_mc_unbind/1</tt></p>
 %
 %
-% <h3><a name="deliver_sm-3">deliver_sm/3</a></h3>
+% <h3><a name="transmitter_mc_unbind-2">transmitter_mc_unbind/2</a></h3>
 %
-% <tt>deliver_sm(Pid, Eid, Pdu) -> Result</tt>
+% <tt>transmitter_mc_unbind(Pid, Eid) -> ok | {error, Error}</tt>
 % <ul>
-%   <li><tt>Pid        = pid()</tt></li>
-%   <li><tt>Eid        = pid()</tt></li>
-%   <li><tt>Pdu        = pdu()</tt></li>
-%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt></li>
-%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
-%   <li><tt>ParamName  = atom()</tt></li>
-%   <li><tt>ParamValue = term()</tt></li>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>Short messages delivered by the ESME via this callback are enclosed
-% inside a deliver_sm PDU.</p>
+% <p>This callback forwards unbind requests (issued by the MC) on the 
+% transmitter session of the ESME.  If <tt>ok</tt> returned an unbind_resp
+% with a ESME_ROK command_status is sent to the MC and the session moves 
+% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
+% the ESME, the response PDU sent by the session to the MC will have an 
+% <tt>Error</tt> command_status and the session will remain on it's 
+% current bound_tx state.</p>
 %
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_deliver_sm/2</tt></p>
+% <p><b>See also:</b> <tt>callback_transmitter_mc_unbind/1</tt></p>
 %
 %
-% <h3><a name="deliver_data_sm-3">deliver_data_sm/3</a></h3>
+% <h3><a name="transceiver_mc_unbind-2">transceiver_mc_unbind/2</a></h3>
 %
-% <tt>deliver_data_sm(Pid, Eid, Pdu) -> Result</tt>
+% <tt>transceiver_mc_unbind(Pid, Eid) -> ok | {error, Error}</tt>
 % <ul>
-%   <li><tt>Pid        = pid()</tt></li>
-%   <li><tt>Eid        = pid()</tt></li>
-%   <li><tt>Pdu        = pdu()</tt></li>
-%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt></li>
-%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
-%   <li><tt>ParamName  = atom()</tt></li>
-%   <li><tt>ParamValue = term()</tt></li>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Error = int()</tt></li>
 % </ul>
 %
-% <p>Short messages delivered by the ESME via this callback are enclosed
-% inside a data_sm PDU.</p>
+% <p>This callback forwards unbind requests (issued by the MC) on the 
+% transceiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
+% with a ESME_ROK command_status is sent to the MC and the session moves 
+% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
+% the ESME, the response PDU sent by the session to the MC will have an 
+% <tt>Error</tt> command_status and the session will remain on it's 
+% current bound_trx state.</p>
 %
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME
 % process id.</p>
 %
-% <p><b>See also:</b> <tt>callback_deliver_data_sm/2</tt></p>
+% <p><b>See also:</b> <tt>callback_transceiver_mc_unbind/1</tt></p>
+%
+%
+% <h3><a name="unbind_receiver_resp-3">unbind_receiver_resp/3</a></h3>
+%
+% <tt>unbind_receiver_resp(Pid, Sid, Resp) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
+% </ul>
+%
+% <p>Forwards unbind_receiver responses.</p>
+%
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the unbind operation.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_unbind_receiver_resp/2</tt></p>
+%
+%
+% <h3><a name="unbind_transmitter_resp-3">unbind_transmitter_resp/3</a></h3>
+%
+% <tt>unbind_transmitter_resp(Pid, Sid, PduResp) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
+% </ul>
+%
+% <p>Forwards unbind_transmitter responses.</p>
+%
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the unbind operation.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_unbind_transmitter_resp/2</tt></p>
+%
+%
+% <h3><a name="unbind_transceiver_resp-3">unbind_transceiver_resp/3</a></h3>
+%
+% <tt>unbind_transceiver_resp(Pid, Sid, PduResp) -> ok</tt>
+% <ul>
+%   <li><tt>Pid = Eid = pid()</tt></li>
+%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
+%   <li><tt>PduResp = pdu()</tt></li>
+%   <li><tt>Error = int()</tt></li>
+% </ul>
+%
+% <p>Forwards unbind_transceiver responses.</p>
+%
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+% 
+% <p><tt>Error</tt> is the SMPP error returned by the unbind operation.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
+%
+% <p><b>See also:</b> <tt>callback_unbind_transceiver_resp/2</tt></p>
 %
 %
 % <h2>Changes 0.1 -&gt; 0.2</h2>
@@ -499,6 +529,12 @@
 %
 % <ul>
 %   <li>Completely redesigned.</li>
+% </ul>
+%
+% [27 Feb 2004]
+%
+% <ul>
+%   <li>Callback interface redefined.</li>
 % </ul>
 %
 %
@@ -744,23 +780,23 @@
 % %@equiv
 %%
 behaviour_info(callbacks) ->
-     [{bound_receiver, 3}, 
-      {bound_transmitter, 3}, 
-      {bound_transceiver, 3}, 
-      {receiver_cannot_bind, 3}, 
-      {transmitter_cannot_bind, 3}, 
-      {transceiver_cannot_bind, 3}, 
-      {receiver_unbind, 2},
-      {transmitter_unbind, 2},
-      {transceiver_unbind, 2},
+     [{bind_receiver_resp, 3}, 
+      {bind_transmitter_resp, 3}, 
+      {bind_transceiver_resp, 3}, 
+      {alert_notification, 3},
+      {deliver_sm, 3}, 
+      {deliver_data_sm, 3},
       {receiver_mc_unavailable, 2}, 
       {transmitter_mc_unavailable, 2}, 
       {transceiver_mc_unavailable, 2}, 
       {smpp_listen_error, 3},
       {smpp_listen_recovery, 3},
-      {alert_notification, 3},
-      {deliver_sm, 3}, 
-      {deliver_data_sm, 3}];
+      {receiver_mc_unbind, 2},
+      {transmitter_mc_unbind, 2},
+      {transceiver_mc_unbind, 2},
+      {unbind_receiver_resp, 3},
+      {unbind_transmitter_resp, 3},
+      {unbind_transceiver_resp, 3}];
 
 behaviour_info(_Other) ->
     undefined.
@@ -935,13 +971,13 @@ listen_transmitter(Eid, McList) ->
 %    SystemId = string()
 %    Password = string()
 %
-% @doc Puts the receiver session to listen on <tt>Port</tt>. In 
+% @doc Puts the transmitter session to listen on <tt>Port</tt>. In 
 % <a href="#listen_transmitter-1">listen_transmitter/1</a> and
 % <a href="#listen_transmitter-2">listen_transmitter/2</a> the default SMPP 
 % port is assumed (defined by ?DEFAULT_SMPP_PORT).  If an authorized MC 
 % connects to this session and issues an outbind, the  corresponding 
-% bind_receiver request is sent to the calling MC (identified on the outbind 
-% by a <tt>SystemId</tt> and <tt>Password</tt>).
+% bind_transmitter request is sent to the calling MC (identified on the 
+% outbind by a <tt>SystemId</tt> and <tt>Password</tt>).
 %
 % <p>The <tt>McList</tt> is searched in sequence.  If a tuple on 
 % this list matches the system_id and password sent along with the outbind
@@ -1005,13 +1041,13 @@ listen_transceiver(Eid, McList) ->
 %    SystemId = string()
 %    Password = string()
 %
-% @doc Puts the receiver session to listen on <tt>Port</tt>. In 
+% @doc Puts the transceiver session to listen on <tt>Port</tt>. In 
 % <a href="#listen_transceiver-1">listen_transceiver/1</a> and
 % <a href="#listen_transceiver-2">listen_transceiver/2</a> the default SMPP 
 % port is assumed (defined by ?DEFAULT_SMPP_PORT).  If an authorized MC 
 % connects to this session and issues an outbind, the  corresponding 
-% bind_receiver request is sent to the calling MC (identified on the outbind 
-% by a <tt>SystemId</tt> and <tt>Password</tt>).
+% bind_transceiver request is sent to the calling MC (identified on the 
+% outbind by a <tt>SystemId</tt> and <tt>Password</tt>).
 %
 % <p>The <tt>McList</tt> is searched in sequence.  If a tuple on 
 % this list matches the system_id and password sent along with the outbind
@@ -1085,9 +1121,7 @@ open_receiver(Eid, Address, McList) ->
 %    PduResp  = pdu()
 %    Error    = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, issues a bind_receiver request.
-%
-% <p>If the receiver session is bound, the bind request fails.</p>
+% @doc The ESME with pid <tt>Eid</tt> opens the receiver session.
 %
 % <p>The default SMPP port is used (?DEFAULT_SMPP_PORT) unless otherwise 
 % stated.</p>
@@ -1155,9 +1189,7 @@ open_transmitter(Eid, Address, McList) ->
 %    PduResp  = pdu()
 %    Error    = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, issues a bind_transmitter request.
-%
-% <p>If the transmitter session is bound, the bind request fails.</p>
+% @doc The ESME with pid <tt>Eid</tt> opens the transmitter session.
 %
 % <p>The default SMPP port is used (?DEFAULT_SMPP_PORT) unless otherwise 
 % stated.</p>
@@ -1225,10 +1257,7 @@ open_transceiver(Eid, Address, McList) ->
 %    PduResp  = pdu()
 %    Error    = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, issues a bind_transceiver request.
-%
-% <p>If the ESME has a bound session, as a receiver, transmitter or 
-% transceiver, the bind request will fail.</p>
+% @doc The ESME with pid <tt>Eid</tt> opens the transceiver session.
 %
 % <p>The default SMPP port is used (?DEFAULT_SMPP_PORT) unless otherwise 
 % stated.</p>
@@ -1245,52 +1274,44 @@ open_transceiver(Eid, Address, Port, McList) ->
 
 
 %%%
-% @spec bind_receiver(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = term()
+% @spec bind_receiver(Eid) -> ok
+%    Eid = pid()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_receiver request.
 %
 % <p>The session must be already open.</p>
 %
 % @see open_receiver/4
-% @see gen_server:call/3
-% @see bind_receiver/2
+% @see gen_server:cast/2
 % @end
 %
 % %@equiv
 %%
 bind_receiver(Eid) ->
-    gen_server:call(Eid, bind_receiver, infinity).
+    gen_server:cast(Eid, bind_receiver).
 
 
 %%%
-% @spec bind_transmitter(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = term()
+% @spec bind_transmitter(Eid) -> ok
+%    Eid = pid()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_transmitter request.
 %
 % <p>The session must be already open.</p>
 %
 % @see open_transmitter/4
-% @see gen_server:call/3
-% @see bind_transmitter/2
+% @see gen_server:cast/2
 % @end
 %
 % %@equiv
 %%
 bind_transmitter(Eid) ->
-    gen_server:call(Eid, bind_transmitter, infinity).
+    gen_server:cast(Eid, bind_transmitter).
 
 
 %%%
-% @spec bind_transceiver(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = term()
+% @spec bind_transceiver(Eid) -> ok
+%    Eid = pid()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues a bind_transceiver request.
 %
@@ -1298,13 +1319,12 @@ bind_transmitter(Eid) ->
 %
 % @see open_transceiver/4
 % @see gen_server:call/3
-% @see bind_transceiver/2
 % @end
 %
 % %@equiv
 %%
 bind_transceiver(Eid) ->
-    gen_server:call(Eid, bind_transceiver, infinity).
+    gen_server:cast(Eid, bind_transceiver).
 
 
 %%%
@@ -1317,8 +1337,7 @@ bind_transceiver(Eid) ->
 %    PduResp    = pdu()
 %    Error      = int() | atom()
 %
-% @doc Issues a broadcast_sm operation on the ESME identified by <tt>Eid
-% </tt>.
+% @doc Issues a broadcast_sm operation on the ESME identified by <tt>Eid</tt>.
 % @end
 %
 % %@see
@@ -1467,8 +1486,7 @@ replace_sm(Eid, ParamList) ->
 %    PduResp    = pdu()
 %    Error      = int() | atom()
 %
-% @doc Issues a submit_multi operation on the ESME identified by <tt>Eid
-% </tt>.
+% @doc Issues a submit_multi operation on the ESME identified by <tt>Eid</tt>.
 % @end
 %
 % %@see
@@ -1501,16 +1519,11 @@ submit_sm(Eid, ParamList) ->
 
 
 %%%
-% @spec unbind_receiver(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = undefined_session | int()
+% @spec unbind_receiver(Eid) -> ok
+%    Eid = pid()
 %
-% @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the receiver
+% @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the receiver 
 % session.
-%
-% <p>If the rx_session is not defined this function returns the term
-% <tt>{error, undefined_session}</tt>.</p>
 % @end
 %
 % %@see
@@ -1518,20 +1531,15 @@ submit_sm(Eid, ParamList) ->
 % %@equiv
 %%
 unbind_receiver(Eid) ->
-    gen_server:call(Eid, unbind_receiver, infinity).
+    gen_server:cast(Eid, unbind_receiver).
 
 
 %%%
-% @spec unbind_transmitter(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = undefined_session | int()
+% @spec unbind_transmitter(Eid) -> ok
+%    Eid = pid()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the transmitter
 % session.
-%
-% <p>If the tx_session is not defined this function returns the term
-% <tt>{error, undefined_session}</tt>.</p>
 % @end
 %
 % %@see
@@ -1539,20 +1547,15 @@ unbind_receiver(Eid) ->
 % %@equiv
 %%
 unbind_transmitter(Eid) ->
-    gen_server:call(Eid, unbind_transmitter, infinity).
+    gen_server:cast(Eid, unbind_transmitter).
 
 
 %%%
-% @spec unbind_transceiver(Eid) -> {ok, PduResp} | {error, Error}
-%    Eid     = pid()
-%    PduResp = pdu()
-%    Error   = undefined_session | int()
+% @spec unbind_transceiver(Eid) -> ok
+%    Eid = pid()
 %
 % @doc The ESME with pid <tt>Eid</tt>, issues an unbind on the transceiver
 % session.
-%
-% <p>If the rx_session and the tx_session are not defined or not the same, 
-% this function returns the term <tt>{error, undefined_session}</tt>.</p>
 % @end
 %
 % %@see
@@ -1560,7 +1563,7 @@ unbind_transmitter(Eid) ->
 % %@equiv
 %%
 unbind_transceiver(Eid) ->
-    gen_server:call(Eid, unbind_transceiver, infinity).
+    gen_server:cast(Eid, unbind_transceiver).
 
 
 %%%
@@ -1568,7 +1571,7 @@ unbind_transceiver(Eid) ->
 %    Eid   = pid()
 %    Error = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, closes the receiver session.
+% @doc The ESME with pid <tt>Eid</tt> closes the receiver session.
 % @end
 %
 % %@see
@@ -1584,7 +1587,7 @@ close_receiver(Eid) ->
 %    Eid   = pid()
 %    Error = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, closes the transmitter session.
+% @doc The ESME with pid <tt>Eid</tt> closes the transmitter session.
 % @end
 %
 % %@see
@@ -1600,7 +1603,7 @@ close_transmitter(Eid) ->
 %    Eid   = pid()
 %    Error = term()
 %
-% @doc The ESME with pid <tt>Eid</tt>, closes the transceiver session.
+% @doc The ESME with pid <tt>Eid</tt> closes the transceiver session.
 % @end
 %
 % %@see
@@ -1615,7 +1618,7 @@ close_transceiver(Eid) ->
 % @spec stop(Eid) -> ok
 %    Eid = pid()
 %
-% @doc Stops the server.
+% @doc Stops the ESME with pid <tt>Eid</tt>.
 %
 % @see gen_server:cast/2
 % @end
@@ -1637,7 +1640,8 @@ stop(Eid) ->
 %    Timeout = int() | infinity
 %    Reason  = term()
 %
-% @doc Initiates the server
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - init/1</a> callback implementation.  Initiates the 
+% server.
 % @end
 %%
 init([Pid, Module, Setup]) ->
@@ -1675,7 +1679,8 @@ init([Pid, Module, Setup]) ->
 %    Timeout   = int() | infinity
 %    Reason    = term()
 %
-% @doc Handling call messages.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - handle_call/3</a> callback implementation.  Handling 
+% call messages.
 %
 % <ul>
 %   <li>On <tt>{stop, Reason, Reply, NewState}</tt>
@@ -1687,15 +1692,6 @@ init([Pid, Module, Setup]) ->
 % @see terminate/2
 % @end
 %%
-handle_call(bind_receiver, _From, State) ->
-    {reply, do_bind_receiver(State), State};
-
-handle_call(bind_transmitter, _From, State) ->
-    {reply, do_bind_transmitter(State), State};
-
-handle_call(bind_transceiver, _From, State) ->
-    {reply, do_bind_transceiver(State), State};
-
 handle_call({broadcast_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_broadcast_sm(ParamList, From, State) end),
     {noreply, State};
@@ -1732,19 +1728,6 @@ handle_call({submit_sm, ParamList}, From, State) ->
     spawn_link(fun() -> do_submit_sm(ParamList, From, State) end),
     {noreply, State};
 
-handle_call(unbind_receiver, From, #state{rx_session = S} = State) ->
-    spawn_link(fun() -> do_unbind(From, S) end),
-    {noreply, State};
-
-handle_call(unbind_transmitter, From, #state{tx_session = S} = State) ->
-    spawn_link(fun() -> do_unbind(From, S) end),
-    {noreply, State};
-
-handle_call(unbind_transceiver, From, #state{rx_session = S,
-                                             tx_session = S} = State) ->
-    spawn_link(fun() -> do_unbind(From, S) end),
-    {noreply, State};
-
 handle_call({deliver_sm, Pdu}, From, State) -> 
     spawn_link(fun() -> do_deliver_sm(Pdu, From, State) end),
     {noreply, State};
@@ -1755,15 +1738,15 @@ handle_call({deliver_data_sm, Pdu}, From, State) ->
 
 handle_call({unbind, S}, _From, #state{rx_session=S, tx_session=S} = State) ->
     % The MC issues an unbind on the transceiver session.
-    {reply, callback_transceiver_unbind(State), State};
+    {reply, callback_transceiver_mc_unbind(State), State};
 
 handle_call({unbind, S}, _From, #state{rx_session = S} = State) ->
     % The MC issues an unbind on the receiver session.
-    {reply, callback_receiver_unbind(State), State};
+    {reply, callback_receiver_mc_unbind(State), State};
 
 handle_call({unbind, S}, _From, #state{tx_session = S} = State) ->
     % The MC issues an unbind on the transmitter session.
-    {reply, callback_transmitter_unbind(State), State};
+    {reply, callback_transmitter_mc_unbind(State), State};
 
 handle_call({open_receiver, Addr, Port, McList}, _From, State) ->
     case do_open(State#state.rx_session,Addr,Port,State#state.session_setup) of
@@ -1840,7 +1823,8 @@ handle_call(close_transceiver, _From, #state{rx_session = S,
 %    Timeout  = int() | infinity
 %    Reason   = normal | term()
 %
-% @doc Handling cast messages.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - handle_cast/2</a> callback implementation.  Handling cast
+% messages.
 %
 % <ul>
 %   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
@@ -1849,6 +1833,18 @@ handle_call(close_transceiver, _From, #state{rx_session = S,
 % @see terminate/2
 % @end
 %%
+handle_cast(bind_receiver, State) ->
+    do_bind_receiver(State), 
+    {noreply, State};
+
+handle_cast(bind_transmitter, State) ->
+    do_bind_transmitter(State),
+    {noreply, State};
+
+handle_cast(bind_transceiver, State) ->
+    do_bind_transceiver(State), 
+    {noreply, State};
+
 handle_cast({alert_notification, Pdu}, State) ->
     spawn_link(fun() -> callback_alert_notification(Pdu, State) end),
     {noreply, State};
@@ -1920,6 +1916,18 @@ handle_cast({smpp_listen_error, Port}, State) ->
 
 handle_cast({smpp_listen_recovery, Port}, State) ->
     callback_smpp_listen_recovery(Port, State),
+    {noreply, State};
+
+handle_cast(unbind_receiver, State) ->
+    do_unbind_receiver(State),
+    {noreply, State};
+
+handle_cast(unbind_transmitter, State) ->
+    do_unbind_transmitter(State),
+    {noreply, State};
+
+handle_cast(unbind_transceiver, State) ->
+    do_unbind_transceiver(State),
     {noreply, State}.
 
 
@@ -1950,7 +1958,8 @@ authenticate_mc(Id, Pwd, [_|T])          -> authenticate_mc(Id, Pwd, T).
 %    Timeout  = int() | infinity
 %    Reason   = normal | term()
 %
-% @doc Handling all non call/cast messages
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - handle_info/2</a> callback implementation.  Handling all 
+% non call/cast messages.
 %
 % <ul>
 %   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
@@ -2012,7 +2021,8 @@ handle_info(_Info, State) ->
 %    Reason = normal | shutdown | term()
 %    State  = term()
 %
-% @doc Shutdown the server.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - terminate/2</a> callback implementation.  Shutdown the 
+% server.
 %
 % <p>Return value is ignored by <tt>gen_server</tt>.</p>
 % @end
@@ -2033,7 +2043,8 @@ terminate(Reason, #state{self = S} = _State) ->
 %    Extra    = term
 %    NewState = term()
 %
-% @doc Convert process state when code is changed
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server - code_change/3</a> callback implementation.  Convert 
+% process state when code is changed
 % @end
 %%
 code_change(OldVsn, State, Extra) ->
@@ -2049,15 +2060,8 @@ code_change(OldVsn, State, Extra) ->
 %    Sid = pid()
 %    Pdu = pdu()
 %
-% @doc Outbind callback.  When the session receives an outbind request this
-% callback is triggered to notify the ESME.  Returning value is ignored by the
-% session.
-% 
-% <p>On response to this function the ESME must start the appropriate actions
-% in order to bind or turn the session back to an open or closed state.</p>
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#outbind-3">gen_esme_session - 
+% outbind/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2076,16 +2080,8 @@ outbind(Pid, Sid, Pdu) ->
 %    Sid = pid()
 %    Error = int()
 %
-% @doc This callback forwards an unbind request (issued by the MC) to the 
-% ESME.  If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
-% command_status is sent to the MC and the session moves into the unbound
-% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
-% response PDU sent by the session to the MC will have an <tt>Error</tt>
-% command_status and the session will remain on it's current bound state
-% (bound_rx, bound_tx or bound_trx).
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#unbind-2">gen_esme_session - unbind/2</a>
+% callback implementation.
 % @end
 %
 % %@see
@@ -2103,15 +2099,8 @@ unbind(Pid, Sid) ->
 %    Address = string() | atom() | ip_address()
 %    Port = int()
 %
-% @doc If the MC becomes unavailable the session notifies that circumstance to
-% the ESME with a call to this function.
-%
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
-% handle these <i>undesired</i> callbacks appropriately.</p>
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#mc_unavailable-4">gen_esme_session - 
+% mc_unavailable-4</a> callback implementation.
 % @end
 %
 % %@see
@@ -2129,12 +2118,8 @@ mc_unavailable(Pid, Sid, _Address, _Port) ->
 %    Address = string() | atom() | ip_address()
 %    Port = int()
 %
-% @doc After a period of unavailability of the MC, once the connection is
-% recover by the session, this function is called in order to let the ESME
-% resume the service.
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#resume_service-4">gen_esme_session -
+% resume_service/4</a> callback implementation.
 % @end
 %
 % %@see
@@ -2151,11 +2136,8 @@ resume_service(Pid, Sid, _Address, _Port) ->
 %    Sid = pid()
 %    Port = int()
 %
-% @doc When a session on listening state looses the listen socket, uses
-% this callback to notify the ESME.
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#smpp_listen_error-3">gen_esme_session -
+% smpp_listen_error/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2172,11 +2154,8 @@ smpp_listen_error(Pid, _Sid, Port) ->
 %    Sid = pid()
 %    Port = int()
 %
-% @doc After a listen failure, a new socket could be set to listen again on
-% <tt>Port</tt>.  This callback notifies the ESME.
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#smpp_listen_recovery-3">gen_esme_session 
+% - smpp_listen_recovery-3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2193,14 +2172,8 @@ smpp_listen_recovery(Pid, _Sid, Port) ->
 %    Sid = pid()
 %    Pdu = pdu()
 %
-% @doc Alert notifications are forwarded to the ESME by this callback.  The
-% dictionary representing the alert_notification PDU is given to the ESME.
-%
-% <p>The ESME is responsible of initiating the appropriate actions associated
-% to the alert notification.</p>
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#alert_notification-3">gen_esme_session -
+% alert_notification/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2221,17 +2194,8 @@ alert_notification(Pid, _Sid, Pdu) ->
 %    ParamName  = atom()
 %    ParamValue = term()
 %
-% @doc Short messages delivered to the ESME via this callback are enclosed
-% inside a deliver_sm PDU.
-%
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#deliver_sm-3">gen_esme_session - 
+% deliver_sm/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2252,17 +2216,8 @@ deliver_sm(Pid, Sid, Pdu) ->
 %    ParamName  = atom()
 %    ParamValue = term()
 %
-% @doc Short messages delivered to the ESME via this callback are enclosed
-% inside a data_sm PDU.
-%
-% <p>The <tt>ParamList</tt> included in the response is used to construct
-% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
-% be returned by the ESME in the response PDU, the callback should return the
-% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-% desired command_status error code.</p>
-%
-% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-% session's process id.</p>
+% @doc <a href="gen_esme_session.html#deliver_data_sm-3">gen_esme_session -
+% deliver_data_sm/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -2376,14 +2331,10 @@ do_close(Session) ->
 
 
 %%%
-% @spec do_bind_receiver(State) -> Result
-%    State    = state()
-%    Result   = {ok, PduResp} | {error, int()}
-%    PduResp  = pdu()
+% @spec do_bind_receiver(State) -> ok
+%    State = state()
 %
 % @doc Issues a bind_receiver request on the receiver session of the ESME.
-%
-% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2397,26 +2348,15 @@ do_bind_receiver(#state{rx_session = RxSession} = State) ->
                   {addr_ton,      State#state.addr_ton},
                   {addr_npi,      State#state.addr_npi},
                   {address_range, State#state.address_range}],
-    case gen_esme_session:bind_receiver(RxSession, EsmeParams) of
-        {ok, PduResp} ->
-            callback_bound_receiver(PduResp, State),
-            {ok, PduResp};
-        Error ->
-            callback_receiver_cannot_bind(Error, State),
-            Error
-    end.
+    Resp = gen_esme_session:bind_receiver(RxSession, EsmeParams),
+    callback_bind_receiver_resp(Resp, State).
 
 
 %%%
-% @spec do_bind_transmitter(State) -> Result
-%    State    = state()
-%    Result   = {ok, PduResp, NewState} | {error, int()}
-%    PduResp  = pdu()
-%    NewState = state()
+% @spec do_bind_transmitter(State) -> ok
+%    State = state()
 %
 % @doc Issues a bind_transmitter request on transmitter session of the ESME.
-%
-% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2430,27 +2370,16 @@ do_bind_transmitter(#state{tx_session = TxSession} = State) ->
                   {addr_ton,      State#state.addr_ton},
                   {addr_npi,      State#state.addr_npi},
                   {address_range, State#state.address_range}],
-    case gen_esme_session:bind_transmitter(TxSession, EsmeParams) of
-        {ok, PduResp} ->
-            callback_bound_transmitter(PduResp, State),
-            {ok, PduResp};
-        Error ->
-            callback_transmitter_cannot_bind(Error, State),
-            Error
-    end.
+    Resp = gen_esme_session:bind_transmitter(TxSession, EsmeParams),
+    callback_bind_transmitter_resp(Resp, State).
 
 
 %%%
 % @spec do_bind_transceiver(State) -> Result
-%    State    = state()
-%    Result   = {ok, PduResp, NewState} | {error, int()}
-%    PduResp  = pdu()
-%    NewState = state()
+%    State = state()
 %
 % @doc Issues a bind_transceiver request on the receiver session of the ESME.
 % Assumes the receiver session acts also as the transmitter session.
-%
-% <p>Error codes are those defined in the SMPP specification.</p>
 % @end
 %
 % %@see
@@ -2464,14 +2393,8 @@ do_bind_transceiver(#state{rx_session = RxSession} = State) ->
                   {addr_ton,      State#state.addr_ton},
                   {addr_npi,      State#state.addr_npi},
                   {address_range, State#state.address_range}],
-    case gen_esme_session:bind_transceiver(RxSession, EsmeParams) of
-        {ok, PduResp} ->
-            callback_bound_transceiver(PduResp, State),
-            {ok, PduResp};
-        Error ->
-            callback_transceiver_cannot_bind(Error, State),
-            Error
-    end.
+    Resp = gen_esme_session:bind_transceiver(RxSession, EsmeParams),
+    callback_bind_transceiver_resp(Resp, State).
 
 
 %%%
@@ -2751,25 +2674,51 @@ do_submit_sm(ParamList, From, #state{tx_session = S} = State) ->
 
 
 %%%
-% @spec do_unbind(From, Session) -> {ok, PduResp} | {error, Error}
-%    From    = {pid(), Tag}
-%    Tag     = term()
-%    Session = undefined | pid()
-%    PduResp = pdu()
-%    Error   = int()
+% @spec do_unbind_receiver(State) -> ok
+%    State = state()
 %
-% @doc Requests an unbind for a given session.
-%
-% <p>Error codes are those defined in the SMPP specification.</p>
+% @doc Requests an unbind on the receiver session.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-do_unbind(From, Session) ->
-    Reply = gen_esme_session:unbind(Session),
-    gen_server:reply(From, Reply).
+do_unbind_receiver(State) ->
+    Resp = gen_esme_session:unbind(State#state.rx_session),
+    callback_unbind_receiver_resp(Resp, State).
+
+
+%%%
+% @spec do_unbind_transmitter(State) -> ok
+%    State = state()
+%
+% @doc Requests an unbind on the transmitter session.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+do_unbind_transmitter(State) ->
+    Resp = gen_esme_session:unbind(State#state.tx_session),
+    callback_unbind_transmitter_resp(Resp, State).
+
+
+%%%
+% @spec do_unbind_transceiver(State) -> ok
+%    State = state()
+%
+% @doc Requests an unbind on the transceiver session.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+do_unbind_transceiver(State) ->
+    Resp = gen_esme_session:unbind(State#state.rx_session),
+    callback_unbind_transceiver_resp(Resp, State).
 
 
 %%%
@@ -2794,317 +2743,72 @@ stop_session(Session) ->
 % Callback wrappers
 %% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %%%
-% @spec callback_bound_receiver(PduResp, State) -> ok
+% @spec callback_bind_receiver_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
 %    PduResp = pdu()
+%    Error   = int()
 %    State   = state()
 %
-% @doc Wrapper for CallbackModule:bound_receiver/3.
+% @doc Wrapper for CallbackModule:bind_receiver_resp/3.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_bound_receiver(PduResp, State) ->
+callback_bind_receiver_resp(Resp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_receiver(Pid, Eid, PduResp) of
+    case catch Mod:bind_receiver_resp(Pid, Eid, Resp) of
         _Whatever ->
             ok
     end.
 
 
 %%%
-% @spec callback_bound_transmitter(PduResp, State) -> ok
+% @spec callback_bind_transmitter_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
 %    PduResp = pdu()
+%    Error   = int()
 %    State   = state()
 %
-% @doc Wrapper for CallbackModule:bound_transmitter/3.
+% @doc Wrapper for CallbackModule:bind_transmitter_resp/3.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_bound_transmitter(PduResp, State) ->
+callback_bind_transmitter_resp(Resp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_transmitter(Pid, Eid, PduResp) of
+    case catch Mod:bind_transmitter_resp(Pid, Eid, Resp) of
         _Whatever ->
             ok
     end.
 
 
 %%%
-% @spec callback_bound_transceiver(PduResp, State) -> ok
+% @spec callback_bind_transceiver_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
 %    PduResp = pdu()
+%    Error   = int()
 %    State   = state()
 %
-% @doc Wrapper for CallbackModule:bound_transceiver/3.
+% @doc Wrapper for CallbackModule:bind_transceiver_resp/3.
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-callback_bound_transceiver(PduResp, State) ->
+callback_bind_transceiver_resp(Resp, State) ->
     Mod = State#state.callback_module,
     Pid = State#state.parent,
     Eid = State#state.self,
-    case catch Mod:bound_transceiver(Pid, Eid, PduResp) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_receiver_unbind(State) -> ok | {error, Error}
-%    State = state()
-%    Error = int()
-%
-% @doc Wrapper for CallbackModule:receiver_unbind/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_receiver_unbind(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:receiver_unbind(Pid, Eid) of
-        {error, Error} when integer(Error) ->
-            {error, Error};
-        {error, _Error} ->
-            {error, ?ESME_RUNKNOWNERR};
-        _Otherwise ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_transmitter_unbind(State) -> ok | {error, Error}
-%    State = state()
-%    Error = int()
-%
-% @doc Wrapper for CallbackModule:transmitter_unbind/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transmitter_unbind(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transmitter_unbind(Pid, Eid) of
-        {error, Error} when integer(Error) ->
-            {error, Error};
-        {error, _Error} ->
-            {error, ?ESME_RUNKNOWNERR};
-        _Otherwise ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_transceiver_unbind(State) -> ok | {error, Error}
-%    State = state()
-%    Error = int()
-%
-% @doc Wrapper for CallbackModule:transceiver_unbind/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transceiver_unbind(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transceiver_unbind(Pid, Eid) of
-        {error, Error} when integer(Error) ->
-            {error, Error};
-        {error, _Error} ->
-            {error, ?ESME_RUNKNOWNERR};
-        _Otherwise ->
-            ok
-    end.
-
-    
-%%%
-% @spec callback_receiver_mc_unavailable(State) -> ok
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:receiver_mc_unavailable/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_receiver_mc_unavailable(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:receiver_mc_unavailable(Pid, Eid) of
-        _Whatever ->
-            ok
-    end.
-
-    
-%%%
-% @spec callback_transmitter_mc_unavailable(State) -> ok
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:transmitter_mc_unavailable/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transmitter_mc_unavailable(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transmitter_mc_unavailable(Pid, Eid) of
-        _Whatever ->
-            ok
-    end.
-
-    
-%%%
-% @spec callback_transceiver_mc_unavailable(State) -> ok
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:transceiver_mc_unavailable/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transceiver_mc_unavailable(State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transceiver_mc_unavailable(Pid, Eid) of
-        _Whatever ->
-            ok
-    end.
-    
-
-%%%
-% @spec callback_receiver_cannot_bind(Error, State) -> ok
-%    Error = term()
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:receiver_cannot_bind/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_receiver_cannot_bind(Error, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:receiver_cannot_bind(Pid, Eid, Error) of
-        _Whatever ->
-            ok
-    end.
-    
-
-%%%
-% @spec callback_transmitter_cannot_bind(Error, State) -> ok
-%    Error = term()
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:transmitter_cannot_bind/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transmitter_cannot_bind(Error, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transmitter_cannot_bind(Pid, Eid, Error) of
-        _Whatever ->
-            ok
-    end.
-   
-
-%%%
-% @spec callback_transceiver_cannot_bind(Error, State) -> ok
-%    Error = term()
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:transceiver_cannot_bind/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_transceiver_cannot_bind(Error, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:transceiver_cannot_bind(Pid, Eid, Error) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_smpp_listen_error(Port, State) -> ok
-%    Port  = int()
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:smpp_listen_error/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_smpp_listen_error(Port, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:smpp_listen_error(Pid, Eid, Port) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_smpp_listen_recovery(Port, State) -> ok
-%    Port  = int()
-%    State = state()
-%
-% @doc Wrapper for CallbackModule:smpp_listen_recovery/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_smpp_listen_recovery(Port, State) ->
-    Mod = State#state.callback_module,
-    Pid = State#state.parent,
-    Eid = State#state.self,
-    case catch Mod:smpp_listen_recovery(Pid, Eid, Port) of
+    case catch Mod:bind_transceiver_resp(Pid, Eid, Resp) of
         _Whatever ->
             ok
     end.
@@ -3193,4 +2897,261 @@ callback_deliver_data_sm(Pdu, State) ->
             {error, ?ESME_RUNKNOWNERR, ParamList};
         _Otherwise ->
             {error, ?ESME_RUNKNOWNERR, []}
+    end.
+
+
+%%%
+% @spec callback_receiver_mc_unbind(State) -> ok | {error, Error}
+%    State = state()
+%    Error = int()
+%
+% @doc Wrapper for CallbackModule:receiver_mc_unbind/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_receiver_mc_unbind(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:receiver_mc_unbind(Pid, Eid) of
+        {error, Error} when integer(Error) ->
+            {error, Error};
+        {error, _Error} ->
+            {error, ?ESME_RUNKNOWNERR};
+        _Otherwise ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_transmitter_mc_unbind(State) -> ok | {error, Error}
+%    State = state()
+%    Error = int()
+%
+% @doc Wrapper for CallbackModule:transmitter_mc_unbind/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transmitter_mc_unbind(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transmitter_mc_unbind(Pid, Eid) of
+        {error, Error} when integer(Error) ->
+            {error, Error};
+        {error, _Error} ->
+            {error, ?ESME_RUNKNOWNERR};
+        _Otherwise ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_transceiver_mc_unbind(State) -> ok | {error, Error}
+%    State = state()
+%    Error = int()
+%
+% @doc Wrapper for CallbackModule:transceiver_mc_unbind/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transceiver_mc_unbind(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transceiver_mc_unbind(Pid, Eid) of
+        {error, Error} when integer(Error) ->
+            {error, Error};
+        {error, _Error} ->
+            {error, ?ESME_RUNKNOWNERR};
+        _Otherwise ->
+            ok
+    end.
+
+    
+%%%
+% @spec callback_receiver_mc_unavailable(State) -> ok
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:receiver_mc_unavailable/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_receiver_mc_unavailable(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:receiver_mc_unavailable(Pid, Eid) of
+        _Whatever ->
+            ok
+    end.
+
+    
+%%%
+% @spec callback_transmitter_mc_unavailable(State) -> ok
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:transmitter_mc_unavailable/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transmitter_mc_unavailable(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transmitter_mc_unavailable(Pid, Eid) of
+        _Whatever ->
+            ok
+    end.
+
+    
+%%%
+% @spec callback_transceiver_mc_unavailable(State) -> ok
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:transceiver_mc_unavailable/2.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_transceiver_mc_unavailable(State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:transceiver_mc_unavailable(Pid, Eid) of
+        _Whatever ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_smpp_listen_error(Port, State) -> ok
+%    Port  = int()
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:smpp_listen_error/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_smpp_listen_error(Port, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:smpp_listen_error(Pid, Eid, Port) of
+        _Whatever ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_smpp_listen_recovery(Port, State) -> ok
+%    Port  = int()
+%    State = state()
+%
+% @doc Wrapper for CallbackModule:smpp_listen_recovery/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_smpp_listen_recovery(Port, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:smpp_listen_recovery(Pid, Eid, Port) of
+        _Whatever ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_unbind_receiver_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
+%    Error   = int()
+%    State   = state()
+%
+% @doc Wrapper for CallbackModule:unbind_receiver_resp/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_unbind_receiver_resp(Resp, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:unbind_receiver_resp(Pid, Eid, Resp) of
+        _Whatever ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_unbind_transmitter_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
+%    Error   = int()
+%    State   = state()
+%
+% @doc Wrapper for CallbackModule:unbind_transmitter_resp/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_unbind_transmitter_resp(Resp, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:unbind_transmitter_resp(Pid, Eid, Resp) of
+        _Whatever ->
+            ok
+    end.
+
+
+%%%
+% @spec callback_unbind_transceiver_resp(Resp, State) -> ok
+%    Resp    = {ok, PduResp} | {error, Error}
+%    PduResp = pdu()
+%    Error   = int()
+%    State   = state()
+%
+% @doc Wrapper for CallbackModule:unbind_transceiver_resp/3.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+callback_unbind_transceiver_resp(Resp, State) ->
+    Mod = State#state.callback_module,
+    Pid = State#state.parent,
+    Eid = State#state.self,
+    case catch Mod:unbind_transceiver_resp(Pid, Eid, Resp) of
+        _Whatever ->
+            ok
     end.

@@ -1,0 +1,274 @@
+                                README
+
+
+Developing SMS based applications with OSERL
+--------------------------------------------
+
+This sections shows how to implement SMS based applications with the
+Open SMPP Erlang Library. 
+
+Even if you don't have any prior experience with it, I strongly recommend 
+you considering erlang as the programming language for the development of 
+your ESME/MC or RE.
+
+If you are reluctant to experience with a new (and better) development 
+environment, you may want to consider using OSERL anyway.  Erlang has 
+mechanisms to talk to other languages such us C or java.
+
+Examples below only apply to erlang development.
+
+
+How to implement an ESME with OSERL
+-----------------------------------
+
+Implementing a robust ESME (External Short Message Entity) using OSERL is 
+quite easy.
+
+A generic ESME is provided by OSERL as a behavior.  This behavior, called
+gen_esme, takes care of most of the cumbersome details associated to an ESME 
+implementation, such us timers, error checking/responses, link enquires, PDU 
+sequencing, recovering/reconnection strategies and so forth.
+
+By using this behavior, developers only need to implement those callbacks,
+exported on the gen_esme module, that are relevant to the particular service 
+their ESME is intended to offer.
+
+A typical ESME implementation requires at least the following functions to
+be implemented (you may call your start/stop functions as you wish).
+
+  * start_link function.  Starts up the ESME and binds to the MC.
+
+    This function must issue a call to gen_esme:start_link/2 or
+    gen_esme:start_link/3 to start the ESME, and then binds to the MC as a 
+    transceiver, transmitter or/and receiver by means of the appropriate bind 
+    functions: gen_esme:bind_transceiver/2, gen_esme:bind_transceiver/3,
+    gen_esme:bind_transmitter/2, gen_esme:bind_transmitter/3,
+    gen_esme:bind_receiver/2, gen_esme:bind_receiver/3.
+
+  * stop function.  Unbinds from the MC and cleanly stops the ESME.
+
+    Inside the body of this function, the appropriate unbind operation(s)
+    must be accomplished.  Using the corresponding functions to those for
+	binding at startup: gen_esme:unbind_transceiver/1,
+    gen_esme:unbind_transmitter/1, gen_esme:unbind_receiver/1.
+    Once unbounded from the MC, the ESME must be cleanly stopped by calling
+	gen_esme:stop/1.
+
+After the start/stop sequences are defined, developers should implement the
+callbacks their ESME is going to take care of.  Leaving a callback undefined
+retains the default behavior, which should be OK if that callback doesn't need 
+to be handled by that particular ESME implementation. 
+
+For example, if we want our ESME to perform some additional operations 
+when the connection to the MC goes down, by default <a href="gen_esme.html">
+gen_esme behavior will try to rebind until the MC becomes again reachable, 
+we should implement the gen_esme:transceiver_mc_unavailable/4, 
+receiver_mc_unavailable/4 or/and the transmitter_mc_unavailable/4 callbacks as 
+needed.
+
+Most of the callbacks are used by the gen_esme behavior to notify different 
+events:  The other peer unbinds, the connection to the MC is lost...  Other 
+should be implemented in order to handle SMPP operations such us deliver_sm, 
+data_sm or alert_notification.  These operation callbacks receive the 
+associated PDU as an argument.  Only correct PDUs can trigger these callbacks. 
+If a PDU can not be successfully decoded, the appropriate error is 
+automatically notified to the MC from the session and no callback is forward
+to the ESME.  Developers do not need to care about SMPP errors at all, they 
+are just responsible for implementing the logic associated to those operations 
+for their particular ESME.  PDUs are received by callbacks as dictionaries, 
+thus their parameters are easily accessible by name.  See below for further 
+details.
+
+Section Sample echo ESME shows a complete example of an echo ESME 
+implementation using OSERL.  This example may be also found under doc/examples/
+in OSERL's directory structure.
+
+Please refer to gen_esme documentation for a detailed information about 
+functions and callbacks exported by this behavior.
+
+
+Sample echo ESME
+----------------
+
+Code below shows a complete working implementation of an ESME 
+providing an echo service.  This service returns received message to the 
+caller.
+
+
+%%%
+% @doc Echo ESME.
+%
+% <p>A complete echo ESME.</p>
+%
+% @copyright 2003 Enrique Marcote Peña
+% @author Enrique Marcote Peña <mpquique@udc.es%gt;
+%         [http://www.des.udc.es/~mpquique/]
+% @version 1.0, {18 Jul 2003} 22:37:35.
+% @end
+%%
+-module(echo_esme).
+
+-behaviour(gen_esme).
+
+%%%-------------------------------------------------------------------
+% Include files
+%%--------------------------------------------------------------------
+-include("gen_esme.hrl").
+
+%%%-------------------------------------------------------------------
+% External exports
+%%--------------------------------------------------------------------
+-export([start_link/5, stop/0]).
+
+%%%-------------------------------------------------------------------
+% Internal exports
+%%--------------------------------------------------------------------
+-export([]).
+
+%%%-------------------------------------------------------------------
+% Internal gen_esme exports
+%%--------------------------------------------------------------------
+-export([deliver_sm/3, deliver_data_sm/3]).
+
+%%%-------------------------------------------------------------------
+% Macros
+%%--------------------------------------------------------------------
+
+%%%-------------------------------------------------------------------
+% Records
+%%--------------------------------------------------------------------
+
+%%%===================================================================
+% External functions
+%%====================================================================
+%%%
+% @spec start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -> ok
+%    SystemId = string()
+%    Password = string()
+%    AddrRange = string()
+%    SourceAddr = string()
+%    McAddr = string() | atom() | ip_address()
+%
+% @doc Starts the echo ESME and binds as a receiver and transmitter to McAddr.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
+    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+    case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
+        {ok, Eid} ->
+            gen_esme:bind_receiver(echo_esme, McAddr),
+            gen_esme:bind_transmitter(echo_esme, McAddr),
+            {ok, Eid};
+        Error ->
+            Error
+    end.
+
+
+%%%
+% @spec stop() -> ok
+%
+% @doc Unbinds and stops the echo ESME.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+stop() ->
+    gen_esme:unbind_receiver(echo_esme),
+    gen_esme:unbind_transmitter(echo_esme),
+    gen_esme:stop(echo_esme).
+
+
+%%%===================================================================
+% ESME functions
+%%====================================================================
+%%%
+% @spec deliver_sm(Pid, Eid, Pdu) -> Result
+%    Pid        = pid()
+%    Eid        = pid()
+%    Pdu        = pdu()
+%    Result     = {ok, ParamList} | {error, Error, ParamList}
+%    ParamList  = [{ParamName, ParamValue}]
+%    ParamName  = atom()
+%    ParamValue = term()
+%
+% @doc Short messages delivered by the ESME via this callback are enclosed
+% inside a deliver_sm PDU.
+%
+% <p>The <tt>ParamList</tt> included in the response is used to construct
+% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+% desired command_status error code.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
+% </p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+deliver_sm(_Pid, Eid, Pdu) -> 
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    spawn(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+
+
+%%%
+% @spec deliver_data_sm(Pid, Eid, Pdu) -> Result
+%    Pid        = pid()
+%    Eid        = pid()
+%    Pdu        = pdu()
+%    Result     = {ok, ParamList} | {error, Error, ParamList}
+%    ParamList  = [{ParamName, ParamValue}]
+%    ParamName  = atom()
+%    ParamValue = term()
+%
+% @doc Short messages delivered by the ESME via this callback are enclosed
+% inside a data_sm PDU.
+%
+% <p>The <tt>ParamList</tt> included in the response is used to construct
+% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+% desired command_status error code.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
+% </p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+deliver_data_sm(_Pid, Eid, Pdu) -> 
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    spawn(fun() -> gen_esme:data_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+</pre>
+
+This server handles deliver_sm and data_sm deliveries.  The
+rest of the callbacks are left undefined, thus default behaviour is preserved.
+
+
+
+How to implement a MC with OSERL
+--------------------------------
+
+Since current version of the library doesn't provide a MC behavior yet, MC
+developing requires a greater effort at the moment.
+
+Proposed approach is to implement a generic MC session behavior, taking the
+ESME session behavior as a reference, and then implement a generic MC behavior 
+on top of it, just like gen_esme relies on the gen_esme_session behavior.
+
+You could also contribute with these behaviors to the project, I'll be glad 
+to include them on the next release.

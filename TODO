@@ -1,0 +1,58 @@
+                                    TODO
+
+
+Version 0.2
+-----------
+
+- In smpp_base.hrl
+
+	-define(SM_DEFAULT_MSG_ID_DOMAIN,   ?INTEGER(1)).
+
+  should be
+
+	-define(SM_DEFAULT_MSG_ID_DOMAIN,   ?RANGE_INTEGER(1, 1, 255)).
+
+
+- Remove empty base type. Redefine it as ?UNION([])
+
+
+- Review the timeout event on get_esme_session
+
+
+- Don't like current PDU packing/unpacking mechanism using the pdu_type/1 
+  function.
+
+  Consider creating a pack/unpack function for each PDU type. Call the 
+  appropriate pack/unpack function by means of the command_id and remove 
+  pdu_type/1 function.
+
+
+- Put the command_id back into the PDU descriptor.
+
+
+- Remove pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Use dicctionary
+  API instead.
+
+  Move these functions to operation.erl
+
+    get_parameter/2
+    set_parameter/3
+
+  Do not use pdu_syntax beyond operation API.
+
+
+Version 1.0
+-----------
+
+- Implement a gen_mc_session behavior.
+
+- Implement a gen_mc behavior.
+
+
+Version 2.0
+-----------
+
+- Implement a gen_re behavior.
+
+
+

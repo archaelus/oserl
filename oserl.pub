@@ -1,0 +1,12 @@
+{name, "oserl"}.
+{vsn, {0,1}}.
+{summary, "SMPP v5.0 implementation"}.
+{author, "Enrique Marcote Peña", "mpquique@udc.es", "030627"}.
+{keywords, ["SMPP", "SMS", "ESME", "MC", "RE"]}.
+{needs, []}.
+{abstract,"Short Message Peer to Peer Protocol implementation."}.
+
+
+
+ 
+ 

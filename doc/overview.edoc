@@ -1,0 +1,1600 @@
+
+	OSERL overview page
+
+@author Enrique Marcote Peña <mpquique@udc.es> [http://www.des.udc.es/~mpquique/]
+@copyright 2003 Enrique Marcote Peña
+@version 0.1 alpha
+
+@doc OSERL is an Erlang implementation of the Short Message Peer to Peer 
+Protocol version 5.0.
+
+<p>As a guideline, some comments include references to the specific section
+numbers on [SMPP 5.0].</p>
+
+
+<h2><a name="contents">Contents</a></h2>
+<ol>
+  <li><a href="#intro">Introduction</a></li>
+  <li><a href="#overview">SMPP protocol implementation overview</a></li>
+  <li><a href="#howto">Developing SMS based applications with OSERL</a>
+    <ol>
+      <li><a href="#howto_esme">How to implement an ESME with OSERL</a>
+        <ol>
+          <li><a href="#echo">Sample echo ESME</a></li>
+        </ol>
+      </li>
+      <li><a href="#howto_mc">How to implement a MC with OSERL</a></li>
+      <li><a href="#fit">Fitting OSERL to your needs</a>
+        <ol>
+          <li><a href="#smpp_pdu">smpp_pdu.hrl</a></li>
+          <li><a href="#smpp_param">smpp_param.hrl</a></li>
+          <li><a href="#smpp_base">smpp_base.hrl</a></li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li><a href="#storage">PDU data storage</a></li>
+  <li><a href="#translation">Translating the SMPP specification</a></li>
+  <li><a href="#base">Base Syntax</a></li>
+  <li><a href="#basemacros">Base Syntax Macros</a></li>
+  <li><a href="#param">Param Syntax</a></li>
+  <li><a href="#parammacros">Param Syntax Macros</a></li>
+  <li><a href="#pdu">PDU Syntax</a></li>
+  <li><a href="#pdumacros">PDU Syntax Macros</a></li>
+  <li><a href="#behaviours">Behaviours</a></li>
+  <li><a href="#pics">PICS Proforma</a></li>
+  <li><a href="#todo">TODO</a></li>
+  <li><a href="#references">References</a></li>
+</ol>
+
+
+<h2><a name="intro">Introduction</a></h2>
+
+<p>Short Message Peer to Peer (SMPP) protocol [SMPP 5.0] is an open, 
+industry standard designed to provide a flexible data communications interface 
+for the transfer of short message data between External Short Message Entities 
+(ESME), Routing Entities (RE) and Message Centers (MC).</p>
+
+<p>A great amount of the effort required for the development of any of the 
+above mention entities is generally spent on a partial implementation of the 
+SMPP protocol.  It is rare to find an implementation that covers every aspect 
+of the SMPP protocol as OSERL does.</p>
+
+<p>OSERL (open SMPP erlang library) comprises the <i>entire specification</i> 
+of the recently released SMPP version 5.0 (February 20th, 2003).  Moreover, 
+every forward and backward compatibility guidelines were adopted at the design 
+stage, what makes the resulting library easy to maintain and update to any
+future or previous version of the protocol.</p>
+
+
+<h2><a name="overview">SMPP protocol implementation overview</a></h2>
+
+<p>The SMPP protocol defines a set of operations, each one taking the form of
+a request and response PDU (Protocol Data Unit).</p>
+
+<p>The first challenge to face on the implementation was to develop packing 
+and unpacking functions for the command PDUs.  The approach was to translate 
+the entire SMPP protocol specification to erlang terms using the syntax 
+notation described next.  Then, we only needed to create the encoding and 
+decoding functions for the primitive types used on our notation, and the whole 
+problem of the SMPP PDU packing/unpacking was solved.</p>
+
+<p>Notice that whenever a new version of the SMPP protocol gets released, 
+we'll just need to update our "static" translation of the protocol to get 
+support for new parameters and PDUs.  Packing and unpacking functions
+won't need to be modified.</p>
+
+<p>Besides the PDU format, encoding (decoding) mechanisms and associated error 
+codes, the SMPP protocol specification defines how a well behaved SMPP based 
+application should be implemented.  Even the behaviour of every ESME (RE or MC)
+is predefined by the protocol specification in many senses, nowadays every 
+developer must program these dynamic aspects of the protocol on its own.  
+OSERL provides a <a href="#behaviours">generic ESME</a>  implementation that 
+transparently handles just about every feature of the SMPP protocol that 
+leaves room for automation, and there are many of them, as we will see 
+<a href="#behaviours">later on</a>.</p>
+
+<p>SMPP version 5.0 declares 31 PDUs for 19 operations.  All SMPP PDUs 
+comprise of organized set of parameters.  Those parameters are defined by 
+means of a primitive type:  <i>Integer</i>, <i>C-Octet String</i> and 
+<i>Octet String</i>.  As well as the primitive type, every parameter has a 
+<i>name</i>, a <i>domain</i> (set of permitted values of the primitive 
+type) and optionally an associated <i>error code</i>.  Furthermore, there is a 
+kind of parameters called TLVs (Tagged Length Value), whose definition also 
+involves a <i>tag</i> (identifier), a set of <i>reserved values</i> (of the 
+primitive type) and sometimes, a <i>default value</i>.</p>
+
+<p>We divided the syntax notation into three layers; <a href="#base">base 
+syntax</a>, <a href="#param">param syntax</a> and <a href="#pdu">PDU syntax</a>
+layer.  The first one is used to define the erlang data structures for the 
+representation of the SMPP primitive types, domains and reserved values.  The 
+parameter syntax provides an erlang notation to complete the field  definitions
+(we'll use field and parameter interchangeable), adding to the primitive 
+types of the underlying layer: parameter names, error codes and default values.
+On top of the parameter syntax, a PDU syntax was built, this upper layer 
+defines the structure for a PDU descriptor.</p>
+
+<p>Each syntax layer has its own encoding and decoding functions.  The PDU 
+packing function relies on the parameter encoder to translate to binary format 
+every individual field of a PDU.  In the same way, the parameter syntax layer 
+doesn't know how encode a primitive value and again, must rely on the base 
+syntax encoder to do the work.  The same process applies  for the unpacking 
+mechanism.</p>
+
+<table width="100%" border="0" cellpadding="0">
+  <tr> 
+    <td width="70%" valign="top" align="center">
+      <table width="100%" border="1" cellpadding="2">
+        <tr> 
+          <th colspan="2" valign="middle" align="center">operation</th>
+        </tr>
+        <tr> 
+          <th valign="middle" align="center">PDU datatypes</th>
+          <th valign="middle" align="center">PDU pack/unpack</th>
+        </tr>
+        <tr> 
+          <th valign="middle" align="center">Param datatypes</th>
+          <th valign="middle" align="center">Param encoding/decoding</th>
+        </tr>
+        <tr> 
+          <th valign="middle" align="center">Base datatypes</th>
+          <th valign="middle" align="center">Base encoding/decoding</th>
+        </tr>
+      </table>
+    </td>
+    <td width="30%" valign="top" align="center">
+      <table width="100%" border="0" cellpadding="3">
+        <tr> 
+          <th align="left">&#160;</th>
+        </tr>
+        <tr> 
+          <th align="left">PDU syntax</th>
+        </tr>
+        <tr> 
+          <th align="left">Param syntax</th>
+        </tr>
+        <tr> 
+          <th align="left">Base syntax</th>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<p>On this table we find the SMPP <a href="operation.html">operation</a> 
+module on top of the PDU syntax.  This module hides the type descriptors of 
+the SMPP specification to higher layers.</p>
+
+
+
+<h2><a name="howto">Developing SMS based applications with OSERL</a></h2>
+
+This sections shows how to implement SMS based applications with the
+Open SMPP Erlang Library. 
+
+<p>Even if you don't have any prior experience with it, I strongly recommend 
+you considering erlang as the programming language for the development of 
+your ESME/MC or RE.</p>
+
+<p>If you are reluctant to experience with a new (and better) development 
+environment, you may want to consider using OSERL anyway.  Erlang has 
+<a href="http://www.erlang.org/doc/r9c/doc/tutorial/part_frame.html">mechanisms
+to talk to other languages</a> such us C or java.</p>
+
+<p>Examples below only apply to erlang development.</p>
+
+
+<h3><a name="howto_esme">How to implement an ESME with OSERL</a></h3>
+
+Implementing a robust ESME (External Short Message Entity) using OSERL is 
+quite easy.
+
+<p>A generic ESME is provided by OSERL as a behavior.  This behavior, called
+<a href="gen_esme.html">gen_esme</a>, takes care of most of the cumbersome
+details associated to an ESME implementation, such us timers, error 
+checking/responses, link enquires, PDU sequencing, recovering/reconnection 
+strategies and so forth.</p>
+
+<p>By using this behavior, developers only need to implement those callbacks,
+exported on the <a href="gen_esme.html">gen_esme</a> module, that are relevant 
+to the particular service their ESME is intended to offer.</p>
+
+<p>A typical ESME implementation requires at least the following functions to
+be implemented (you may call your start/stop functions as you wish).</p>
+<ul>
+  <li><b>start_link</b> function.  Starts up the ESME and binds to the MC.
+
+    <p>This function must issue a call to 
+    <a href="gen_esme.html#start_link-2">gen_esme:start_link/2</a> or
+    <a href="gen_esme.html#start_link-3">gen_esme:start_link/3</a> to start
+    the ESME, and then binds to the MC as a 
+    <a href="gen_esme.html#bind_transceiver-3">transceiver</a>,
+    <a href="gen_esme.html#bind_transmitter-3">transmitter</a> or/and
+    <a href="gen_esme.html#bind_receiver-3">receiver</a> by means of the
+	appropriate bind functions: 
+    <a href="gen_esme.html#bind_transceiver-2">gen_esme:bind_transceiver/2</a>,
+    <a href="gen_esme.html#bind_transceiver-3">gen_esme:bind_transceiver/3</a>,
+    <a href="gen_esme.html#bind_transmitter-2">gen_esme:bind_transmitter/2</a>,
+    <a href="gen_esme.html#bind_transmitter-3">gen_esme:bind_transmitter/3</a>,
+    <a href="gen_esme.html#bind_receiver-2">gen_esme:bind_receiver/2</a>,
+    <a href="gen_esme.html#bind_receiver-3">gen_esme:bind_receiver/3</a>.</p>
+  </li>
+  <li><b>stop</b> function.  Unbinds from the MC and cleanly stops the ESME.
+
+    <p>Inside the body of this function, the appropriate unbind operation(s)
+    must be accomplished.  Using the corresponding functions to those for
+	binding at startup: 
+    <a href="gen_esme.html#unbind_transceiver-1">gen_esme:unbind_transceiver/1
+    </a>,
+    <a href="gen_esme.html#unbind_transmitter-1">gen_esme:unbind_transmitter/1
+    </a>,
+    <a href="gen_esme.html#unbind_receiver-1">gen_esme:unbind_receiver/1</a>.
+    Once unbounded from the MC, the ESME must be cleanly stopped by calling
+	<a href="gen_esme.html#stop-1">gen_esme:stop/1</a>.</p>
+  </li>
+</ul>
+
+<p>After the start/stop sequences are defined, developers should implement the
+callbacks their ESME is going to take care of.  Leaving a callback undefined
+retains the default behavior, which should be OK if that callback doesn't need 
+to be handled by that particular ESME implementation.</p> 
+
+<p>For example, if we want our ESME to perform some additional operations 
+when the connection to the MC goes down, by default <a href="gen_esme.html">
+gen_esme</a> behavior will try to rebind until the MC becomes again reachable, 
+we should implement the <a href="gen_esme.html#transceiver_mc_unavailable-4">
+gen_esme:transceiver_mc_unavailable/4</a>, 
+<a href="gen_esme.html#receiver_mc_unavailable-4">receiver_mc_unavailable/4
+</a> or/and the <a href="gen_esme.html#transmitter_mc_unavailable-4">
+transmitter_mc_unavailable/4</a> callbacks as needed.</p>
+
+<p>Most of the callbacks are used by the <a href="gen_esme.html">gen_esme</a>
+behavior to notify different events:  The other peer unbinds, the connection
+to the MC is lost...  Other should be implemented in order to handle SMPP
+operations such us <a href="gen_esme.html#deliver_sm-3">deliver_sm</a>, 
+<a href="gen_esme.html#deliver_data_sm-3">data_sm</a> or
+<a href="gen_esme.html#alert_notification-3">alert_notification</a>.  These
+operation callbacks receive the associated PDU as an argument.  Only correct 
+PDUs can trigger these callbacks.  If a PDU can not be successfully decoded, 
+the appropriate error is automatically notified to the MC from the session and 
+<i>no callback is forward</i> to the ESME.  Developers do not need to care 
+about SMPP errors at all, they are just responsible for implementing the logic 
+associated to those operations for their particular ESME.  PDUs are received 
+by callbacks as <a href="http://www.erlang.se/doc/doc-5.0.1/lib/stdlib-1.9.1/doc/">dictionaries</a>, thus their parameters are easily accessible by name.  See
+<a href="#storage">below</a> for further details.</p>
+
+<p>Section <a href="#echo">Sample echo ESME</a> shows a complete 
+example of an echo ESME implementation using OSERL.  This example may be also 
+found under <tt>doc/examples/</tt> in OSERL's directory structure.</p>
+
+<p>Please refer to <a href="gen_esme.html">gen_esme</a> documentation for
+a detailed information about functions and callbacks exported by this
+behavior.</p>
+
+
+<h4><a name="echo">Sample echo ESME</a></h4>
+
+<p>Code below shows a <i>complete</i> working implementation of an ESME 
+providing an echo service.  This service returns received message to the 
+caller.</p>
+
+<pre>
+%%%
+% @doc Echo ESME.
+%
+% &lt;p>A complete echo ESME.&lt;/p>
+%
+% @copyright 2003 Enrique Marcote Peña
+% @author Enrique Marcote Peña &lt;mpquique@udc.es%gt;
+%         [http://www.des.udc.es/~mpquique/]
+% @version 1.0, {18 Jul 2003} 22:37:35.
+% @end
+%%
+-module(echo_esme).
+
+-behaviour(gen_esme).
+
+%%%-------------------------------------------------------------------
+% Include files
+%%--------------------------------------------------------------------
+-include("gen_esme.hrl").
+
+%%%-------------------------------------------------------------------
+% External exports
+%%--------------------------------------------------------------------
+-export([start_link/5, stop/0]).
+
+%%%-------------------------------------------------------------------
+% Internal exports
+%%--------------------------------------------------------------------
+-export([]).
+
+%%%-------------------------------------------------------------------
+% Internal gen_esme exports
+%%--------------------------------------------------------------------
+-export([deliver_sm/3, deliver_data_sm/3]).
+
+%%%-------------------------------------------------------------------
+% Macros
+%%--------------------------------------------------------------------
+
+%%%-------------------------------------------------------------------
+% Records
+%%--------------------------------------------------------------------
+
+%%%===================================================================
+% External functions
+%%====================================================================
+%%%
+% @spec start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -> ok
+%    SystemId = string()
+%    Password = string()
+%    AddrRange = string()
+%    SourceAddr = string()
+%    McAddr = string() | atom() | ip_address()
+%
+% @doc Starts the echo ESME and binds as a receiver and transmitter to McAddr.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
+    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+    case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
+        {ok, Eid} ->
+            gen_esme:bind_receiver(echo_esme, McAddr),
+            gen_esme:bind_transmitter(echo_esme, McAddr),
+            {ok, Eid};
+        Error ->
+            Error
+    end.
+
+
+%%%
+% @spec stop() -> ok
+%
+% @doc Unbinds and stops the echo ESME.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+stop() ->
+    gen_esme:unbind_receiver(echo_esme),
+    gen_esme:unbind_transmitter(echo_esme),
+    gen_esme:stop(echo_esme).
+
+
+%%%===================================================================
+% ESME functions
+%%====================================================================
+%%%
+% @spec deliver_sm(Pid, Eid, Pdu) -> Result
+%    Pid        = pid()
+%    Eid        = pid()
+%    Pdu        = pdu()
+%    Result     = {ok, ParamList} | {error, Error, ParamList}
+%    ParamList  = [{ParamName, ParamValue}]
+%    ParamName  = atom()
+%    ParamValue = term()
+%
+% @doc Short messages delivered by the ESME via this callback are enclosed
+% inside a deliver_sm PDU.
+%
+% &lt;p>The &lt;tt>ParamList&lt;/tt> included in the response is used to construct
+% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term &lt;tt>{error, Error, ParamList}&lt;/tt>, where &lt;tt>Error&lt;/tt> is the
+% desired command_status error code.&lt;/p>
+% 
+% &lt;p>&lt;tt>Pid&lt;/tt> is the ESME's parent id, &lt;tt>Eid&lt;/tt> as the ESME process id.
+% &lt;/p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+deliver_sm(_Pid, Eid, Pdu) -> 
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    spawn(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+
+
+%%%
+% @spec deliver_data_sm(Pid, Eid, Pdu) -> Result
+%    Pid        = pid()
+%    Eid        = pid()
+%    Pdu        = pdu()
+%    Result     = {ok, ParamList} | {error, Error, ParamList}
+%    ParamList  = [{ParamName, ParamValue}]
+%    ParamName  = atom()
+%    ParamValue = term()
+%
+% @doc Short messages delivered by the ESME via this callback are enclosed
+% inside a data_sm PDU.
+%
+% &lt;p>The &lt;tt>ParamList&lt;/tt> included in the response is used to construct
+% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
+% be returned by the ESME in the response PDU, the callback should return the
+% term &lt;tt>{error, Error, ParamList}&lt;/tt>, where &lt;tt>Error&lt;/tt> is the
+% desired command_status error code.&lt;/p>
+% 
+% &lt;p>&lt;tt>Pid&lt;/tt> is the ESME's parent id, &lt;tt>Eid&lt;/tt> as the ESME process id.
+% &lt;/p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+deliver_data_sm(_Pid, Eid, Pdu) -> 
+    Dest = sm:reply_address(Pdu),       % source address as response address
+    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    spawn(fun() -> gen_esme:data_sm(Eid, [Mesg|Dest]) end), 
+    {ok, []}.
+</pre>
+
+<p>This server handles <i>deliver_sm</i> and <i>data_sm</i> deliveries.  The
+rest of the callbacks are left undefined, thus default behaviour is preserved.
+</p>
+
+
+<h3><a name="howto_mc">How to implement a MC with OSERL</a></h3>
+
+Since current version of the library doesn't provide a MC behavior yet, MC
+developing requires a greater effort at the moment.
+
+<p>Proposed approach is to implement a generic MC session behavior, taking
+the <a href="gen_esme_session.html">ESME session behavior</a> as a reference,
+and then implement a generic MC behavior on top of it, just like 
+<a href="gen_esme.html">gen_esme</a> relies on the 
+<a href="gen_esme_session.html">gen_esme_session</a> behavior.</p>
+
+<p>You could also contribute with these behaviors to the project, I'll be glad 
+to include them on the next release.</p>
+
+
+<h3><a name="fit">Fitting OSERL to your needs</a></h3>
+
+In order to fit OSERL to your particular needs, you may want to fine tune
+some parameters and/or PDU definitions of the SMPP protocol.
+
+<p>Redefining SMPP PDUs and parameters in OSERL is simple, since OSERL was
+designed with that principle in mind.</p>
+
+<p>There are three header files you should consider, if you want to customize
+the SMPP protocol definitions:</p>
+
+<dl>
+  <dt><a href="#smpp_pdu">smpp_pdu.hrl</a></dt>
+  <dd>PDUs type descriptor.</dd>
+  <dt><a href="#smpp_param">smpp_param.hrl</a></dt>
+  <dd>Standard and TLV parameters descriptor.</dd>
+  <dt><a href="#smpp_base">smpp_base.hrl</a></dt>
+  <dd>Parameters base type.</dd>
+</dl>
+
+<b>Important Note: </b><i>Don't forget to recompile the module
+<a href="operation.html">operation.erl</a> for the changes on any of these 
+files to take effect.</i>
+
+
+<h4><a name="smpp_pdu">smpp_pdu.hrl</a></h4>
+
+This header defines the SMPP PDU Type Declarations.
+
+<p>Macros declaring SMPP PDU definitions and their default values.  Refer 
+to <a href="operation.html">operation.erl</a> to find out how these macros 
+are used.</p>
+
+<p>Every PDU declaration consists of two lists.</p>
+
+<dl>
+  <dt><i>Standard body parameters declaration:</i></dt><dd>A list with the
+    declaration of every standard parameter of the PDU body.  Header 
+    parameters are *not* included on the PDU declaration.  The standard
+    parameters are packed/unpacked in the order specified on this list, thus
+    the order must be the one declared on [SMPP 5.0].
+  </dd>
+  <dt><i>TLV parameters declaration:</i></dt><dd>A list with the declaration
+    of every TLV parameter of the PDU.  
+
+    <p>Programmers may want to comment out, uncomment or even add any 
+    desired TLV in order to fit the needs of a particular implementation.
+    Notice that having declared unused TLVs doesn't do any harm, comment
+    them out or remove'em from the TLV list on the PDU declaration only for
+    efficiency sake.</p>
+  </dd>
+</dl>
+
+<p>Given the following declaration:</p>
+
+<pre>
+-define(BIND_TRANSMITTER_RESP,
+        ?PDU([?SYSTEM_ID],
+             [?CONGESTION_STATE,
+              ?SC_INTERFACE_VERSION])).
+</pre>
+
+<p>A dictionary representing this PDU must have the elements:</p>
+
+<pre>
+[{command_id, ?COMMAND_ID_BIND_TRANSMITTER_RESP},
+ {command_status, CommandStatus},
+ {sequence_number, SequenceNumber},
+ {system_id, SystemId}]
+</pre>
+
+<p>The pair <tt>{system_id, SystemId}</tt> might be ignored if 
+<tt>command_status</tt> is not 0, the following pairs are also optional:</p>
+
+<pre>
+[{congestion_state, CongestionState}, 
+ {sc_interface_version, ScInterfaceVersion}]
+</pre>
+
+<p>Notice that a <tt>command_length</tt> element is not included on the 
+dictionary.</p>
+
+<p>On this header, default values for every PDU are also defined.</p>
+
+<p>Feel free to customize the default value list of any PDU to fit the
+particular needs of your implementation.  Just take care that the
+values are given in the form <tt>{ParamName, ParamValue}</tt>, where
+<tt>ParamName</tt> must be the name given for that particular parameter
+on its type specifier, found in <a href="#smpp_param">smpp_param.hrl</a>.</p>
+
+
+<h4><a name="smpp_param">smpp_param.hrl</a></h4>
+
+SMPP Standard and TLV Parameters descriptor.  These descriptors are defined by 
+means of the base types declared on <a href="#smpp_base">smpp_base</a>,
+and using the syntax defined in <i>param_syntax.hrl</i>.
+
+<p>A parameter descriptor defines the parameter name, base type and error code 
+associated to it.</p>
+
+<p>Feel free to adjust parameter descriptors to your particular needs.</p>
+
+
+<h4><a name="smpp_base">smpp_base.hrl</a></h4>
+
+Base definitions for the SMPP protocol specification.  These definitions use 
+the syntax defined in <i>base_syntax.hrl</i>.
+
+<p>In this header file, parameter base datatypes, domains and reserved values
+are declared.</p>
+
+
+<h2><a name="storage">PDU data storage</a></h2>
+
+PDU data is internally stored as a dictionary.  Dictionaries are defined on 
+erlang's <a href="http://www.erlang.se/doc/doc-5.0.1/lib/stdlib-1.9.1/doc/">stdlib</a>.  Functions <a href="http://www.des.udc.es/~mpquique/oserl/pdu_syntax.html#get_value-2#">pdu_syntax:get_value/2</a> and <a href="http://www.des.udc.es/~mpquique/oserl/pdu_syntax.html#set_value-3#">pdu_syntax:set_value/3</a> may be used to get/set parameters values by name.
+
+<p>The names of the parameters (keys of the PDU dictionary) are those on the 
+SMPP protocol specification.</p>
+
+<p>A PDU is completely defined by the content (the dictionary with the 
+parameter values) and a type descriptor (terms described in the following
+section).  Type descriptors declare the PDU structure, and determines the
+way it must be encoded/decoded.</p>
+
+<p>To successfully encode/decode PDU contents into binary terms, every
+individual parameter value must match the type declared on the PDU descriptor. 
+Users of this library won't need to care about type descriptors though.  The
+<a href="http://www.des.udc.es/~mpquique/oserl/operation.html">operation</a>
+module hides the details to higher layers and transparently handles the
+type descriptors.</p>
+
+
+<h2><a name="translation">Translating the SMPP specification</a></h2>
+
+<p>The erlang terms used to represent the SMPP specification are intended to
+adopt the conventions used on [SMPP 5.0] as much as posible.</p>
+
+<p>The best way to understand the syntax used in OSERL to represent PDU type
+descriptors, and how everything works, is by a complete example.</p>
+
+<p>On page 74, section 4.2.3.2 of the SMPP specification [SMPP 5.0], the
+<i>submit_multi_resp</i> operation PDU is defined as follows:</p>
+
+<table width="100%" border="1" cellpadding="2">
+<caption>submit_multi_resp Syntax</caption>
+  <tr style="color: white; background-color : black"> 
+    <th width="50%" valign="middle" align="center">Field Name</th>
+    <th width="25%" valign="middle" align="center">Size Octets</th>
+    <th width="25%" valign="middle" align="center">Type</th>
+  </tr>
+  <tr style="color: white; background-color : grey">
+    <td width="50%" valign="middle" align="center">command_length</td>
+    <td width="25%" valign="middle" align="center">4</td>
+    <td width="25%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr style="color: white; background-color : grey">
+    <td width="50%" valign="middle" align="center">command_id</td>
+    <td width="25%" valign="middle" align="center">4</td>
+    <td width="25%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr style="color: white; background-color : grey">
+    <td width="50%" valign="middle" align="center">command_status</td>
+    <td width="25%" valign="middle" align="center">4</td>
+    <td width="25%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr style="color: white; background-color : grey">
+    <td width="50%" valign="middle" align="center">sequence_number</td>
+    <td width="25%" valign="middle" align="center">4</td>
+    <td width="25%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr> 
+    <td width="50%" valign="middle" align="center">message_id</td>
+    <td width="25%" valign="middle" align="center">Var. max 65</td>
+    <td width="25%" valign="middle" align="center">C-Octet String</td>
+  </tr>
+  <tr> 
+    <td width="50%" valign="middle" align="center">no_unsuccess</td>
+    <td width="25%" valign="middle" align="center">1</td>
+    <td width="25%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr> 
+    <td width="50%" valign="middle" align="center">unsuccess_sme</td>
+    <td width="25%" valign="middle" align="center">Var. max 27</td>
+    <td width="25%" valign="middle" align="center">Composite</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="middle" align="center">
+      <table width="100%" border="0" cellpadding="2">
+        <tr>
+          <td width="100%" align="center">dest_addr_ton</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">dest_addr_npi</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">destination_addr</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">error_status_code</td>
+        </tr>
+      </table>
+    </td>
+    <td width="25%" valign="middle" align="center">
+      <table width="100%" border="0" cellpadding="2">
+        <tr>
+          <td width="100%" align="center">1</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">1</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">Var. max 21</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">4</td>
+        </tr>
+      </table>
+    </td>
+    <td width="25%" valign="middle" align="center">
+      <table width="100%" border="0" cellpadding="2">
+        <tr>
+          <td width="100%" align="center">Integer</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">Integer</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">C-Octet String</td>
+        </tr>
+        <tr>
+          <td width="100%" align="center">Integer</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td width="50%" valign="middle" align="center">
+      Message Submission Response TLVs
+    </td>
+    <td width="25%" valign="middle" align="center">Var</td>
+    <td width="25%" valign="middle" align="center">TLV</td>
+  </tr>
+</table>
+
+<p><tt>unsuccess_sme</tt> is a composite field containing an SME address 
+(<tt>dest_addr_ton</tt>, <tt>dest_addr_npi</tt> and <tt>destination_addr</tt>) 
+and an error code (<tt>error_status_code</tt>).  Additionally the field can be 
+encoded multiple times according to the value specified in the 
+<tt>no_unsuccess</tt> field.</p>
+
+<table width="100%" border="1" cellpadding="2">
+<caption>Message Submission Response TLVs</caption>
+  <tr style="color: white; background-color : black"> 
+    <th width="40%" valign="middle" align="center">TLV Name</th>
+    <th width="20%" valign="middle" align="center">Tag</th>
+    <th width="20%" valign="middle" align="center">Size Octets</th>
+    <th width="20%" valign="middle" align="center">Type</th>
+  </tr>
+  <tr>
+    <td width="40%" valign="middle" align="center">
+      additional_status_info_text
+    </td>
+    <td width="20%" valign="middle" align="center">0x001D</td>
+    <td width="20%" valign="middle" align="center">1-256</td>
+    <td width="20%" valign="middle" align="center">C-Octet String</td>
+  </tr>
+  <tr>
+    <td width="30%" valign="middle" align="center">delivery_failure_reason</td>
+    <td width="20%" valign="middle" align="center">0x0425</td>
+    <td width="20%" valign="middle" align="center">1</td>
+    <td width="20%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr>
+    <td width="30%" valign="middle" align="center">dpf_result</td>
+    <td width="20%" valign="middle" align="center">0x0420</td>
+    <td width="20%" valign="middle" align="center">1</td>
+    <td width="20%" valign="middle" align="center">Integer</td>
+  </tr>
+  <tr>
+    <td width="30%" valign="middle" align="center">network_error_code</td>
+    <td width="20%" valign="middle" align="center">0x0423</td>
+    <td width="20%" valign="middle" align="center">3</td>
+    <td width="20%" valign="middle" align="center">Octet String</td>
+  </tr>
+</table>
+
+<p>This PDU type is internaly represented by the following descriptor:</p>
+
+<pre>
+-define(SUBMIT_MULTI_RESP,
+        ?PDU([?MESSAGE_ID, 
+              ?UNSUCCESS_SME],
+             [?ADDITIONAL_STATUS_INFO_TEXT,
+              ?CONGESTION_STATE,
+              ?DELIVERY_FAILURE_REASON,
+              ?DPF_RESULT,
+              ?NETWORK_ERROR_CODE])).
+</pre>
+
+<p>This macro definition can be found in the header file 
+<b>smpp_pdu.hrl</b></p>
+
+<p>Since the format of the header is common to every PDU type, it doesn't need
+to be declared.  Although is a bit surprising to find out that not even the 
+<tt>command_id</tt> is included in this descriptor.  Let us see the 
+reason.</p>
+
+<p>The procedure for decoding a PDU could be roughly described by these 
+three steps:</p>
+
+<ol>
+  <li>Decode the header of the PDU and get the <tt>command_id</tt>.</li>
+  <li>Find the PDU descriptor associatted to that <tt>command_id</tt>.</li>
+  <li>Use the PDU descriptor to decode the body of the PDU.</li>
+</ol>
+
+<p>Thus a PDU decoding function needs, during step 2, access to the entire 
+list of SMPP PDU descriptors.  In a first approach, the <tt>command_ids</tt> 
+were included inside each PDU descriptor, but then the entire list of 
+descriptors ought to be given to the decoding function as a parameter.  This 
+list was too heavy and the resulting decoding process slow (too slow...
+useless).</p>
+
+<p>To speed up the process the <tt>command_id</tt> was separated from the
+descriptor and a new function (<a name="operation.html#pdu_type-1">
+operation:pdu_type/1</a>) defined.  Now the decoding process iterates 
+through the list of <tt>command_ids</tt> and only when a math occurs, the
+corresponding PDU descriptor is taken with <tt>pdu_type(command_id)</tt>.</p>
+
+<p>The first approach was more elegant but unfortunately cannot be considered 
+until I find a better way to exploit it.</p>
+
+<p>Recalling the internal representation of the PDU, every individual field is 
+defined in <b>smpp_param.hrl</b> as:</p>
+
+<pre>
+-define(MESSAGE_ID, 
+        ?STANDARD(message_id, 
+                  ?MESSAGE_ID_DOMAIN, 
+                  ?ESME_RINVMSGID)).
+
+-define(UNSUCCESS_SME, 
+        ?STANDARD(unsuccess_sme, 
+                  ?UNSUCCESS_SME_DOMAIN, 
+                  ?ESME_RINVDSTADR)).
+
+-define(ADDITIONAL_STATUS_INFO_TEXT, 
+        ?OPTIONAL_TLV(additional_status_info_text,
+                      16#001D, 
+                      ?ADDITIONAL_STATUS_INFO_TEXT_DOMAIN, 
+                      ?ADDITIONAL_STATUS_INFO_TEXT_RESERVED, 
+                      undefined, 
+                      undefined)).
+
+-define(CONGESTION_STATE, 
+        ?OPTIONAL_TLV(congestion_state,
+                      16#0428, 
+                      ?CONGESTION_STATE_DOMAIN, 
+                      ?CONGESTION_STATE_RESERVED, 
+                      undefined, 
+                      undefined)).
+
+-define(DELIVERY_FAILURE_REASON, 
+        ?OPTIONAL_TLV(delivery_failure_reason,
+                      16#0425, 
+                      ?DELIVERY_FAILURE_REASON_DOMAIN, 
+                      ?DELIVERY_FAILURE_REASON_RESERVED, 
+                      undefined, 
+                      undefined)).
+
+-define(DPF_RESULT, 
+        ?OPTIONAL_TLV(dpf_result,
+                      16#0420, 
+                      ?DPF_RESULT_DOMAIN, 
+                      ?DPF_RESULT_RESERVED, 
+                      ?DPF_RESULT_NOT_SET, 
+                      undefined)).
+
+-define(NETWORK_ERROR_CODE, 
+        ?OPTIONAL_TLV(network_error_code,
+                      16#0423, 
+                      ?NETWORK_ERROR_CODE_DOMAIN, 
+                      ?NETWORK_ERROR_CODE_RESERVED, 
+                      undefined, 
+                      undefined)).
+</pre>
+
+<p>Domains and reserved values are defined in <b>smpp_base.hrl</b>.</p>
+
+<pre>
+%%%
+% message_id
+%%
+-define(MESSAGE_ID_DOMAIN, ?VAR_C_OCTET_STRING(65)).
+
+%%%
+% unsuccess_sme
+%%
+-define(UNSUCCESS_SME_ITEM_DOMAIN,
+        ?COMPOSITE(unsuccess_sme,
+                   {?TON_DOMAIN,
+                    ?NPI_DOMAIN,
+                    ?ADDR_21_DOMAIN,
+                    ?SMPP_ERROR_DOMAIN})).
+
+-define(UNSUCCESS_SME_DOMAIN, ?LIST(?UNSUCCESS_SME_ITEM_DOMAIN)).
+
+%%%
+% additional_status_info_text
+%%
+-define(ADDITIONAL_STATUS_INFO_TEXT_DOMAIN,   ?VAR_C_OCTET_STRING(256)).
+-define(ADDITIONAL_STATUS_INFO_TEXT_RESERVED, ?EMPTY).
+
+%%%
+% congestion_state
+%%
+-define(CONGESTION_STATE_DOMAIN,   ?BOUND_INTEGER(1, 99)).
+-define(CONGESTION_STATE_RESERVED, ?RANGE_INTEGER(1, 100, 255)).
+
+%%%
+% delivery_failure_reason
+%%
+-define(DELIVERY_FAILURE_REASON_DOMAIN,   ?BOUND_INTEGER(1, 3)).
+-define(DELIVERY_FAILURE_REASON_RESERVED, ?RANGE_INTEGER(1, 4, 255)).
+
+%%%
+% dpf_result
+%%
+-define(DPF_RESULT_DOMAIN,   ?BOUND_INTEGER(1, 1)).
+-define(DPF_RESULT_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
+
+%%%
+% network_error_code
+%%
+-define(NETWORK_ERROR_CODE_TYPE_DOMAIN,   ?RANGE_INTEGER(1, 1, 8)).
+-define(NETWORK_ERROR_CODE_TYPE_RESERVED,   
+        ?UNION([?CONSTANT(0), ?RANGE_INTEGER(1, 9, 255)])).
+
+-define(NETWORK_ERROR_CODE_ERROR_DOMAIN,   ?INTEGER(2)).
+-define(NETWORK_ERROR_CODE_ERROR_RESERVED, ?INTEGER(2)).
+
+-define(NETWORK_ERROR_CODE_DOMAIN, 
+        ?COMPOSITE(network_error_code,
+                   {?NETWORK_ERROR_CODE_TYPE_DOMAIN,
+                    ?NETWORK_ERROR_CODE_ERROR_DOMAIN})).
+-define(NETWORK_ERROR_CODE_RESERVED, 
+        ?COMPOSITE(network_error_code,
+                   {?NETWORK_ERROR_CODE_TYPE_RESERVED,
+                    ?NETWORK_ERROR_CODE_ERROR_RESERVED})).
+</pre>
+
+
+<p>Notice that <tt>UNSUCCESS_SME_DOMAIN</tt> embraces the definition of both 
+fields; <tt>unsuccess_sme</tt> and <tt>no_unsuccess</tt>, since a list is 
+<a href="base_syntax.html#encode-list">encoded in a Length ++ List</a> fashion,
+<tt>no_unsuccess</tt> doesn't need to be explicitly declared.</p>
+
+<p>Additionally, two records must be defined in order to successfully decode 
+named composites:</p>
+
+<pre>
+-record(unsuccess_sme, 
+        {dest_addr_ton     = ?TON_INTERNATIONAL,
+         dest_addr_npi     = ?NPI_ISDN,
+         destination_addr,
+         error_status_code}).
+
+-record(network_error_code, 
+        {type  = ?NETWORK_ERROR_CODE_TYPE_GSM,
+         error}).
+</pre>
+
+<p>Record identifiers must match the names provided in the composite 
+declaration for the decoding function to work propertly.  These names are 
+ignored by the encode function though.</p>
+
+<p>Please read documentation, comments and examples on the source code for 
+further details.</p>
+
+
+<h2><a name="base">Base Syntax</a></h2>
+
+<p>The base syntax is an internal representation for the base types defined on
+the SMPP specification.</p>
+
+<p>Some base types are explicitly defined on the protocol specification, but
+many of them didn't became necessary until the PDUs were examined in greater 
+detail.  Data-types like <tt>lists</tt> or <tt>composites</tt> are needed to
+support PDU fields that may appear multiple times, or fields that happen to
+be always grouped together inside a given PDU definition.</p>
+
+<p>The following base types are defined as records on the base syntax:</p>
+
+<ol>
+  <li><a href="#empty">empty</a></li>
+  <li><a href="#constant">constant</a></li>
+  <li><a href="#integer">integer</a></li>
+  <li><a href="#c_octet_string">c_octet_string</a></li>
+  <li><a href="#octet_string">octet_string</a></li>
+  <li><a href="#list">list</a></li>
+  <li><a href="#composite">composite</a></li>
+  <li><a href="#union">union</a></li>
+</ol>
+
+
+<h3><a name="empty">empty</a></h3>
+
+<p><tt>-record(empty, {})</tt></p>
+
+<p>Empty datatype.  A type with no elements.</p>
+
+
+<h3><a name="constant">constant</a></h3>
+
+<p><tt>-record(constant, {value})</tt>
+  <ul>
+    <li><tt>Value = bin()</tt></li>
+  </ul>
+</p>
+
+<p>Constant declaration.  Constants are defined in binary format and
+their value is packed as is.</p>
+
+<dl>
+  <dt>Value: </dt><dd>Binary constant value.</dd>
+</dl>
+
+
+<h3><a name="integer">integer</a></h3>
+
+<p><tt>-record(integer, {size, min, max})</tt>
+  <ul>
+    <li><tt>Size = int()</tt></li>
+    <li><tt>Min  = int()</tt></li>
+    <li><tt>Max  = int()</tt></li>
+  </ul>
+</p>
+
+<p>Integer data-type declaration.</p>
+
+<dl>
+  <dt>Size: </dt><dd>Size in octets.</dd>
+  <dt>Min: </dt><dd>Lower limit (included).</dd>
+  <dt>Max: </dt><dd>Upper limit (included).</dd>
+</dl>
+
+<p>Refer to section 3.1 on [SMPP 5.0]</p>
+
+
+<h3><a name="c_octet_string">c_octet_string</a></h3>
+
+<p><tt>-record(c_octet_string, {fixed, size, format})</tt>
+  <ul>
+    <li><tt>Fixed  = bool()</tt></li>
+    <li><tt>Size   = int()</tt></li>
+    <li><tt>Format = free | hex | dec</tt></li>
+  </ul>
+</p>
+
+<p>C-Octet String data-type declaration.  A C-Octet String must always 
+be NULL terminated, thus the minimun length allowed is 1 octet.</p>
+
+<dl>
+  <dt>Fixed: </dt><dd>String size may be of variable or fixed length.  When
+    fixed the length must be exactly Size octets long, if not fixed it may
+    be from 1 up to Size octets long.
+  </dd>
+  <dt>Size: </dt><dd>Size in octets.</dd>
+  <dt>Format: </dt><dd>
+    <ul>
+      <li>free: a free fomat string.</li>
+      <li>hex: the string represents an hexadecimal digit sequence.</li>
+      <li>dec: the string represents a decimal digit sequence.</li>
+    </ul>
+  </dd>
+</dl>
+
+<p>Refer to section 3.1 on [SMPP 5.0]</p>
+
+
+<h3><a name="octet_string">octet_string</a></h3>
+
+<p><tt>-record(octet_string, {fixed, size, format})</tt>
+  <ul>
+    <li><tt>Fixed  = bool()</tt></li>
+    <li><tt>Size   = int()</tt></li>
+    <li><tt>Format = free | hex | dec</tt></li>
+  </ul>
+</p>
+
+<p>Octet String data-type declaration.  An Octet String is not necessary
+to be NULL terminated, thus the minimun length allowed is 0 octets.</p>
+
+<dl>
+  <dt>Fixed: </dt><dd>String size may be of variable or fixed length.  When
+    fixed the length must be exactly Size octets long, if not fixed it may
+    be from 0 up to Size octets long.
+  </dd>
+  <dt>Size: </dt><dd>Size in octets.</dd>
+  <dt>Format: </dt><dd>
+    <ul>
+      <li>free: a free fomat string.</li>
+      <li>hex: the string represents an hexadecimal digit sequence.</li>
+      <li>dec: the string represents a decimal digit sequence.</li>
+    </ul>
+  </dd>
+</dl>
+
+<p>Refer to section 3.1 on [SMPP 5.0]</p>
+
+
+<h3><a name="list">list</a></h3>
+
+<p><tt>-record(list, {type, size})</tt>
+  <ul>
+    <li><tt>Type     = {constant, Value}</tt>
+           <br/><tt> | {integer, Size, Min, Max}</tt>
+           <br/><tt> | {c_octet_string, Fixed, Size, Format}</tt>
+           <br/><tt> | {octet_string, Fixed, Size, Format}</tt>
+           <br/><tt> | {list, Type, Size}</tt>
+           <br/><tt> | {composite, Name, Tuple}</tt>
+           <br/><tt> | {union, Types}</tt></li>   
+    <li><tt>Value    = bin()</tt></li>
+    <li><tt>Size     = int()</tt></li>
+    <li><tt>Min      = int()</tt></li>
+    <li><tt>Max      = int()</tt></li>
+    <li><tt>Format   = free | hex | dec</tt></li>
+    <li><tt>Fixed    = bool()</tt></li>
+    <li><tt>Name     = atom()</tt></li>
+    <li><tt>Tuple    = term()</tt></li>
+    <li><tt>Types    = [Type]</tt></li>
+  </ul>
+</p>
+
+<p>List data-type declaration.  Represents a list with elements of
+the same Type.</p>
+
+<p>Notice that nested data-type definitions are allowed.  Type could be:</p>
+
+<ul>
+  <li>a constant, even it doesn't make much sense.</li>
+  <li>basic data-type; integer, c_octet_string or octet_string.  A list
+    of basic values.
+  </li>
+  <li>complex data-type such as tlvs lists, composites or union
+     declarations.
+  </li>
+</ul>
+
+<dl>
+  <dt>Type: </dt><dd>Defines the type of the elements on the list.  Any
+    kind of data-type declaration is valid.
+  </dd>
+  <dt>Size: </dt><dd>Maximum number of elements.</dd>
+</dl>
+
+
+<h3><a name="composite">composite</a></h3>
+
+<p><tt>-record(composite, {name, tuple})</tt>
+  <ul>
+    <li><tt>Name  = atom()</tt></li>
+    <li><tt>Tuple = term()</tt></li>
+  </ul>
+</p>
+
+<p>Composite data-type declaration.  If <tt>Name</tt> is undefined the
+composite is said to be anonymous and thus represented by a tuple.  Named 
+composites are represented by records of type <tt>Name</tt>.  It is 
+responsibility of the programmer to provide the appropriate record 
+definitions.</p>
+
+<p><tt>Name</tt> is ignored when encoding the value into a binary stream.  It
+is only considered to translate the binary representation of a composite
+into erlang records.  It also helps to document the declaration of nested
+data structures.  It'll be a good practice to give the composite (and the
+associated record) the same <tt>Name</tt> that the SMPP Protocol
+Specification uses [SMPP 5.0].</p>  
+
+<p>Whether named or not, <tt>Tuple</tt> is a tuple (never a record) defining 
+the type structure of the composite.  For example, in a composite with two 
+fields; an integer and an octet_string, <tt>Tuple</tt> would be something 
+like:</p>
+
+<p><tt>{?INTEGER_4, VAR_OCTET_STRING(21)}</tt></p>
+
+<p>Nested data-type definitions are allowed.  An element on the composite may
+be of the type:</p>
+
+<ul>
+  <li>constants.</li>
+  <li>basic data-types; integer, c_octet_string or octet_string.</li>
+  <li>complex data-types such as lists, composites or union declarations.</li>
+</ul>
+
+<dl>
+  <dt>Name: </dt><dd>Identifier of the composite.  Must be left undefined if
+    the composite is anonymous.
+  </dd>
+  <dt>Tuple: </dt><dd>Defines the structure of the composite.  Any kind of 
+    data-type declaration is a valid term of this tuple.
+  </dd>
+</dl>
+
+
+<h3><a name="union">union</a></h3>
+
+<p><tt>-record(union, {types})</tt>
+  <ul>
+    <li><tt>Types    = [Type]</tt></li>
+    <li><tt>Type     = {constant, Value}</tt>
+           <br/><tt> | {integer, Size, Min, Max}</tt>
+           <br/><tt> | {c_octet_string, Fixed, Size, Format}</tt>
+           <br/><tt> | {octet_string, Fixed, Size, Format}</tt>
+           <br/><tt> | {list, Type, Size}</tt>
+           <br/><tt> | {composite, Name, Tuple}</tt>
+           <br/><tt> | {union, Types}</tt></li>
+    <li><tt>Value    = bin()</tt></li>
+    <li><tt>Size     = int()</tt></li>
+    <li><tt>Min      = int()</tt></li>
+    <li><tt>Max      = int()</tt></li>
+    <li><tt>Fixed    = bool()</tt></li>
+    <li><tt>Format   = free | hex | dec</tt></li>
+    <li><tt>Name     = atom()</tt></li>
+    <li><tt>Tuple    = term()</tt></li>
+  </ul>
+</p>
+
+<p>Union data-type declaration.  Defines a new type which is the union of
+<tt>types</tt>.  For example the destination address in a <i>submit_multi</i> 
+command represents either a distribution list or an SME address (these 
+addresses have different data-types).</p>
+
+<p><tt>{union, [SmeAddress, DlAddress]}</tt></p>
+
+<p>where <tt>SmeAddress</tt> and <tt>DlAddress</tt> are composite 
+data-type definitions.  Notice that nested data-type declarations are
+allowed.  In SMPP the union declaration is mainly used in examples like
+the one above mentioned, where the union types are composites.</p>
+
+<dl>
+  <dt>Types: </dt><dd>A list with the types of the union.</dd>
+</dl>
+
+
+<h2><a name="basemacros">Base Syntax Macros</a></h2>
+
+<p>Macros based on record data-types definitions</p>
+
+<pre>
+-define(EMPTY,
+        #empty{}).
+-define(CONSTANT(Value), 
+        #constant{value = Value}).
+-define(INTEGER(Size), 
+        #integer{size = Size, min = 0, max = math:pow(256, Size) - 1}).
+-define(C_OCTET_STRING(Fixed, Size),
+        #c_octet_string{fixed = Fixed, size = Size, format = free}).
+-define(OCTET_STRING(Fixed, Size),
+        #octet_string{fixed = Fixed, size = Size, format = free}).
+-define(LIST(Type), 
+        #list{type = Type, size = 255}).
+-define(COMPOSITE(Name, Tuple), 
+        #composite{name = Name, tuple = Tuple}).
+-define(UNION(Types), 
+        #union{types = Types}).</pre>
+
+
+<p>Simplified macros, some options are implicitly assigned.  Most of the SMPP 
+PDU fields definitions are more readable using these macros.</p>
+
+<pre>
+-define(BOUND_INTEGER(Size, Max), 
+        #integer{size = Size, min = 0, max = Max}).
+-define(RANGE_INTEGER(Size, Min, Max), 
+        #integer{size = Size, min = Min, max = Max}).
+
+-define(HEX_C_OCTET_STRING(Fixed, Size),
+        #c_octet_string{fixed = Fixed, size = Size, format = hex}).
+-define(HEX_OCTET_STRING(Fixed, Size),
+        #octet_string{fixed = Fixed, size = Size, format = hex}).
+
+-define(DEC_C_OCTET_STRING(Fixed, Size),
+        #c_octet_string{fixed = Fixed, size = Size, format = dec}).
+-define(DEC_OCTET_STRING(Fixed, Size),
+        #octet_string{fixed = Fixed, size = Size, format = dec}).
+
+-define(ANONYMOUS_COMPOSITE(Tuple), #composite{tuple = Tuple}).
+
+-define(VAR_C_OCTET_STRING(Size),   ?C_OCTET_STRING(false, Size)).
+-define(VAR_OCTET_STRING(Size),     ?OCTET_STRING(false, Size)).
+-define(FIXED_C_OCTET_STRING(Size), ?C_OCTET_STRING(true, Size)).
+-define(FIXED_OCTET_STRING(Size),   ?OCTET_STRING(true, Size)).
+
+-define(VAR_HEX_C_OCTET_STRING(Size),   ?HEX_C_OCTET_STRING(false, Size)).
+-define(VAR_HEX_OCTET_STRING(Size),     ?HEX_OCTET_STRING(false, Size)).
+-define(FIXED_HEX_C_OCTET_STRING(Size), ?HEX_C_OCTET_STRING(true, Size)).
+-define(FIXED_HEX_OCTET_STRING(Size),   ?HEX_OCTET_STRING(true, Size)).
+
+-define(VAR_DEC_C_OCTET_STRING(Size),   ?DEC_C_OCTET_STRING(false, Size)).
+-define(VAR_DEC_OCTET_STRING(Size),     ?DEC_OCTET_STRING(false, Size)).
+-define(FIXED_DEC_C_OCTET_STRING(Size), ?DEC_C_OCTET_STRING(true, Size)).
+-define(FIXED_DEC_OCTET_STRING(Size),   ?DEC_OCTET_STRING(true, Size)).
+
+-define(SIZED_LIST(Type, Size), 
+        #list{type = Type, size = Size}).
+
+-define(SET(List), ?UNION(lists:map(fun(C) -> ?CONSTANT(C) end, List))).</pre>
+
+
+<h2><a name="param">Param Syntax</a></h2>
+
+<p>Standard and TLV parameter syntax definition.  This layer complements
+the base syntax defined in the file <b>base_syntax.hrl</b>, giving
+to the parameter definitions the possibility to specify an associated error
+code, a default value and a tag (on TLVs only).  A complete list of the SMPP
+parameters specification is defined in <b>smpp_param.hrl</b>, based
+on macros defined below and the syntax declarations included in
+<b>smpp_base.hrl</b>.</p>
+
+<p>Even this syntax is considered implementation-specific, the definitions 
+herein included try to reflect the conventions used on [SMPP 5.0].</p>
+
+<p>The following types are defined as records on the param syntax:</p>
+
+<ol>
+  <li><a href="#standard">standard</a></li>
+  <li><a href="#tlv">tlv</a></li>
+</ol>
+
+
+<h3><a name="standard">standard</a></h3>
+
+<p><tt>-record(standard, {name, domain, error})</tt>
+  <ul>
+    <li><tt>Name   = atom()</tt></li>
+    <li><tt>Domain = Type</tt></li>
+    <li><tt>Type   = empty()</tt>
+           <br/><tt> | constant()</tt>
+           <br/><tt> | integer()</tt>
+           <br/><tt> | c_octet_string()</tt>
+           <br/><tt> | octet_string()</tt>
+           <br/><tt> | multivalue()</tt>
+           <br/><tt> | composite()</tt>
+           <br/><tt> | polymorphic()</tt></li>
+    <li><tt>Error  = int()</tt></li>
+  </ul>
+</p>
+
+<p>Standard Parameter declaration.</p>
+
+<dl>
+  <dt>Name: </dt><dd>Name of the parameter.</dd>
+  <dt>Domain: </dt><dd>Domain of the parameter.  Defined by means of the
+    base syntax (<b>base_syntax.hrl</b>).
+  </dd>
+  <dt>Error: </dt><dd>Error code associated to the parameter.</dd>
+</dl>
+
+
+<h3><a name="tlv">tlv</a></h3>
+
+<p><tt>-record(tlv, 
+       {name, tag, domain, reserved, mandatory, multiple, default, error})</tt>
+  <ul>
+    <li><tt>Name      = atom()</tt></li>
+    <li><tt>Tag       = int()</tt></li>
+    <li><tt>Domain    = Type</tt></li>
+    <li><tt>Type   = empty()</tt>
+           <br/><tt> | constant()</tt>
+           <br/><tt> | integer()</tt>
+           <br/><tt> | c_octet_string()</tt>
+           <br/><tt> | octet_string()</tt>
+           <br/><tt> | multivalue()</tt>
+           <br/><tt> | composite()</tt>
+           <br/><tt> | polymorphic()</tt></li>
+    <li><tt>Reserved  = Type</tt></li>
+    <li><tt>Mandatory = bool()</tt></li>
+    <li><tt>Multiple  = bool()</tt></li>
+    <li><tt>Default   = term()</tt></li>
+    <li><tt>Error  = int()</tt></li>
+  </ul>
+</p>
+
+<p>Tagged Length Value Parameter declaration.</p>
+
+<dl>
+  <dt>Name: </dt><dd>Name of the parameter.</dd>
+  <dt>Tag: </dt><dd>Identifier of the TLV.</dd>
+  <dt>Domain: </dt><dd>Domain of the parameter.  Defined by means of the
+    base syntax (<b>base_syntax.hrl</b>).
+  </dd>
+  <dt>Reserved: </dt><dd>Set of reserved values for the parameter.  Defined by
+    means of the base syntax (<b>base_syntax.hrl</b>).
+  </dd>
+  <dt>Mandatory: </dt><dd>Boolean.   <tt>true</tt> if the TLV is mandatory.
+  </dd>
+  <dt>Multiple: </dt><dd>Boolean.  <tt>true</tt> if the TLV can be encoded 
+    multiple times.
+  </dd>
+  <dt>Default: </dt><dd>Default value for the parameter.  If the 
+    encoding (or decoding) operation fails the default value should be used
+    (if provided).
+  </dd>
+  <dt>Error: </dt><dd>Error code associated to the parameter.</dd>
+</dl>
+
+
+<h3>Domains and Datatypes</h3>
+
+<p>To see how these concepts are used along this SMPP implementation, 
+consider the <tt>addr_ton</tt> field.</p>
+
+<p>Its <b>datatype</b> is a 1 octet integer: <tt>?INTEGER(1)</tt>.</p>
+
+<p>Its <b>domain</b> is the set of all possible TON Values: 
+<tt>?BOUND_INTEGER(1, 6)</tt>.</p>
+
+
+<h2><a name="parammacros">Param Syntax Macros</a></h2>
+
+<p>Macros based on record param-types definitions.</p>
+
+<pre>
+-define(STANDARD(Name, Domain, Error), 
+        #standard{name = Name, domain = Domain, error = Error}).
+-define(TLV(Name, Tag, Domain, Reserved, Mandatory, Multiple, Default, Error), 
+        #tlv{name      = Name,
+             tag       = Tag, 
+             domain    = Domain,
+             reserved  = Reserved, 
+             mandatory = Mandatory,
+             multiple  = Multiple,
+             default   = Default, 
+             error     = Error}).
+</pre>
+
+<p>Simplified TLV Macros for Readability, some options are implicitly assigned
+here.  SMPP PDU TLV definitions are more readable using these macros.</p>
+
+<pre>
+-define(MANDATORY_TLV(Name, Tag, Domain, Reserved, Default, Error), 
+        ?TLV(Name, Tag, Domain, Reserved, true, false, Default, Error)).
+-define(OPTIONAL_TLV(Name, Tag, Domain, Reserved, Default, Error), 
+        ?TLV(Name, Tag, Domain, Reserved, false, false, Default, Error)).
+-define(MULTIPLE_MANDATORY_TLV(Name, Tag, Domain, Reserved, Default, Error), 
+        ?TLV(Name, Tag, Domain, Reserved, true, true, Default, Error)).
+-define(MULTIPLE_OPTIONAL_TLV(Name, Tag, Domain, Reserved, Default, Error), 
+        ?TLV(Name, Tag, Domain, Reserved, false, true, Default, Error)).
+</pre>
+
+
+<h2><a name="pdu">PDU Syntax</a></h2>
+
+<p>This syntax extends the <i>param syntax</i> and gives support to PDU
+defintions.</p>
+
+<p>The following types are defined as records on the pdu syntax:</p>
+
+<ol>
+  <li><a href="#pdu">pdu</a></li>
+</ol>
+
+
+<h3><a name="pdu">pdu</a></h3>
+
+<p><tt>-record(pdu, {stds_types, tlvs_types})</tt>
+  <ul>
+    <li><tt>StdsTypes = [standard()]</tt></li>
+    <li><tt>TlvsTypes = [tlv()]</tt></li>
+  </ul>
+</p>
+
+<p>PDU definitions.</p>
+
+<dl>
+  <dt>StdsTypes: </dt><dd>List with the types of the standard parameters.
+    There is one descriptor per standard parameter on the PDU.  This list
+    must have the same exact order than the one defined on the SMPP protocol
+    specification.
+  </dd>
+  <dt>TlvsTypes: </dt><dd>List with the types of every permitted TLV of the
+    PDU.  The SMPP protocol specification does not establish any kind of
+    ordering for the TLV parameters.  The order on this list might only be
+    relevant from an efficiency point of view, refer to the 
+    <a href="pdu_syntax.html#pack-3">packing</a>/
+    <a href="pdu_syntax.html#unpack-3">unpacking</a> functions 
+    implementation on <a href="pdu_syntax.html">pdu_syntax.erl</a>.
+  </dd>
+</dl>
+
+
+<h2><a name="pdumacros">PDU Syntax Macros</a></h2>
+
+<p>Macros based on PDU record definition.</p>
+
+<pre>
+-define(PDU(StdsTypes, TlvsTypes),
+        #pdu{stds_types = StdsTypes, tlvs_types = TlvsTypes}).
+</pre>
+
+
+<h2><a name="behaviours">Behaviours</a></h2>
+
+<p>A generic ESME (External Short Message Entity) behaviour is implemented in 
+OSERL.  Behaviours are formalizations of "design patters" which can be used to 
+program certain common problems, an ESME in this particular case.  The generic 
+ESME behaviour was built on top of a generic session behaviour, having again 
+an underlying generic connection behaviour.</p>
+
+<img src="img/behaviours.png" 
+     alt="behaviours" 
+     border="0" 
+     width="600" 
+     height="180"/>
+
+<p>The schema depicted on the previous figure shows how the ESME behaviour
+is acting as the callback module for the session behaviour, which in turn acts 
+as the callback module for the generic connection.</p>
+
+<p>The session receives binary data from the connection through several 
+callbacks and unpacks SMPP PDUs therein included.  Some operation PDUs are 
+automatically responded and managed by the session behaviour but others, like 
+an <i>outbind</i> or <i>deliver_sm</i> PDU, must be forwarded to the upper 
+ESME behaviour to let it decide what to do.  The ESME behaviour knows how to 
+handle things like an <i>outbind</i> request, but under certain operations, 
+such us <i>deliver_sm</i> requests, the callback module implementing the ESME 
+behaviour must take care of the work (actions associated to a delivery request 
+depends on the particular service provided by the ESME being implemented).</p>
+
+<p>SMS Developers don't need to care about sessions or connections, they will 
+just need to implement those exported callbacks of the ESME behaviour relevant
+to the particular service they want to develop.  The interface offered by the 
+ESME behaviour is shown <a href="gen_esme.html">here</a>.</p>
+
+<p>Leaving a callback unimplemented causes the generic ESME behaviour to 
+perform the default action (usually by simply ignoring the callback).  Every 
+callback is guaranteed to be correct, never a malformed or unexpected PDU could
+trigger a callback.</p>
+
+<p>Due to these behaviours, OSERL handles transparently many aspects of the 
+SMPP protocol, saving lots of work to developers by</p>
+
+<ul>
+  <li>Automatically handling PDU sequencing. Assigns monotonically 
+    increasing sequence numbers and matches requests with their corresponding 
+    responses in an asynchronous manner.
+  </li>
+  <li>OSERL handles automatically all timers defined by the SMPP protocol 
+    specification version 5.0: session init timer, enquire link timer, 
+    inactivity timer and response timer.  On a timer expiration, the action 
+    recommended on the protocol specification is triggered.
+  </li>
+  <li>Handles every operation failure, including when the PDU is unrecognized 
+	or malformed, invalid field length, PDU data is unexpected and deemed 
+	invalid, and the PDU is not allowed in the current state.
+
+ 	<p>Upon failure the appropriate response is automatically issued.  Even 
+	errors associated to individual parameters of the PDUs are detected, and
+	reported using the corresponding error code.</p>
+
+    <p>Every error code in the protocol specification was implemented.</p>
+  </li>
+  <li>Detects connection failures and provides automatic recovery mechanisms,
+	restoring dropped sessions.
+  </li>
+  <li>Controls congestion using the <tt>congestion_state</tt> field.</li>
+  <li>Every forward and backwards compatibility guidelines were adopted.</li>
+  <li>Supports every operation and every field of the SMPP protocol 
+	version 5.0.
+  </li>
+</ul>
+
+
+<h2><a name="pics">PICS Proforma</a></h2>
+
+Find OSERL's PICS proforma in openoffice format 
+<a href="oserl_pics.sxw">here</a>.
+
+
+<h2><a name="todo">TODO</a></h2>
+
+<ul>
+  <li>Version 0.2
+  <ol>
+    <li>In smpp_base.hrl<br/>
+      <br/>
+      <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).</tt>
+      <br/>
+      should be<br/>
+      <br/>
+      <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).</tt>
+    </li>
+    <li>Remove <b>empty</b> base type.  Redefine it as <tt>?UNION([])</tt></li>
+    <li>Review the <tt>timeout</tt> event on <tt>get_esme_session</tt></li>
+    <li>Don't like current PDU packing/unpacking mechanism using the 
+      <tt>pdu_type/1</tt> function.
+
+      <p>Consider creating a pack/unpack function for each PDU type.  Call the
+      appropriate pack/unpack function by means of the <tt>command_id</tt> and
+      remove <tt>pdu_type/1</tt> function.</p>
+    </li>
+    <li>Try to put the <tt>command_id</tt> back into the PDU descriptor in an
+      efficient manner.
+    </li>
+    <li>Remove <a href="pdu_syntax.html#get_value-2">pdu_syntax:get_value/2</a>
+      and <a href="pdu_syntax.html#set_value-3">pdu_syntax:set_value/3</a>.  
+      Use the dicctionary API instead.
+  
+      <p>Move these functions to operation.erl (and rename them as 
+      <tt>get_parameter/2</tt> and <tt>set_parameter/3</tt> respectively.</p>
+
+      <p>Do not use <a href="pdu_syntax.html">pdu_syntax</a> functions beyond
+      <a href="operation.html">operation</a> API.</p>
+    </li>
+  </ol>
+  </li>
+  <li>Version 1.0
+    <ol>
+      <li>Implement a gen_mc_session behavior.</li>
+      <li>Implement a gen_mc behavior.</li>
+    </ol>
+  </li>
+  <li>Version 2.0
+    <ol>
+      <li>Implement a gen_re behavior.</li>
+    </ol>
+  </li>
+</ul>
+
+
+<h2><a name="references">References</a></h2>
+
+<dl>
+  <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
+    Version 5.0. SMS Forum.
+  </dd>
+</dl>

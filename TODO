@@ -34,7 +34,16 @@ Index
 - Automatically add/remove trailing '\0' in C-Octet Strings.
 
   Pay special attention to C-Octet String parameteres defined as composites
-  (records), such us TIME_DOMAIN.
+  (records), such us TIME_DOMAIN.  Create a MACRO to assing values to 
+  parameters represented as records.
+
+  Cambios en base_syntax.erl
+
+  Modificar la función take_until, ojo con los comentarios que hacen referncia
+  a smpp_base: cambiarlos por base_syntax.
+
+  Cambios en los hrls, modificar todos los valores por defecto que incluyen el
+  NULL_CHARACTER explícitamente.  El NULL_C_OCTET_STRING es ahora un "".
 
 - Make OSERL behaviours OTP compilant.  
 

@@ -57,6 +57,12 @@
   </li>
   <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
   <li>PDU packing/unpacking functions redefined.</li>
+  <li>New macros for composite parameters value definitions.<br/>
+    <br/>
+    For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
+    <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
+    <i>dest_address_sme</i>.
+  </li>
 </ul>
 
 <p>How these changes affected individual files is described below.</p>
@@ -168,6 +174,12 @@
   <li>Trailing $\0 removed from the c_octet_string values.</li>
   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time
     record removed.  Time manipulation is now much more natural... and easy.
+  </li>
+  <li>New macros for composite parameters value definitions.<br/>
+    <br/>
+    For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
+    <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
+    <i>dest_address_sme</i>.
   </li>
 </ul>
 

@@ -1249,7 +1249,7 @@ the SMPP protocol definitions:</p>
 </dl>
 
 <b>Important Note: </b><i>Don't forget to recompile the module
-<a href="operation.html">operation.erl</a> for the changes on any of these 
+<a href="operation.html">operation.erl</a> for changes on any of these 
 files to take effect.</i>
 
 
@@ -1261,7 +1261,8 @@ This header defines the SMPP PDU Type Declarations.
 to <a href="operation.html">operation.erl</a> to find out how these macros 
 are used.</p>
 
-<p>Every PDU declaration consists of two lists.</p>
+<p>Every PDU declaration consists of a <i>command_id</i> and a couple of 
+lists.</p>
 
 <dl>
   <dt><i>Standard body parameters declaration:</i></dt><dd>A list with the
@@ -1285,7 +1286,8 @@ are used.</p>
 
 <pre>
 -define(BIND_TRANSMITTER_RESP,
-        ?PDU([?SYSTEM_ID],
+        ?PDU(?COMMAND_ID_BIND_TRANSMITTER_RESP,
+             [?SYSTEM_ID],
              [?CONGESTION_STATE,
               ?SC_INTERFACE_VERSION])).
 </pre>
@@ -1300,14 +1302,14 @@ are used.</p>
 </pre>
 
 <p>The pair <tt>{system_id, SystemId}</tt> might be ignored if 
-<tt>command_status</tt> is not 0, the following pairs are also optional:</p>
+<tt>command_status</tt> is not 0. Following pairs are also optional:</p>
 
 <pre>
 [{congestion_state, CongestionState}, 
  {sc_interface_version, ScInterfaceVersion}]
 </pre>
 
-<p>Notice that a <tt>command_length</tt> element is not included on the 
+<p>Notice that a <tt>command_length</tt> element is not included in the 
 dictionary.</p>
 
 
@@ -1315,7 +1317,7 @@ dictionary.</p>
 
 SMPP Standard and TLV Parameters descriptor.  These descriptors are defined by 
 means of the base types declared on <a href="#smpp_base">smpp_base</a>,
-and using the syntax defined in <i>param_syntax.hrl</i>.
+and using the parameter syntax defined in <i>param_syntax.hrl</i>.
 
 <p>A parameter descriptor defines the parameter name, base type, default value
 and error code associated to it.</p>
@@ -1323,15 +1325,11 @@ and error code associated to it.</p>
 <p>Feel free to adjust parameter descriptors to your particular needs.  You may
 want to change the default value or the mandatory status of some TLVs.</p>
 
-<p><b>Important Note:</b> <i>Don't forget to recompile the module
-<a href="operation.html">operation.erl</a> for the changes on this file to 
-take effect.</i></p>
-
 
 <h4><a name="smpp_base">smpp_base.hrl</a></h4>
 
 Base definitions for the SMPP protocol specification.  These definitions use 
-the syntax defined in <i>base_syntax.hrl</i>.
+the base syntax defined in <i>base_syntax.hrl</i>.
 
 <p>In this header file, parameter base datatypes, domains and reserved values
 are declared.</p>
@@ -1359,6 +1357,11 @@ type descriptors.</p>
 
 
 <h2><a name="translation">Translating the SMPP specification</a></h2>
+
+<p><i>Only those developers interested in the implementation details
+of the library should read this section.</i>  Those who only want to use
+the API, and don't care much about how things were done, may safely skip this 
+section.</p>
 
 <p>The erlang terms used to represent the SMPP specification are intended to
 adopt the conventions used on [SMPP 5.0] as much as posible.</p>
@@ -1516,7 +1519,8 @@ encoded multiple times according to the value specified in the
 
 <pre>
 -define(SUBMIT_MULTI_RESP,
-        ?PDU([?MESSAGE_ID, 
+        ?PDU(?COMMAND_ID_SUBMIT_MULTI_RESP,
+             [?MESSAGE_ID, 
               ?UNSUCCESS_SME],
              [?ADDITIONAL_STATUS_INFO_TEXT,
               ?CONGESTION_STATE,
@@ -1529,34 +1533,7 @@ encoded multiple times according to the value specified in the
 <b>smpp_pdu.hrl</b></p>
 
 <p>Since the format of the header is common to every PDU type, it doesn't need
-to be declared.  Although is a bit surprising to find out that not even the 
-<tt>command_id</tt> is included in this descriptor.  Let us see the 
-reason.</p>
-
-<p>The procedure for decoding a PDU could be roughly described by these 
-three steps:</p>
-
-<ol>
-  <li>Decode the header of the PDU and get the <tt>command_id</tt>.</li>
-  <li>Find the PDU descriptor associatted to that <tt>command_id</tt>.</li>
-  <li>Use the PDU descriptor to decode the body of the PDU.</li>
-</ol>
-
-<p>Thus a PDU decoding function needs, during step 2, access to the entire 
-list of SMPP PDU descriptors.  In a first approach, the <tt>command_ids</tt> 
-were included inside each PDU descriptor, but then the entire list of 
-descriptors ought to be given to the decoding function as a parameter.  This 
-list was too heavy and the resulting decoding process slow (too slow...
-useless).</p>
-
-<p>To speed up the process the <tt>command_id</tt> was separated from the
-descriptor and a new function (<a name="operation.html#pdu_type-1">
-operation:pdu_type/1</a>) defined.  Now the decoding process iterates 
-through the list of <tt>command_ids</tt> and only when a math occurs, the
-corresponding PDU descriptor is taken with <tt>pdu_type(command_id)</tt>.</p>
-
-<p>The first approach was more elegant but unfortunately cannot be considered 
-until I find a better way to exploit it.</p>
+to be declared.</p>
 
 <p>Recalling the internal representation of the PDU, every individual field is 
 defined in <b>smpp_param.hrl</b> as:</p>
@@ -1565,11 +1542,13 @@ defined in <b>smpp_param.hrl</b> as:</p>
 -define(MESSAGE_ID, 
         ?STANDARD(message_id, 
                   ?MESSAGE_ID_DOMAIN, 
+                  ?NULL_C_OCTET_STRING,
                   ?ESME_RINVMSGID)).
 
 -define(UNSUCCESS_SME, 
         ?STANDARD(unsuccess_sme, 
-                  ?UNSUCCESS_SME_DOMAIN, 
+                  ?UNSUCCESS_SME_DOMAIN,
+                  undefined, 
                   ?ESME_RINVDSTADR)).
 
 -define(ADDITIONAL_STATUS_INFO_TEXT, 
@@ -1612,6 +1591,9 @@ defined in <b>smpp_param.hrl</b> as:</p>
                       undefined, 
                       undefined)).
 </pre>
+
+<p>These parameter descriptors were defined by means of some macros
+declared in the <a href="#param">parameter syntax</a>.</p>
 
 <p>Domains and reserved values are defined in <b>smpp_base.hrl</b>.</p>
 
@@ -1773,7 +1755,7 @@ their value is packed as is.</p>
   <ul>
     <li><tt>Fixed  = bool()</tt></li>
     <li><tt>Size   = int()</tt></li>
-    <li><tt>Format = free | hex | dec</tt></li>
+    <li><tt>Format = fun(string()) -&gt; bool()</tt></li>
   </ul>
 </p>
 
@@ -1786,12 +1768,8 @@ be NULL terminated, thus the minimun length allowed is 1 octet.</p>
     be from 1 up to Size octets long.
   </dd>
   <dt>Size: </dt><dd>Size in octets.</dd>
-  <dt>Format: </dt><dd>
-    <ul>
-      <li>free: a free fomat string.</li>
-      <li>hex: the string represents an hexadecimal digit sequence.</li>
-      <li>dec: the string represents a decimal digit sequence.</li>
-    </ul>
+  <dt>Format: </dt><dd>If a format predicate is given, the string will be
+    valid if the C-Octet String satisfies <tt>Format</tt>.
   </dd>
 </dl>
 
@@ -1804,7 +1782,7 @@ be NULL terminated, thus the minimun length allowed is 1 octet.</p>
   <ul>
     <li><tt>Fixed  = bool()</tt></li>
     <li><tt>Size   = int()</tt></li>
-    <li><tt>Format = free | hex | dec</tt></li>
+    <li><tt>Format = fun(string()) -&gt; bool()</tt></li>
   </ul>
 </p>
 
@@ -1817,12 +1795,8 @@ to be NULL terminated, thus the minimun length allowed is 0 octets.</p>
     be from 0 up to Size octets long.
   </dd>
   <dt>Size: </dt><dd>Size in octets.</dd>
-  <dt>Format: </dt><dd>
-    <ul>
-      <li>free: a free fomat string.</li>
-      <li>hex: the string represents an hexadecimal digit sequence.</li>
-      <li>dec: the string represents a decimal digit sequence.</li>
-    </ul>
+  <dt>Format: </dt><dd>If a format predicate is given, the string will be
+    valid if the C-Octet String satisfies <tt>Format</tt>.
   </dd>
 </dl>
 
@@ -1994,14 +1968,26 @@ PDU fields definitions are more readable using these macros.</p>
         #integer{size = Size, min = Min, max = Max}).
 
 -define(HEX_C_OCTET_STRING(Fixed, Size),
-        #c_octet_string{fixed = Fixed, size = Size, format = hex}).
+        #c_octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_hex(Str) end}).
 -define(HEX_OCTET_STRING(Fixed, Size),
-        #octet_string{fixed = Fixed, size = Size, format = hex}).
+        #octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_hex(Str) end}).
 
 -define(DEC_C_OCTET_STRING(Fixed, Size),
-        #c_octet_string{fixed = Fixed, size = Size, format = dec}).
+        #c_octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_dec(Str) end}).
 -define(DEC_OCTET_STRING(Fixed, Size),
-        #octet_string{fixed = Fixed, size = Size, format = dec}).
+        #octet_string{
+            fixed  = Fixed, 
+            size   = Size, 
+            format = fun(Str) -> my_string:is_dec(Str) end}).
 
 -define(ANONYMOUS_COMPOSITE(Tuple), #composite{tuple = Tuple}).
 
@@ -2024,8 +2010,22 @@ PDU fields definitions are more readable using these macros.</p>
         #list{type = Type, size = Size}).
 </pre>
 
-<p>Sets
-</p>
+<p>Time strings</p>
+
+<pre>
+-define(ATIME_C_OCTET_STRING,
+        #c_octet_string{
+            fixed  = true, 
+            size   = 17,
+            format = fun(Str) -> my_string:is_atime(Str) end}).
+-define(RTIME_C_OCTET_STRING,
+        #c_octet_string{
+            fixed  = true, 
+            size   = 17,
+            format = fun(Str) -> my_string:is_rtime(Str) end}).
+</pre>
+
+<p>Sets</p>
 
 <pre>
 -define(EMPTY,     ?UNION([])).
@@ -2056,11 +2056,12 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
 
 <h3><a name="standard">standard</a></h3>
 
-<p><tt>-record(standard, {name, domain, error})</tt>
+<p><tt>-record(standard, {name, domain, default, error})</tt>
   <ul>
-    <li><tt>Name   = atom()</tt></li>
-    <li><tt>Domain = Type</tt></li>
-    <li><tt>Type   = constant()</tt>
+    <li><tt>Name    = atom()</tt></li>
+    <li><tt>Domain  = Type</tt></li>
+    <li><tt>Default = term()</tt></li>
+    <li><tt>Type    = constant()</tt>
            <br/><tt> | integer()</tt>
            <br/><tt> | c_octet_string()</tt>
            <br/><tt> | octet_string()</tt>
@@ -2077,6 +2078,9 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
   <dt>Name: </dt><dd>Name of the parameter.</dd>
   <dt>Domain: </dt><dd>Domain of the parameter.  Defined by means of the
     base syntax (<b>base_syntax.hrl</b>).
+  </dd>
+  <dt>Default: </dt><dd>Default value for the parameter.  Used by 
+    encoding functions whenever the parameter is left undefined.
   </dd>
   <dt>Error: </dt><dd>Error code associated to the parameter.</dd>
 </dl>
@@ -2129,33 +2133,27 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
 </dl>
 
 
-<h3>Domains and Datatypes</h3>
-
-<p>To see how these concepts are used along this SMPP implementation, 
-consider the <tt>addr_ton</tt> field.</p>
-
-<p>Its <b>datatype</b> is a 1 octet integer: <tt>?INTEGER(1)</tt>.</p>
-
-<p>Its <b>domain</b> is the set of all possible TON Values: 
-<tt>?BOUND_INTEGER(1, 6)</tt>.</p>
-
-
 <h2><a name="parammacros">Param Syntax Macros</a></h2>
 
 <p>Macros based on record param-types definitions.</p>
 
 <pre>
--define(STANDARD(Name, Domain, Error), 
-        #standard{name = Name, domain = Domain, error = Error}).
+-define(STANDARD(Name, Domain, Default, Error), 
+        #standard{
+            name    = Name, 
+            domain  = Domain, 
+            default = Default, 
+            error   = Error}).
 -define(TLV(Name, Tag, Domain, Reserved, Mandatory, Multiple, Default, Error), 
-        #tlv{name      = Name,
-             tag       = Tag, 
-             domain    = Domain,
-             reserved  = Reserved, 
-             mandatory = Mandatory,
-             multiple  = Multiple,
-             default   = Default, 
-             error     = Error}).
+        #tlv{
+            name      = Name,
+            tag       = Tag, 
+            domain    = Domain,
+            reserved  = Reserved, 
+            mandatory = Mandatory,
+            multiple  = Multiple,
+            default   = Default, 
+            error     = Error}).
 </pre>
 
 <p>Simplified TLV Macros for Readability, some options are implicitly assigned
@@ -2187,8 +2185,9 @@ defintions.</p>
 
 <h3><a name="pdu">pdu</a></h3>
 
-<p><tt>-record(pdu, {stds_types, tlvs_types})</tt>
+<p><tt>-record(pdu, {command_id, stds_types, tlvs_types})</tt>
   <ul>
+    <li><tt>CommandId = int()</tt></li>
     <li><tt>StdsTypes = [standard()]</tt></li>
     <li><tt>TlvsTypes = [tlv()]</tt></li>
   </ul>
@@ -2197,6 +2196,7 @@ defintions.</p>
 <p>PDU definitions.</p>
 
 <dl>
+  <dt>CommandId: </dt><dd>SMPP <i>command_id</i>.</dd>
   <dt>StdsTypes: </dt><dd>List with the types of the standard parameters.
     There is one descriptor per standard parameter on the PDU.  This list
     must have the same exact order than the one defined on the SMPP protocol
@@ -2218,8 +2218,10 @@ defintions.</p>
 <p>Macros based on PDU record definition.</p>
 
 <pre>
--define(PDU(StdsTypes, TlvsTypes),
-        #pdu{stds_types = StdsTypes, tlvs_types = TlvsTypes}).
+-define(PDU(CommandId, StdsTypes, TlvsTypes),
+        #pdu{command_id = CommandId,
+			 stds_types = StdsTypes, 
+			 tlvs_types = TlvsTypes}).
 </pre>
 
 
@@ -2325,6 +2327,12 @@ Find OSERL's PICS proforma in openoffice format
   </li>
   <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
   <li>PDU packing/unpacking functions redefined.</li>
+  <li>New macros for composite parameters value definitions.<br/>
+    <br/>
+    For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
+    <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
+    <i>dest_address_sme</i>.
+  </li>
 </ul>
 
 <p>How these changes affected individual files is described 

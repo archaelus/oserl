@@ -308,8 +308,8 @@
 %   <dt>Domain: </dt><dd>Domain of the parameter.  Defined by means of the
 %     base syntax (<b>base_syntax.hrl</b>).
 %   </dd>
-%   <dt>Default: </dt><dd>Default value for the parameter.  Used by the 
-%     encoding whenever the parameter is left undefined.
+%   <dt>Default: </dt><dd>Default value for the parameter.  Used by 
+%     encoding functions whenever the parameter is left undefined.
 %   </dd>
 %   <dt>Error: </dt><dd>Error code associated to the parameter.</dd>
 % </dl>

@@ -1,4 +1,4 @@
-TODO - OSERL Version 0.1                                     February 09, 2004
+TODO - OSERL Version 0.2                                     March 01, 2004
 
                     http://sourceforge.net/projects/oserl/
 
@@ -7,34 +7,21 @@ TODO - OSERL Version 0.1                                     February 09, 2004
 
 Contents
 
-1. Version 0.2
-2. Version 1.0
-3. Version 2.0
+1. Version 1.0
+2. Version 2.0
 
 
 ---
 
 
-1. Version 0.2
-
-- Update overview.edoc (c_octet_string and octet_string format field).
-
-- Define a couple of MACROS for every composite parameter.  One to assign
-  default (record) values, and the other to hide record definition to higher
-  layers.
-
-  DEST_TELEMATICS_ID_DEFAULT_VALUE
-  DEST_TELEMATICS_ID_VALUE(...)
-
-
-2. Version 1.0
+1. Version 1.0
 
 - Implement a gen_mc_session behavior.
 
 - Implement a gen_mc behavior.
 
 
-3. Version 2.0
+2. Version 2.0
 
 - Implement a gen_re behavior.
 

@@ -1,4 +1,4 @@
-changes.txt - OSERL Version 0.2                              February 18, 2004
+changes.txt - OSERL Version 0.2                              March 01, 2004
 
                     http://sourceforge.net/projects/oserl/
 
@@ -48,6 +48,10 @@ Contents
   base_syntax.hrl and smpp_base.hrl for further details).
 - gen_esme callback interface redefined.
 - PDU packing/unpacking functions redefined.
+- New macros for composite parameters value definitions.
+
+  For instance, ?DEST_ADDRESS_SME_DEFAULT_VALUE and
+  ?DEST_ADDRESS_SME_VALUE/4 were defined for parameter dest_address_sme.
 
 How these changes affected individual files is described below.
 
@@ -117,6 +121,11 @@ How these changes affected individual files is described below.
 - Trailing $\0 removed from the c_octet_string values.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 
   finally removed.  Time manipulation is now much more natural... and easy.
+- New macros for composite parameters value definitions.
+
+  For instance, ?DEST_ADDRESS_SME_DEFAULT_VALUE and
+  ?DEST_ADDRESS_SME_VALUE/4 were defined for parameter dest_address_sme.
+
 
 1.9  smpp_param.hrl
 

@@ -14,6 +14,8 @@ Contents
 
 1. Version 1.2
 
+- Correct comments in gen_esme/gen_smsc (Exported callbacks).
+
 - Do not spawn a process for each request. Replace request brokers (processes) 
   by request status (static) information.
 

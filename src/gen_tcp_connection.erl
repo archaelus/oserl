@@ -92,6 +92,12 @@
 %%% parameter may be used to control congestion.</p>
 %%%
 %%%
+%%% @TODO Change the meaning of <tt>Count</tt>.  Remove unlinks from
+%%% <a href="#handle_call-3">handle_call/3</a> on events 
+%%% <tt>controlling_process</tt> and <tt>spawn_accept</tt>.  Trap children 
+%%% exits.
+%%%
+%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
@@ -346,10 +352,8 @@ init([Pid, Module, {listen, Port, Count}]) ->
         Error ->
             {stop, Error}
     end;
-init([Pid, Module, {accept, Socket, From}]) ->
+init([Pid, Module, {accept, Socket}]) ->
     Self = self(),
-    link(Pid),
-    unlink(From),
     process_flag(trap_exit, true),
     spawn_link(fun() -> wait_recv(Self, Socket) end),
     {ok, #state{owner = Pid, socket = Socket, mod = Module}}.
@@ -392,15 +396,35 @@ handle_call({accept, Socket}, _From, S) ->
             {reply, {error, reject}, S}
     end;
 handle_call({spawn_accept, Socket}, From, S) ->
-    Self = self(),
-    case (S#state.mod):handle_accept(S#state.owner, Self, Socket) of
-        {ok, NewOwner} ->
-            Reply = start_accept(NewOwner, S#state.mod, Socket),
-            {reply, Reply, S};
-        _Reject ->
-            {reply, {error, reject}, S}
+    % Start a gen_connection to handle the new Socket, setting self() as owner.
+    % Need to pass the pid() of this new gen_connection along with the
+    % handle_accept callback.
+    %
+    % Here we talk about the controlling process of the behaviour.  Notice that
+    % the controller of the underlying tcp socket is stablished in wait_accept.
+    Accept = {accept, Socket},
+    case gen_server:start_link(?MODULE, [self(), S#state.mod, Accept], []) of
+        {ok, Pid} ->
+            case (S#state.mod):handle_accept(S#state.owner, Pid, Socket) of
+                {ok, NewOwner} ->
+                    % Transfer the control of the new connection to NewOwner. 
+                    gen_tcp_connection:controlling_process(Pid, NewOwner),
+                    {reply, {ok, Pid}, S};
+                _Reject ->
+                    % The socket will be closed, but don't need (want) to get
+                    % the exit signal (unlink from it).
+                    %
+                    % %@see TODOs
+                    unlink(Pid),  
+                    {reply, {error, reject}, S}
+            end;
+        Error ->
+            {reply, Error, S}
     end;
-handle_call({owner, NewOwner}, From, #state{owner = From} = S) ->
+handle_call({owner, NewOwner}, {Owner, _Tag}, #state{owner = Owner} = S) ->
+    % %@see TODOs
+    link(NewOwner),
+    unlink(Owner),
     {reply, ok, S#state{owner = NewOwner}};
 handle_call({owner, NewOwner}, From, S) ->
     {reply, {error, eperm}, S};
@@ -458,9 +482,17 @@ handle_cast({recv, Socket, Input, Lapse}, S) ->
 handle_info({'EXIT', _Child, normal}, S) ->
     % A socket or loop exits with normal status
     {noreply, S};
-handle_info({'EXIT', _Child, Reason}, S) ->
-    % A wait_accept or wait_recv loop exits on error
+handle_info({'EXIT', _AcceptLoop, {accept_error, Reason}}, S) ->
+    % A wait_accept loop exits on error
     {stop, Reason, S};
+handle_info({'EXIT', _RecvLoop, {recv_error, Reason}}, S) ->
+    % A wait_accept loop exits on error
+    {stop, Reason, S};
+handle_info({'EXIT', _Child, Reason}, S) ->
+    % A child gen_connection exits on error.  
+	%
+    % %@see TODOs
+    {noreply, S};
 handle_info(Info, S) ->
     {noreply, S}.
 
@@ -499,16 +531,6 @@ code_change(OldVsn, State, Extra) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-%% @spec start_accept(Socket, From, Owner, Module) -> Result
-%%    Socket = socket()
-%%
-%% @doc Starts a separate gen_connection with the given <tt>Socket</tt>.
-%% @end 
-start_accept(Owner, Module, Socket) ->
-    Accept = {accept, Socket, self()},
-    gen_server:start_link(?MODULE, [Owner, Module, Accept], []).
-
-
 %% @spec wait_accept(Conn, LSocket) -> void()
 %%    Conn     = pid()
 %%    LSocket = socket()

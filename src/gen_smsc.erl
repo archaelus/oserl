@@ -60,7 +60,7 @@
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
-%%% @author Enrique Marcote Peña <mpquique@udc.es>
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 0.1, {13 May 2004} {@time}.
 %%% @end
@@ -73,8 +73,8 @@
 %%%-------------------------------------------------------------------
 
 %%%-------------------------------------------------------------------
-% Behaviour exports
-%%--------------------------------------------------------------------
+%%% Behaviour exports
+%%%-------------------------------------------------------------------
 -export([behaviour_info/1]).
 
 %%%-------------------------------------------------------------------
@@ -136,11 +136,20 @@
 %% @end
 behaviour_info(callbacks) ->
      [{init, 1},
-      {handle_parse_request, 1}, 
-      {handle_price_request, 1},
-      {handle_subscriber_request, 3},
-      {handle_visitor_request, 3},
-      {handle_error, 3},
+      {bind_receiver, 3}, 
+      {bind_transmitter, 3}, 
+      {bind_transceiver, 3}, 
+      {broadcast_sm, 3},
+      {cancel_broadcast_sm, 3},
+      {cancel_sm, 3},
+      {query_broadcast_sm, 3},
+      {query_sm, 3},
+      {replace_sm, 3},
+      {submit_multi, 3},
+      {deliver_sm, 3},
+      {data_sm, 3},
+      {unbind, 2},
+      {handle_session_failure, 1},
       {handle_call, 3},
       {handle_cast, 2},
       {handle_info, 2},
@@ -176,14 +185,20 @@ start_link(ServerName, Module, Args, Options) ->
 alert(ServerRef, User, Data) ->
     gen_server:cast(ServerRef, {alert, User, Data}).
 
-call(ServerRef, Request) ->
-    gen_server:call(ServerRef, {service, Request}).
 
-call(ServerRef, Request, Timeout) ->
-    gen_server:call(ServerRef, {service, Request}, Timeout).
+
+
+call(SMSC, Request) ->
+    gen_server:call(SMSC, {call, Request}).
+
+call(SMSC, Request, Timeout) ->
+    gen_server:call(SMSC, {call, Request}, Timeout).
     
-cast(ServerRef, Request) ->
-    gen_server:cast(ServerRef, {service, Request}).
+cast(SMSC, Request) ->
+    gen_server:cast(SMSC, {cast, Request}).
+
+
+
 
 request(ServerRef, User, Data) ->
     gen_server:cast(ServerRef, {request, User, Data}).
@@ -249,7 +264,41 @@ init({Mod, Args}) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({service, Request}, From, S) ->
+% Peer ESME SMPP requests 
+handle_call({Id, Session, Pdu}, From, S) when Id == bind_receiver;
+                                              Id == bind_transmitter;
+                                              Id == bind_transceiver;
+                                              Id == broadcast_sm;
+                                              Id == cancel_broadcast_sm;
+                                              Id == cancel_sm;
+                                              Id == query_broadcast_sm;
+                                              Id == query_sm;
+                                              Id == replace_sm;
+                                              Id == submit_multi;
+                                              Id == deliver_sm;
+                                              Id == data_sm ->
+    Self = self(),
+    Args = [Self, Session, Pdu],
+    spawn_link(fun() -> apply_callback(Self, From, S#state.mod, Id, Args) end),
+    {noreply, State};
+handle_call({unbind, Session}, From, S) ->
+    (S#state.mod):unbind(self(), Session);
+
+% handle_call({reply, Reply, NewMS}, From, S) ->
+%     {reply, Reply, S#state{mod_state = NewMS}};
+% handle_call({reply, Reply, NewMS, Timeout}, From, S) ->
+%     {reply, Reply, S#state{mod_state = NewMS}, Timeout};
+% handle_call({noreply, NewMS}, From, S) ->
+%     {noreply, S#state{mod_state = NewMS}};
+% handle_call({noreply, NewMS, Timeout}, From, S) ->
+%     {noreply, S#state{mod_state = NewMS}, Timeout};
+% handle_call({stop, Reason, Reply, NewMS}, From, S) ->
+%     {stop, Reason, Reply, S#state{mod_state = NewMS}};
+% handle_call({stop, Reason, NewMS}, From, S) ->
+%     {stop, Reason,  S#state{mod_state = NewMS}};
+
+% Callback SMSC custom calls
+handle_call({call, Request}, From, S) ->
     case (S#state.mod):handle_call(Request, From, S#state.mod_state) of
         {reply, Reply, NewMS} ->
             {reply, Reply, S#state{mod_state = NewMS}};
@@ -263,9 +312,7 @@ handle_call({service, Request}, From, S) ->
             {stop, Reason, Reply, S#state{mod_state = NewMS}};
         {stop, Reason, NewMS} ->
             {stop, Reason,  S#state{mod_state = NewMS}}
-    end;
-handle_call(die, _From, State) ->
-    {stop, normal, ok, State}.
+    end.
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -284,15 +331,6 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast({service, Request}, S) ->
-    case (S#state.mod):handle_cast(Request, S#state.mod_state) of
-        {noreply, NewMS} ->
-            {noreply, S#state{mod_state = NewMS}};
-        {noreply, NewMS, Timeout} ->
-            {noreply, S#state{mod_state = NewMS}, Timeout};
-        {stop, Reason, NewMS} ->
-            {stop, Reason,  S#state{mod_state = NewMS}}
-    end;
 handle_cast({request, User, Data}, S) ->
     R = (S#state.mod):handle_parse_request(Data),
     case account_mgr:lookup(User) of
@@ -303,12 +341,31 @@ handle_cast({request, User, Data}, S) ->
     end,
     {noreply, S};
 handle_cast({response, User, Data}, S) ->
-	amusement:send_sms(User, Data),
+    amusement:send_sms(User, Data),
     {noreply, S};
 handle_cast({alert, User, Data}, S) ->
-	amusement:send_sms(User, Data),
+    amusement:send_sms(User, Data),
     {noreply, S};
-handle_cast({mod_state, NewMS}, S) ->
+
+handle_cast({noreply, NewMS}, From, S) ->
+    {noreply, S#state{mod_state = NewMS}};
+handle_cast({noreply, NewMS, Timeout}, From, S) ->
+    {noreply, S#state{mod_state = NewMS}, Timeout};
+handle_cast({stop, Reason, NewMS}, From, S) ->
+    {stop, Reason,  S#state{mod_state = NewMS}};
+
+
+handle_cast({cast, Request}, S) ->
+    case (S#state.mod):handle_cast(Request, S#state.mod_state) of
+        {noreply, NewMS} ->
+            {noreply, S#state{mod_state = NewMS}};
+        {noreply, NewMS, Timeout} ->
+            {noreply, S#state{mod_state = NewMS}, Timeout};
+        {stop, Reason, NewMS} ->
+            {stop, Reason,  S#state{mod_state = NewMS}}
+    end;
+
+handle_cast({mod_state, NewMs}, S) ->
     {noreply, S#state{mod_state = NewMS}}.
 
 
@@ -368,9 +425,9 @@ code_change(OldVsn, State, Extra) ->
 
 
 %%%===================================================================
-%%% Session functions
+%%% SMSC Session functions
 %%%===================================================================
-%% @spec bind_receiver(SMSC, Session, Pdu) -> ok
+%% @spec bind_receiver(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -382,9 +439,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+bind_receiver(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {bind_receiver, Session, Pdu}, infinity).
 
 
-%% <tt>bind_transmitter(SMSC, Session, Pdu) -> ok</tt>
+%% @spec bind_transmitter(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -396,8 +455,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+bind_transmitter(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {bind_transmitter, Session, Pdu}, infinity).
 
-%% <tt>bind_transceiver(SMSC, Session, Pdu) -> ok</tt>
+
+%% @spec bind_transceiver(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -409,8 +471,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+bind_transceiver(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {bind_transceiver, Session, Pdu}, infinity).
 
-%% <tt>broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+
+%% @spec broadcast_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -422,8 +487,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+broadcast_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {broadcast_sm, Session, Pdu}, infinity).
 
-%% <tt>cancel_broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+
+%% @spec cancel_broadcast_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -435,8 +503,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+cancel_broadcast_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {cancel_broadcast_sm, Session, Pdu}, infinity).
 
-%% <tt>cancel_sm(SMSC, Session, Pdu) -> Result</tt>
+
+%% @spec cancel_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -448,8 +519,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+cancel_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {cancel_sm, Session, Pdu}, infinity).
 
-%% <tt>query_broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+
+%% @spec query_broadcast_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -461,8 +535,11 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+query_broadcast_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {query_broadcast_sm, Session, Pdu}, infinity).
 
-%% <tt>query_sm(SMSC, Session, Pdu) -> Result</tt>
+
+%% @spec query_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
@@ -474,6 +551,9 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+query_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {query_sm, Session, Pdu}, infinity).
+
 
 %% @spec replace_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
@@ -487,6 +567,9 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+replace_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {replace_sm, Session, Pdu}, infinity).
+
 
 %% @spec submit_multi(SMSC, Session, Pdu) -> Result
 %%    SMSC = pid()
@@ -500,6 +583,8 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+submit_multi(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {submit_multi, Session, Pdu}, infinity).
 
 
 %% @spec deliver_sm(SMSC, Session, Pdu) -> Result
@@ -514,6 +599,9 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+deliver_sm(SMSC, Session, Pdu) -> 
+    gen_server:call(SMSC, {deliver_sm, Session, Pdu}, infinity).
+
 
 %% @spec data_sm(SMSC, Session, Pdu) -> Result
 %%    SMSC       = pid()
@@ -527,6 +615,9 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
+data_sm(SMSC, Session, Pdu) ->
+    gen_server:call(SMSC, {data_sm, Session, Pdu}, infinity).
+
 
 %% @spec unbind(SMSC, Session) -> ok | {error, Error}
 %%    SMSC = pid()
@@ -536,14 +627,38 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc_session.html#outbind-3">gen_smsc_session - 
 %% /3</a> callback implementation.
 %% @end
-
-
-
+unbind(SMSC, Session) ->
+    gen_server:call(SMSC, {unbind, Session}, infinity).
 
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+% apply_sync_callback(Pid, From, Mod, Callback, Args) ->
+%     Reply = gen_server:call(Pid, apply(Mod, Callback, Args)),
+%     gen_server:reply(From, Reply).
+
+% apply_async_callback(Pid, Mod, Callback, Args) ->
+%     gen_server:cast(Pid, apply(Mod, Callback, Args)).
+
+apply_callback(Pid, From, Mod, Callback, Args) ->
+    case apply(Mod, Callback, Args) of
+        {reply, Reply, NewMS} ->
+            gen_server:cast(Pid, {noreply, NewMS}),
+            gen_server:reply(From, Reply);
+        {reply, Reply, NewMS, Timeout} ->
+            gen_server:cast(Pid, {noreply, NewMS, Timeout}),
+            gen_server:reply(From, Reply);
+        {stop, Reason, Reply, NewMS} ->
+            gen_server:reply(From, Reply), % reply first
+            gen_server:cast(Pid, {stop, Reason, NewMS});
+        WithoutReply ->
+            gen_server:cast(Pid, WithoutReply)
+    end.
+
+
+
 %% @spec 
 %%
 %% @doc 

@@ -59,4 +59,6 @@ $(DOCDIR)/%.html:	%.erl
 # ----------------------------------------------------
 # .hrl dependencies
 # ----------------------------------------------------
-$(EBIN)/echo_esme.beam:../../include/gen_esme.hrl
+$(EBIN)/code_lock_esme.beam:../../include/oserl.hrl
+$(EBIN)/echo_esme.beam:../../include/oserl.hrl
+$(EBIN)/submit_esme.beam:../../include/oserl.hrl

@@ -34,6 +34,12 @@
 %   </li>
 % </ul>
 %
+% [26 Feb 2004]
+%
+% <ul>
+%   <li>Last changes in <a href="gen_esme.html">gen_esme.erl</a> adopted.</li>
+% </ul>
+%
 %
 % @copyright 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
@@ -98,7 +104,8 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
     case gen_esme:start_link({local, submit_esme}, ?MODULE, Setup) of
         {ok, Eid} ->
-            gen_esme:bind_transmitter(submit_esme, McAddr),
+            gen_esme:open_transmitter(submit_esme, McAddr),
+            gen_esme:bind_transmitter(submit_esme),
             {ok, Eid};
         Error ->
             Error
@@ -117,6 +124,7 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
 %%
 stop() ->
     gen_esme:unbind_transmitter(submit_esme),
+    gen_esme:close_transmitter(submit_esme),
     gen_esme:stop(submit_esme).
 
 

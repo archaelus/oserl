@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -30,8 +30,14 @@
 %   <li>Trailing $\0 removed from the c_octet_string values.</li>
 % </ul>
 %
+% [26 Feb 2004]
 %
-% @copyright 2003 Enrique Marcote Peña
+% <ul>
+%   <li>Last changes in <a href="gen_esme.html">gen_esme.erl</a> adopted.</li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique]
 % @version 1.0, {18 Jul 2003} {@time}.
@@ -62,12 +68,12 @@
 -export([deliver_sm/3, deliver_data_sm/3]).
 -export([bound_receiver/3,
          bound_transmitter/3,
+         receiver_cannot_bind/3,
+         transmitter_cannot_bind/3,
          receiver_unbind/2,
          transmitter_unbind/2,
-         receiver_mc_unavailable/4,
-         transmitter_mc_unavailable/4,
-         receiver_can_not_resume/5,
-         transmitter_can_not_resume/5]).
+         receiver_mc_unavailable/2,
+         transmitter_mc_unavailable/2]).
 
 %%%-------------------------------------------------------------------
 % Macros
@@ -101,27 +107,29 @@ start() ->
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
 %    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
-	Setup = #gen_esme_setup{
-	  system_id         = SystemId,
-	  password          = Password,
-	  addr_ton          = ?TON_INTERNATIONAL,
-	  addr_npi          = ?NPI_ISDN,
-	  address_range     = AddrRange,
-	  source_addr_ton   = ?TON_INTERNATIONAL,
-	  source_addr_npi   = ?NPI_ISDN,
-	  source_addr       = SourceAddr,
-	  service_type      = ?SERVICE_TYPE_NULL,
-	  system_type       = ?NULL_C_OCTET_STRING,
-	  session_init_time = ?SESSION_INIT_TIME, 
-	  enquire_link_time = ?ENQUIRE_LINK_TIME,
-	  inactivity_time   = 240000,
-	  response_time     = ?RESPONSE_TIME,
-	  rebind_time       = ?REBIND_TIME},
+    Setup = #gen_esme_setup{
+      system_id         = SystemId,
+      password          = Password,
+      addr_ton          = ?TON_INTERNATIONAL,
+      addr_npi          = ?NPI_ISDN,
+      address_range     = AddrRange,
+      source_addr_ton   = ?TON_INTERNATIONAL,
+      source_addr_npi   = ?NPI_ISDN,
+      source_addr       = SourceAddr,
+      service_type      = ?SERVICE_TYPE_NULL,
+      system_type       = ?NULL_C_OCTET_STRING,
+      session_init_time = ?SESSION_INIT_TIME, % 180000
+      enquire_link_time = ?ENQUIRE_LINK_TIME,
+      inactivity_time   = 240000,
+      response_time     = ?RESPONSE_TIME,
+      rebind_time       = ?REBIND_TIME},
     case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
         {ok, Eid} ->
-%			receive after 200000 ->	ok end,
-            gen_esme:bind_receiver(echo_esme, McAddr),
-            gen_esme:bind_transmitter(echo_esme, McAddr),
+            gen_esme:open_transmitter(echo_esme, McAddr),
+            gen_esme:bind_transmitter(echo_esme),
+%            receive after 120000 ->    ok end,
+            gen_esme:open_receiver(echo_esme, McAddr),
+            gen_esme:bind_receiver(echo_esme),
             process_flag(trap_exit, true),
             {ok, Eid};
         Error ->
@@ -141,7 +149,9 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
 %%
 stop() ->
     gen_esme:unbind_receiver(echo_esme),
+    gen_esme:close_receiver(echo_esme),
     gen_esme:unbind_transmitter(echo_esme),
+    gen_esme:close_transmitter(echo_esme),
     gen_esme:stop(echo_esme).
 
 
@@ -149,71 +159,52 @@ stop() ->
 % ESME functions
 %%====================================================================
 %%%
-% @spec bound_receiver(Pid, Sid, SystemId) -> ok
+% @spec bound_receiver(Pid, Sid, PduResp) -> ok
 %    Pid = pid()
 %    Eid = pid()
-%    SystemId = string()
+%    PduResp = pdu()
 %
-% @doc After an outbind request or a period during the MC was unreachable, if 
-% the ESME gets to (re)bind as a receiver to the MC, this callback is triggered
-% to notify.  Returning value is ignored by the ESME. The callback module
-% may start some initialization on response to this callback.
+% @doc The ESME just bound as a receiver.
 %
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  
-% <tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process
-% id.</p>
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-bound_receiver(Pid, Sid, SystemId) ->
+bound_receiver(Pid, Sid, PduResp) ->
+    SystemId = operation:get_value(system_id, PduResp),
     io:format("Bound as receiver to ~p~n", [SystemId]).
 
 
 %%%
-% @spec bound_transmitter(Pid, Sid, SystemId) -> ok
+% @spec bound_transmitter(Pid, Sid, PduResp) -> ok
 %    Pid = pid()
 %    Eid = pid()
-%    SystemId = string()
+%    PduResp = pdu()
 %
-% @doc After a period during the MC was unreachable, if the ESME gets to 
-% rebind as a transmitter to the MC, this callback is triggered to notify.  
-% Returning value is ignored by the ESME.  The callback module may start some
-% initialization on response to this callback.
+% @doc The ESME just bound as a transmitter.
 %
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  <tt>Pid</tt>
-% is the ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
+% <p>Returning value is ignored by the ESME. The callback module may start
+% some initialization on response to this callback.</p>
+%
+% <p><tt>PduResp</tt> is the PDU response sent by the MC.  <tt>Pid</tt> is the 
+% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-bound_transmitter(Pid, Sid, SystemId) ->
+bound_transmitter(Pid, Sid, PduResp) ->
+    SystemId = operation:get_value(system_id, PduResp),
     io:format("Bound as transmitter to ~p~n", [SystemId]).
 
-
-%%%
-% @spec bound_transceiver(Pid, Sid, SystemId) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    SystemId = string()
-%
-% @doc After an outbind request or a period during the MC was unreachable, if 
-% the ESME gets to (re)bind as a transceiver to the MC, this callback is 
-% triggered to notify.  Returning value is ignored by the ESME.  The callback 
-% module may start some initialization on response to this callback.
-%
-% <p>The MC on the other peer is identified by <tt>SystemId</tt>.  <tt>Pid</tt>
-% is the ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
 
 %%%
 % @spec receiver_unbind(Pid, Eid) -> ok | {error, Error}
@@ -268,35 +259,9 @@ transmitter_unbind(Pid, Eid) ->
 
 
 %%%
-% @spec transceiver_unbind(Pid, Eid) -> ok | {error, Error}
+% @spec receiver_mc_unavailable(Pid, Eid) -> ok
 %    Pid = pid()
 %    Eid = pid()
-%    Error = int()
-%
-% @doc This callback forwards an unbind request (issued by the MC) to the 
-% transceiver session of the ESME.  If <tt>ok</tt> returned an unbind_resp
-% with a ESME_ROK command_status is sent to the MC and the session moves 
-% into the unbound state.  When <tt>{error, Error}</tt> is returned by 
-% the ESME, the response PDU sent by the session to the MC will have an 
-% <tt>Error</tt> command_status and the session will remain on it's 
-% current bound_trx state.
-%
-% <p><tt>Pid</tt> is the ESME parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-
-
-%%%
-% @spec receiver_mc_unavailable(Pid, Eid, Address, Port) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Address = string() | atom() | ip_address()
-%    Port = int()
 %
 % @doc If the MC becomes unavailable on the receiver session, this circumstance
 % is notified with a call to this function.
@@ -313,16 +278,14 @@ transmitter_unbind(Pid, Eid) ->
 %
 % %@equiv
 %%
-receiver_mc_unavailable(Pid, Eid, Address, Port) ->
+receiver_mc_unavailable(Pid, Eid) ->
     io:format("MC unavailable on receiver session~n", []).
 
 
 %%%
-% @spec transmitter_mc_unavailable(Pid, Eid, Address, Port) -> ok
+% @spec transmitter_mc_unavailable(Pid, Eid) -> ok
 %    Pid = pid()
 %    Eid = pid()
-%    Address = string() | atom() | ip_address()
-%    Port = int()
 %
 % @doc If the MC becomes unavailable on the transmitter session, this
 % circumstance is notified with a call to this function.
@@ -339,163 +302,52 @@ receiver_mc_unavailable(Pid, Eid, Address, Port) ->
 %
 % %@equiv
 %%
-transmitter_mc_unavailable(Pid, Eid, Address, Port) ->
+transmitter_mc_unavailable(Pid, Eid) ->
     io:format("MC unavailable on transmitter session~n", []).
+
+
+%%%
+% @spec receiver_cannot_bind(Pid, Eid, Error) -> ok
+%    Pid = pid()
+%    Eid = pid()
+%    Error = {error, term()}
+%
+% @doc Cannot bind on the receiver session.
+% 
+% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% process id.</p>
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+receiver_cannot_bind(Pid, Eid, Error) ->
+    io:format("Can not bind on receiver session: ~p~n", [Error]).
      
 
 %%%
-% @spec transceiver_mc_unavailable(Pid, Eid, Address, Port) -> ok
+% @spec transmitter_cannot_bind(Pid, Eid, Error) -> ok
 %    Pid = pid()
 %    Eid = pid()
-%    Address = string() | atom() | ip_address()
-%    Port = int()
+%    Error = {error, term()}
 %
-% @doc If the MC becomes unavailable on the transceiver session, this
-% circumstance is notified with a call to this function.
-%
-% <p>Notice that this callback could also be triggered after an unbind
-% operation, if the MC closes the underlying connection first.  The ESME must
-% handle these <i>undesired</i> callbacks appropriately.</p>
+% @doc Cannot bind on the transmitter session.
 % 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
+% <p><tt>Error</tt> is the error returned by the bind operation.</p>
+% 
+% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME
+% process id.</p>
 % @end
 %
 % %@see
 %
 % %@equiv
 %%
-
-
-%%%
-% @spec receiver_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Addr = string() | atom() | ip_address()
-%    Port = int()
-%    Err  = term()
-%
-% @doc After a period of unavailability of the MC, once the underlying 
-% connection was recover, the receiver session failed to rebind to the MC with
-% error <tt>Err</tt>.  The callback module must take care of this 
-% situation.
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-receiver_can_not_resume(Pid, Eid, Addr, Port, Err) ->
-    io:format("Can not resume service on receiver session~n", []).
-     
-
-%%%
-% @spec transmitter_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Addr = string() | atom() | ip_address()
-%    Port = int()
-%    Err  = term()
-%
-% @doc After a period of unavailability of the MC, once the underlying 
-% connection was recover, the transmitter session failed to rebind to the MC 
-% with error <tt>Err</tt>.  The callback module must take care of this 
-% situation.
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-transmitter_can_not_resume(Pid, Eid, Addr, Port, Err) ->
-    io:format("Can not resume service on transmitter session~n", []).
-
-
-%%%
-% @spec transceiver_can_not_resume(Pid, Eid, Addr, Port, Err) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Addr = string() | atom() | ip_address()
-%    Port = int()
-%    Err  = term()
-%
-% @doc After a period of unavailability of the MC, once the underlying 
-% connection was recover, the transceiver session failed to rebind to the MC 
-% with error <tt>Err</tt>.  The callback module must take care of this 
-% situation.
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-
-%%%
-% @spec smpp_listen_error(Pid, Eid, Port) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Port = int()
-%
-% @doc When an ESME on listening state looses the listen socket, uses
-% this callback to notify the failure.
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-
-%%%
-% @spec smpp_listen_recovery(Pid, Eid, Port) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Port = int()
-%
-% @doc After a listen failure, a new socket could be set to listen again on
-% <tt>Port</tt>.  The ESME uses this callback to notify the recovery.
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-
-
-%%%
-% @spec alert_notification(Pid, Eid, Pdu) -> ok
-%    Pid = pid()
-%    Eid = pid()
-%    Pdu = pdu()
-%
-% @doc Alert notifications are forwarded by the ESME using this callback.  The
-% alert_notification PDU is given along.
-%
-% <p>The callback module is responsible of initiating the appropriate actions
-% associated to the alert notification.</p>
-% 
-% <p><tt>Pid</tt> is the ESME's parent id, <tt>Eid</tt> as the ESME process id.
-% </p>
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
+transmitter_cannot_bind(Pid, Eid, Error) ->
+    io:format("Can not bind on transmitter session: ~p~n", [Error]).
 
 
 %%%
@@ -570,3 +422,4 @@ deliver_data_sm(_Pid, Eid, Pdu) ->
 %%%===================================================================
 % Internal functions
 %%====================================================================
+

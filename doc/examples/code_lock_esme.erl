@@ -30,6 +30,12 @@
 %   <li>Trailing $\0 removed from the c_octet_string values.</li>
 % </ul>
 %
+% [26 Feb 2004]
+%
+% <ul>
+%   <li>Last changes in <a href="gen_esme.html">gen_esme.erl</a> adopted.</li>
+% </ul>
+%
 %
 % @copyright 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
@@ -52,12 +58,14 @@ start() ->
     start_link("banana", "secret", "1949", "1949", {193, 144, 50, 51}, [1,2]).
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) ->
-	io:format("Starting the code lock ESME...", []),
+    io:format("Starting the code lock ESME...", []),
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
     case gen_esme:start_link({local, code_lock_esme}, ?MODULE, Setup) of
         {ok, Eid} ->
-            gen_esme:bind_receiver(code_lock_esme, McAddr),
-            gen_esme:bind_transmitter(code_lock_esme, McAddr),
+            gen_esme:open_transmitter(code_lock_esme, McAddr),
+            gen_esme:bind_transmitter(code_lock_esme),
+            gen_esme:open_receiver(code_lock_esme, McAddr),
+            gen_esme:bind_receiver(code_lock_esme),
             io:format("bound as receiver/transceiver~n", []),
             gen_fsm:start_link({local, code_lock_fsm}, ?MODULE, Code, []),
             {ok, Eid};
@@ -69,10 +77,12 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) ->
 stop() ->
     io:format("Stopping the code lock ESME...", []),
     gen_esme:unbind_receiver(code_lock_esme),
+    gen_esme:close_receiver(code_lock_esme),
     gen_esme:unbind_transmitter(code_lock_esme),
+    gen_esme:close_transmitter(code_lock_esme),
     gen_esme:stop(code_lock_esme),
     gen_fsm:send_all_state_event(code_lock_fsm, stop),
-	io:format("done~n", []).
+    io:format("done~n", []).
 
 
 deliver_sm(_Pid, _Eid, Pdu) -> 
@@ -100,8 +110,8 @@ closed({button, Digit, Caller}, {SoFar, Code, Who}) when Who == undefined;
     end;
 closed({button, Digit, Caller}, {SoFar, Code, Who}) ->
     submit_sm("Please, wait your turn", Caller),
-	{next_state, closed, {SoFar, Code, Who}}.
-	
+    {next_state, closed, {SoFar, Code, Who}}.
+    
 
 open(timeout, {SoFar, Code, Who}) ->
     do_close(Who),
@@ -126,7 +136,7 @@ do_close(Who) ->
 
 
 submit_sm(Mesg, Dest) ->
-	io:format("Submitted SM: ~p~nDestination: ~p~n", [Mesg, Dest]),
+    io:format("Submitted SM: ~p~nDestination: ~p~n", [Mesg, Dest]),
     ParamList = [{short_message, Mesg}|Dest],
     spawn(fun() -> gen_esme:submit_sm(code_lock_esme, ParamList) end).
-	
+    

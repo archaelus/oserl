@@ -141,6 +141,8 @@ How these changes affected individual files is described below.
 - If already connected to Address on Port, the term 
   {error, {already_listening, Address, Port}} is returned for a request to 
   connect to Address on Port (instead of ok).
+- Changes in comments.
+
 
 
 1.13 gen_esme_session.erl
@@ -148,12 +150,14 @@ How these changes affected individual files is described below.
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 - All timers reviewed (fixed).
 - request_broker fixed when Caller is undefined.
+- Changes in comments.
 
 
 1.14 gen_esme.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 - Completely redesigned.
+- Callback interface redefined.
 
 
 1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
@@ -162,7 +166,7 @@ How these changes affected individual files is described below.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 
   finally removed.  Time manipulation is now much more natural... and easy.
 - Last changes in gen_esme.erl adopted.
-
+- Use new callbacks defined in gen_esme.erl.
 
 1.16 Other changes
 

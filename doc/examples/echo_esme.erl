@@ -100,9 +100,26 @@ start() ->
     
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
-    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+%    Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
+	Setup = #gen_esme_setup{
+	  system_id         = SystemId,
+	  password          = Password,
+	  addr_ton          = ?TON_INTERNATIONAL,
+	  addr_npi          = ?NPI_ISDN,
+	  address_range     = AddrRange,
+	  source_addr_ton   = ?TON_INTERNATIONAL,
+	  source_addr_npi   = ?NPI_ISDN,
+	  source_addr       = SourceAddr,
+	  service_type      = ?SERVICE_TYPE_NULL,
+	  system_type       = ?NULL_C_OCTET_STRING,
+	  session_init_time = ?SESSION_INIT_TIME, 
+	  enquire_link_time = ?ENQUIRE_LINK_TIME,
+	  inactivity_time   = 240000,
+	  response_time     = ?RESPONSE_TIME,
+	  rebind_time       = ?REBIND_TIME},
     case gen_esme:start_link({local, echo_esme}, ?MODULE, Setup) of
         {ok, Eid} ->
+%			receive after 200000 ->	ok end,
             gen_esme:bind_receiver(echo_esme, McAddr),
             gen_esme:bind_transmitter(echo_esme, McAddr),
             process_flag(trap_exit, true),

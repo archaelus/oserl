@@ -1307,7 +1307,6 @@
 %%%   <li><tt>SMSC = Session = pid()</tt></li>
 %%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
-%%%   <li><tt>Bind = {unbind, Pdu}</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
 %%% </ul>
 %%%

@@ -13,10 +13,6 @@ Contents
 
 ---
 
-Mirar las callbacks bind_receiver_resp y otras, ver que se pasa bien el Pid
-del ESME y no el de la session.
-
-
 1. Version 1.0
 
 - Implement a gen_mc_session behavior.

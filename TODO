@@ -43,6 +43,9 @@ Index
 
 - Automatically add/remove trailing '\0' in C-Octet Strings.
 
+  Pay special attention to C-Octet String parameteres defined as composites
+  (records), such us TIME_DOMAIN.
+
 
 2. Version 1.0
 

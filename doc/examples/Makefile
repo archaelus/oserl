@@ -10,7 +10,7 @@ include ../../vsn.mk
 VSN = $(OSERL_VSN)
 
 
-MODULES = echo_esme code_lock_esme
+MODULES = echo_esme code_lock_esme submit_esme
 
 
 ERL_FLAGS += -W

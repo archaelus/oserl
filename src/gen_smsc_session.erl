@@ -15,26 +15,25 @@
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 %%%
 
-%%% @doc Generic MC SMPP Session.
+%%% @doc Generic SMSC SMPP Session.
 %%%
-%%% <p>A generic MC SMPP session modeled as a FSM.  It also implements the
-%%% gen_connection behaviour.</p>
+%%% <p>A generic SMSC SMPP session modeled as a FSM.  It also implements the
+%%% <a href="gen_connection.html">gen_connection</a> behaviour.</p>
 %%%
-%%% <p>Every SMPP session works over a single TCP/IP connection.  Connection 
-%%% errors/recovery are automatically handled by the session and reported to 
-%%% the MC through esme_unavailable/2 and resume_service/2 functions.  Please 
-%%% notice that if a harmful error occurs, causing the process of the 
+%%% <p>Every SMPP session works over a single TCP/IP connection.  If the 
 %%% underlying connection to terminate, the session is also terminated.</p>
+%%%
+%%% <p>Connection errors must be handled by the SMSC.</p>
 %%%
 %%%
 %%% <h2>State transitions table</h2>
 %%%
-%%% <p>To a better understanding of this behaviour, should notice the state
-%%% names on a MC session references the state of the ESME session on the other
-%%% peer.  Thus:</p>
+%%% <p>To a better understanding of this behaviour, should notice that the
+%%% state name on a SMSC session references that state of the ESME session on 
+%%% the other peer.  Thus:</p>
 %%%
 %%% <dl>
-%%%   <dt>bound_rx: </dt><dd>A MC session has this state whenever there's a
+%%%   <dt>bound_rx: </dt><dd>A SMSC session has this state whenever there's a
 %%%     receiver ESME on the other peer.
 %%%   </dd>
 %%%   <dt>bound_tx: </dt><dd>If there is a transmitter ESME on the other peer.
@@ -43,12 +42,12 @@
 %%%   </dd>
 %%% </dl>
 %%%
-%%% <p>Possible states for the MC SMPP session are shown in the first row.
+%%% <p>Possible states for the SMSC SMPP session are shown in the first row.
 %%% Events are those in the first column.  This table shows the next state 
 %%% given an event and the current state.</p>
 %%%
 %%% <p>Operations issued by the other peer (the MC) are treated asynchronously
-%%% by the MC session, thus represented by async events.</p>
+%%% by the SMSC session, thus represented by async events.</p>
 %%%
 %%% <p>Empty cells mean that events are not possible for those states.</p>
 %%%
@@ -316,7 +315,6 @@
 %%%   </tr>
 %%% </table>
 %%%
-
 %%%
 %%%
 %%% <h2>Timers</h2>
@@ -455,7 +453,7 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
-%%%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%%%     <th align="left"><small>data_sm (async)</small></th>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -745,7 +743,7 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
-%%%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%%%     <th align="left"><small>data_sm (async)</small></th>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
@@ -1034,7 +1032,7 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
-%%%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%%%     <th align="left"><small>data_sm (async)</small></th>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
@@ -1204,108 +1202,105 @@
 %%%
 %%% <h2>Callback Function Index</h2>
 %%%
-%%% <p>A module implementing this behaviour may export these functions.  
-%%% Leaving a function undefined preserves the default behaviour.</p>
+%%% <p>A module implementing this behaviour must export these functions.  
+%%% Leaving a callback undefined crashes the entire session (when called).</p>
 %%%
 %%% <table width="100%" border="1">
 %%%   <tr>
-%%%     <td valign="top"><a href="#outbind-3">outbind/3</a></td>
-%%%     <td>Notifies outbind operations.</td>
+%%%     <td valign="top"><a href="#bind_receiver-3">bind_receiver/3</a></td>
+%%%     <td>Forwards bind_receiver operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#bind_transmitter-3">bind_transmitter/3</a>
+%%%     </td>
+%%%     <td>Forwards bind_transmitter operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#bind_transceiver-3">bind_transceiver/3</a>
+%%%     </td>
+%%%     <td>Forwards bind_transceiver operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#broadcast_sm-3">broadcast_sm/3</a></td>
+%%%     <td>Forwards broadcast_sm operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top">
+%%%        <a href="#cancel_broadcast_sm-3">cancel_broadcast_sm/3</a>
+%%%     </td>
+%%%     <td>Forwards cancel_broadcast_sm operations (from the peer ESME) to 
+%%%       the callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#cancel_sm-3">cancel_sm/3</a></td>
+%%%     <td>Forwards cancel_sm operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top">
+%%%       <a href="#query_broadcast_sm-3">query_broadcast_sm/3</a>
+%%%     </td>
+%%%     <td>Forwards query_broadcast_sm operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#query_sm-3">query_sm/3</a></td>
+%%%     <td>Forwards query_sm operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#replace_sm-3">replace_sm/3</a>
+%%%     </td>
+%%%     <td>Forwards replace_sm operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#submit_multi-3">submit_multi/3</a></td>
+%%%     <td>Forwards submit_multi operations (from the peer ESME) to the 
+%%%       callback SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#submit_sm-3">submit_sm/3</a></td>
+%%%     <td>Forwards submit_sm operations (from the peer ESME) to the callback
+%%%       SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#data_sm-3">data_sm/3</a>
+%%%     </td>
+%%%     <td>Forwards data_sm operations (from the peer ESME) to the callback 
+%%%       SMSC.
+%%%     </td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#unbind-2">unbind/2</a></td>
 %%%     <td>Forwards unbind requests.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top">
-%%%       <a href="#alert_notification-3">alert_notification/3</a>
-%%%     </td>
-%%%     <td>Forwards alert_notification operations to the ESME.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top"><a href="#deliver_sm-3">deliver_sm/3</a></td>
-%%%     <td>Forwards deliver_sm operations to the ESME.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top"><a href="#deliver_data_sm-3">deliver_data_sm/3</a>
-%%%     </td>
-%%%     <td>Forwards data_sm operations to the ESME.</td>
 %%%   </tr>
 %%% </table>
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
 %%% 
-%%% <h3><a name="outbind-3">outbind/3</a></h3>
+%%% <h3><a name="bind_receiver-3">bind_receiver/3</a></h3>
 %%%
-%%% <tt>outbind(Pid, Sid, Pdu) -> ok</tt>
+%%% <tt>bind_receiver(SMSC, Session, Pdu) -> ok</tt>
 %%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
-%%% </ul>
-%%%
-%%% <p>Outbind callback.  When the session receives an outbind request this
-%%% callback is triggered to notify the ESME.  Returning value is ignored by 
-%%% the session.</p>
-%%% 
-%%% <p>On response to this function the ESME must start the appropriate actions
-%%% in order to bind or turn the session back to an open or closed state.</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_outbind/2</tt></p>
-%%%
-%%%
-%%% <h3><a name="unbind-2">unbind/2</a></h3>
-%%%
-%%% <tt>unbind(Pid, Sid) -> ok | {error, Error}</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Error = int()</tt></li>
-%%% </ul>
-%%%
-%%% <p>This callback forwards an unbind request (issued by the MC) to the 
-%%% ESME.  If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
-%%% command_status is sent to the MC and the session moves into the unbound
-%%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
-%%% response PDU sent by the session to the MC will have an <tt>Error</tt>
-%%% command_status and the session will remain on it's current bound state
-%%% (bound_rx, bound_tx or bound_trx).</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_unbind/1</tt></p>
-%%%
-%%%
-%%% <h3><a name="alert_notification-3">alert_notification/3</a></h3>
-%%%
-%%% <tt>alert_notification(Pid, Sid, Pdu) -> ok</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Pdu = pdu()</tt></li>
-%%% </ul>
-%%%
-%%% <p>Alert notifications are forwarded to the ESME by this callback.  The
-%%% alert_notification PDU is given to the ESME.</p>
-%%%
-%%% <p>The ESME is responsible of initiating the appropriate actions associated
-%%% to the alert notification.</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_alert_notification/2</tt></p>
-%%%
-%%%
-%%% <h3><a name="deliver_sm-3">deliver_sm/3</a></h3>
-%%%
-%%% <tt>deliver_sm(Pid, Sid, Pdu) -> Result</tt>
-%%% <ul>
-%%%   <li><tt>Pid        = pid()</tt></li>
-%%%   <li><tt>Sid        = pid()</tt></li>
-%%%   <li><tt>Pdu        = pdu()</tt></li>
 %%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
 %%%   </li>
 %%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
@@ -1313,27 +1308,259 @@
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Short messages delivered to the ESME via this callback are enclosed
-%%% inside a deliver_sm PDU.</p>
+%%% <p>Forwards bind_receiver operations (from the peer ESMEs) to the callback
+%%% SMSC.</p>
 %%%
 %%% <p>The <tt>ParamList</tt> included in the response is used to construct
-%%% the deliver_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% the bind_receiver_resp PDU.  If a command_status other than ESME_ROK is to
 %%% be returned by the ESME in the response PDU, the callback should return the
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
 %%%
-%%% <p><b>See also:</b> <tt>callback_deliver_sm/2</tt></p>
+%%% 
+%%% <h3><a name="bind_transmitter-3">bind_transmitter/3</a></h3>
 %%%
-%%%
-%%% <h3><a name="deliver_data_sm-3">deliver_data_sm/3</a></h3>
-%%%
-%%% <tt>deliver_data_sm(Pid, Sid, Pdu) -> Result</tt>
+%%% <tt>bind_transmitter(SMSC, Session, Pdu) -> ok</tt>
 %%% <ul>
-%%%   <li><tt>Pid        = pid()</tt></li>
-%%%   <li><tt>Sid        = pid()</tt></li>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards bind_transmitter operations (from the peer ESMEs) to the 
+%%% callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the bind_transmitter_resp PDU.  If a command_status other than ESME_ROK is 
+%%% to be returned by the ESME in the response PDU, the callback should return 
+%%% the term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="bind_transceiver-3">bind_transceiver/3</a></h3>
+%%%
+%%% <tt>bind_transceiver(SMSC, Session, Pdu) -> ok</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards bind_transceiver operations (from the peer ESMEs) to the 
+%%% callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the bind_transceiver_resp PDU.  If a command_status other than ESME_ROK is 
+%%% to be returned by the ESME in the response PDU, the callback should return 
+%%% the term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="broadcast_sm-3">broadcast_sm/3</a></h3>
+%%%
+%%% <tt>broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards broadcast_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the broadcast_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="cancel_broadcast_sm-3">cancel_broadcast_sm/3</a></h3>
+%%%
+%%% <tt>cancel_broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards cancel_broadcast_sm operations (from the peer ESMEs) to the 
+%%% callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the cancel_broadcast_sm_resp PDU.  If a command_status other than ESME_ROK 
+%%% is to be returned by the ESME in the response PDU, the callback should 
+%%% return the term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is
+%%% the desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="cancel_sm-3">cancel_sm/3</a></h3>
+%%%
+%%% <tt>cancel_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards cancel_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the cancel_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="query_broadcast_sm-3">query_broadcast_sm/3</a></h3>
+%%%
+%%% <tt>query_broadcast_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards query_broadcast_sm operations (from the peer ESMEs) to the 
+%%% callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the query_broadcast_sm_resp PDU.  If a command_status other than ESME_ROK 
+%%% is to be returned by the ESME in the response PDU, the callback should 
+%%% return the term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> 
+%%% is the desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="query_sm-3">query_sm/3</a></h3>
+%%%
+%%% <tt>query_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards query_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the query_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="replace_sm-3">replace_sm/3</a></h3>
+%%%
+%%% <tt>replace_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards replace_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the replace_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%% 
+%%% <h3><a name="submit_multi-3">submit_multi/3</a></h3>
+%%%
+%%% <tt>submit_multi(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards submit_multi operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the submit_multi_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%%
+%%% <h3><a name="submit_sm-3">submit_sm/3</a></h3>
+%%%
+%%% <tt>deliver_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC       = pid()</tt></li>
+%%%   <li><tt>Session    = pid()</tt></li>
 %%%   <li><tt>Pdu        = pdu()</tt></li>
 %%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
 %%%   </li>
@@ -1342,8 +1569,39 @@
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Short messages delivered to the ESME via this callback are enclosed
-%%% inside a data_sm PDU.</p>
+%%% <p>Forwards submit_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>Short messages are enclosed inside a submit_sm PDU.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the submit_sm_resp PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%%
+%%% <h3><a name="data_sm-3">data_sm/3</a></h3>
+%%%
+%%% <tt>data_sm(SMSC, Session, Pdu) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>SMSC       = pid()</tt></li>
+%%%   <li><tt>Session    = pid()</tt></li>
+%%%   <li><tt>Pdu        = pdu()</tt></li>
+%%%   <li><tt>Result     = {ok, ParamList} | {error, Error, ParamList}</tt>
+%%%   </li>
+%%%   <li><tt>ParamList  = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName  = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards data_sm operations (from the peer ESME) to the callback
+%%% SMSC.</p>
+%%%
+%%% <p>Short messages are enclosed inside a data_sm PDU.</p>
 %%%
 %%% <p>The <tt>ParamList</tt> included in the response is used to construct
 %%% the data_sm_resp PDU.  If a command_status other than ESME_ROK is to
@@ -1351,10 +1609,39 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
 %%%
-%%% <p><b>See also:</b> <tt>callback_deliver_data_sm/2</tt></p>
+%%%
+%%% <h3><a name="unbind-2">unbind/2</a></h3>
+%%%
+%%% <tt>unbind(SMSC, Session) -> ok | {error, Error}</tt>
+%%% <ul>
+%%%   <li><tt>SMSC = Session = pid()</tt></li>
+%%%   <li><tt>Error = int()</tt></li>
+%%% </ul>
+%%%
+%%% <p>This callback forwards an unbind request (issued by a peer ESME) to the 
+%%% SMSC.  If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
+%%% command_status is sent to the MC and the session moves into the unbound
+%%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
+%%% response PDU sent by the session to the MC will have an <tt>Error</tt>
+%%% command_status and the session will remain on it's current bound state
+%%% (bound_rx, bound_tx or bound_trx).</p>
+%%%
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% process id.</p>
+%%%
+%%%
+%%% <h2>Used modules</h2>
+%%%
+%%% <ul>
+%%%   <li>gen_fsm</li>
+%%%   <li>ets</li>
+%%%   <li>gen_connection</li>
+%%%   <li>my_calendar</li>
+%%%   <li>operation</li>
+%%% <ul>
 %%%
 %%%
 %%% <h2>Changes 0.1 -&gt; 0.2</h2>
@@ -1383,10 +1670,10 @@
 %%% </ul>
 %%%
 %%%
-%%% @copyright 2003 - 2004 Enrique Marcote Peña
+%%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 1.0 beta, {26 May 2003} {@time}.
+%%% @version 1.0 beta, {07 June 2004} {@time}.
 %%% @end
 %%%
 %%% %@TODO New fsm implementation (on stdlib 1.12) includes now timers, use 
@@ -1408,17 +1695,6 @@
 %%% Include files
 %%%-------------------------------------------------------------------
 -include("oserl.hrl").
-
-%%%-------------------------------------------------------------------
-%%% Imports.  
-%%%
-%%% <p>Imports are explicitly made on the function calls.  These lines are
-%%% commented out and only included for informative purposes.</p>
-%%%-------------------------------------------------------------------
-% -import(ets, [insert/2, delete/2, lookup/2, new/1]).
-% -import(gen_connection, [close/1, connect/4, disable_retry/1, enable_retry/1, start_link/2, send/2]).
-% -import(my_calendar, [time_since/1]).
-% -import(operation, [get_param/2, esme_pack/1, esme_unpack/1, merge_params/2, request_command_id/1, request_failure_code/1, new_bind_receiver/2, new_bind_transmitter/2, new_bind_transceiver/2, new_broadcast_sm/2, new_cancel_broadcast_sm/2, new_cancel_sm/2, new_query_broadcast_sm/2, new_generic_nack/3, new_data_sm/2, new_data_sm_resp/3, new_deliver_sm_resp/3, new_enquire_link/2, new_enquire_link_resp/3, new_unbind_resp/3, new_query_sm/2, new_replace_sm/2, new_submit_multi/2, new_submit_sm/2, new_unbind/2]).
 
 %%%-------------------------------------------------------------------
 %%% Behaviour exports
@@ -1477,7 +1753,7 @@
 %% %@spec {state, 
 %%         Mc,
 %%         Self,
-%%         CallbackModule,
+%%         Mod,
 %%         SequenceNumber,
 %%         Connection,
 %%         Requests,
@@ -1492,7 +1768,7 @@
 %%         ResponseTime}
 %%    Mc                  = pid()
 %%    Self                = pid()
-%%    CallbackModule      = atom()
+%%    Mod                 = atom()
 %%    SequenceNumber      = int()
 %%    Connection          = pid()
 %%    Requests            = ets:table()
@@ -1517,7 +1793,7 @@
 %%     triggering the callback.  Since a callback function might be called from
 %%     a spawned process, we want to keep a reference to our main process.
 %%   </dd>
-%%   <dt>CallbackModule: </dt><dd>Callback Module.</dd>
+%%   <dt>Mod: </dt><dd>Callback Module.</dd>
 %%   <dt>SequenceNumber: </dt><dd>PDU sequence number.</dd>
 %%   <dt>Connection: </dt><dd>The <tt>pid()</tt> of the underlying 
 %%     connection
@@ -1588,8 +1864,8 @@
 -record(state, 
         {mc,
          self,
-         callback_module,
-         sequence_number       = 0,
+         mod,
+         sequence_number = 0,
          connection,
          requests,
          self_congestion_state = 0,
@@ -1627,56 +1903,54 @@ behaviour_info(callbacks) ->
      {replace_sm, 3}, 
      {submit_multi, 3}, 
      {submit_sm, 3}, 
-     {submit_data_sm, 3},
+     {data_sm, 3},
      {unbind, 3}];
 behaviour_info(_Other) ->
     undefined.
 
 
-%% @spec start_link(Module, Connection, Setup) -> Result
+%% @spec start_link(Module, Connection, Timers) -> Result
 %%    Module     = atom()
 %%    Connection = pid()
-%%    Setup      = #session_setup()
+%%    Timers     = #timers()
 %%    Result     = {ok, Pid} | ignore | {error, Error}
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>self()</tt> as the session MC (owner).
 %%
-%% <p><tt>Setup</tt> is a session_setup() record with all the
-%% session setup parameters.  Use the macro ?DEFAULT_SESSION_SETUP to 
-%% set the default values.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the
-%% session_setup() record definition.</p>
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% definition.</p>
 %%
 %% <p>The gen_mc_session is not registered.</p>
 %%
 %% @see gen_fsm:start_link/3
 %% @see start_link/3
 %% @end
-start_link(Module, Connection, Setup) ->
-    gen_fsm:start_link(?MODULE, [self(), Module, Connection, Setup], []).
+start_link(Module, Connection, Timers) ->
+    gen_fsm:start_link(?MODULE, [self(), Module, Connection, Timers], []).
 
 
-%% @spec start_link(Name, Module, Connection, Setup) -> Result
+%% @spec start_link(Name, Module, Connection, Timers) -> Result
 %%    Name  = {local, Name} | {global, Name}
 %%    Name   = atom()
 %%    Module = atom()
 %%    Connection = pid()
-%%    Setup  = session_setup()
+%%    Timers  = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>self()</tt> as the session MC (owner).
 %%
-%% <p><tt>Setup</tt> is a session_setup() record with all the
-%% session setup parameters.  Use the macro ?DEFAULT_SESSION_SETUP to 
-%% set the default values.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the
-%% session_setup() record definition.</p>
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% definition.</p>
 %%
 %% <p>If <tt>Name = {local, TheName}</tt>, the gen_mc_session is registered
 %% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the 
@@ -1685,8 +1959,8 @@ start_link(Module, Connection, Setup) ->
 %% @see gen_fsm:start_link/4
 %% @see start_link/2
 %% @end
-start_link(Name, Module, Connection, Setup) ->
-    gen_fsm:start_link(Name, ?MODULE, [self(), Module, Connection, Setup], []).
+start_link(Name, Module, Connection, Timers) ->
+    gen_fsm:start_link(Name, ?MODULE, [self(), Module, Connection, Timers],[]).
 
 
 %% @spec alert_notification(Sid, ParamList) -> Result
@@ -1794,17 +2068,16 @@ stop(Sid) ->
 %%
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - init/1</a> callback implementation. Initializes the the fsm.
 %% @end
-init([Pid, Module, Connection, Setup]) ->
+init([Pid, Module, Connection, Timers]) ->
 	process_flag(trap_exit, true),
 	State = #state{mc                = Pid,
-				   self              = self(),
-				   callback_module   = Module,
+				   mod               = Module,
 				   connection        = Connection,
 				   requests          = ets:new(mc_requests, []),
-				   session_init_time = Setup#session_setup.session_init_time,
-				   enquire_link_time = Setup#session_setup.enquire_link_time,
-				   inactivity_time   = Setup#session_setup.inactivity_time,
-				   response_time     = Setup#session_setup.response_time},
+				   session_init_time = Timers#timers.session_init_time,
+				   enquire_link_time = Timers#timers.enquire_link_time,
+				   inactivity_time   = Timers#timers.inactivity_time,
+				   response_time     = Timers#timers.response_time},
 	{ok, open, State}.
 
 
@@ -1827,7 +2100,7 @@ init([Pid, Module, Connection, Setup]) ->
 open({bind_receiver, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_receiver(Pdu, S) of
+    case (S#state.mod):bind_receiver(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             T = start_timer(S#state.inactivity_time, inactivity_timer),
@@ -1840,7 +2113,7 @@ open({bind_receiver, Pdu}, #state{connection = C} = S) ->
 open({bind_transmitter, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_transmitter(Pdu, S) of
+    case (S#state.mod):bind_transmitter(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
@@ -1853,7 +2126,7 @@ open({bind_transmitter, Pdu}, #state{connection = C} = S) ->
 open({bind_transceiver, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_transceiver(Pdu, S) of
+    case (S#state.mod):bind_transceiver(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
@@ -1903,7 +2176,7 @@ open(Request, S) ->
 outbound({bind_receiver, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_receiver(Pdu, S) of
+    case (S#state.mod):bind_receiver(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             send_bind_receiver_resp(?ESME_ROK, SeqNum, ParamList, C),
@@ -1916,7 +2189,7 @@ outbound({bind_receiver, Pdu}, #state{connection = C} = S) ->
 outbound({bind_transmitter, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_transmitter(Pdu, S) of
+    case (S#state.mod):bind_transmitter(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
@@ -1929,7 +2202,7 @@ outbound({bind_transmitter, Pdu}, #state{connection = C} = S) ->
 outbound({bind_transceiver, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_bind_transceiver(Pdu, S) of
+    case (S#state.mod):bind_transceiver(S#state.mc, self(), Pdu) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
             send_bind_transceiver_resp(?ESME_ROK, SeqNum, ParamList, C),
@@ -1980,7 +2253,7 @@ bound_rx({unbind, Pdu}, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_unbind(Pdu, S) of
+    case (S#state.mod):unbind(S#state.mc, self(), Pdu) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
@@ -2042,7 +2315,7 @@ bound_tx({broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_broadcast_sm(Pdu, S) of
+    case (S#state.mod):broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2056,7 +2329,7 @@ bound_tx({cancel_broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_cancel_broadcast_sm(Pdu, S)of
+    case (S#state.mod):cancel_broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_cancel_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2070,7 +2343,7 @@ bound_tx({cancel_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_cancel_sm(Pdu, S)of
+    case (S#state.mod):cancel_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_cancel_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2079,12 +2352,12 @@ bound_tx({cancel_sm, Pdu}, #state{connection = C} = S) ->
             send_cancel_sm_resp(Error, SeqNum, ParamList, C)
     end,
     {next_state, bound_tx, S};
-bound_tx({submit_data_sm, Pdu}, #state{connection = C} = S) ->
+bound_tx({data_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_data_sm(Pdu, S)of
+    case (S#state.mod):data_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_data_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2098,7 +2371,7 @@ bound_tx({query_broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_query_broadcast_sm(Pdu, S) of
+    case (S#state.mod):query_broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_query_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2112,7 +2385,7 @@ bound_tx({query_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_query_sm(Pdu, S) of
+    case (S#state.mod):query_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_query_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2126,7 +2399,7 @@ bound_tx({replace_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_replace_sm(Pdu, S) of
+    case (S#state.mod):replace_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_replace_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2140,7 +2413,7 @@ bound_tx({submit_multi, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_multi(Pdu, S) of
+    case (S#state.mod):submit_multi(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_submit_multi_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2154,7 +2427,7 @@ bound_tx({submit_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_sm(Pdu, S) of
+    case (S#state.mod):submit_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_submit_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2167,7 +2440,7 @@ bound_tx({unbind, Pdu}, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_unbind(Pdu, S) of
+    case (S#state.mod):unbind(S#state.mc, self(), Pdu) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
@@ -2229,7 +2502,7 @@ bound_trx({broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_broadcast_sm(Pdu, S) of
+    case (S#state.mod):broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2243,7 +2516,7 @@ bound_trx({cancel_broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_cancel_broadcast_sm(Pdu, S)of
+    case (S#state.mod):cancel_broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_cancel_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2257,7 +2530,7 @@ bound_trx({cancel_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_cancel_sm(Pdu, S)of
+    case (S#state.mod):cancel_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_cancel_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2266,12 +2539,12 @@ bound_trx({cancel_sm, Pdu}, #state{connection = C} = S) ->
             send_cancel_sm_resp(Error, SeqNum, ParamList, C)
     end,
     {next_state, bound_trx, S};
-bound_trx({submit_data_sm, Pdu}, #state{connection = C} = S) ->
+bound_trx({data_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_data_sm(Pdu, S)of
+    case (S#state.mod):data_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_data_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2285,7 +2558,7 @@ bound_trx({query_broadcast_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_query_broadcast_sm(Pdu, S) of
+    case (S#state.mod):query_broadcast_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_query_broadcast_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2299,7 +2572,7 @@ bound_trx({query_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_query_sm(Pdu, S) of
+    case (S#state.mod):query_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_query_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2313,7 +2586,7 @@ bound_trx({replace_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_replace_sm(Pdu, S) of
+    case (S#state.mod):replace_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_replace_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2327,7 +2600,7 @@ bound_trx({submit_multi, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_multi(Pdu, S) of
+    case (S#state.mod):submit_multi(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_submit_multi_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2341,7 +2614,7 @@ bound_trx({submit_sm, Pdu}, #state{connection = C} = S) ->
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     PList2 = [{congestion_state, S#state.self_congestion_state}],
-    case callback_submit_sm(Pdu, S) of
+    case (S#state.mod):submit_sm(S#state.mc, self(), Pdu) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
             send_submit_sm_resp(?ESME_ROK, SeqNum, ParamList, C);
@@ -2354,7 +2627,7 @@ bound_trx({unbind, Pdu}, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
-    case callback_unbind(Pdu, S) of
+    case (S#state.mod):unbind(S#state.mc, self(), Pdu) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
@@ -2467,7 +2740,7 @@ esme_rinvbndsts_resp({submit_multi, Pdu}, Connection) ->
 esme_rinvbndsts_resp({submit_sm, Pdu}, Connection) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     send_submit_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], Connection);
-esme_rinvbndsts_resp({submit_data_sm, Pdu}, Connection) ->
+esme_rinvbndsts_resp({data_sm, Pdu}, Connection) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     send_data_sm_resp(?ESME_RINVBNDSTS, SeqNum, [], Connection);
 esme_rinvbndsts_resp({unbind, Pdu}, Connection) ->
@@ -2788,9 +3061,8 @@ handle_event({enquire_link, Pdu}, StateName, StateData) ->
     send_enquire_link_resp(?ESME_ROK, SeqNum, [], StateData#state.connection),
     {next_state, StateName, StateData};
 handle_event(die, _StateName, StateData) ->
-    process_flag(trap_exit, false),
     gen_tcp_connection:stop(StateData#state.connection),
-    {stop, normal, StateData}.
+    {next_state, StateName, StateData}.
 
 
 %% @doc Auxiliary function for handle_event/3
@@ -2849,7 +3121,7 @@ handle_input_correct_pdu(Pdu, StateData) ->
         ?COMMAND_ID_SUBMIT_SM ->
             gen_fsm:send_event(self(), {submit_sm, Pdu});
         ?COMMAND_ID_DATA_SM ->
-            gen_fsm:send_event(self(), {submit_data_sm, Pdu});
+            gen_fsm:send_event(self(), {data_sm, Pdu});
         ?COMMAND_ID_UNBIND ->
             gen_fsm:send_event(self(), {unbind, Pdu});
         _OtherRequest ->
@@ -2960,12 +3232,12 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @end
 handle_info({'EXIT', C, R}, _StateName, #state{connection = C} = StateData) ->
     % If the underlying connection terminates, the session must be stopped.
-%    io:format("Underlying connection was stopped~n", []),
-    {stop, R, StateData#state{connection = undefined}};
+%    io:format("Underlying connection terminated with reason: ~p~n", [R]),
+    {stop, R, StateData#state{connection = closed}};
 handle_info({'EXIT', _Child, R}, StateName, StateData) when R /= normal ->
     % A child process (request broker) terminates abnormally.
-    stop_connection(StateData#state.connection),
-    {next_state, StateName, StateData};
+%    io:format("Request broker terminated with reason: ~p~n", [R]),
+    {stop, R, StateData};
 handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
 
@@ -3576,15 +3848,6 @@ request_broker(Caller, TimeoutError, Time) ->
     end.
 
 
-%% @spec stop_connection(Connection) -> ok
-%%    Connection = pid() | undefined
-%%
-%% @doc Stops the underlying connection. 
-%% @end
-stop_connection(undefined)  -> ok;
-stop_connection(Connection) -> gen_tcp_connection:stop(Connection).    
-
-
 %% @spec start_timer(Time, Msg) -> Ref
 %%    Time = int()
 %%    Msg  = term()
@@ -3604,8 +3867,8 @@ stop_connection(Connection) -> gen_tcp_connection:stop(Connection).
 %%
 %% %@TODO See todo tags at the begining of this file.
 start_timer(Time, Msg) ->
-    Mc = self(),
-    spawn(fun() -> timer_loop(Mc, Time, Msg) end).
+    SMSC = self(),
+    spawn(fun() -> timer_loop(SMSC, Time, Msg) end).
 
 %% @doc Auxiliary function for start_timer/2.
 %% @end
@@ -3644,227 +3907,3 @@ reset_timer(Timer) when pid(Timer) ->
     Timer ! {self(), reset};
 reset_timer(_Timer) ->  % might be the atom undefined
     ok.
-
-
-%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-%%% Callback wrappers
-%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-%% @spec callback_bind_receiver(Pdu, StateData) -> ok
-%%    Pdu        = pdu()
-%%    StateData  = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:bind_receiver/3.
-%% @end
-callback_bind_receiver(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:bind_receiver(Pid, Sid, Pdu).
-    
-
-%% @spec callback_bind_transmitter(Pdu, StateData) -> ok
-%%    Pdu        = pdu()
-%%    StateData  = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:bind_transmitter/3.
-%% @end
-callback_bind_transmitter(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:bind_transmitter(Pid, Sid, Pdu).
-    
-
-%% @spec callback_bind_transceiver(Pdu, StateData) -> ok
-%%    Pdu        = pdu()
-%%    StateData  = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:bind_transceiver/3.
-%% @end
-callback_bind_transceiver(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:bind_transceiver(Pid, Sid, Pdu).
-    
-
-%% @spec callback_broadcast_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData  = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:broadcast_sm/3.
-%% @end
-callback_broadcast_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:broadcast_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_cancel_broadcast_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:cancel_broadcast_sm/3.
-%% @end
-callback_cancel_broadcast_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:cancel_broadcast_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_cancel_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:cancel_sm/3.
-%% @end
-callback_cancel_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:cancel_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_query_broadcast_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:query_broadcast_sm/3.
-%% @end
-callback_query_broadcast_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:query_broadcast_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_query_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:query_sm/3.
-%% @end
-callback_query_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:query_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_replace_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:replace_sm/3.
-%% @end
-callback_replace_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:replace_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_submit_multi(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:submit_multi/3.
-%% @end
-callback_submit_multi(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:submit_multi(Pid, Sid, Pdu).
-
-
-%% @spec callback_submit_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:submit_sm/3.
-%% @end
-callback_submit_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:submit_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_submit_data_sm(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:submit_data_sm/3.
-%% @end
-callback_submit_data_sm(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:submit_data_sm(Pid, Sid, Pdu).
-
-
-%% @spec callback_unbind(Pdu, StateData) -> Result
-%%    Pdu        = pdu()
-%%    StateData   = #state()
-%%    Result     = {ok, ParamList} | {error, Error, ParamList}
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Wrapper for CallbackModule:unbind/3.
-%% @end
-callback_unbind(Pdu, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:unbind(Pid, Sid, Pdu).

@@ -36,6 +36,16 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
+%% Timers
+-define(DEFAULT_TIMERS, #timers{}).
+
+-define(TIMERS(STime, ETime, ITime, RTime, RetryT),
+        #timers{session_init_time = STime,
+                enquire_link_time = ETime,
+                inactivity_time   = ITime,
+                response_time     = RTime,
+                retry_time        = RetryT}).
+
 %% Session
 -define(DEFAULT_SESSION_SETUP, #session_setup{}).
 
@@ -76,6 +86,64 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
+%% %@spec {timers,
+%%         SessionInitTime,
+%%         EnquireLinkTime,
+%%         InactivityTime,
+%%         ResponseTime,
+%%         RetryTime}
+%%    SessionInitTime = int() | infinity
+%%    EnquireLinkTime = int() | infinity
+%%    InactivityTime  = int() | infinity
+%%    ResponseTime    = int() | infinity
+%%    RetryTime       = int() | infinity
+%%
+%% %@doc The times are expressed in milliseconds.  The atom <tt>infinity
+%% </tt> disables the timer.
+%%
+%% <dl>
+%%   <dt>SessionInitTime: </dt><dd>Session init timer.  An ESME will close the 
+%%     MC-initiated connection if the MC fails to issue an outbind within the
+%%     defined period of time.
+%%
+%%     <p>On expiration, close the connection  (default value is 
+%%     ?SESSION_INIT_TIME).</p>
+%%   </dd>
+%%   <dt>EnquireLinkTime: </dt><dd>Enquire link timer. Time lapse allowed 
+%%     between operations after which a SMPP entity should interrogate whether 
+%%     its peer still has an active session.
+%%
+%%     <p>On expiration an enquire_link request should be initiated (default
+%%     value is ?ENQUIRE_LINK_TIME).</p>
+%%   </dd>
+%%   <dt>InactivityTime: </dt><dd>Inactivity timer.  Maximum time lapse allowed
+%%     between transactions.
+%%
+%%     <p>On expiration, close the session or issue an unbind request (default
+%%     value is ?INACTIVITY_TIME).</p>
+%%   </dd>
+%%   <dt>ResponseTime: </dt><dd>Response timer. Time lapse allowed between a 
+%%     SMPP request and the corresponding SMPP response.
+%%
+%%     <p>On expiration assume the operation have failed  (default value is
+%%     ?RESPONSE_TIME).</p>
+%%   </dd>
+%%   <dt>RetryTime: </dt><dd>This timer sets the time lapse in which the ESME
+%%     should try to reconnect once the MC becomes unavailable.
+%%
+%%     <p>On expiration a new connection attempt is issued.  (default value is
+%%     ?REBIND_TIME).</p>
+%%   </dd>
+%% </dl>
+%% %@end
+-record(timers, 
+        {session_init_time = ?SESSION_INIT_TIME,
+         enquire_link_time = ?ENQUIRE_LINK_TIME,
+         inactivity_time   = ?INACTIVITY_TIME,
+         response_time     = ?RESPONSE_TIME,
+         retry_time        = ?REBIND_TIME}).
+
+
 %% %@spec {session_setup,
 %%         SessionInitTime,
 %%         EnquireLinkTime,

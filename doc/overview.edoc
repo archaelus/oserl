@@ -496,9 +496,10 @@ subdirectory.</p>
     ok
 </pre>
 
-<p>To test your applications you may use the <a href="http://www.mobilelandscape.co.uk">SMPPSim SMSC simulator by logica</a>.  You can download SMPPSim from 
-<a href="http://www.mobilelandscape.co.uk/">http://www.mobilelandscape.co.uk
-</a>.</p>
+<p>To test your applications you may use the SMPPSim SMSC simulator by Martin 
+Woolley.  You can download SMPPSim from 
+<a href="http://www.mobilelandscape.co.uk/">
+http://www.mobilelandscape.co.uk</a>.</p>
 
 <p>Since version 1.1 OSERL includes a minimal <a href="#test">test SMSC</a>. 
 You can use this SMSC for your tests also, please read below for more details 
@@ -539,8 +540,8 @@ doc/examples/echo_esme.erl</a>.</p>
 tested using the <a href="examples/test_smsc.erl">test_smsc.erl</a> shipped
 with OSERL.</p>
 
-<p>You may rather want to test this example using the SMSC simulator by Logica 
-, if so, you can use <a href="examples/send_oserl.html">this HTML 
+<p>You may rather want to test this example using the SMSC simulator by Martin 
+Woolley, if so, you can use <a href="examples/send_oserl.html">this HTML 
 form</a> to try sending short messages to your test ESMEs.</p>
 
 <p>Notice the address of the echo service is <i>1948</i> by default.  If you 

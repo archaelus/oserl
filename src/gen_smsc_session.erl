@@ -61,13 +61,9 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr> 
 %%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
 %%%     <td valign="top" align="center"><small>open</small></td>
 %%%     <td valign="top" align="center"><small>open</small></td>
 %%%     <td valign="top" align="center"><small>open</small></td>
@@ -83,8 +79,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver</small></th>
@@ -94,15 +88,11 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
 %%%     <td valign="top" align="center"><small>bound_rx</small></td>
 %%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -116,15 +106,11 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -138,15 +124,11 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -160,8 +142,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>cancel_broadcast_sm</small></th>
@@ -171,8 +151,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>cancel_sm</small></th>
@@ -182,41 +160,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>close</small></th>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>data_sm</small></th>
@@ -226,8 +169,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>deliver_data_sm (async)</small></th>
@@ -237,8 +178,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>deliver_sm (async)</small></th>
@@ -248,8 +187,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>die (async)</small></th>
@@ -259,8 +196,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>enquire_link (async)</small></th>
@@ -270,8 +205,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>input (async)</small></th>
@@ -281,41 +214,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen</small></th>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>open</small></th>
@@ -324,8 +222,6 @@
 %%%     <td valign="top" align="center"><small>bound_rx</small></td>
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
 %%%     <td valign="top" align="center"><small>open</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -336,8 +232,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>query_broadcast_sm</small></th>
@@ -347,8 +241,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>query_sm</small></th>
@@ -358,8 +250,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>replace_sm</small></th>
@@ -369,8 +259,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>submit_multi</small></th>
@@ -380,8 +268,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>submit_sm</small></th>
@@ -391,8 +277,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind issued by MC (async)</small></th>
@@ -402,8 +286,6 @@
 %%%     <td valign="top" align="center"><small>unbound/bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>unbound/bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind issued by ESME</small></th>
@@ -413,8 +295,6 @@
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>listening</small></td>
-%%%     <td valign="top" align="center"><small>closed</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind_resp (async)</small></th>
@@ -424,8 +304,6 @@
 %%%     <td valign="top" align="center"><small>unbound</small></td>
 %%%     <td valign="top" align="center"><small>unbound</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>timeout (async)</small></th>
@@ -434,8 +312,6 @@
 %%%     <td valign="top" align="center"><small>bound_rx</small></td>
 %%%     <td valign="top" align="center"><small>bound_tx</small></td>
 %%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%% </table>
@@ -460,13 +336,9 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr> 
 %%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
@@ -482,13 +354,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -504,13 +372,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -526,13 +390,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -548,13 +408,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -570,13 +426,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>cancel_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -592,35 +444,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>data_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -636,13 +462,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>deliver_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -658,8 +480,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>enquire_link (async)</small></th>
@@ -669,46 +489,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -725,7 +508,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>outbind</small></th>
@@ -735,13 +517,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>query_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -757,13 +535,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>replace_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -779,13 +553,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>submit_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -801,8 +571,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind issued by ESME</small></th>
@@ -812,13 +580,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -838,14 +602,10 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top" align="center"><small>close connection</small></td>
 %%%     <td valign="top" align="center"><small>close connection</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -865,13 +625,10 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
 %%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr> 
 %%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -887,13 +644,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -909,13 +662,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -931,13 +680,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -953,8 +698,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>broadcast_sm</small></th>
@@ -963,8 +706,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -975,8 +716,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>cancel_sm</small></th>
@@ -986,35 +725,9 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>close</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1030,8 +743,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>deliver_data_sm (async)</small></th>
@@ -1040,8 +751,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1052,13 +761,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1074,46 +779,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1129,13 +797,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>outbind</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1151,8 +815,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>query_sm</small></th>
@@ -1161,8 +823,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1173,8 +833,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>submit_multi</small></th>
@@ -1183,8 +841,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1195,8 +851,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind issued by MC (async)</small></th>
@@ -1205,8 +859,6 @@
 %%%     <td valign="top" align="center"><small>cancel</small></td>
 %%%     <td valign="top" align="center"><small>cancel</small></td>
 %%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1217,8 +869,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind_resp (async)</small></th>
@@ -1227,8 +877,6 @@
 %%%     <td valign="top" align="center"><small>cancel</small></td>
 %%%     <td valign="top" align="center"><small>cancel</small></td>
 %%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%% </table>
@@ -1243,8 +891,6 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1252,8 +898,6 @@
 %%%     <td valign="top" align="center"><small>unbind</small></td>
 %%%     <td valign="top" align="center"><small>unbind</small></td>
 %%%     <td valign="top" align="center"><small>unbind</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%% </table>
@@ -1270,12 +914,9 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr> 
 %%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
@@ -1292,8 +933,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver</small></th>
@@ -1303,13 +942,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1325,13 +960,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1347,13 +978,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1369,8 +996,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>cancel_broadcast_sm</small></th>
@@ -1379,8 +1004,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1391,8 +1014,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>close</small></th>
@@ -1402,30 +1023,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>connect_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>data_sm</small></th>
@@ -1434,8 +1031,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1446,8 +1041,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>deliver_sm (async)</small></th>
@@ -1457,13 +1050,9 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1479,46 +1068,9 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_error (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>listen_recovery (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1535,13 +1087,10 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>outbind</small></th>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
@@ -1556,8 +1105,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>query_sm</small></th>
@@ -1566,8 +1113,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1578,8 +1123,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>submit_multi</small></th>
@@ -1588,8 +1131,6 @@
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1600,8 +1141,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind issued by MC (async)</small></th>
@@ -1610,8 +1149,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
@@ -1622,8 +1159,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%%   <tr>
 %%%     <th align="left"><small>unbind_resp (async)</small></th>
@@ -1632,8 +1167,6 @@
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
 %%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%% </table>
@@ -1648,8 +1181,6 @@
 %%%     <th><small>bound_tx</small></th>
 %%%     <th><small>bound_trx</small></th>
 %%%     <th><small>unbound</small></th>
-%%%     <th><small>listening</small></th>
-%%%     <th><small>closed</small></th>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top" align="center"><small>enquire_link</small></td>
@@ -1658,8 +1189,6 @@
 %%%     <td valign="top" align="center"><small>enquire_link</small></td>
 %%%     <td valign="top" align="center"><small>enquire_link</small></td>
 %%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
 %%%   </tr>
 %%% </table>
 %%%
@@ -1686,26 +1215,6 @@
 %%%   <tr>
 %%%     <td valign="top"><a href="#unbind-2">unbind/2</a></td>
 %%%     <td>Forwards unbind requests.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top"><a href="#mc_unavailable-4">mc_unavailable/4</a></td>
-%%%     <td>Triggered when the MC becomes unavailable.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top"><a href="#resume_service-4">resume_service/4</a></td>
-%%%     <td>The MC is back.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top">
-%%%       <a href="#smpp_listen_error-3">smpp_listen_error/3</a>
-%%%     </td>
-%%%     <td>Listen socket lost.</td>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top">
-%%%       <a href="#smpp_listen_recovery-3">smpp_listen_recovery/3</a>
-%%%     </td>
-%%%     <td>A new socket is now listening.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top">
@@ -1768,81 +1277,6 @@
 %%% session's process id.</p>
 %%%
 %%% <p><b>See also:</b> <tt>callback_unbind/1</tt></p>
-%%%
-%%%
-%%% <h3><a name="mc_unavailable-4">mc_unavailable/4</a></h3>
-%%%
-%%% <tt>mc_unavailable(Pid, Sid, Address, Port) -> ok</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%%%   <li><tt>Port = int()</tt></li>
-%%% </ul>
-%%%
-%%% <p>If the MC becomes unavailable the session notifies that circumstance to
-%%% the ESME with a call to this function.</p>
-%%%
-%%% <p>Notice that this callback could also be triggered after an unbind
-%%% operation, if the MC closes the underlying connection first.  The ESME must
-%%% handle these <i>undesired</i> callbacks appropriately.</p>
-%%% 
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_mc_unavailable/3</tt></p>
-%%%
-%%%
-%%% <h3><a name="resume_service-4">resume_service/4</a></h3>
-%%%
-%%% <tt>resume_service(Pid, Sid, Address, Port) -> ok</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%%%   <li><tt>Port = int()</tt></li>
-%%% </ul>
-%%%
-%%% <p>After a period of unavailability of the MC, once the connection is
-%%% recover by the session, this function is called in order to let the ESME
-%%% resume the service.</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_resume_service/3</tt></p>
-%%%
-%%%
-%%% <h3><a name="smpp_listen_error-3">smpp_listen_error/3</a></h3>
-%%%
-%%% <tt>smpp_listen_error(Pid, Sid, Port) -> ok</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Port = int()</tt></li>
-%%% </ul>
-%%%
-%%% <p>When a session on listening state looses the listen socket, uses
-%%% this callback to notify the ESME.</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_smpp_listen_error/2</tt></p>
-%%%
-%%%
-%%% <h3><a name="smpp_listen_recovery-3">smpp_listen_recovery/3</a></h3>
-%%%
-%%% <tt>smpp_listen_recovery(Pid, Sid, Port) -> ok</tt>
-%%% <ul>
-%%%   <li><tt>Pid = Sid = pid()</tt></li>
-%%%   <li><tt>Port = int()</tt></li>
-%%% </ul>
-%%%
-%%% <p>After a listen failure, a new socket could be set to listen again on
-%%% <tt>Port</tt>.  This callback notifies the ESME.</p>
-%%%
-%%% <p><tt>Pid</tt> is the session's parent id, <tt>Sid</tt> own 
-%%% session's process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_smpp_listen_recovery/2</tt></p>
 %%%
 %%%
 %%% <h3><a name="alert_notification-3">alert_notification/3</a></h3>
@@ -1982,7 +1416,7 @@
 %%% commented out and only included for informative purposes.</p>
 %%%-------------------------------------------------------------------
 % -import(ets, [insert/2, delete/2, lookup/2, new/1]).
-% -import(gen_connection, [close/1, connect/4, disable_retry/1, enable_retry/1, listen/2, start_link/2, send/2]).
+% -import(gen_connection, [close/1, connect/4, disable_retry/1, enable_retry/1, start_link/2, send/2]).
 % -import(my_calendar, [time_since/1]).
 % -import(operation, [get_param/2, esme_pack/1, esme_unpack/1, merge_params/2, request_command_id/1, request_failure_code/1, new_bind_receiver/2, new_bind_transmitter/2, new_bind_transceiver/2, new_broadcast_sm/2, new_cancel_broadcast_sm/2, new_cancel_sm/2, new_query_broadcast_sm/2, new_generic_nack/3, new_data_sm/2, new_data_sm_resp/3, new_deliver_sm_resp/3, new_enquire_link/2, new_enquire_link_resp/3, new_unbind_resp/3, new_query_sm/2, new_replace_sm/2, new_submit_multi/2, new_submit_sm/2, new_unbind/2]).
 
@@ -1994,16 +1428,13 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start_link/2, 
-         start_link/3, 
+-export([start_link/3, 
+         start_link/4, 
          alert_notification/2,
          outbind/2,
          deliver_sm/2,
          data_sm/2,
          unbind/1,
-         do_open/3,
-         do_listen/2,
-         do_close/1,
          stop/1]).
 
 %%%-------------------------------------------------------------------
@@ -2016,16 +1447,12 @@
          bound_tx/2,
          bound_trx/2,
          unbound/2,
-         listening/2,
-         closed/2,
          open/3,
          outbound/3,
          bound_rx/3,
          bound_tx/3,
          bound_trx/3,
          unbound/3,
-         listening/3,
-         closed/3,
          handle_event/3,
          handle_sync_event/4,
          handle_info/3,
@@ -2035,12 +1462,7 @@
 %%%-------------------------------------------------------------------
 %%% Internal gen_connection exports
 %%%-------------------------------------------------------------------
--export([handle_accept/2,
-         handle_input/4,
-         handle_listen_error/3,
-         handle_connect_error/4,
-         handle_listen_recovery/3,
-         handle_connect_recovery/4]).
+-export([handle_accept/3, handle_input/4]).
 
 %%%-------------------------------------------------------------------
 %%% Macros
@@ -2194,11 +1616,7 @@
 %% @doc Gives information about the behaviour.
 %% @end
 behaviour_info(callbacks) ->
-    [{esme_unavailable, 4},
-     {resume_service, 4},
-     {smpp_listen_error, 3},
-     {smpp_listen_recovery, 3},
-     {bind_receiver, 3}, 
+    [{bind_receiver, 3}, 
      {bind_transmitter, 3}, 
      {bind_transceiver, 3}, 
      {broadcast_sm, 3}, 
@@ -2215,12 +1633,13 @@ behaviour_info(_Other) ->
     undefined.
 
 
-%% @spec start_link(Module, Setup) -> Result
-%%    Module = atom()
-%%    Setup  = session_setup()
-%%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%% @spec start_link(Module, Connection, Setup) -> Result
+%%    Module     = atom()
+%%    Connection = pid()
+%%    Setup      = #session_setup()
+%%    Result     = {ok, Pid} | ignore | {error, Error}
+%%    Pid        = pid()
+%%    Error      = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>self()</tt> as the session MC (owner).
 %%
@@ -2236,14 +1655,15 @@ behaviour_info(_Other) ->
 %% @see gen_fsm:start_link/3
 %% @see start_link/3
 %% @end
-start_link(Module, Setup) ->
-    gen_fsm:start_link(?MODULE, [self(), Module, Setup], []).
+start_link(Module, Connection, Setup) ->
+    gen_fsm:start_link(?MODULE, [self(), Module, Connection, Setup], []).
 
 
-%% @spec start_link(SName, Module, Setup) -> Result
-%%    SName  = {local, Name} | {global, Name}
+%% @spec start_link(Name, Module, Connection, Setup) -> Result
+%%    Name  = {local, Name} | {global, Name}
 %%    Name   = atom()
 %%    Module = atom()
+%%    Connection = pid()
 %%    Setup  = session_setup()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
@@ -2258,15 +1678,15 @@ start_link(Module, Setup) ->
 %% <p>Refer to <b>oserl.hrl</b> for more details on the
 %% session_setup() record definition.</p>
 %%
-%% <p>If <tt>SName = {local, Name}</tt>, the gen_mc_session is registered
-%% locally as <tt>Name</tt>.  If <tt>SName = {global, Name}</tt>, the 
-%% gen_mc_session is registered globally as <tt>Name</tt>.</p>
+%% <p>If <tt>Name = {local, TheName}</tt>, the gen_mc_session is registered
+%% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the 
+%% gen_mc_session is registered globally as <tt>TheName</tt>.</p>
 %%
 %% @see gen_fsm:start_link/4
 %% @see start_link/2
 %% @end
-start_link(SName, Module, Setup) ->
-    gen_fsm:start_link(SName, ?MODULE, [self(), Module, Setup], []).
+start_link(Name, Module, Connection, Setup) ->
+    gen_fsm:start_link(Name, ?MODULE, [self(), Module, Connection, Setup], []).
 
 
 %% @spec alert_notification(Sid, ParamList) -> Result
@@ -2345,41 +1765,6 @@ unbind(Sid) ->
     gen_fsm:sync_send_event(Sid, unbind, infinity).
 
 
-%% @spec do_open(Sid, Address, Port) -> ok | {error, Error}
-%%    Sid     = atom()
-%%    Address = string() | atom() | ip_address()
-%%    Port    = int()
-%%    Error   = int()
-%%
-%% @doc Opens the session identified by <tt>Sid</tt> with the MC whose 
-%% address is <tt>Address</tt>.
-%% @end
-do_open(Sid, Address, Port) ->
-    gen_fsm:sync_send_event(Sid, {open, Address, Port}, infinity).
-
-
-%% @spec do_listen(Sid, Port) -> ok | {error, Error}
-%%    Sid   = atom()
-%%    Port  = int()
-%%    Error = int()
-%%
-%% @doc Puts the session identified by <tt>Sid</tt> to listen on port
-%% <tt>Port</tt>.
-%% @end
-do_listen(Sid, Port) ->
-    gen_fsm:sync_send_event(Sid, {listen, Port}, infinity).
-
-
-%% @spec do_close(Sid) -> ok | {error, Error}
-%%    Sid   = pid()
-%%    Error = int()
-%%
-%% @doc Closes the session identified by <tt>Sid</tt>.
-%% @end
-do_close(Sid) ->
-    gen_fsm:sync_send_event(Sid, close, infinity).
-
-
 %% @spec stop(Sid) -> ok
 %%
 %% @doc Stops the fsm.  This function does *NOT* issue an unbind operation.
@@ -2409,30 +1794,18 @@ stop(Sid) ->
 %%
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - init/1</a> callback implementation. Initializes the the fsm.
 %% @end
-init([Pid, Module, #session_setup{retry_time = T} = Setup]) ->
-    case gen_connection:start_link(?MODULE, T) of
-        {ok, Cid} ->
-%       {error, {already_started, Cid}} ->
-            State = #state{mc                = Pid,
-                           self              = self(),
-                           callback_module   = Module,
-                           connection        = Cid,
-                           requests          = ets:new(mc_requests, []),
-                           session_init_time = 
-                               Setup#session_setup.session_init_time,
-                           enquire_link_time = 
-                               Setup#session_setup.enquire_link_time,
-                           inactivity_time   = 
-                               Setup#session_setup.inactivity_time,
-                           response_time     =
-                               Setup#session_setup.response_time},
-            process_flag(trap_exit, true),
-            {ok, closed, State};
-        {error, Reason} ->
-            {stop, Reason};
-        ignore ->
-            ignore
-    end.
+init([Pid, Module, Connection, Setup]) ->
+	process_flag(trap_exit, true),
+	State = #state{mc                = Pid,
+				   self              = self(),
+				   callback_module   = Module,
+				   connection        = Connection,
+				   requests          = ets:new(mc_requests, []),
+				   session_init_time = Setup#session_setup.session_init_time,
+				   enquire_link_time = Setup#session_setup.enquire_link_time,
+				   inactivity_time   = Setup#session_setup.inactivity_time,
+				   response_time     = Setup#session_setup.response_time},
+	{ok, open, State}.
 
 
 %% @spec open(Event, StateData) -> Result
@@ -2500,11 +1873,12 @@ open({timeout, _Ref, enquire_link_timer}, S) ->
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, open, NewS#state{enquire_link_timer = T}};
 open({timeout, _Ref, session_init_timer}, S) ->
-    gen_connection:close(S#state.connection),
-    {next_state, closed, S};
+    process_flag(trap_exit, false),
+    gen_tcp_connection:stop(S#state.connection),
+    {stop, {timeout, session_init_timer}, S};
 open({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
-    {next_state, closed, S};
+    {next_state, open, S};
 open(Request, S) ->
     esme_rinvbndsts_resp(Request, S#state.connection),
     {next_state, open, S}.
@@ -2575,8 +1949,9 @@ outbound({timeout, _Ref, enquire_link_timer}, S) ->
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, outbound, NewS#state{enquire_link_timer = T}};
 outbound({timeout, _Ref, session_init_timer}, S) ->
-    gen_connection:close(S#state.connection),
-    {next_state, closed, S};
+    process_flag(trap_exit, false),
+    gen_tcp_connection:stop(S#state.connection),
+    {stop, {timeout, session_init_timer}, S};
 outbound({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, outbound, S};
@@ -2608,7 +1983,6 @@ bound_rx({unbind, Pdu}, S) ->
     case callback_unbind(Pdu, S) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
-            gen_connection:disable_retry(S#state.connection),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
             {next_state, unbound, S};
         {error, Error} ->
@@ -2616,7 +1990,6 @@ bound_rx({unbind, Pdu}, S) ->
             {next_state, bound_rx, S}
     end;
 bound_rx(unbind_resp, S) ->
-    gen_connection:disable_retry(S#state.connection),
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -2797,7 +2170,6 @@ bound_tx({unbind, Pdu}, S) ->
     case callback_unbind(Pdu, S) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
-            gen_connection:disable_retry(S#state.connection),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
             {next_state, unbound, S};
         {error, Error} ->
@@ -2805,7 +2177,6 @@ bound_tx({unbind, Pdu}, S) ->
             {next_state, bound_tx, S}
     end;
 bound_tx(unbind_resp, S) ->
-    gen_connection:disable_retry(S#state.connection),
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -2986,7 +2357,6 @@ bound_trx({unbind, Pdu}, S) ->
     case callback_unbind(Pdu, S) of
         ok ->
             cancel_timer(S#state.inactivity_timer),
-            gen_connection:disable_retry(S#state.connection),
             send_unbind_resp(?ESME_ROK, SeqNum, [], S#state.connection),
             {next_state, unbound, S};
         {error, Error} ->
@@ -2994,7 +2364,6 @@ bound_trx({unbind, Pdu}, S) ->
             {next_state, bound_trx, S}
     end;
 bound_trx(unbind_resp, S) ->
-    gen_connection:disable_retry(S#state.connection),
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
@@ -3057,43 +2426,6 @@ unbound({timeout, _Ref, _Timer}, S) ->
 unbound(Request, S) ->    
     esme_rinvbndsts_resp(Request, S#state.connection),
     {next_state, unbound, S}.
-
-
-%% @spec listening(Event, StateData) -> Result
-%%    Event         = timeout | term()
-%%    StateData     = term()
-%%    Result        = {next_state, NextStateName, NextStateData}          |
-%%                    {next_state, NextStateName, NextStateData, Timeout} |
-%%                    {stop, Reason, NewStateData}
-%%    NextStateName = atom()
-%%    NextStateData = term()
-%%    Timeout       = int() | infinity
-%%    Reason        = term()
-%%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events
-%% for the state name listening.
-%% @end
-listening(_Event, StateData) ->
-    {next_state, listening, StateData}.
-
-
-%% @spec closed(Event, StateData) -> Result
-%%    Event         = timeout | term()
-%%    StateData     = term()
-%%    Result        = {next_state, NextStateName, NextStateData}          |
-%%                    {next_state, NextStateName, NextStateData, Timeout} |
-%%                    {stop, Reason, NewStateData}
-%%    NextStateName = atom()
-%%    NextStateData = term()
-%%    Timeout       = int() | infinity
-%%    Reason        = term()
-%%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events
-%% for the state name closed.
-%% @end
-closed(_Event, StateData) ->
-    {next_state, closed, StateData}.
-
 
 %% @doc Auxiliary function for Event/2 functions.
 %%
@@ -3173,19 +2505,6 @@ open({outbind, ParamList}, _From, S) ->
         Error ->
             {reply, Error, open, S}
     end;
-open(close, _From, S) ->
-    cancel_timer(S#state.session_init_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    {reply, gen_connection:close(S#state.connection), closed, S};
-open({listen, Port}, _From, S) ->
-    cancel_timer(S#state.session_init_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    {reply, gen_connection:listen(S#state.connection, Port), listening, S};
-open({open, Addr, Port}, _From, #state{connection=C, response_time=T} = S) ->
-    reset_timer(S#state.session_init_timer),
-    reset_timer(S#state.enquire_link_timer),
-    Reply = gen_connection:connect(C, Addr, Port, T),
-    {reply, Reply, open, S};
 open(_Event, _From, S) ->
     {reply, {error, ?ESME_RINVBNDSTS}, open, S}.
 
@@ -3209,19 +2528,6 @@ open(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
 %% the state name outbound.
 %% @end
-outbound(close, _From, S) ->
-    cancel_timer(S#state.session_init_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    {reply, gen_connection:close(S#state.connection), closed, S};
-outbound({listen, Port}, _From, S) ->
-    cancel_timer(S#state.session_init_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    {reply, gen_connection:listen(S#state.connection, Port), listening, S};
-outbound({open, Addr, Port}, _From, #state{connection=C,response_time=T} = S)->
-    reset_timer(S#state.session_init_timer),
-    reset_timer(S#state.enquire_link_timer),
-    Reply = gen_connection:connect(C, Addr, Port, T),
-    {reply, Reply, open, S};
 outbound(_Event, _From, S) ->
     {reply, {error, ?ESME_RINVBNDSTS}, outbound, S}.
 
@@ -3419,89 +2725,8 @@ bound_trx(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name unbound.
 %% @end
-unbound(close, _From, S) ->
-    cancel_timer(S#state.enquire_link_timer),
-    {reply, gen_connection:close(S#state.connection), closed, S};
-unbound({listen, Port}, _From, S) ->
-    cancel_timer(S#state.enquire_link_timer),
-    gen_connection:enable_retry(S#state.connection),
-    {reply, gen_connection:listen(S#state.connection, Port), listening, S};
-unbound({open, Addr, Port}, _From, #state{connection=C, response_time=T} = S)->
-    reset_timer(S#state.enquire_link_timer),
-    gen_connection:enable_retry(C),
-    Reply = gen_connection:connect(C, Addr, Port, T),
-    Timer = start_timer(S#state.session_init_time, session_init_timer),
-    {reply, Reply, open, S#state{session_init_timer = Timer}};
 unbound(_Event, _From, S) ->
     {reply, {error, ?ESME_RINVBNDSTS}, unbound, S}.
-
-
-%% @spec listening(Event, From, StateData) -> Result
-%%    Event         = term()
-%%    From          = {pid(), Tag}
-%%    StateData     = term()
-%%    Result        = {next_state, NextStateName, NextStateData}            |
-%%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%%                    {reply, Reply, NextStateName, NextStateData}          |
-%%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
-%%    Reply         = term()
-%%    NextStateName = atom()
-%%    NextStateData = term()
-%%    Timeout       = int() | infinity
-%%    Reason        = term()
-%%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
-%% the state name listening.
-%% @end
-listening(close, _From, S) ->
-    {reply, gen_connection:close(S#state.connection), closed, S};
-listening({listen, Port}, _From, S) ->
-    {reply, gen_connection:listen(S#state.connection, Port), listening, S};
-listening({open, Addr, Port}, _From, #state{connection=C,response_time=T}=S) ->
-    Reply  = gen_connection:connect(C, Addr, Port, T),
-    ETimer = start_timer(S#state.enquire_link_time, enquire_link_timer),
-    STimer = start_timer(S#state.session_init_time, session_init_timer),
-    {reply, Reply, open, S#state{enquire_link_timer = ETimer,
-                                 session_init_timer = STimer}};
-listening(_Event, _From, S) ->
-    {reply, {error, ?ESME_RINVBNDSTS}, listening, S}.
-
-
-%% @spec closed(Event, From, StateData) -> Result
-%%    Event         = term()
-%%    From          = {pid(), Tag}
-%%    StateData     = term()
-%%    Result        = {next_state, NextStateName, NextStateData}            |
-%%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%%                    {reply, Reply, NextStateName, NextStateData}          |
-%%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
-%%    Reply         = term()
-%%    NextStateName = atom()
-%%    NextStateData = term()
-%%    Timeout       = int() | infinity
-%%    Reason        = term()
-%%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
-%% the state name closed.
-%% @end
-closed(close, _From, S) ->
-    {reply, ok, closed, S};
-closed({listen, Port}, _From, S) ->
-    gen_connection:enable_retry(S#state.connection),
-    {reply, gen_connection:listen(S#state.connection, Port), listening, S};
-closed({open, Addr, Port}, _From, #state{connection=C, response_time=T} = S) ->
-    gen_connection:enable_retry(C),
-    Reply  = gen_connection:connect(C, Addr, Port, T),
-    ETimer = start_timer(S#state.enquire_link_time, enquire_link_timer),
-    STimer = start_timer(S#state.session_init_time, session_init_timer),
-    {reply, Reply, open, S#state{enquire_link_timer = ETimer,
-                                 session_init_timer = STimer}};
-closed(_Event, _From, S) ->
-    {reply, {error, ?ESME_RINVBNDSTS}, closed, S}.
 
 
 %% @spec handle_event(Event, StateName, StateData) -> Result
@@ -3557,51 +2782,15 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             handle_input_corrupt_pdu(undefined,?ESME_RUNKNOWNERR,0,StateData),
             {next_state, StateName, StateData}
     end;
-handle_event(accept, StateName, StateData) ->
-    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    {next_state, open, StateData#state{session_init_timer = STimer,
-                                       enquire_link_timer = ETimer}};
-
-%%%
-%%% @TODO REVISAR LOS ERRORES EN LAS CONEXIONES ->>>
-%%%
-
-handle_event({connect_error, Addr, Port}, _StateName, StateData) ->
-    cancel_timer(StateData#state.session_init_timer),
-    cancel_timer(StateData#state.inactivity_timer),
-    cancel_timer(StateData#state.enquire_link_timer),
-    spawn(fun() -> callback_esme_unavailable(Addr, Port, StateData) end),
-    {next_state, closed, StateData#state{self_congestion_state = 0}};
-handle_event({connect_recovery, Addr, Port}, closed, StateData) ->
-    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    spawn(fun() -> callback_resume_service(Addr, Port, StateData) end),
-    {next_state, open, StateData#state{session_init_timer = STimer,
-                                       enquire_link_timer = ETimer}};
-handle_event({connect_recovery, Addr, Port}, StateName, StateData) ->
-    {next_state, StateName, StateData};
-
-%%%
-%%% <<<-
-%%%
-
-handle_event(die, StateName, #state{connection = C} = StateData) ->
-    stop_connection(C),
-    {next_state, StateName, StateData};
 handle_event({enquire_link, Pdu}, StateName, StateData) ->
     reset_timer(StateData#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     send_enquire_link_resp(?ESME_ROK, SeqNum, [], StateData#state.connection),
     {next_state, StateName, StateData};
-handle_event({listen_error, Port}, _StateName, StateData) ->
-    spawn(fun() -> callback_smpp_listen_error(Port, StateData) end),
-    {next_state, closed, StateData};
-handle_event({listen_recovery, Port}, closed, StateData) ->
-    spawn(fun() -> callback_smpp_listen_recovery(Port, StateData) end),
-    {next_state, listening, StateData};
-handle_event({listen_recovery, Port}, StateName, StateData) ->
-    {next_state, StateName, StateData}.
+handle_event(die, _StateName, StateData) ->
+    process_flag(trap_exit, false),
+    gen_tcp_connection:stop(StateData#state.connection),
+    {stop, normal, StateData}.
 
 
 %% @doc Auxiliary function for handle_event/3
@@ -3825,8 +3014,7 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %% @doc <a href="gen_connection.html#handle_accept-2">gen_connection 
 %% - handle_accept/2</a> callback implementation.
 %% @end
-handle_accept(Pid, Cid) ->
-    gen_fsm:send_all_state_event(Pid, accept).
+handle_accept(_Owner, _Conn, _Socket) -> error.
      
 
 %% @spec handle_input(Pid, Cid, Input, Lapse) -> {ok, RestBuffer}
@@ -3855,56 +3043,6 @@ handle_input(Pid, Cid, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
     end;
 handle_input(_Pid, _Cid, Buffer, _Lapse, _N) ->
     {ok, Buffer}.
-
-
-%% @spec handle_listen_error(Pid, Cid, Port) -> ok
-%%    Port = int()
-%%    Pid = pid()
-%%    Cid = pid()
-%%
-%% @doc <a href="gen_connection.html#handle_listen_error-3">gen_connection 
-%% - handle_listen_error/3</a> callback implementation.
-%% @end
-handle_listen_error(Pid, _Cid, Port) ->
-    gen_fsm:send_all_state_event(Pid, {listen_error, Port}).
-
-
-%% @spec handle_connect_error(Pid, Cid, Address, Port) -> ok
-%%    Address = string() | atom() | ip_address()
-%%    Port = int()
-%%    Pid = pid()
-%%    Cid = pid()
-%%
-%% @doc <a href="gen_connection.html#handle_connect_error-4">gen_connection 
-%% - handle_connect_error/4</a> callback implementation.
-%% @end
-handle_connect_error(Pid, _Cid, Address, Port) ->
-    gen_fsm:send_all_state_event(Pid, {connect_error, Address, Port}).
-
-
-%% @spec handle_listen_recovery(Pid, Cid, Port) -> ok
-%%    Port = int()
-%%    Pid = pid()
-%%    Cid = pid()
-%%
-%% @doc <a href="gen_connection.html#handle_listen_recovery-3">gen_connection 
-%% - handle_listen_recovery/3</a> callback implementation.
-%% @end
-handle_listen_recovery(Pid, _Cid, Port) ->
-    gen_fsm:send_all_state_event(Pid, {listen_recovery, Port}).
-
-
-%% @spec handle_connect_recovery(Pid, Cid, Address, Port) -> ok
-%%    Address = string() | atom() | ip_address()
-%%    Port = int()
-%%    Pid = pid()
-%%    Cid = pid()
-%%
-%% @doc <a href="gen_connection.html#handle_connect_recovery-4">gen_connection 
-%% - handle_connect_recovery/4</a> callback implementation.
-%% @end
-handle_connect_recovery(Pid, _Cid, Address, Port) ->
-    gen_fsm:send_all_state_event(Pid, {connect_recovery, Address, Port}).
 
 
 %%%-------------------------------------------------------------------
@@ -4373,7 +3511,7 @@ send_pdu(Cid, Pdu) ->
 %     io:format("Sending PDU: ~p~n", [Pdu]),
     case catch operation:mc_pack(Pdu) of
         {ok, BinaryPdu} ->
-            case gen_connection:send(Cid, BinaryPdu) of
+            case gen_tcp_connection:send(Cid, BinaryPdu) of
                 ok ->
 %                     io:format("OK~n", []),
                     ok;
@@ -4444,7 +3582,7 @@ request_broker(Caller, TimeoutError, Time) ->
 %% @doc Stops the underlying connection. 
 %% @end
 stop_connection(undefined)  -> ok;
-stop_connection(Connection) -> gen_connection:stop(Connection).    
+stop_connection(Connection) -> gen_tcp_connection:stop(Connection).    
 
 
 %% @spec start_timer(Time, Msg) -> Ref
@@ -4511,60 +3649,6 @@ reset_timer(_Timer) ->  % might be the atom undefined
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %%% Callback wrappers
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-%% @spec callback_esme_unavailable(Address, Port, StateData) -> ok
-%%    Address   = string() | atom() | ip_address()
-%%    Port      = int()
-%%    StateData = #state()
-%%
-%% @doc Wrapper for CallbackModule:esme_unavailable/4.
-%% @end
-callback_esme_unavailable(Address, Port, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:esme_unavailable(Pid, Sid, Address, Port).
-    
-
-%% @spec callback_resume_service(Address, Port, StateData) -> ok
-%%    Address   = string() | atom() | ip_address()
-%%    Port      = int()
-%%    StateData = #state()
-%%
-%% @doc Wrapper for CallbackModule:resume_service/4.
-%% @end
-callback_resume_service(Address, Port, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:resume_service(Pid, Sid, Address, Port).
-    
-
-%% @spec callback_smpp_listen_error(Port, StateData) -> ok
-%%    Port      = int()
-%%    StateData = #state()
-%%
-%% @doc Wrapper for CallbackModule:smpp_listen_error/3.
-%% @end
-callback_smpp_listen_error(Port, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:smpp_listen_error(Pid, Sid, Port).
-
-
-%% @spec callback_smpp_listen_recovery(Port, StateData) -> ok
-%%    Port      = int()
-%%    StateData = #state()
-%%
-%% @doc Wrapper for CallbackModule:smpp_listen_recovery/3.
-%% @end
-callback_smpp_listen_recovery(Port, StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.mc,
-    Sid = StateData#state.self,
-    Mod:smpp_listen_recovery(Pid, Sid, Port).
-
-
 %% @spec callback_bind_receiver(Pdu, StateData) -> ok
 %%    Pdu        = pdu()
 %%    StateData  = #state()

@@ -429,6 +429,1237 @@
 % </table>
 %
 %
+%
+% <h2>Timers</h2>
+%
+% <p>Timers are implemented as shown in tables below.  There's is a table
+% for each timer, indicating what events on every state force timers to be 
+% started, restarted or stopped.</p>
+%
+% <h3>session_init_timer</h3>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>&#160;</small></th>
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>accept (async)</small></th>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>alert_notification (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>close</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_error (async)</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>data_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>die (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>enquire_link (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>input (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_error (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>open</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>outbind (async)</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>replace_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_multi</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by MC (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by ESME</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+% <p>Actions on timeout.</p>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr>
+%     <td valign="top" align="center"><small>close connection</small></td>
+%     <td valign="top" align="center"><small>close connection</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+%
+% <h3>inactivity_timer</h3>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>&#160;</small></th>
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>accept (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>alert_notification (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>close</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_error (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>data_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>die (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>enquire_link (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>input (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_error (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>open</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>outbind (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>replace_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_multi</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by MC (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by ESME</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+% <p>Actions on timeout.</p>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>unbind</small></td>
+%     <td valign="top" align="center"><small>unbind</small></td>
+%     <td valign="top" align="center"><small>unbind</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+%
+% <h3>enquire_link_timer</h3>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>&#160;</small></th>
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>accept (async)</small></th>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr> 
+%     <th align="left"><small>alert_notification (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_receiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>cancel_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>close</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_error (async)</small></th>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>cancel</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>connect_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>data_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_data_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>deliver_sm (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>die (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>enquire_link (async)</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>input (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_error (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>listen_recovery (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>open</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%     <td valign="top" align="center"><small>start</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>outbind (async)</small></th>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_broadcast_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>query_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>replace_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_multi</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>submit_sm</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by MC (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind issued by ESME</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+%   <tr>
+%     <th align="left"><small>unbind_resp (async)</small></th>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>reset</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+% <p>Actions on timeout.</p>
+%
+% <table width="100%" border="1" cellpadding="5">
+%   <tr> 
+%     <th><small>open</small></th>
+%     <th><small>outbound</small></th>
+%     <th><small>bound_rx</small></th>
+%     <th><small>bound_tx</small></th>
+%     <th><small>bound_trx</small></th>
+%     <th><small>unbound</small></th>
+%     <th><small>listening</small></th>
+%     <th><small>closed</small></th>
+%   </tr>
+%   <tr>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>enquire_link</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%     <td valign="top" align="center"><small>&#160;</small></td>
+%   </tr>
+% </table>
+%
+%
+% <h3>response_timer</h3>
+%
+% <p>One <quote>instance</quote> of this timer is started for each request.  
+% On expiration, the request is considered unsuccessful.</p>  
+%
+% <p>The timer associated to a request is stopped when the corresponding 
+% response arrives.</p>
+%
+%
 % <h2>Callback Function Index</h2>
 %
 % <p>A module implementing this behaviour may export these functions.  Leaving 
@@ -683,6 +1914,15 @@
 %   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
 %     <tt>operation:get_param/2</tt>.
 %    </li>
+% </ul>
+%
+% [24 Feb 2004]
+%
+% <ul>
+%   <li>All timers reviewed (fixed).</li>
+%   <li><tt>request_broker</tt> fixed when <tt>Caller</tt> is
+%     <tt>undefined</tt>.
+%   </li>
 % </ul>
 %
 %
@@ -1425,7 +2665,7 @@ init([Pid, Module, #gen_esme_session_setup{retry_time = T} = Setup]) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name open.
+% @doc Handles async events for the state name open.
 % @end
 %%
 open({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -1435,24 +2675,18 @@ open({alert_notification, Pdu}, #state{connection = C} = StateData) ->
 
 open(bind_receiver_resp, StateData) ->
     cancel_timer(StateData#state.session_init_timer),
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_rx, StateData#state{enquire_link_timer = ETimer,
-                                           inactivity_timer   = ITimer}};
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_rx, StateData#state{inactivity_timer = Timer}};
 
 open(bind_transmitter_resp, StateData) ->
     cancel_timer(StateData#state.session_init_timer),
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_tx, StateData#state{enquire_link_timer = ETimer,
-                                           inactivity_timer   = ITimer}};
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_tx, StateData#state{inactivity_timer = Timer}};
 
 open(bind_transceiver_resp, StateData) ->
     cancel_timer(StateData#state.session_init_timer),
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_trx, StateData#state{enquire_link_timer = ETimer,
-                                            inactivity_timer   = ITimer}};
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_trx, StateData#state{inactivity_timer = Timer}};
 
 open({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
@@ -1465,7 +2699,8 @@ open({deliver_sm, Pdu}, #state{connection = C} = StateData) ->
     {next_state, open, StateData};
 
 open({outbind, Pdu}, StateData) ->
-    cancel_timer(StateData#state.session_init_timer),
+    reset_timer(StateData#state.session_init_timer),
+    reset_timer(StateData#state.enquire_link_timer),
     spawn(fun() -> callback_outbind(Pdu, StateData) end),
     {next_state, outbound, StateData};
 
@@ -1473,6 +2708,16 @@ open({unbind, Pdu}, #state{connection = C} = StateData) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, open, StateData};
+
+open({timeout, _Ref, enquire_link_timer}, StateData) ->
+    NewData = case send_enquire_link([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      NewStateData;
+                  _Error ->
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
+    {next_state, open, NewData#state{enquire_link_timer = Timer}};
 
 open({timeout, _Ref, session_init_timer}, #state{connection=C} = StateData) ->
     gen_connection:close(C),
@@ -1494,7 +2739,7 @@ open(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name outbound.
+% @doc Handles async events for the state name outbound.
 % @end
 %%
 outbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -1503,22 +2748,19 @@ outbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
     {next_state, outbound, StateData};
 
 outbound(bind_receiver_resp, StateData) ->
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_rx, StateData#state{enquire_link_timer = ETimer,
-                                           inactivity_timer   = ITimer}};
+    cancel_timer(StateData#state.session_init_timer),
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_rx, StateData#state{inactivity_timer = Timer}};
 
 outbound(bind_transmitter_resp, StateData) ->
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_tx, StateData#state{enquire_link_timer = ETimer,
-                                           inactivity_timer   = ITimer}};
+    cancel_timer(StateData#state.session_init_timer),
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_tx, StateData#state{inactivity_timer = Timer}};
 
 outbound(bind_transceiver_resp, StateData) ->
-    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
-    ITimer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_trx, StateData#state{enquire_link_timer = ETimer,
-                                            inactivity_timer   = ITimer}};
+    cancel_timer(StateData#state.session_init_timer),
+    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_trx, StateData#state{inactivity_timer = Timer}};
 
 outbound({deliver_data_sm, Pdu}, #state{connection = C} = StateData) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
@@ -1540,6 +2782,20 @@ outbound({unbind, Pdu}, #state{connection = C} = StateData) ->
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, outbound, StateData};
 
+outbound({timeout, _Ref, enquire_link_timer}, StateData) ->
+    NewData = case send_enquire_link([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      NewStateData;
+                  _Error ->
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
+    {next_state, outbound, NewData#state{enquire_link_timer = Timer}};
+
+outbound({timeout, _Ref, session_init_timer}, #state{connection=C}=StateData)->
+    gen_connection:close(C),
+    {next_state, closed, StateData};
+
 outbound(_Event, StateData) ->
     {next_state, outbound, StateData}.
     
@@ -1556,7 +2812,7 @@ outbound(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_rx.
+% @doc Handles async events for the state name bound_rx.
 % @end
 %%
 bound_rx({alert_notification, Pdu}, StateData) ->
@@ -1605,7 +2861,7 @@ bound_rx({unbind, Pdu}, #state{connection = C} = StateData) ->
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
-            cancel_timer(StateData#state.enquire_link_timer),
+            reset_timer(StateData#state.enquire_link_timer),
             gen_connection:disable_retry(C),
             send_unbind_resp(?ESME_ROK, SeqNum, [], C),
             {next_state, unbound, StateData};
@@ -1615,8 +2871,9 @@ bound_rx({unbind, Pdu}, #state{connection = C} = StateData) ->
     end;
 
 bound_rx(unbind_resp, StateData) ->
+    gen_connection:disable_retry(StateData#state.connection),
     cancel_timer(StateData#state.inactivity_timer),
-    cancel_timer(StateData#state.enquire_link_timer),
+    reset_timer(StateData#state.enquire_link_timer),
     {next_state, unbound, StateData};
 
 bound_rx({timeout, _Ref, enquire_link_timer}, StateData) ->
@@ -1626,14 +2883,20 @@ bound_rx({timeout, _Ref, enquire_link_timer}, StateData) ->
                   _Error ->
                       StateData
               end,
-    Timer = start_timer(StateData#state.enquire_link_time, enquire_link_timer),
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_rx, NewData#state{enquire_link_timer = Timer}};
 
 bound_rx({timeout, _Ref, inactivity_timer}, StateData) ->
-    Sid = self(),
-    spawn(fun() -> unbind(Sid) end),
-    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_rx, StateData#state{inactivity_timer = Timer}};
+    NewData = case send_unbind([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      reset_timer(NewStateData#state.enquire_link_timer),
+                      NewStateData;
+                  _Error ->
+                      % %@TODO: trigger a new callback here? exit?
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_rx, NewData#state{inactivity_timer = Timer}};
 
 bound_rx(_Event, StateData) ->    
     {next_state, bound_rx, StateData}.
@@ -1651,7 +2914,7 @@ bound_rx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_tx.
+% @doc Handles async events for the state name bound_tx.
 % @end
 %%
 bound_tx({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -1679,7 +2942,7 @@ bound_tx({unbind, Pdu}, #state{connection = C} = StateData) ->
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
-            cancel_timer(StateData#state.enquire_link_timer),
+            reset_timer(StateData#state.enquire_link_timer),
             gen_connection:disable_retry(C),
             send_unbind_resp(?ESME_ROK, SeqNum, [], C),
             {next_state, unbound, StateData};
@@ -1689,8 +2952,9 @@ bound_tx({unbind, Pdu}, #state{connection = C} = StateData) ->
     end;
 
 bound_tx(unbind_resp, StateData) ->
+    gen_connection:disable_retry(StateData#state.connection),
     cancel_timer(StateData#state.inactivity_timer),
-    cancel_timer(StateData#state.enquire_link_timer),
+    reset_timer(StateData#state.enquire_link_timer),
     {next_state, unbound, StateData};
 
 bound_tx({timeout, _Ref, enquire_link_timer}, StateData) ->
@@ -1700,14 +2964,20 @@ bound_tx({timeout, _Ref, enquire_link_timer}, StateData) ->
                   _Error ->
                       StateData
               end,
-    Timer = start_timer(StateData#state.enquire_link_time, enquire_link_timer),
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_tx, NewData#state{enquire_link_timer = Timer}};
 
 bound_tx({timeout, _Ref, inactivity_timer}, StateData) ->
-    Sid = self(),
-    spawn(fun() -> unbind(Sid) end),
-    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_tx, StateData#state{inactivity_timer = Timer}};
+    NewData = case send_unbind([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      reset_timer(NewStateData#state.enquire_link_timer),
+                      NewStateData;
+                  _Error ->
+                      % %@TODO: trigger a new callback here? exit?
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_tx, NewData#state{inactivity_timer = Timer}};
 
 bound_tx(_Event, StateData) ->    
     {next_state, bound_tx, StateData}.
@@ -1725,7 +2995,7 @@ bound_tx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_trx.
+% @doc Handles async events for the state name bound_trx.
 % @end
 %%
 bound_trx({alert_notification, Pdu}, StateData) ->
@@ -1775,7 +3045,7 @@ bound_trx({unbind, Pdu}, #state{connection = C} = StateData) ->
     case callback_unbind(StateData) of
         ok ->
             cancel_timer(StateData#state.inactivity_timer),
-            cancel_timer(StateData#state.enquire_link_timer),
+            reset_timer(StateData#state.enquire_link_timer),
             gen_connection:disable_retry(C),
             send_unbind_resp(?ESME_ROK, SeqNum, [], C),
             {next_state, unbound, StateData};
@@ -1785,8 +3055,9 @@ bound_trx({unbind, Pdu}, #state{connection = C} = StateData) ->
     end;
 
 bound_trx(unbind_resp, StateData) ->
+    gen_connection:disable_retry(StateData#state.connection),
     cancel_timer(StateData#state.inactivity_timer),
-    cancel_timer(StateData#state.enquire_link_timer),
+    reset_timer(StateData#state.enquire_link_timer),
     {next_state, unbound, StateData};
 
 bound_trx({timeout, _Ref, enquire_link_timer}, StateData) ->
@@ -1796,14 +3067,20 @@ bound_trx({timeout, _Ref, enquire_link_timer}, StateData) ->
                   _Error ->
                       StateData
               end,
-    Timer = start_timer(StateData#state.enquire_link_time, enquire_link_timer),
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_trx, NewData#state{enquire_link_timer = Timer}};
 
 bound_trx({timeout, _Ref, inactivity_timer}, StateData) ->
-    Sid = self(),
-    spawn(fun() -> unbind(Sid) end),
-    Timer = start_timer(StateData#state.inactivity_time, inactivity_timer),
-    {next_state, bound_trx, StateData#state{inactivity_timer = Timer}};
+    NewData = case send_unbind([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      reset_timer(NewStateData#state.enquire_link_timer),
+                      NewStateData;
+                  _Error ->
+                      % %@TODO: trigger a new callback here? exit?
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.inactivity_time, inactivity_timer),
+    {next_state, bound_trx, NewData#state{inactivity_timer = Timer}};
 
 bound_trx(_Event, StateData) ->
     {next_state, bound_trx, StateData}.
@@ -1821,7 +3098,7 @@ bound_trx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name unbound.
+% @doc Handles async events for the state name unbound.
 % @end
 %%
 unbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -1849,6 +3126,16 @@ unbound({unbind, Pdu}, #state{connection = C} = StateData) ->
     send_unbind_resp(?ESME_RINVBNDSTS, SeqNum, [], C),
     {next_state, unbound, StateData};
 
+unbound({timeout, _Ref, enquire_link_timer}, StateData) ->
+    NewData = case send_enquire_link([], undefined, StateData) of
+                  {ok, NewStateData} ->
+                      NewStateData;
+                  _Error ->
+                      StateData
+              end,
+    Timer = start_timer(NewData#state.enquire_link_time, enquire_link_timer),
+    {next_state, unbound, NewData#state{enquire_link_timer = Timer}};
+
 unbound(_Event, StateData) ->
     {next_state, unbound, StateData}.
 
@@ -1865,7 +3152,7 @@ unbound(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name listening.
+% @doc Handles async events for the state name listening.
 % @end
 %%
 listening(_Event, StateData) ->
@@ -1884,7 +3171,7 @@ listening(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name closed.
+% @doc Handles async events for the state name closed.
 % @end
 %%
 closed(_Event, StateData) ->
@@ -1914,6 +3201,7 @@ closed(_Event, StateData) ->
 open({bind_receiver, ParamList}, From, StateData) ->
     case send_bind_receiver(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, open, NewStateData};
         Error ->
             {reply, Error, open, StateData}
@@ -1922,6 +3210,7 @@ open({bind_receiver, ParamList}, From, StateData) ->
 open({bind_transmitter, ParamList}, From, StateData) ->
     case send_bind_transmitter(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, open, NewStateData};
         Error ->
             {reply, Error, open, StateData}
@@ -1930,6 +3219,7 @@ open({bind_transmitter, ParamList}, From, StateData) ->
 open({bind_transceiver, ParamList}, From, StateData) ->
     case send_bind_transceiver(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, open, NewStateData};
         Error ->
             {reply, Error, open, StateData}
@@ -1937,18 +3227,23 @@ open({bind_transceiver, ParamList}, From, StateData) ->
 
 open(close, _From, #state{connection = C} = StateData) ->
     cancel_timer(StateData#state.session_init_timer),
-    gen_connection:close(C),
-    {reply, ok, closed, StateData};
+    cancel_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:close(C), closed, StateData};
 
 open({listen, Port}, _From, #state{connection = C} = StateData) ->
     cancel_timer(StateData#state.session_init_timer),
-    gen_connection:listen(C, Port),
-    {reply, ok, listening, StateData};
+    cancel_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:listen(C, Port), listening, StateData};
 
-open({open, Address, Port}, _From, #state{connection = C} = StateData) ->
-    cancel_timer(StateData#state.session_init_timer),
-    gen_connection:connect(C, Address, Port, StateData#state.response_time),
-    {reply, ok, open, StateData};
+open({open, A, P}, _From, #state{connection=C, response_time=T} = StateData) ->
+    case gen_connection:connect(C, A, P, T) of
+        ok ->
+            reset_timer(StateData#state.session_init_timer),
+            reset_timer(StateData#state.enquire_link_timer),
+            {reply, ok, open, StateData};
+        Error ->
+            {reply, Error, open, StateData}
+    end;
 
 open(_Event, _From, StateData) ->
     {reply, {error, ?ESME_RINVBNDSTS}, open, StateData}.
@@ -1977,6 +3272,7 @@ open(_Event, _From, StateData) ->
 outbound({bind_receiver, ParamList}, From, StateData) ->
     case send_bind_receiver(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, outbound, NewStateData};
         Error ->
             {reply, Error, outbound, StateData}
@@ -1985,6 +3281,7 @@ outbound({bind_receiver, ParamList}, From, StateData) ->
 outbound({bind_transmitter, ParamList}, From, StateData) ->
     case send_bind_transmitter(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, outbound, NewStateData};
         Error ->
             {reply, Error, outbound, StateData}
@@ -1993,22 +3290,26 @@ outbound({bind_transmitter, ParamList}, From, StateData) ->
 outbound({bind_transceiver, ParamList}, From, StateData) ->
     case send_bind_transceiver(ParamList, From, StateData) of
         {ok, NewStateData} ->
+			reset_timer(StateData#state.enquire_link_timer),
             {next_state, outbound, NewStateData};
         Error ->
             {reply, Error, outbound, StateData}
     end;
 
 outbound(close, _From, #state{connection = C} = StateData) ->
-    gen_connection:close(C),
-    {reply, ok, closed, StateData};
+    cancel_timer(StateData#state.session_init_timer),
+    cancel_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:close(C), closed, StateData};
 
 outbound({listen, Port}, _From, #state{connection = C} = StateData) ->
-    gen_connection:listen(C, Port),
-    {reply, ok, listening, StateData};
+    cancel_timer(StateData#state.session_init_timer),
+    cancel_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:listen(C, Port), listening, StateData};
 
-outbound({open, Address, Port}, _From, #state{connection = C} = StateData) ->
-    gen_connection:connect(C, Address, Port, StateData#state.response_time),
-    {reply, ok, open, StateData};
+outbound({open, A, P}, _From, #state{connection=C,response_time=T}=StateData)->
+    reset_timer(StateData#state.session_init_timer),
+    reset_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:connect(C, A, P, T), open, StateData};
 
 outbound(_Event, _From, StateData) ->
     {reply, {error, ?ESME_RINVBNDSTS}, outbound, StateData}.
@@ -2040,7 +3341,6 @@ bound_rx({Bind, _ParamList}, _From, StateData) when Bind == bind_receiver;
     {reply, {error, ?ESME_RALYBND}, bound_rx, StateData};
 
 bound_rx(unbind, From, StateData) ->
-    gen_connection:disable_retry(StateData#state.connection),
     case send_unbind([], From, StateData) of
         {ok, NewStateData} ->
             reset_timer(StateData#state.inactivity_timer),
@@ -2187,7 +3487,6 @@ bound_tx({submit_sm, ParamList}, From, StateData) ->
     end;
 
 bound_tx(unbind, From, StateData) ->
-    gen_connection:disable_retry(StateData#state.connection),
     case send_unbind([], From, StateData) of
         {ok, NewStateData} ->
             reset_timer(StateData#state.inactivity_timer),
@@ -2334,7 +3633,6 @@ bound_trx({submit_sm, ParamList}, From, StateData) ->
     end;
 
 bound_trx(unbind, From, StateData) ->
-    gen_connection:disable_retry(StateData#state.connection),
     case send_unbind([], From, StateData) of
         {ok, NewStateData} ->
             reset_timer(StateData#state.inactivity_timer),
@@ -2369,18 +3667,20 @@ bound_trx(_Event, _From, StateData) ->
 % @end
 %%
 unbound(close, _From, #state{connection = C} = StateData) ->
-    gen_connection:close(C),
-    {reply, ok, closed, StateData};
+    cancel_timer(StateData#state.enquire_link_timer),
+    {reply, gen_connection:close(C), closed, StateData};
 
 unbound({listen, Port}, _From, #state{connection = C} = StateData) ->
+    cancel_timer(StateData#state.enquire_link_timer),
     gen_connection:enable_retry(C),
-    gen_connection:listen(C, Port),
-    {reply, ok, listening, StateData};
+    {reply, gen_connection:listen(C, Port), listening, StateData};
 
-unbound({open, Address, Port}, _From, #state{connection = C} = StateData) ->
+unbound({open, A, P}, _From, #state{connection = C} = StateData) ->
+    reset_timer(StateData#state.enquire_link_timer),
     gen_connection:enable_retry(C),
-    gen_connection:connect(C, Address, Port, StateData#state.response_time),
-    {reply, ok, open, StateData};
+    Reply = gen_connection:connect(C, A, P, StateData#state.response_time),
+    Timer = start_timer(StateData#state.session_init_time, session_init_timer),
+    {reply, Reply, open, StateData#state{session_init_timer = Timer}};
 
 unbound(_Event, _From, StateData) ->
     {reply, {error, ?ESME_RINVBNDSTS}, unbound, StateData}.
@@ -2407,16 +3707,17 @@ unbound(_Event, _From, StateData) ->
 % @end
 %%
 listening(close, _From, #state{connection = C} = StateData) ->
-    gen_connection:close(C),
-    {reply, ok, closed, StateData};
+    {reply, gen_connection:close(C), closed, StateData};
 
 listening({listen, Port}, _From, #state{connection = C} = StateData) ->
-    gen_connection:listen(C, Port),
-    {reply, ok, listening, StateData};
+    {reply, gen_connection:listen(C, Port), listening, StateData};
 
-listening({open, Address, Port}, _From, #state{connection = C} = StateData) ->
-    gen_connection:connect(C, Address, Port, StateData#state.response_time),
-    {reply, ok, open, StateData};
+listening({open, A, P}, _From, #state{connection = C} = StateData) ->
+    Reply  = gen_connection:connect(C, A, P, StateData#state.response_time),
+    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
+    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
+    {reply, Reply, open, StateData#state{enquire_link_timer = ETimer,
+                                         session_init_timer = STimer}};
 
 listening(_Event, _From, StateData) ->
     {reply, {error, ?ESME_RINVBNDSTS}, listening, StateData}.
@@ -2447,13 +3748,15 @@ closed(close, _From, StateData) ->
 
 closed({listen, Port}, _From, #state{connection = C} = StateData) ->
     gen_connection:enable_retry(C),
-    gen_connection:listen(C, Port),
-    {reply, ok, listening, StateData};
+    {reply, gen_connection:listen(C, Port), listening, StateData};
 
-closed({open, Address, Port}, _From, #state{connection = C} = StateData) ->
+closed({open, A, P}, _From, #state{connection = C} = StateData) ->
     gen_connection:enable_retry(C),
-    gen_connection:connect(C, Address, Port, StateData#state.response_time),
-    {reply, ok, open, StateData};
+    Reply  = gen_connection:connect(C, A, P, StateData#state.response_time),
+    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
+    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
+    {reply, Reply, open, StateData#state{enquire_link_timer = ETimer,
+                                         session_init_timer = STimer}};
 
 closed(_Event, _From, StateData) ->
     {reply, {error, ?ESME_RINVBNDSTS}, closed, StateData}.
@@ -2514,36 +3817,48 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
     end;
 
 handle_event(accept, StateName, StateData) ->
-    Timer = start_timer(StateData#state.session_init_time, session_init_timer),
-    {next_state, open, StateData#state{session_init_timer = Timer}};
+    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
+    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
+    {next_state, open, StateData#state{session_init_timer = STimer,
+                                       enquire_link_timer = ETimer}};
 
 handle_event({connect_error, Addr, Port}, _StateName, StateData) ->
+    cancel_timer(StateData#state.session_init_timer),
     cancel_timer(StateData#state.inactivity_timer),
     cancel_timer(StateData#state.enquire_link_timer),
     spawn(fun() -> callback_mc_unavailable(Addr, Port, StateData) end),
     {next_state, closed, StateData#state{self_congestion_state = 0}};
 
-handle_event({connect_recovery, Addr, Port}, _StateName, StateData) ->
+handle_event({connect_recovery, Addr, Port}, closed, StateData) ->
+    STimer = start_timer(StateData#state.session_init_time,session_init_timer),
+    ETimer = start_timer(StateData#state.enquire_link_time,enquire_link_timer),
     spawn(fun() -> callback_resume_service(Addr, Port, StateData) end),
-    {next_state, open, StateData};
+    {next_state, open, StateData#state{session_init_timer = STimer,
+                                       enquire_link_timer = ETimer}};
+
+handle_event({connect_recovery, Addr, Port}, StateName, StateData) ->
+    {next_state, StateName, StateData};
 
 handle_event(die, StateName, #state{connection = C} = StateData) ->
     stop_connection(C),
     {next_state, StateName, StateData};
 
 handle_event({enquire_link, Pdu}, StateName, StateData) ->
+    reset_timer(StateData#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     send_enquire_link_resp(?ESME_ROK, SeqNum, [], StateData#state.connection),
     {next_state, StateName, StateData};
 
 handle_event({listen_error, Port}, _StateName, StateData) ->
-    cancel_timer(StateData#state.session_init_timer),
     spawn(fun() -> callback_smpp_listen_error(Port, StateData) end),
     {next_state, closed, StateData};
 
-handle_event({listen_recovery, Port}, _StateName, StateData) ->
+handle_event({listen_recovery, Port}, closed, StateData) ->
     spawn(fun() -> callback_smpp_listen_recovery(Port, StateData) end),
-    {next_state, listening, StateData}.
+    {next_state, listening, StateData};
+
+handle_event({listen_recovery, Port}, StateName, StateData) ->
+    {next_state, StateName, StateData}.
 
 
 %%%
@@ -3662,12 +4977,28 @@ send_pdu(Cid, Pdu) ->
 %
 % %@equiv
 %%
-request_broker(undefined, _TimeoutError, Time) ->
+request_broker(undefined, TimeoutError, Time) ->
     receive 
-        {_Sid, {response, _Pdu}} ->
-            true
+        {Sid, {response, Pdu}} ->
+            case operation:get_param(command_status, Pdu) of
+                ?ESME_ROK ->
+                    case operation:get_param(command_id, Pdu) of
+                        ?COMMAND_ID_BIND_RECEIVER_RESP ->
+                            bind_receiver_resp(Sid);
+                        ?COMMAND_ID_BIND_TRANSMITTER_RESP ->
+                            bind_transmitter_resp(Sid);
+                        ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
+                            bind_transceiver_resp(Sid);
+                        ?COMMAND_ID_UNBIND_RESP ->
+                            unbind_resp(Sid);
+                        _OtherResponse ->
+                            ok
+                    end;
+                Error ->
+                    {error, Error}
+            end
     after Time ->
-            true
+            {error, TimeoutError}
     end;
 
 request_broker(Caller, TimeoutError, Time) ->

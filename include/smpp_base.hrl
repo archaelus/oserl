@@ -51,6 +51,17 @@
 %   </li>
 % </ul>
 %
+% [01 Mar 2004]
+% 
+% <ul>
+%   <li>New macros for composite parameters value definitions.<br/>
+%     <br/>
+%     For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
+%     <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
+%     <i>dest_address_sme</i>.
+%   </li>
+% </ul>
+%
 %
 % <h2>References</h2>
 % <dl>
@@ -2165,6 +2176,86 @@
 -define(USSD_SERVICE_OP_USSR_CONFIRM,   18). 
 -define(USSD_SERVICE_OP_USSN_CONFIRM,   19).
 
+
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+% Standard and TLV Composite Parameters Value Definitions
+%
+% %@see section 4.1 to 4.6 on [SMPP 5.0]
+%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-define(DEST_ADDRESS_SME_DEFAULT_VALUE, #dest_address_sme{}).
+-define(DEST_ADDRESS_SME_VALUE(DestFlag, DestAddrTon, DestAddrNpi, DestAddr), 
+        #dest_address_sme{ 
+            dest_flag        = DestFlag,
+            dest_addr_ton    = DestAddrTon,
+            dest_addr_npi    = DestAddrNpi,
+            destination_addr = DestAddr}).
+
+-define(DEST_ADDRESS_DL_DEFAULT_VALUE, #dest_address_dl{}).
+-define(DEST_ADDRESS_DL_VALUE(DestFlag, DlName), 
+        #dest_address_dl{dest_flag = DestFlag, dl_name = DlName}).
+
+-define(UNSUCCESS_SME_DEFAULT_VALUE, #unsuccess_sme{}).
+-define(UNSUCCESS_SME_VALUE(DestAddrTon, DestAddrNpi, DestAddr, StatusCode), 
+        #unsuccess_sme{
+            dest_addr_ton     = DestAddrTon,
+            dest_addr_npi     = DestAddrNpi,
+            destination_addr  = DestAddr,
+            error_status_code = StatusCode}).
+
+-define(BROADCAST_AREA_DEFAULT_VALUE, #broadcast_area{}).
+-define(BROADCAST_AREA_VALUE(Format, Details),
+        #broadcast_area{format = Format, details = Details}).
+
+-define(BROADCAST_CONTENT_TYPE_DEFAULT_VALUE, #broadcast_content_type{}).
+-define(BROADCAST_CONTENT_TYPE_VALUE(NetworkType, Service),
+        #broadcast_content_type{network_type = NetworkType,service = Service}).
+
+-define(BROADCAST_FREQUENCY_INTERVAL_DEFAULT_VALUE, 
+        #broadcast_frequency_interval{}).
+-define(BROADCAST_FREQUENCY_INTERVAL_VALUE(TimeUnit, Number), 
+        #broadcast_frequency_interval{time_unit = TimeUnit, number = Number}).
+
+-define(SUBADDRESS_DEFAULT_VALUE, #subaddress{}).
+-define(SUBADDRESS_VALUE(Tag, Data), #subaddress{tag = Tag, data = Data}).
+
+-define(CALLBACK_NUM_DEFAULT_VALUE, #callback_num{}).
+-define(CALLBACK_NUM_VALUE(DigitModeIndicator, AddrTon, AddrNpi, NumberDigits),
+        #callback_num{
+            digit_mode_indicator = DigitModeIndicator,
+            addr_ton             = AddrTon,
+            addr_npi             = AddrNpi,
+            number_digits        = NumberDigits}).
+
+-define(CALLBACK_NUM_ATAG_DEFAULT_VALUE, #callback_num_atag{}).
+-define(CALLBACK_NUM_ATAG_VALUE(DataCoding, DisplayCharacters),
+        #callback_num_atag{
+            data_coding        = DataCoding, 
+            display_characters = DisplayCharacters}).
+
+-define(TELEMATICS_ID_DEFAULT_VALUE, #telematics_id{}).
+-define(TELEMATICS_ID_VALUE(ProtocolId, Reserved),
+        #telematics_id{protocol_id = ProtocolId, reserved = Reserved}).
+
+-define(ITS_SESSION_INFO_DEFAULT_VALUE, #its_session_info{}).
+-define(ITS_SESSION_INFO_VALUE(SessionNumber, SequenceNumber), 
+        #its_session_info{
+            session_number  = SessionNumber, 
+            sequence_number = SequenceNumber}).
+
+-define(MS_VALIDITY_ABSOLUTE_DEFAULT_VALUE, #ms_validity_absolute{}).
+-define(MS_VALIDITY_ABSOLUTE_VALUE(Behavior),
+        #ms_validity_absolute{behaviour = Behavior}).
+
+-define(MS_VALIDITY_RELATIVE_DEFAULT_VALUE, #ms_validity_relative{}).
+-define(MS_VALIDITY_RELATIVE_VALUE,
+        #ms_validity_relative{
+            behaviour = Behavior, 
+            time_unit = TimeUnit,  
+            number    = Number}).
+
+-define(NETWORK_ERROR_CODE_DEFAULT_VALUE, #network_error_code{}).
+-define(NETWORK_ERROR_CODE_VALUE(Type, Error),
+        #network_error_code{type = Type, error = Error}).
 
 %%%-------------------------------------------------------------------
 % Records

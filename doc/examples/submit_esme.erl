@@ -228,10 +228,8 @@ stop() ->
 % % @equiv
 %%
 submit_sm(MobileNumber, UserMessage) ->
-    % Notice that NULL characters must be explicitly assigned in C-Octet
-    % Strings :-(  This won't be true in the next version of the library :-)
-    ServiceType = read_string("Service type> ") ++ "\0",
-    SourceAddress = read_string("Source> ") ++ "\0",
+    ServiceType = read_string("Service type> "),
+    SourceAddress = read_string("Source> "),
     ReplaceIfPresentFlag = read_decimal("Replace if present flag> "),
     ScheduleDeliveryTime = read_time("Schedule delivery time> "),
     ValidityPeriod = read_time("Validity period> "),
@@ -319,6 +317,7 @@ submit_sm_sync_iter(ParamList, Count) ->
 submit_sm(ParamList) -> 
     case gen_esme:submit_sm(submit_esme, ParamList) of
         {ok, Response} -> 
+            % See how to get a parameter value
             MessageId = pdu_syntax:get_value(message_id, Response),
             io:format("Message ID: ~p~n", [MessageId]);
         {error, Error} ->
@@ -333,6 +332,10 @@ submit_sm(ParamList) ->
 %     What   = term()
 %
 % @doc Reads a string from the standard input.
+%
+% <p>Notice that NULL characters must be explicitly assigned in C-Octet
+% Strings :-(  This won't be true in the next version of the library :-)
+% </p>
 % @end 
 %
 % % @see
@@ -342,7 +345,7 @@ submit_sm(ParamList) ->
 read_string(Prompt) ->
     case io:fread(Prompt, "~s") of
         {ok, InputList} ->
-            hd(InputList);
+            hd(InputList) ++ "\0";
         Error ->
             Error
     end.

@@ -2198,6 +2198,9 @@ behaviour_info(callbacks) ->
      {resume_service, 4},
      {smpp_listen_error, 3},
      {smpp_listen_recovery, 3},
+     {bind_receiver, 3}, 
+     {bind_transmitter, 3}, 
+     {bind_transceiver, 3}, 
      {broadcast_sm, 3}, 
      {cancel_broadcast_sm, 3}, 
      {cancel_sm, 3}, 
@@ -2207,7 +2210,7 @@ behaviour_info(callbacks) ->
      {submit_multi, 3}, 
      {submit_sm, 3}, 
      {submit_data_sm, 3},
-     {unbind, 2}];
+     {unbind, 3}];
 behaviour_info(_Other) ->
     undefined.
 
@@ -2462,14 +2465,12 @@ open({bind_receiver, Pdu}, #state{connection = C} = S) ->
             {next_state, open, S}
     end;
 open({bind_transmitter, Pdu}, #state{connection = C} = S) ->
-	io:format("LLEGA UN BIND ~p~n", [Pdu]),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
     case callback_bind_transmitter(Pdu, S) of
         {ok, ParamList} ->
             cancel_timer(S#state.session_init_timer),
-            R = send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
-			io:format("Resultado de enviar la respuesta ~p~n", [R]),
+            send_bind_transmitter_resp(?ESME_ROK, SeqNum, ParamList, C),
             T = start_timer(S#state.inactivity_time, inactivity_timer),
             {next_state, bound_tx, S#state{inactivity_timer = T}};
         {error, Error, ParamList} ->
@@ -2776,8 +2777,6 @@ bound_tx({submit_multi, Pdu}, #state{connection = C} = S) ->
     end,
     {next_state, bound_tx, S};
 bound_tx({submit_sm, Pdu}, #state{connection = C} = S) ->
-	io:format("LLEGO A LA SESSION ~p~n", [Pdu]),
-
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     SeqNum = operation:get_param(sequence_number, Pdu),
@@ -4378,8 +4377,8 @@ send_pdu(Cid, Pdu) ->
                 ok ->
 %                     io:format("OK~n", []),
                     ok;
-                SendError ->
-                     io:format("Error ~p~n", [SendError]),
+                _SendError ->
+%                     io:format("Error ~p~n", [SendError]),
                     {error, ?ESME_RUNKNOWNERR}
             end;
         {error, _CmdId, Status, _SeqNum} ->

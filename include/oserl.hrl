@@ -48,39 +48,37 @@
 
 %% Session
 -define(DEFAULT_SESSION_SETUP, #session_setup{}).
-
 -define(SESSION_SETUP(STime, ETime, ITime, RTime, RetryT),
         #session_setup{session_init_time = STime,
                        enquire_link_time = ETime,
                        inactivity_time   = ITime,
                        response_time     = RTime,
                        retry_time        = RetryT}).
-
--define(GET_ESME_SESSION_SETUP(EsmeSetup),
-        ?SESSION_SETUP(EsmeSetup#esme_setup.session_init_time,
-                       EsmeSetup#esme_setup.enquire_link_time,
-                       EsmeSetup#esme_setup.inactivity_time,
-                       EsmeSetup#esme_setup.response_time,
-                       EsmeSetup#esme_setup.rebind_time)).
-
--define(GET_MC_SESSION_SETUP(McSetup),
-        ?SESSION_SETUP(McSetup#mc_setup.session_init_time,
-                       McSetup#mc_setup.enquire_link_time,
-                       McSetup#mc_setup.inactivity_time,
-                       McSetup#mc_setup.response_time,
-                       McSetup#mc_setup.rebind_time)).
+-define(GET_ESME_SESSION_SETUP(ESMESetup),
+        ?SESSION_SETUP(ESMESetup#esme_setup.session_init_time,
+                       ESMESetup#esme_setup.enquire_link_time,
+                       ESMESetup#esme_setup.inactivity_time,
+                       ESMESetup#esme_setup.response_time,
+                       ESMESetup#esme_setup.rebind_time)).
+-define(GET_SMSC_SESSION_SETUP(SMSCSetup),
+        ?SESSION_SETUP(SMSCSetup#mc_setup.session_init_time,
+                       SMSCSetup#mc_setup.enquire_link_time,
+                       SMSCSetup#mc_setup.inactivity_time,
+                       SMSCSetup#mc_setup.response_time,
+                       SMSCSetup#mc_setup.rebind_time)).
 
 % ESME
 -define(DEFAULT_ESME_SETUP, #esme_setup{}).
-
 -define(ESME_SETUP(SystemId, Password, AddressRange, SourceAddr),
         #esme_setup{system_id     = SystemId,
                     password      = Password,
                     address_range = AddressRange,
                     source_addr   = SourceAddr}).
 
-% MC
--define(DEFAULT_MC_SETUP, #mc_setup{}).
+% SMSC
+-define(DEFAULT_SMSC_SETUP, #smsc_setup{}).
+-define(SMSC_SETUP(SystemId, Password),
+        #smsc_setup{system_id = SystemId, password = Password}).
 
 
 %%%-------------------------------------------------------------------
@@ -237,11 +235,11 @@
 %% %@doc ESME setup record.
 %%
 %% <dl>
-%%   <dt>SystemId: </dt><dd>ESME identifier.  C-octet string, null terminated 
-%%     string (default value is ?NULL_C_OCTET_STRING).
+%%   <dt>SystemId: </dt><dd>ESME identifier.  C-octet string (default value is 
+%%     ?NULL_C_OCTET_STRING).
 %%   </dd>
-%%   <dt>Password: </dt><dd>ESME password.  C-octet string, null terminated 
-%%     string (default value is ?NULL_C_OCTET_STRING).
+%%   <dt>Password: </dt><dd>ESME password.  C-octet string (default value is 
+%%     ?NULL_C_OCTET_STRING).
 %%   </dd>
 %%   <dt>AddrTon: </dt><dd>ESME address TON.  Integer (default value is
 %%     ?TON_INTERNATIONAL).
@@ -320,5 +318,28 @@
          inactivity_time   = ?INACTIVITY_TIME,
          response_time     = ?RESPONSE_TIME,
          rebind_time       = ?REBIND_TIME}).
+
+
+%% %@spec {smsc_setup, SystemId, Password, Port, Timers}
+%%    SystemId = string()
+%%    Password = string()
+%%    Timers   = #timers()
+%%
+%% %@doc SMSC setup record.
+%%
+%% <dl>
+%%   <dt>SystemId: </dt><dd>SMSC identifier.  C-octet string (default value is
+%%     ?NULL_C_OCTET_STRING).
+%%   </dd>
+%%   <dt>Password: </dt><dd>SMSC password.  C-octet string (default value is
+%%     ?NULL_C_OCTET_STRING).
+%%   </dd>
+%%   <dt>Timers: </dt><dd>SMPP Timers.</dd>
+%% </dl>
+%% %@end
+-record(smsc_setup, 
+        {system_id = ?NULL_C_OCTET_STRING,
+         password  = ?NULL_C_OCTET_STRING,
+         timers    = #timers()}).
 
 -endif.  % -ifndef(oserl)

@@ -36,6 +36,9 @@ Contents
 
 3.   Changes 1.0 -> 1.1
 
+4.   Changes 1.1 -> 1.2
+4.1  smpp_base.hrl
+
 ---
 
 
@@ -247,3 +250,12 @@ How these changes affected individual files is described below.
 - gen_connection removed.
 - gen_esme and gen_smsc redesigned.
 - gen_esme_session and gen_smsc_session redesigned.
+
+
+4.   Changes 1.1 -> 1.2
+
+4.1  smpp_base.hrl
+
+- ESM_CLASS_DOMAIN fixed.  Thanks to hfventer for this fix.  
+  The max values were less than the min values! Without this it would be 
+  impossible to send binary content messages (like ring tones or WAP push).

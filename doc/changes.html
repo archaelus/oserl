@@ -42,6 +42,11 @@
     </ol>
   </li>
   <li><a href="#changes0_2-1_0">Changes 1.0 -> 1.1</a></li>
+  <li><a href="#changes1_1-1_2">Changes 1.1 -> 1.2</a>
+    <ol>
+      <li><a href="#changes0_2-1_0-smpp_base-hrl">smpp_base.hrl</a></li>
+    </ol>
+  </li>
 </ol>
 
 <h2><a name="changes0_1-0_2">Changes 0.1 -> 0.2</a></h2>
@@ -391,6 +396,19 @@
   </li>
 </ul>
 
+<h2><a name="changes1_1-1_2">Changes 1.1 -> 1.2</a></h2>
+
+<h3><a name="changes1_1-1_2-smpp_base-hrl">smpp_base.hrl</a></h3>
+
+<ul>
+  <li><tt>ESM_CLASS_DOMAIN</tt> fixed.  Thanks to hfventer for this fix.
+    <br/>
+    The max values were less than the min values!
+    <br/>
+    Without this it would be impossible to send binary content messages 
+    (like ring tones or WAP push).
+  </li>
+</ul>
 
 </body>
 </html>

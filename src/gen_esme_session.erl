@@ -759,14 +759,18 @@ stop(FsmRef) ->
 init([Pid, Mod, Socket, Timers]) ->
     Self = self(),
     spawn_link(fun() -> wait_recv(Self, Socket, <<>>) end),
-    {ok, open, #state{esme              = Pid,
-					  mod               = Mod,
-					  socket            = Socket,
-					  requests          = ets:new(esme_requests, []),
-					  session_init_time = Timers#timers.session_init_time,
-					  enquire_link_time = Timers#timers.enquire_link_time,
-					  inactivity_time   = Timers#timers.inactivity_time,
-					  response_time     = Timers#timers.response_time}}.
+    TE = start_timer(Timers#timers.enquire_link_time, enquire_link_timer),
+    TS = start_timer(Timers#timers.session_init_time, session_init_timer),
+    {ok, open, #state{esme               = Pid,
+					  mod                = Mod,
+					  socket             = Socket,
+					  requests           = ets:new(esme_requests, []),
+					  session_init_time  = Timers#timers.session_init_time,
+					  session_init_timer = TS,
+					  enquire_link_time  = Timers#timers.enquire_link_time,
+					  enquire_link_timer = TE,
+					  inactivity_time    = Timers#timers.inactivity_time,
+					  response_time      = Timers#timers.response_time}}.
 
 
 %% @spec open(Event, StateData) -> Result

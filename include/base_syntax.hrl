@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -201,6 +201,17 @@
 % further details.</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% <ul>
+%   <li><tt>empty</tt> base type record definition removed.</li>
+%   <li><tt>EMPTY</tt> macro now defined as<br/>
+%     <br/>
+%     <tt>-define(EMPTY, ?UNION([])).</tt>
+%   </li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -209,10 +220,10 @@
 % </dl>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {14 Mar 2003} {@time}.
+% @version 0.2 alpha, {09 Feb 2004} {@time}.
 % @end
 %%
 
@@ -231,8 +242,6 @@
 % <p>See below for a simplified variant of these macros.</p>
 % %@end
 %%
--define(EMPTY,
-        #empty{}).
 -define(CONSTANT(Value), 
         #constant{value = Value}).
 -define(INTEGER(Size), 
@@ -291,21 +300,15 @@
         #list{type = Type, size = Size}).
 
 %%%
-% Set of constants
+% Sets
 %%
+-define(EMPTY,     ?UNION([])).
 -define(SET(List), ?UNION(lists:map(fun(C) -> ?CONSTANT(C) end, List))).
 
 
 %%%-------------------------------------------------------------------
 % Records
 %%--------------------------------------------------------------------
-%%%
-% %@spec {empty} 
-%
-% %@doc Empty datatype.  A type with no elements.
-%%
--record(empty, {}).
-
 %%%
 % %@spec {constant, Value} 
 %    Value = bin()

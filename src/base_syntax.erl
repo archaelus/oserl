@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@
 %   </dd>
 % </dl>
 %
-% @copyright 2003 Enrique Marcote Peña
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {21 Mar 2003} {@time}.
+% @version 0.2 alpha, {09 Feb 2004} {@time}.
 % @end
 %%
 -module(base_syntax).
@@ -69,8 +69,7 @@
 %%%
 % @spec decode(Binary, Type) -> {ok, Value, Rest} | {error, Reason}
 %    Binary   = bin()
-%    Type     = {empty}                               |
-%               {constant, Constant}                  | 
+%    Type     = {constant, Constant}                  | 
 %               {integer, Size, Min, Max}             | 
 %               {c_octet_string, Fixed, Size, Format} | 
 %               {octet_string, Fixed, Size, Format}   |
@@ -101,7 +100,6 @@
 % <p>Every type is decoded according to [SMPP 5.0].</p>
 %
 % <ol>
-%   <li><a href="#decode-empty">empty</a></li>
 %   <li><a href="#decode-constant">constant</a></li>
 %   <li><a href="#decode-integer">integer</a></li>
 %   <li><a href="#decode-c_octet_string">c_octet_string</a></li>
@@ -110,11 +108,6 @@
 %   <li><a href="#decode-composite">composite</a></li>
 %   <li><a href="#decode-union">union</a></li>
 % </ol>
-%
-%
-% <h4><a name="decode-empty">empty</a></h4>
-%
-% <p>Always returns a type_mismatch error.</p>
 %
 %
 % <h4><a name="decode-constant">constant</a></h4>
@@ -481,8 +474,7 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %%%
 % @spec encode(Value, Type) -> {ok, Binary} | {error, Reason}
 %    Value    = term()
-%    Type     = {empty}                               |
-%               {constant, Constant}                  | 
+%    Type     = {constant, Constant}                  | 
 %               {integer, Size, Min, Max}             | 
 %               {c_octet_string, Fixed, Size, Format} | 
 %               {octet_string, Fixed, Size, Format}   |
@@ -510,7 +502,6 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 % <p>Every type is encoded according to [SMPP 5.0].</p>
 %
 % <ol>
-%   <li><a href="#encode-empty">empty</a></li>
 %   <li><a href="#encode-constant">constant</a></li>
 %   <li><a href="#encode-integer">integer</a></li>
 %   <li><a href="#encode-c_octet_string">c_octet_string</a></li>
@@ -519,11 +510,6 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %   <li><a href="#encode-composite">composite</a></li>
 %   <li><a href="#encode-union">union</a></li>
 % </ol>
-%
-%
-% <h4><a name="encode-empty">empty</a></h4>
-% 
-% <p>Always returns a type_mismatch error.</p>
 %
 %
 % <h4><a name="encode-constant">constant</a></h4>

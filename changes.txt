@@ -1,0 +1,40 @@
+changes.txt - OSERL Version 0.1                              February 09, 2004
+
+                    http://sourceforge.net/projects/oserl/
+
+Enrique Marcote Peña <mpquique@udc.es>
+
+
+Index
+
+1.  Changes 0.1 -> 0.2
+1.1 smpp_base.hrl
+1.2 base_syntax.hrl
+
+
+---
+
+
+1. Changes 0.1 -> 0.2
+
+1.1 smpp_base.hrl
+
+- Domain for sm_default_msg_id parameter was
+
+	-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).
+
+  now is
+
+	-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).
+
+
+1.2 base_syntax.hrl 
+
+- empty base type record definition removed.
+
+- EMPTY macro now defined as 
+
+    -define(EMPTY, ?UNION([])).
+
+
+

@@ -45,6 +45,16 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#pdumacros">PDU Syntax Macros</a></li>
   <li><a href="#behaviours">Behaviours</a></li>
   <li><a href="#pics">PICS Proforma</a></li>
+  <li><a href="#changes">Changes</a>
+    <ol>
+      <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a>
+        <ol>
+          <li><a href="#changes0_1-0_2-smpp_base">smpp_base.hrl</a></li>
+          <li><a href="#changes0_1-0_2-base_syntax">base_syntax.hrl</a></li>
+        </ol> 
+      </li>
+    </ol>
+  </li>
   <li><a href="#todo">TODO</a></li>
   <li><a href="#references">References</a></li>
 </ol>
@@ -1689,7 +1699,6 @@ be always grouped together inside a given PDU definition.</p>
 <p>The following base types are defined as records on the base syntax:</p>
 
 <ol>
-  <li><a href="#empty">empty</a></li>
   <li><a href="#constant">constant</a></li>
   <li><a href="#integer">integer</a></li>
   <li><a href="#c_octet_string">c_octet_string</a></li>
@@ -1698,13 +1707,6 @@ be always grouped together inside a given PDU definition.</p>
   <li><a href="#composite">composite</a></li>
   <li><a href="#union">union</a></li>
 </ol>
-
-
-<h3><a name="empty">empty</a></h3>
-
-<p><tt>-record(empty, {})</tt></p>
-
-<p>Empty datatype.  A type with no elements.</p>
 
 
 <h3><a name="constant">constant</a></h3>
@@ -1945,8 +1947,6 @@ the one above mentioned, where the union types are composites.</p>
 <p>Macros based on record data-types definitions</p>
 
 <pre>
--define(EMPTY,
-        #empty{}).
 -define(CONSTANT(Value), 
         #constant{value = Value}).
 -define(INTEGER(Size), 
@@ -2001,7 +2001,13 @@ PDU fields definitions are more readable using these macros.</p>
 
 -define(SIZED_LIST(Type, Size), 
         #list{type = Type, size = Size}).
+</pre>
 
+<p>Sets
+</p>
+
+<pre>
+-define(EMPTY,     ?UNION([])).
 -define(SET(List), ?UNION(lists:map(fun(C) -&gt; ?CONSTANT(C) end, List))).
 </pre>
 
@@ -2033,8 +2039,7 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
   <ul>
     <li><tt>Name   = atom()</tt></li>
     <li><tt>Domain = Type</tt></li>
-    <li><tt>Type   = empty()</tt>
-           <br/><tt> | constant()</tt>
+    <li><tt>Type   = constant()</tt>
            <br/><tt> | integer()</tt>
            <br/><tt> | c_octet_string()</tt>
            <br/><tt> | octet_string()</tt>
@@ -2064,8 +2069,7 @@ herein included try to reflect the conventions used on [SMPP 5.0].</p>
     <li><tt>Name      = atom()</tt></li>
     <li><tt>Tag       = int()</tt></li>
     <li><tt>Domain    = Type</tt></li>
-    <li><tt>Type   = empty()</tt>
-           <br/><tt> | constant()</tt>
+    <li><tt>Type   = constant()</tt>
            <br/><tt> | integer()</tt>
            <br/><tt> | c_octet_string()</tt>
            <br/><tt> | octet_string()</tt>
@@ -2276,20 +2280,40 @@ Find OSERL's PICS proforma in openoffice format
 <a href="oserl_pics.sxw">here</a>.
 
 
+<h2><a name="changes">Changes</a></h2>
+
+<h3><a name="changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></h3>
+
+<h4><a name="changes0_1-0_2-smpp_base">smpp_base.hrl</a></h4>
+
+<ul>
+  <li>Domain for <i>sm_default_msg_id</i> parameter was<br/>
+    <br/>
+    <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).</tt><br/>
+    <br/>
+    now corrected to<br/>
+    <br/>
+    <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).</tt>
+  </li>
+</ul>
+
+
+<h4><a name="changes0_1-0_2-base_syntax">base_syntax.hrl</a></h4>
+
+<ul>
+  <li><tt>empty</tt> base type record definition removed.</li>
+  <li><tt>EMPTY</tt> macro now defined as<br/>
+    <br/>
+    <tt>-define(EMPTY, ?UNION([])).</tt>
+  </li>
+</ul>
+
+
 <h2><a name="todo">TODO</a></h2>
 
 <ul>
   <li>Version 0.2
   <ol>
-    <li>In smpp_base.hrl<br/>
-      <br/>
-      <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).</tt>
-      <br/>
-      should be<br/>
-      <br/>
-      <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).</tt>
-    </li>
-    <li>Remove <b>empty</b> base type.  Redefine it as <tt>?UNION([])</tt></li>
     <li>Review the <tt>timeout</tt> event on <tt>get_esme_session</tt></li>
     <li>Don't like current PDU packing/unpacking mechanism using the 
       <tt>pdu_type/1</tt> function.

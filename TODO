@@ -1,23 +1,23 @@
-                                    TODO
+TODO - OSERL Version 0.1                                     February 09, 2004
+
+                    http://sourceforge.net/projects/oserl/
+
+Enrique Marcote Peña <mpquique@udc.es>
 
 
-Version 0.2
------------
+Index
 
-- In smpp_base.hrl
-
-	-define(SM_DEFAULT_MSG_ID_DOMAIN,   ?INTEGER(1)).
-
-  should be
-
-	-define(SM_DEFAULT_MSG_ID_DOMAIN,   ?RANGE_INTEGER(1, 1, 255)).
+1. Version 0.2
+2. Version 1.0
+3. Version 2.0
 
 
-- Remove empty base type. Redefine it as ?UNION([])
+---
 
+
+1. Version 0.2
 
 - Review the timeout event on get_esme_session
-
 
 - Don't like current PDU packing/unpacking mechanism using the pdu_type/1 
   function.
@@ -26,9 +26,7 @@ Version 0.2
   appropriate pack/unpack function by means of the command_id and remove 
   pdu_type/1 function.
 
-
 - Put the command_id back into the PDU descriptor.
-
 
 - Remove pdu_syntax:get_value/2 and pdu_syntax:set_value/3.  Use dicctionary
   API instead.
@@ -46,16 +44,14 @@ Version 0.2
 - Automatically add/remove trailing '\0' in C-Octet Strings.
 
 
-Version 1.0
------------
+2. Version 1.0
 
 - Implement a gen_mc_session behavior.
 
 - Implement a gen_mc behavior.
 
 
-Version 2.0
------------
+3. Version 2.0
 
 - Implement a gen_re behavior.
 

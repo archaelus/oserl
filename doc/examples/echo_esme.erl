@@ -498,8 +498,9 @@ transmitter_can_not_resume(Pid, Eid, Addr, Port, Err) ->
 % %@equiv
 %%
 deliver_sm(_Pid, Eid, Pdu) -> 
+    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
-    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    io:format("Echoing SM: ~p~n", [Mesg]),
     spawn(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
     {ok, []}.
 
@@ -532,8 +533,9 @@ deliver_sm(_Pid, Eid, Pdu) ->
 % %@equiv
 %%
 deliver_data_sm(_Pid, Eid, Pdu) -> 
+    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
-    Mesg = sm:message_user_data(Pdu),   % gets incomming short message
+    io:format("Echoing SM: ~p~n", [Mesg]),
     spawn(fun() -> gen_esme:data_sm(Eid, [Mesg|Dest]) end), 
     {ok, []}.
 

@@ -185,7 +185,11 @@
          start_link/5, 
          listen/1,
          listen/3,
-%         outbind/3,
+         alert_notification/2,
+         outbind/3,
+         deliver_sm/2,
+         data_sm/2,
+         unbind/1,
          call/2, 
          call/3, 
          cast/2, 
@@ -404,7 +408,23 @@ listen(ServerRef, Port, Count) ->
     gen_server:call(ServerRef, {listen, Port, Count}).
 
 
-%% @spec outbind(Sid, ParamList) -> Result
+%% @spec alert_notification(ServerRef, SystemId, ParamList) -> Result
+%%    Sid        = atom()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues an alert notification operation on the session identified by 
+%% <tt>Sid</tt>.
+%% @end
+alert_notification(ServerRef, SystemId, ParamList) ->
+    gen_server:cast(ServerRef, {alert_notification, SystemId, ParamList}).
+
+
+%% @spec outbind(ServerRef, SystemId, ParamList) -> Result
 %%    Sid        = atom()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
@@ -415,9 +435,53 @@ listen(ServerRef, Port, Count) ->
 %%
 %% @doc Issues an outbind operation on the session identified by <tt>Sid</tt>.
 %% @end
-% outbind(Sid, ParamList) ->
-%     CmdId = ?COMMAND_ID_OUTBIND,
-%     gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
+outbind(ServerRef, SystemId, ParamList) ->
+    gen_server:call(ServerRef, {outbind, ParamList, SystemId}, infinity).
+
+
+%% @spec data_sm(ServerRef, SystemId, ParamList) -> Result
+%%    Sid        = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a data_sm operation on the session identified by <tt>Sid
+%% </tt>.
+%% @end
+data_sm(ServerRef, SystemId, ParamList) ->
+    gen_server:call(ServerRef, {data_sm, SystemId, ParamList}, infinity).
+
+
+%% @spec deliver_sm(ServerRef, SystemId, ParamList) -> Result
+%%    Sid        = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a deliver_sm operation on the session identified by <tt>Sid
+%% </tt>.
+%% @end
+deliver_sm(ServerRef, SystemId, ParamList) ->
+    gen_server:call(ServerRef, {deliver_sm, SystemId, ParamList}, infinity).
+
+
+%% @spec unbind(ServerRef, SystemId) -> Result
+%%    Sid     = atom()
+%%    Result  = {ok, PduResp} | {error, Error}
+%%    PduResp = pdu()
+%%    Error   = int()
+%%
+%% @doc Issues an unbind operation on the session identified by <tt>Sid
+%% </tt>.
+%% @end
+unbind(ServerRef, SystemId) ->
+    gen_server:call(ServerRef, {unbind, SystemId}, infinity).
 
 
 %% @spec call(ServerRef, Request) -> Reply
@@ -495,7 +559,12 @@ reply(Client, Reply) ->
 %%
 %% @doc Initiates the server
 init({Mod, Timers, Args}) ->
-    pack(Mod:init(Args), #state{timers = Timers}).
+	S = #state{mod      = Mod, 
+			   timers   = Timers, 
+			   listener = closed,
+			   sessions = ets:new(sessions,[])},
+    process_flag(trap_exit, true),
+    pack(Mod:init(Args), S).
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -526,30 +595,33 @@ init({Mod, Timers, Args}) ->
 %% @end
 handle_call({bind, Session, {BoundAs, Pdu} = R}, From, S) ->
     SystemId = operation:get_param(system_id, Pdu),
-    ets:delete(S#state.sessions, {undefined, Session}),
-    ets:insert(S#state.sessions, {{SystemId, Session}, BoundAs}),
+    ets:delete(S#state.sessions, Session),
+    ets:insert(S#state.sessions, {Session, SystemId, BoundAs}),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({operation, Session, Operation}, From, S) ->
-    case ets:match(S#state.sessions, {{'$1', Session}, '$2'}, 1) of
-        [[SystemId, _BoundAs]] ->
-            R = {SystemId, Operation},
-            pack((S#state.mod):handle_operation(R, From, S#state.mod_state),S);
-        _Otherwise ->
-            {reply, {error, ?ESME_RUNKNOWNERR, []}, S}
-    end;
-handle_call({unbind, Session, _Request}, From, S) ->
-    case ets:match(S#state.sessions, {{'$1', Session}, '$2'}, 1) of
-        [[SystemId, BoundAs]] ->
-            R = {SystemId, BoundAs},
-            pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
-        _Otherwise ->
-            {reply, {error, ?ESME_RUNKNOWNERR}, S}
-    end;
+handle_call({operation, Session, {Operation, Pdu}}, From, S) ->
+    Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
+				  {[[SystemId, _BoundAs]], _Continuation} ->
+					  {Operation, SystemId, Pdu};
+				  _Otherwise ->
+					  {Operation, undefined, Pdu}
+			  end,
+	pack((S#state.mod):handle_operation(Request, From, S#state.mod_state), S);
+handle_call({unbind, Session, _Unbind}, From, S) ->
+    Request = case ets:match(S#state.sessions, {Session, '$1', '$2'}, 1) of
+				  {[[SystemId, BoundAs]], _Continuation} ->
+					  {BoundAs, SystemId};
+				  _Otherwise ->  
+					  {undefined, undefined}
+			  end,
+	pack((S#state.mod):handle_unbind(Request, From, S#state.mod_state), S);
+handle_call({data_sm, SystemId, ParamList}, From, S) ->
+	spawn_link(),
+	{noreply, S};
 handle_call({accept, Conn, _Socket}, From, S) ->
     case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
         {ok, Session} ->
-            % SystemId and the Bound State of the session are still undefined
-            ets:insert(S#state.sessions, {{undefined, Session}, undefined}),
+            % The system_id and bound state of the session are still undefined
+            ets:insert(S#state.sessions, {Session, undefined, undefined}),
             {reply, {ok, Session}, S};
         _Error ->
             {reply, error, S}
@@ -582,6 +654,9 @@ handle_call({call, Request}, From, S) ->
 %%
 %% @see terminate/2
 %% @end
+handle_cast({alert_notification, SystemId, ParamList}, S) ->
+	gen_smsc_session:alert_notification(Session, ParamList),
+	{noreply, S};
 handle_cast({cast, Request}, S) ->
     pack((S#state.mod):handle_cast(Request, S#state.mod_state), S).
 
@@ -604,30 +679,32 @@ handle_cast({cast, Request}, S) ->
 %%
 %% @see terminate/2
 %% @end
+handle_info({'EXIT', Child, normal}, S) when Child == S#state.listener ->
+    % The listener terminates with normal status.
+	{noreply, S#state{listener = closed}};
+handle_info({'EXIT', Child, Reason}, S) when Child == S#state.listener ->
+    % The listener terminates on error.
+	NewS = S#state{listener = closed},
+	pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
 handle_info({'EXIT', Child, normal} = Info, S) ->
     % A Child process terminates with normal status.
-    case ets:match(S#state.sessions, {{'$1', Child}, '$2'}, 1) of
-        [[SystemId, _BoundAs]] ->             % Child is a bound session
-            ets:delete(S#state.sessions, {SystemId, Child}),
+    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
+        {[[SystemId, _BoundAs]], _Continuation} ->  % Child is a session
+            ets:delete(S#state.sessions, Child),
             {noreply, S};
-        [] when Child == S#state.listener ->  % Child is the listener
-            {noreply, S#state{listener = closed}};
         _Otherwise ->
             pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
     end;
-handle_info({'EXIT', Child, Reason} = Info, S) when Reason /= normal ->
+handle_info({'EXIT', Child, Reason} = Info, S) ->
     % A Child process terminates on error.
-    case ets:match(S#state.sessions, {{'$1', Child}, '$2'}, 1) of
-        [[undefined, undefined]] ->           % Child is an unbound session
-            ets:delete(S#state.sessions, {undefined, Child}),
+    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
+        {[[undefined, undefined]], _Continuation} -> % An unbound session
+            ets:delete(S#state.sessions, Child),
             {noreply, S};
-        [[SystemId, BoundAs]] ->              % Child is a bound session
-            ets:delete(S#state.sessions, {SystemId, Child}),
+        {[[SystemId, BoundAs]], _Continuation} ->    % Child is a bound session
+            ets:delete(S#state.sessions, Child),
 			R = {SystemId, BoundAs},
             pack((S#state.mod):handle_session_failure(R, S#state.mod_state),S);
-        [] when Child == S#state.listener ->  % Child is the listener
-            NewS = S#state{listener = closed},
-            pack((S#state.mod):handle_listen_error(S#state.mod_state), NewS);
         _Otherwise ->
             pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
     end;
@@ -644,6 +721,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, S) ->
+	io:format("*** gen_smsc terminating: ~p - ~p ***~n", [self(), Reason]),
     pack((S#state.mod):terminate(Reason, S#state.mod_state), S).
 
 

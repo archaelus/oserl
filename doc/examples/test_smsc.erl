@@ -36,7 +36,7 @@
 %%% External exports
 %%%-------------------------------------------------------------------
 %%-compile(export_all).
--export([start_link/0, deliver_sm/0, stop/0]).
+-export([start_link/0, deliver_sm/2, stop/0]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -56,6 +56,9 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
+-define(SYSTEM_ID, atom_to_list(?MODULE)).
+-define(SMPP_PORT, 10002).
+-define(DESTINATION_ADDR, "*").
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -69,7 +72,7 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, {rx = [], tx = []}).
+-record(state, {message_id = 0, rx = [], tx = []}).
 
 %%%===================================================================
 %%% External functions
@@ -86,16 +89,13 @@
 %% @end
 start_link() ->
 	gen_smsc:start_link({local,?SERVER}, ?MODULE, ?DEFAULT_TIMERS, [],[]),
-	gen_smsc:listen_start(?SERVER).
+    gen_smsc:listen_start(?SERVER, ?SMPP_PORT, infinity).
 
 
-deliver_sm() ->
-    SourceAddress = read_string("Source Address> "),
-    DestinationAddress = read_string("Destination Address> "),
-    ShortMessage = read_string("Short Message> "),
-    ParamList = [{source_addr, SourceAddress},
-                 {destination_addr, DestinationAddress},
-                 {short_message, ShortMessage}],                 
+deliver_sm(SourceAddress, ShortMessage) ->
+    ParamList = [{source_addr, SourceAddress}, 
+				 {destination_addr, ?DESTINATION_ADDR}, 
+				 {short_message, ShortMessage}],
 	gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
 
 
@@ -245,14 +245,14 @@ code_change(OldVsn, State, Extra) ->
 %% @end
 handle_bind({bind_receiver, Rx, Pdu}, From, S) ->
 	io:format("bound_rx ~n"),
-	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{rx = [Rx|S#state.rx]}};
+	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Rx|S#state.rx]}};
 handle_bind({bind_transmitter, Tx, Pdu}, From, S) ->
 	io:format("bound_tx ~n"),
-	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{tx = [Tx|S#state.tx]}};
+	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{tx = [Tx|S#state.tx]}};
 handle_bind({bind_transceiver, Trx, Pdu}, From, S) ->
 	io:format("bound_trx ~n"),
-	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{rx = [Trx|S#state.rx],
-													  tx = [Trx|S#state.tx]}}.
+	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Trx|S#state.rx],
+													 tx = [Trx|S#state.tx]}}.
 
 
 %% @spec handle_operation(Operation, From, State) -> Result</tt>
@@ -283,9 +283,16 @@ handle_bind({bind_transceiver, Trx, Pdu}, From, S) ->
 %% @doc <a href="gen_smsc.html#handle_operation-3">gen_smsc - 
 %% handle_operation/3</a> callback implementation.
 %% @end
-handle_operation({Operation, Session, Pdu}, From, State) ->
+handle_operation({Submit, Session, Pdu}, From, S) when Submit == submit_sm;
+                                                       Submit == data_sm ->
+    N = operation:get_param(destination_addr, Pdu),
+    T = element(2, sm:message_user_data(Pdu)),
+    I = S#state.message_id,
+	io:format("New  SM: ~p - ~p~n", [N, T]),
+    {reply, {ok, [{message_id, integer_to_list(I)}]}, S#state{message_id=I+1}};
+handle_operation({_Operation, Session, Pdu}, From, S) ->
 	io:format("*** operation - ~p ***~n", [operation:to_list(Pdu)]),
-	{reply, {error, ?ESME_RINVCMDID, []}, State}.
+	{reply, {error, ?ESME_RINVCMDID, []}, S}.
 
 
 %% @spec handle_unbind(Unbind, From, State) -> Result
@@ -332,18 +339,3 @@ deliver_sm_iter(ParamList, []) ->
 deliver_sm_iter(ParamList, [H|T]) ->
 	gen_smsc:deliver_sm(?SERVER, H, ParamList),
 	deliver_sm_iter(ParamList, T).
-
-%% @spec read_string(Prompt) -> Result
-%%     Prompt = string()
-%%     Result = string | {error, What} | eof
-%%     What   = term()
-%%
-%% @doc Reads a string from the standard input.
-%% @end 
-read_string(Prompt) ->
-    case io:fread(Prompt, "~s") of
-        {ok, InputList} ->
-            hd(InputList);
-        Error ->
-            Error
-    end.

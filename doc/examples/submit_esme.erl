@@ -18,48 +18,10 @@
 %%%
 %%% <p>A very simple ESME for submitting short messages.</p>
 %%%
-%%%
-%%% <h2>Changes 0.1 -&gt; 0.2</h2>
-%%%
-%%% [18 Feb 2004]
-%%% 
-%%% <ul>
-%%%   <li>Trailing $\0 removed from the C-Octet String values.</li>
-%%%   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time 
-%%%     record finally removed.  Time manipulation is now much more natural... 
-%%%     and easy.
-%%%   </li>
-%%% </ul>
-%%%
-%%% [26 Feb 2004]
-%%%
-%%% <ul>
-%%%   <li>Last changes in <a href="gen_esme.html">gen_esme.erl</a> adopted.
-%%%   </li>
-%%% </ul>
-%%%
-%%% [28 Feb 2004]
-%%%
-%%% <ul>
-%%%   <li>Uses new callbacks defined in <a href="gen_esme.html">gen_esme.erl
-%%%     </a>.
-%%%   </li>
-%%% </ul>
-%%%
-%%%
-%%% <h2>Changes 0.2 -&gt; 1.0</h2>
-%%%
-%%% [17 May 2004]
-%%% 
-%%% <ul>
-%%%   <li>New header <i>oserl.hrl</i> imported.</li>
-%%% </ul>
-%%%
-%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique]
-%%% @version 1.0, {09 Feb 2004} {@time}.
+%%%         [http://oserl.sourceforge.net/]
+%%% @version 1.1, {09 Feb 2004} {@time}.
 %%% @end
 -module(submit_esme).
 
@@ -73,163 +35,356 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start/0, start_link/5, stop/0, submit_sm/2]).
+-export([start_link/0, submit_sm/2, stop/0]).
 
 %%%-------------------------------------------------------------------
-%%% Internal exports
+%%% Internal ESME exports
 %%%-------------------------------------------------------------------
--export([]).
-
-%%%-------------------------------------------------------------------
-%%% Internal gen_esme exports
-%%%-------------------------------------------------------------------
--export([]).
+-export([init/1,
+         handle_outbind/3,
+         handle_alert_notification/3,
+         handle_operation/3,
+         handle_unbind/3,
+         handle_listen_error/1,
+         handle_call/3,
+         handle_cast/2,
+         handle_info/2,
+         terminate/2,
+         code_change/3]).
 
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-%-define(MC_ADDR, {193, 144, 50, 51}).
--define(MC_ADDR, {192, 168, 1, 4}).
--define(ESME_NAME, submit_esme).
+-define(SERVER, ?MODULE).
+-define(SMSC_ADDRESS, {192, 168, 1, 4}).
+-define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
+-define(SYSTEM_ID, atom_to_list(?MODULE)).
+-define(PASSWORD, "secret").
+-define(SOURCE_ADDR, "1950").
 
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
+%% %@spec {state, TxSession}
+%%
+%% %@doc Representation of the server's state
+%%
+%% <dl>
+%%   <dt>TxSession: </dt><dd>Pid of the transmitter session.</dd>
+%% </dl>
+%% %@end
+-record(state, {tx_session}).
+
 
 %%%===================================================================
 %%% External functions
 %%%===================================================================
-%% @spec start() -> ok
+%% @spec start_link() -> Result
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the submit ESME.
-%% @end
-start() ->
-    start_link("submit_esme", "secret", "1950", "1950", ?MC_ADDR).
-    
-%% @spec start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) -> ok
-%%    SystemId = string()
-%%    Password = string()
-%%    AddrRange = string()
-%%    SourceAddr = string()
-%%    McAddr = string() | atom() | ip_address()
+%% @doc Starts the ESME server.
 %%
-%% @doc Starts the submit ESME and binds as a receiver and transmitter to 
-%% McAddr.
+%% @see gen_esme
+%% @see start/0
 %% @end
-start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
-    Setup = ?ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
-    case gen_esme:start_link({local, ?ESME_NAME}, ?MODULE, Setup) of
-        {ok, Eid} ->
-            gen_esme:open_transmitter(?ESME_NAME, McAddr),
-            gen_esme:bind_transmitter(?ESME_NAME),
-            {ok, Eid};
-        Error ->
-            Error
-    end.
+start_link() ->
+    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+
+%% @spec submit_sm(MobileNumber, UserMessage) -> ok
+%%     MobileNumber = string()
+%%     UserMessage  = string()
+%%
+%% @doc Submits a Short Message with the text <tt>UserMessage</tt> to
+%% <tt>MobileNumber</tt>.
+%% @end
+submit_sm(MobileNumber, UserMessage) ->
+    gen_esme:call(?SERVER, {submit_sm, MobileNumber, UserMessage}).
 
 
 %% @spec stop() -> ok
 %%
-%% @doc Unbinds and stops the Submit SM ESME.
+%% @doc Stops the ESME server.
+%%
+%% @see handle_call/3
+%%
+%% @equiv gen_esme:call(?SERVER, die, 10000).
 %% @end
 stop() ->
-    gen_esme:unbind_transmitter(?ESME_NAME),
-    gen_esme:close_transmitter(?ESME_NAME),
-    gen_esme:stop(?ESME_NAME).
+    gen_esme:call(?SERVER, die, 10000).
+
+%%%===================================================================
+%%% Server functions
+%%%===================================================================
+%% @spec init(Args) -> Result
+%%    Args    = term()
+%%    Result  = {ok, State} | {ok, State, Timeout} | ignore | {stop, Reason}
+%%    State   = term()
+%%    Timeout = int() | infinity
+%%    Reason  = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#init-1">
+%% gen_esme - init/1</a> callback implementation.
+%% 
+%% <p>Initiates the server.</p>
+%% @end
+init([]) ->
+    case gen_esme:session_start(?SERVER, ?SMSC_ADDRESS, ?SMPP_PORT) of
+        {ok, Tx} ->
+            ParamList = [{system_id, ?SYSTEM_ID},
+                         {password, ?PASSWORD},
+                         {source_addr, ?SOURCE_ADDR}],
+            case gen_esme:bind_transmitter(?SERVER, Tx, ParamList) of
+                {ok, _PduResp} ->
+                    {ok, #state{tx_session = Tx}};
+                BindError ->
+                    {stop, BindError}
+            end;
+        SessionError ->
+            SessionError
+    end.
 
 
-%% @spec submit_sm(MobileNumber, UserMessage) -> MessageId
-%%     MobileNumber = string()
-%%     UserMessage  = string()
-%%     MessageId    = string()
+%% @spec handle_outbind(Outbind, From, State) -> Result
+%%    OutBind = {outbind, Session, Pdu}
+%%    Session = pid()
+%%    Pdu = pdu()
+%%    From = term()
+%%    State = term()
+%%    Result = {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, NewState}
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
 %%
-%% @doc Submits a Short Message with the text <tt>UserMessage</tt> to
-%% <tt>MobileNumber</tt>.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_outbind-3">gen_esme - handle_outbind/3</a> callback implementation.
 %%
-%% <p>This function is a direct translation into erlang from the java code 
-%% below.
-%% </p>
+%% <p>Handle <i>oubind</i> requests from the peer SMSC.</p>
+%% @end
+handle_outbind({outbind, Session, Pdu}, From, State) ->
+    {noreply, State}.
+
+
+%% @spec handle_alert_notification(AlertNotification, From, State) -> Result
+%%    AlertNotification = {alert_notification, Session, Pdu}
+%%    Session = pid()
+%%    Pdu = pdu()
+%%    From = term()
+%%    State = term()
+%%    Result = {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, NewState}
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
 %%
-%% <p>This sample code has too much I/O, which is very similar in both 
-%% languajes, that's why resulting code is almost identical.  In other kind
-%% of examples, with less I/O, I believe erlang code results much more compact 
-%% and readable than java.
-%% </p>
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-3">gen_esme - handle_alert_notification/3</a> callback implementation.
 %%
-%% <p>Besides, you should consider that the erlang code in this module, is more
-%% than just equivalent to the java function below.  In fact this module is a 
-%% complete ESME implementation.  This ESME detects and recovers from 
-%% connection failures, handles SMPP timers, controls congestion and so forth.
-%% </p>
+%% <p>Handle <i>alert_notification</i> requests from the peer SMSC.</p>
+%% @end
+handle_alert_notification({alert_notification, Session, Pdu}, From, State) -> 
+    {noreply, State}.
+
+
+%% @spec handle_operation(Operation, From, State) -> Result
+%%    Operation = {deliver_sm, Session, Pdu} | {data_sm, Session, Pdu}
+%%    Session = pid()
+%%    Pdu = pdu()
+%%    From = term()
+%%    State = term()
+%%    Result = {reply, Reply, NewState}          |
+%%             {reply, Reply, NewState, Timeout} |
+%%             {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, Reply, NewState}   |
+%%             {stop, Reason, NewState}
+%%    Reply = {ok, ParamList} | {error, Error, ParamList}
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
 %%
-%% <pre>
-%% public String  submit(String mobileNumber, String userMessage) {
-%%     SubmitSM request = new SubmitSM();
-%%     SubmitSMResp response;
-%%  
-%%     // input values
-%%     serviceType = getParam("Service type", serviceType);
-%%     sourceAddress = getAddress("Source",sourceAddress);
-%%     destAddress = getAddress("Destination",new Address(mobileNumber));
-%%     replaceIfPresentFlag = getParam("Replace if present flag", 
-%%                                      replaceIfPresentFlag);
-%%     shortMessage = userMessage;
-%%     scheduleDeliveryTime = getParam("Schedule delivery time", 
-%%                                     scheduleDeliveryTime);
-%%     validityPeriod = getParam("Validity period", validityPeriod);
-%%     esmClass = getParam("Esm class", esmClass);
-%%     protocolId = 0;
-%%     priorityFlag = getParam("Priority flag", priorityFlag);
-%%     registeredDelivery = getParam("Registered delivery", 
-%%                                    registeredDelivery);
-%%     dataCoding = 0x10; // For Flash Message
-%%     smDefaultMsgId = getParam("Sm default msg id", smDefaultMsgId);
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_operation-3">gen_esme - handle_operation/3</a> callback implementation.
 %%
-%%     // set values
-%%     request.setServiceType(serviceType);
-%%     request.setSourceAddr(sourceAddress);
-%%     request.setDestAddr(destAddress);
-%%     request.setReplaceIfPresentFlag(replaceIfPresentFlag);
-%%     request.setShortMessage(shortMessage);
-%%     request.setScheduleDeliveryTime(scheduleDeliveryTime);
-%%     request.setValidityPeriod(validityPeriod);
-%%     request.setEsmClass(esmClass);
-%%     request.setProtocolId(protocolId);
-%%     request.setPriorityFlag(priorityFlag);
-%%     request.setRegisteredDelivery(registeredDelivery);
-%%     request.setDataCoding(dataCoding);
-%%     request.setSmDefaultMsgId(smDefaultMsgId);
+%% <p>Handle <i>deliver_sm</i> and <i>data_sm</i> operations (from the peer
+%% SMSCs) to the callback ESME.</p>
 %%
-%%     // send the request
-%%     int count = 1;
-%%     System.out.println();
-%%     count = getParam("How many times to submit this message (load test)",
-%%                      count);
-%%     for (int i = 0; i&lt;count; i++) {
-%%         request.assignSequenceNumber(true);
-%%         //System.out.print("#"+i+"  ");
-%%         System.out.println("Submit request " + request.debugString());
-%%         if (asynchronous) {
-%%             //session.submit(request);  
-%%             response = session.submit(request);
-%%             messageId = response.getMessageId();
-%%             //System.out.println();
-%%             return messageId;
-%%         } else {
-%%             response = session.submit(request);                    
-%%             messageId = response.getMessageId();
-%%             System.out.println("Submit response " + 
-%%                                response.debugString() + 
-%%                                " MESSAGE ID : " + 
-%%                                messageId);
-%%             return messageId;
-%%         }
-%%     }   
-%%     return messageId;            
-%% }
-%% </pre>
-%% @end 
-submit_sm(MobileNumber, UserMessage) ->
+%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%% the response PDU.  If a command_status other than ESME_ROK is to
+%% be returned by the ESME in the response PDU, the callback should return the
+%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%% desired command_status error code.</p>
+%% @end
+handle_operation({CmdName, Session, Pdu}, From, S) ->
+    % Don't know how to handle CmdName
+    io:format("Don't know how to handle ~p~n", [CmdName]),
+    {reply, {error, ?ESME_RINVCMDID, []}, S}.
+
+
+%% @spec handle_unbind(Unbind, From, State) -> Result
+%%    Unbind = {unbind, Session, Pdu}
+%%    Session = pid()
+%%    Pdu = pdu()
+%%    Result = {reply, Reply, NewState}          |
+%%             {reply, Reply, NewState, Timeout} |
+%%             {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, Reply, NewState}   |
+%%             {stop, Reason, NewState}
+%%    Reply = ok | {error, Error}
+%%    Error = int()
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_unbind-3">gen_esme - handle_unbind/3</a> callback implementation.
+%%
+%% <p>Handle <i>unbind</i> requests from the peer SMSC.</p>
+%%
+%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
+%% command_status is sent to the MC and the session moves into the unbound
+%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
+%% response PDU sent by the session to the MC will have an <tt>Error</tt>
+%% command_status and the session will remain on it's current bound state
+%% (bound_rx, bound_tx or bound_trx).</p>
+%% @end
+handle_unbind({unbind, Session, Pdu}, From, State) -> 
+    {reply, ok, State}.
+
+
+%% @spec handle_listen_error(State) -> Result
+%%    State = term()
+%%    Result = {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_listen_error-1">gen_esme - handle_listen_error/1</a> callback implementation.
+%%
+%% <p>Handle listen failures.</p>
+%% @end
+handle_listen_error(State) ->
+    {noreply, State}.
+
+
+%% @spec handle_call(Request, From, State) -> Result
+%%    Request   = term()
+%%    From      = {pid(), Tag}
+%%    State     = term()
+%%    Result    = {reply, Reply, NewState}          |
+%%                {reply, Reply, NewState, Timeout} |
+%%                {noreply, NewState}               |
+%%                {noreply, NewState, Timeout}      |
+%%                {stop, Reason, Reply, NewState}   |
+%%                {stop, Reason, NewState}
+%%    Reply     = term()
+%%    NewState  = term()
+%%    Timeout   = int() | infinity
+%%    Reason    = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_call-3">gen_esme - handle_call/3</a> callback implementation.
+%%
+%% <p>Handling call messages.</p>
+%%
+%% <ul>
+%%   <li>On <tt>{stop, Reason, Reply, NewState}</tt>
+%%   terminate/2 is called</li>
+%%   <li>On <tt>{stop, Reason, NewState}</tt>
+%%   terminate/2 is called</li>
+%% </ul>
+%%
+%% @see terminate/2
+%% @end
+handle_call({submit_sm, MobileNumber, UserMessage}, From, S) ->
+    % <p>This function is a direct translation into erlang from the java code 
+    % below.
+    % </p>
+    %
+    % <p>This sample code has too much I/O, which is very similar in both 
+    % languajes, that's why resulting code is almost identical.  In other kind
+    % of examples, with less I/O, I believe erlang code results much more 
+    % compact and readable than java.
+    % </p>
+    %
+    % <pre>
+    % public String  submit(String mobileNumber, String userMessage) {
+    %     SubmitSM request = new SubmitSM();
+    %     SubmitSMResp response;
+    %  
+    %     // input values
+    %     serviceType = getParam("Service type", serviceType);
+    %     sourceAddress = getAddress("Source",sourceAddress);
+    %     destAddress = getAddress("Destination",new Address(mobileNumber));
+    %     replaceIfPresentFlag = getParam("Replace if present flag", 
+    %                                      replaceIfPresentFlag);
+    %     shortMessage = userMessage;
+    %     scheduleDeliveryTime = getParam("Schedule delivery time", 
+    %                                     scheduleDeliveryTime);
+    %     validityPeriod = getParam("Validity period", validityPeriod);
+    %     esmClass = getParam("Esm class", esmClass);
+    %     protocolId = 0;
+    %     priorityFlag = getParam("Priority flag", priorityFlag);
+    %     registeredDelivery = getParam("Registered delivery", 
+    %                                    registeredDelivery);
+    %     dataCoding = 0x10; // For Flash Message
+    %     smDefaultMsgId = getParam("Sm default msg id", smDefaultMsgId);
+    %
+    %     // set values
+    %     request.setServiceType(serviceType);
+    %     request.setSourceAddr(sourceAddress);
+    %     request.setDestAddr(destAddress);
+    %     request.setReplaceIfPresentFlag(replaceIfPresentFlag);
+    %     request.setShortMessage(shortMessage);
+    %     request.setScheduleDeliveryTime(scheduleDeliveryTime);
+    %     request.setValidityPeriod(validityPeriod);
+    %     request.setEsmClass(esmClass);
+    %     request.setProtocolId(protocolId);
+    %     request.setPriorityFlag(priorityFlag);
+    %     request.setRegisteredDelivery(registeredDelivery);
+    %     request.setDataCoding(dataCoding);
+    %     request.setSmDefaultMsgId(smDefaultMsgId);
+    %
+    %     // send the request
+    %     int count = 1;
+    %     System.out.println();
+    %     count = getParam("How many times to submit this message (load test)",
+    %                      count);
+    %     for (int i = 0; i&lt;count; i++) {
+    %         request.assignSequenceNumber(true);
+    %         //System.out.print("#"+i+"  ");
+    %         System.out.println("Submit request " + request.debugString());
+    %         if (asynchronous) {
+    %             //session.submit(request);  
+    %             response = session.submit(request);
+    %             messageId = response.getMessageId();
+    %             //System.out.println();
+    %             return messageId;
+    %         } else {
+    %             response = session.submit(request);                    
+    %             messageId = response.getMessageId();
+    %             System.out.println("Submit response " + 
+    %                                response.debugString() + 
+    %                                " MESSAGE ID : " + 
+    %                                messageId);
+    %             return messageId;
+    %         }
+    %     }   
+    %     return messageId;            
+    % }
+    % </pre>
     ServiceType = read_string("Service type> "),
     SourceAddress = read_string("Source> "),
     ReplaceIfPresentFlag = read_decimal("Replace if present flag> "),
@@ -267,52 +422,114 @@ submit_sm(MobileNumber, UserMessage) ->
     % @see submit_sm_async_iter/2 (asynchronous/default)
     % @see submit_sm_sync_iter/2 (synchronous)
     case read_decimal("How many times to submit this message (load test)") of
-        Count when integer(Count) -> submit_sm_async_iter(ParamList, Count);
-        _Error                    -> submit_sm_async_iter(ParamList, 1)
-    end.
+        Count when integer(Count) -> 
+            submit_sm_iter(ParamList, Count, S#state.tx_session);
+        _Error -> 
+            submit_sm_iter(ParamList, 1, S#state.tx_session)
+    end,
+    {reply, ok, S};
+handle_call(die, _From, State) ->
+    {stop, normal, ok, State}.
 
 
-%% @doc Auxiliary function for submit_sm/2
+%% @spec handle_cast(Request, State) -> Result
+%%    Request  = term()
+%%    Result   = {noreply, NewState}          |
+%%               {noreply, NewState, Timeout} |
+%%               {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout  = int() | infinity
+%%    Reason   = normal | term()
 %%
-%% <p>Asynchronous submit iter.</p>
-%% @end 
-submit_sm_async_iter(ParamList, 0) -> 
-    ok;
-submit_sm_async_iter(ParamList, Count) ->
-    spawn(fun() -> submit_sm(ParamList) end),
-    submit_sm_async_iter(ParamList, Count - 1).
-
-
-%% @doc Auxiliary function for submit_sm/2
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_cast-2"> gen_esme - handle_cast/2</a> callback implementation.
 %%
-%% <p>Synchronous submit iter.</p>
-%% @end 
-submit_sm_sync_iter(ParamList, 0) -> 
-    ok;
-submit_sm_sync_iter(ParamList, Count) ->
-    submit_sm(ParamList),
-    submit_sm_sync_iter(ParamList, Count - 1).
+%% <p>Handling cast messages.</p>
+%%
+%% <ul>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
+%% </ul>
+%%
+%% @see terminate/2
+%% @end
+handle_cast(Request, State) ->
+    {noreply, State}.
 
-%%%===================================================================
-%%% ESME functions
-%%%===================================================================
+
+%% @spec handle_info(Info, State) -> Result
+%%    Info     = timeout | term()
+%%    State    = term()
+%%    Result   = {noreply, NewState}          |
+%%               {noreply, NewState, Timeout} |
+%%               {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout  = int() | infinity
+%%    Reason   = normal | term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_info-2"> gen_esme - handle_info/2</a> callback implementation.
+%%
+%% <p>Handling all non call/cast messages.</p>
+%%
+%% <ul>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%% </ul>
+%%
+%% @see terminate/2
+%% @end
+handle_info(Info, State) ->
+    {noreply, State}.
+
+
+%% @spec terminate(Reason, State) -> ok
+%%    Reason = normal | shutdown | term()
+%%    State  = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#terminate-2">
+%% gen_esme - terminate/2</a> callback implementation.
+%%
+%% <p>Shutdown the ESME server.</p>
+%%
+%% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
+%% @end
+terminate(Reason, State) ->
+    % You may stop sessions and issue unbind requests here.
+    ok.
+
+
+%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
+%%    OldVsn   = undefined | term()
+%%    State    = term()
+%%    Extra    = term
+%%    NewState = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#code_change-2"> gen_esme - code_change/2</a> callback implementation.
+%%
+%% <p>Convert process state when code is changed.</p>
+%% @end
+code_change(OldVsn, State, Extra) ->
+    {ok, State}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-%% @spec submit_sm(ParamList) -> ok
+%% @spec submit_sm_iter(ParamList, Count, Session) -> ok
 %%
-%% @doc Submits a SM and waits for the submit_sm_resp.
+%% @doc Sends a SM <tt>Count</tt> times over a given transmitter 
+%% <tt>Session</tt>.
 %% @end 
-submit_sm(ParamList) -> 
-    case gen_esme:submit_sm(?ESME_NAME, ParamList) of
-        {ok, Response} -> 
-            % See how to get a parameter value
-            MessageId = operation:get_param(message_id, Response),
-            io:format("Message ID: ~p~n", [MessageId]);
-        {error, Error} ->
-            io:format("Submit operation failed with ~p~n", [Error])
-    end.
+submit_sm_iter(_ParamList, 0, _Session) -> 
+    ok;
+submit_sm_iter(ParamList, Count, Session) ->
+    spawn(fun() ->
+                  case gen_esme:submit_sm(?SERVER, Session, ParamList) of
+                      {ok, Response} -> 
+                          % See how to get a parameter value
+                          Id = operation:get_param(message_id, Response),
+                          io:format("Message ID: ~p~n", [Id]);
+                      {error, Error} ->
+                          io:format("submit_sm failed with ~p~n", [Error])
+                  end
+          end),
+    submit_sm_iter(ParamList, Count - 1, Session).
 
 
 %% @spec read_string(Prompt) -> Result

@@ -13,7 +13,6 @@
 %%% You should have received a copy of the GNU Lesser General Public
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%%
 
 %%% @doc Generic SMSC SMPP Session.
 %%%
@@ -200,7 +199,7 @@
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 1.0 beta, {07 June 2004} {@time}.
+%%% @version 1.1, {07 June 2004} {@time}.
 %%% @end
 %%%
 %%% %@TODO New fsm implementation (on stdlib 1.12) includes now timers, use 

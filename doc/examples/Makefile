@@ -14,8 +14,7 @@ EDOC_OPTS = [{dir, "$(DOCDIR)"}]
 # ----------------------------------------------------
 # Target Specs
 # ----------------------------------------------------
-EDOC_MODULES = echo_esme test_smsc 
-#submit_esme 
+EDOC_MODULES = esme_skel smsc_skel echo_esme test_smsc submit_esme 
 
 MODULES = $(EDOC_MODULES)
 
@@ -60,6 +59,8 @@ $(DOCDIR)/%.html:	%.erl
 # ----------------------------------------------------
 # .hrl dependencies
 # ----------------------------------------------------
-$(EBIN)/code_lock_esme.beam:../../include/oserl.hrl
+$(EBIN)/esme_skel.beam:../../include/oserl.hrl
+$(EBIN)/smsc_skel.beam:../../include/oserl.hrl
 $(EBIN)/echo_esme.beam:../../include/oserl.hrl
 $(EBIN)/submit_esme.beam:../../include/oserl.hrl
+$(EBIN)/test_esme.beam:../../include/oserl.hrl

@@ -115,7 +115,6 @@
 %%%
 %%% <h2>Callback Function Details</h2>
 %%%
-%%%
 %%% <h3><a name="init-1">init/1</a></h3>
 %%%
 %%% <tt>init(Args) -> Result</tt>
@@ -147,6 +146,7 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
 %%%   <li><tt>NewState = term()</tt></li>
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
@@ -189,6 +189,7 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
 %%%   <li><tt>NewState = term()</tt></li>
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
@@ -222,6 +223,7 @@
 %%%                    {stop, Reason, NewState}</tt></li>
 %%%   <li><tt>Reply = ok | {error, Error}</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
 %%%   <li><tt>NewState = term()</tt></li>
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
@@ -237,14 +239,15 @@
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
 %%% 
-%%% <h3><a name="handle_listen_failure-1">handle_listen_failure/1</a></h3>
+%%% <h3><a name="handle_listen_error-1">handle_listen_error/1</a></h3>
 %%%
-%%% <tt>handle_listen_failure(State) -> Result</tt>
+%%% <tt>handle_listen_error(State) -> Result</tt>
 %%% <ul>
 %%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {noreply, NewState}               |
 %%%                    {noreply, NewState, Timeout}      |
 %%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
 %%%   <li><tt>NewState = term()</tt></li>
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
@@ -309,7 +312,7 @@
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 0.1, {13 May 2004} {@time}.
+%%% @version 1.1, {13 May 2004} {@time}.
 %%% @end
 -module(gen_smsc).
 

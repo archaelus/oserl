@@ -14,16 +14,17 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc Sample echo ESME.
+%%% @doc ESME Skeleton.
 %%%
-%%% <p>This ESME echoes SMs back to the caller.</p>
+%%% <p>You may use this skeleton as the starting point to implement your
+%%% own ESMEs.</p>
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 1.1, {23 Jun 2004} {@time}.
+%%% @version 1.1, { 6 Jul 2004} {@time}.
 %%% @end
--module(echo_esme).
+-module(esme_skel).
 
 -behaviour(gen_esme).
 
@@ -56,25 +57,21 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(SMSC_ADDRESS, {192, 168, 1, 4}).
--define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
--define(PASSWORD, "secret").
--define(SOURCE_ADDR, "1949").
 
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, TrxSession}
+%% %@spec {state}
 %%
 %% %@doc Representation of the ESME server state.
 %%
 %% <dl>
-%%   <dt>TrxSession: </dt><dd>Pid of the transceiver session.</dd>
+%%   <dt>: </dt><dd>
+%%   </dd>
 %% </dl>
 %% %@end
--record(state, {trx_session}).
-
+-record(state, {}).
 
 %%%===================================================================
 %%% External functions
@@ -90,8 +87,7 @@
 %% @see start/0
 %% @end
 start_link() ->
-    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []),
-	gen_esme:call(?SERVER, {bind, ?SMSC_ADDRESS, ?SMPP_PORT}, infinity).
+    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 
 %% @spec stop() -> ok
@@ -121,7 +117,8 @@ stop() ->
 %% <p>Initiates the server.</p>
 %% @end
 init([]) ->
-	{ok, #state{}}.
+    % You may start sessions and issue bind requests here.
+    {ok, #state{}}.
 
 
 %% @spec handle_outbind(Outbind, From, State) -> Result
@@ -203,21 +200,8 @@ handle_alert_notification({alert_notification, Session, Pdu}, From, State) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({deliver_sm, _Session, Pdu}, From, S) ->
-    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:submit_sm(?SERVER, S#state.trx_session, [Mesg|Dest]),
-    {reply, {ok, []}, S};
-handle_operation({data_sm, Session, Pdu}, From, S) ->
-    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:data_sm(?SERVER, S#state.trx_session, [Mesg|Dest]), 
-    {reply, {ok, []}, S};
-handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
+handle_operation({CmdName, Session, Pdu}, From, S) ->
     % Don't know how to handle CmdName
-    io:format("Don't know how to handle ~p~n", [CmdName]),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
 
@@ -248,9 +232,8 @@ handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Trx, Pdu}, From, #state{trx_session = Trx} = S) -> 
-    io:format("unbind: ~p~n", [Trx]),
-    {stop, normal, S#state{trx_session = undefined}}.
+handle_unbind({unbind, Session, Pdu}, From, State) -> 
+    {reply, ok, State}.
 
 
 %% @spec handle_listen_error(State) -> Result
@@ -267,7 +250,7 @@ handle_unbind({unbind, Trx, Pdu}, From, #state{trx_session = Trx} = S) ->
 %% <p>Handle listen failures.</p>
 %% @end
 handle_listen_error(State) ->
-    {stop, {error, listen_error}, State}.
+    {noreply, State}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -298,22 +281,9 @@ handle_listen_error(State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({bind, SMSCAddr, Port}, From, S) ->
-    case gen_esme:session_start(?SERVER, SMSCAddr, Port) of
-        {ok, Trx} ->
-%			erlang:monitor(process, Trx),
-            ParamList = [{system_id, ?SYSTEM_ID},
-                         {password, ?PASSWORD},
-                         {source_addr, ?SOURCE_ADDR}],
-            case gen_esme:bind_transmitter(?SERVER, Trx, ParamList) of
-                {ok, _PduResp} ->
-                    {reply, ok, #state{trx_session = Trx}};
-                BindError ->
-                    {stop, BindError, S}
-            end;
-        SessionError ->
-            {stop, SessionError, S}
-	end;
+handle_call(Request, From, State) ->
+    Reply = ok,
+    {reply, Reply, State};
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
@@ -361,10 +331,8 @@ handle_cast(Request, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'DOWN', _, process, Trx, Info}, #state{trx_session = Trx} = S) ->
-	{stop, Info, S};
-handle_info(Info, S) ->
-    {noreply, S}.
+handle_info(Info, State) ->
+    {noreply, State}.
 
 
 %% @spec terminate(Reason, State) -> ok
@@ -378,11 +346,9 @@ handle_info(Info, S) ->
 %%
 %% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
 %% @end
-terminate(kill, S) ->
-    ok;
-terminate(Reason, S) ->
-    catch gen_smsc:unbind(?SERVER, S#state.trx_session),
-    catch gen_smsc:session_stop(?SERVER, S#state.trx_session).
+terminate(Reason, State) ->
+    % You may stop sessions and issue unbind requests here.
+    ok.
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
@@ -401,4 +367,3 @@ code_change(OldVsn, State, Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-

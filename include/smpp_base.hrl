@@ -1,115 +1,109 @@
+%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
-% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%
-
+%%% This library is free software; you can redistribute it and/or
+%%% modify it under the terms of the GNU Lesser General Public
+%%% License as published by the Free Software Foundation; either
+%%% version 2.1 of the License, or (at your option) any later version.
 %%%
-% @doc SMPP Base definitions.
-%
-% <p>Basic definitions of the SMPP protocol specification using the syntax
-% defined in <b>base_syntax.hrl</b>.</p>
-%
-% <p>As a guideline, some comments reference the section number of the
-% document [SMPP 5.0].</p>
-%
-%
-% <h2>Domain and Datatype</h2>
-% 
-% <p>To see how these concepts are used along this SMPP implementation, 
-% consider the addr_ton field.</p>
-%
-% <p>Its <b>datatype</b> is a 1 octet integer: ?INTEGER(1).</p>
-%
-% <p>Its <b>domain</b> is the set of all possible TON Values: 
-% ?BOUND_INTEGER(1, 6).</p>
-%
-% <p><b>IMPORTANT</b> Datatype definitions are <b>not</b> used.  They're 
-% only preserved because they help document parameter definitions.</p>
-%
-%
-% <h2>Changes 0.1 -&gt; 0.2</h2>
-%
-% [18 Feb 2004]
-% 
-% <ul>
-%   <li>Trailing $\0 removed from the c_octet_string values.</li>
-%   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time
-%     record removed.  Time manipulation is now much more natural... and easy.
-%   </li>
-% </ul>
-%
-% [01 Mar 2004]
-% 
-% <ul>
-%   <li>New macros for composite parameters value definitions.<br/>
-%     <br/>
-%     For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
-%     <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
-%     <i>dest_address_sme</i>.
-%   </li>
-% </ul>
-%
-%
-% <h2>References</h2>
-% <dl>
-%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
-%     Version 5.0. SMS Forum.
-%   </dd>
-%   <dt>[3GPP TS 23.040]</dt><dd>Technical Realization of the Short Message
-%     Service (SMS) Release 4.  Version 5.0.0. 
-%     <a href="http://www.3gpp.org">3GPP</a>.
-%   </dd>
-% </dl>
-%
-%
-% @copyright 2003 - 2004 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%         [http://www.des.udc.es/~mpquique/]
-% @version 0.2 alpha, {14 Mar 2003} {@time}.
-% @end
-%%
+%%% This library is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%%% Lesser General Public License for more details.
+%%%
+%%% You should have received a copy of the GNU Lesser General Public
+%%% License along with this library; if not, write to the Free Software
+%%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+%%% @doc SMPP Base definitions.
+%%%
+%%% <p>Basic definitions of the SMPP protocol specification using the syntax
+%%% defined in <b>base_syntax.hrl</b>.</p>
+%%%
+%%% <p>As a guideline, some comments reference the section number of the
+%%% document [SMPP 5.0].</p>
+%%%
+%%%
+%%% <h2>Domain and Datatype</h2>
+%%% 
+%%% <p>To see how these concepts are used along this SMPP implementation, 
+%%% consider the addr_ton field.</p>
+%%%
+%%% <p>Its <b>datatype</b> is a 1 octet integer: ?INTEGER(1).</p>
+%%%
+%%% <p>Its <b>domain</b> is the set of all possible TON Values: 
+%%% ?BOUND_INTEGER(1, 6).</p>
+%%%
+%%% <p><b>IMPORTANT</b> Datatype definitions are <b>not</b> used.  They're 
+%%% only preserved because they help document parameter definitions.</p>
+%%%
+%%%
+%%% <h2>Changes 0.1 -&gt; 0.2</h2>
+%%%
+%%% [18 Feb 2004]
+%%% 
+%%% <ul>
+%%%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+%%%   <li>Absolute/relative time implemented as pure C-Octet Strings.  Time
+%%%     record removed.  Time manipulation is now much more natural... and
+%%%     easy.
+%%%   </li>
+%%% </ul>
+%%%
+%%% [01 Mar 2004]
+%%% 
+%%% <ul>
+%%%   <li>New macros for composite parameters value definitions.<br/>
+%%%     <br/>
+%%%     For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
+%%%     <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
+%%%     <i>dest_address_sme</i>.
+%%%   </li>
+%%% </ul>
+%%%
+%%%
+%%% <h2>References</h2>
+%%% <dl>
+%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
+%%%     Version 5.0. SMS Forum.
+%%%   </dd>
+%%%   <dt>[3GPP TS 23.040]</dt><dd>Technical Realization of the Short Message
+%%%     Service (SMS) Release 4.  Version 5.0.0. 
+%%%     <a href="http://www.3gpp.org">3GPP</a>.
+%%%   </dd>
+%%% </dl>
+%%%
+%%%
+%%% @copyright 2003 - 2004 Enrique Marcote Peña
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
+%%%         [http://www.des.udc.es/~mpquique/]
+%%% @version 0.2 alpha, {14 Mar 2003} {@time}.
+%%% @end
 -ifndef(smpp_base).
 -define(smpp_base, true).
 
 %%%-------------------------------------------------------------------
-% Include files
-%%--------------------------------------------------------------------
+%%% Include files
+%%%-------------------------------------------------------------------
 -include("smpp_globals.hrl").  % Some global definitions
 -include("base_syntax.hrl").   % The syntax used in this file
 
 %%%-------------------------------------------------------------------
-% Macros
-%%--------------------------------------------------------------------
+%%% Macros
+%%%-------------------------------------------------------------------
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% Common Definitions
-%
-% <p>Some syntax definitions shared by several fields/TLVs</p>
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% Common Definitions
 %%%
-% addr
-%
-% %@doc Specifies the SME address. For mobile terminated/originated messages,
-% this is the directory number of the recipient/originating MS. IP address
-% must be in "aaa.bbb.ccc.ddd" notation.
-%
-% <p>Used on: destination_addr, dest_address, esme_addr, source_addr, 
-% unsuccess_sme</p>
-% %@end
+%%% <p>Some syntax definitions shared by several fields/TLVs</p>
+%%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% addr
 %%
+%% %@doc Specifies the SME address. For mobile terminated/originated messages,
+%% this is the directory number of the recipient/originating MS. IP address
+%% must be in "aaa.bbb.ccc.ddd" notation.
+%%
+%% <p>Used on: destination_addr, dest_address, esme_addr, source_addr, 
+%% unsuccess_sme</p>
+%% %@end
 -define(ADDR_21_DATATYPE, ?VAR_C_OCTET_STRING(21)).
 -define(ADDR_21_DOMAIN,   ?VAR_C_OCTET_STRING(21)).
 -define(ADDR_21_RESERVED, ?EMPTY).
@@ -118,12 +112,10 @@
 -define(ADDR_65_DOMAIN,   ?VAR_C_OCTET_STRING(65)).
 -define(ADDR_65_RESERVED, ?EMPTY).
 
-%%%
-% addr_subunit
-%
-% %@doc Used on: dest_addr_subunit, source_addr_subunit
-% %@end
+%% addr_subunit
 %%
+%% %@doc Used on: dest_addr_subunit, source_addr_subunit
+%% %@end
 -define(ADDR_SUBUNIT_DATATYPE, ?INTEGER(1)).
 -define(ADDR_SUBUNIT_DOMAIN,   ?BOUND_INTEGER(1, 16#04)).
 -define(ADDR_SUBUNIT_RESERVED, ?RANGE_INTEGER(1, 16#05, 16#FF)).
@@ -135,12 +127,10 @@
 -define(ADDR_SUBUNIT_SMART_CARD_1,     16#03). % Expected to be SIM
 -define(ADDR_SUBUNIT_EXTERNAL_UNIT_2,  16#04).
 
-%%%
-% bearer_type
-%
-% %@doc Used on: dest_bearer_type, source_bearer_type
-% %@end
+%% bearer_type
 %%
+%% %@doc Used on: dest_bearer_type, source_bearer_type
+%% %@end
 -define(BEARER_TYPE_DATATYPE, ?INTEGER(1)).
 -define(BEARER_TYPE_DOMAIN,   ?BOUND_INTEGER(1, 16#08)).
 -define(BEARER_TYPE_RESERVED, ?RANGE_INTEGER(1, 16#09, 16#FF)).
@@ -156,17 +146,15 @@
 -define(BEARER_TYPE_FLEX_REFLEX,    16#07).  % FLEX/ReFLEX
 -define(BEARER_TYPE_CELL_BROADCAST, 16#08).  % Cell Broadcast (cell cast)
 
-%%%
-% broadcast_area
-%
-% %@doc A broadcast_area value should be defined using the broadcast_area 
-% record.
-%
-% <p>Used on: broadcast_area_identifier, failed_broadcast_area_identifier.</p>
-%
-% %@see broadcast_area record definition below.
-% %@end
+%% broadcast_area
 %%
+%% %@doc A broadcast_area value should be defined using the broadcast_area 
+%% record.
+%%
+%% <p>Used on: broadcast_area_identifier, failed_broadcast_area_identifier.</p>
+%%
+%% %@see broadcast_area record definition below.
+%% %@end
 -define(BROADCAST_AREA_FORMAT_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_AREA_FORMAT_DOMAIN,   ?BOUND_INTEGER(1, 16#02)).
 -define(BROADCAST_AREA_FORMAT_RESERVED, ?RANGE_INTEGER(1, 16#03, 16#FF)).
@@ -193,12 +181,10 @@
 -define(BROADCAST_AREA_FORMAT_ELLIPSOID_ARC, 16#01).
 -define(BROADCAST_AREA_FORMAT_POLYGON,       16#02).
 
-%%%
-% encoding_scheme
-%
-% %@doc Used on: data_coding, callback_num_atag.
-% %@end
+%% encoding_scheme
 %%
+%% %@doc Used on: data_coding, callback_num_atag.
+%% %@end
 -define(ENCODING_SCHEME_DATATYPE, ?INTEGER(1)).
 -define(ENCODING_SCHEME_DOMAIN,   
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00001010),
@@ -229,24 +215,20 @@
                                                    % (X 0212-1990)
 -define(ENCODING_SCHEME_KS_C_5601,    2#00001110). % KS C 5601
 
-%%%
-% message_identifier
-%
-% %@doc Set according to MC implementation.
-%
-% <p>Used by: message_id, receipted_message_id</p>
-% %@end
+%% message_identifier
 %%
+%% %@doc Set according to MC implementation.
+%%
+%% <p>Used by: message_id, receipted_message_id</p>
+%% %@end
 -define(MESSAGE_IDENTIFIER_DATATYPE, ?VAR_C_OCTET_STRING(65)).
 -define(MESSAGE_IDENTIFIER_DOMAIN,   ?VAR_C_OCTET_STRING(65)).
 -define(MESSAGE_IDENTIFIER_RESERVED, ?EMPTY).
 
-%%%
-% message_state
-%
-% %@doc Used by: message_state_std, message_state_tlv
-% %@end
+%% message_state
 %%
+%% %@doc Used by: message_state_std, message_state_tlv
+%% %@end
 -define(MESSAGE_STATE_DATATYPE, ?INTEGER(1)).
 -define(MESSAGE_STATE_DOMAIN,   ?BOUND_INTEGER(1, 9)).
 -define(MESSAGE_STATE_RESERVED, ?EMPTY).
@@ -263,25 +245,21 @@
 -define(MESSAGE_STATE_REJECTED,      8).  % Final
 -define(MESSAGE_STATE_SKIPPED,       9).  % Final
 
+%% network_id
 %%
-% network_id
-%
-% %@doc Unique address that may be derived and assigned by the node owner 
-% without establishing a central assignment and management authority.
-%
-% <p>Used on: dest_network_id, source_network_id</p>
-% %@end
+%% %@doc Unique address that may be derived and assigned by the node owner 
+%% without establishing a central assignment and management authority.
 %%
+%% <p>Used on: dest_network_id, source_network_id</p>
+%% %@end
 -define(NETWORK_ID_DATATYPE, ?VAR_C_OCTET_STRING(65)).
 -define(NETWORK_ID_DOMAIN,   ?VAR_C_OCTET_STRING(65)).
 -define(NETWORK_ID_RESERVED, ?EMPTY).
 
-%%%
-% network_type
-%
-% %@doc Used by: dest_network_type, source_network_type
-% %@end
+%% network_type
 %%
+%% %@doc Used by: dest_network_type, source_network_type
+%% %@end
 -define(NETWORK_TYPE_DATATYPE, ?INTEGER(1)).
 -define(NETWORK_TYPE_DOMAIN,   ?BOUND_INTEGER(1, 16#08)).
 -define(NETWORK_TYPE_RESERVED, ?RANGE_INTEGER(1, 16#09, 16#FF)).
@@ -298,25 +276,21 @@
 -define(NETWORK_TYPE_AMPS,           16#07).
 -define(NETWORK_TYPE_PAGING_NETWORK, 16#08).
 
-%%%
-% node_id
-%
-% %@doc Sequence of 6 decimal digits identifying the node.
-%
-% <p>Used on: dest_node_id, source_node_id</p>
-% %@end
+%% node_id
 %%
+%% %@doc Sequence of 6 decimal digits identifying the node.
+%%
+%% <p>Used on: dest_node_id, source_node_id</p>
+%% %@end
 -define(NODE_ID_DATATYPE, ?FIXED_DEC_OCTET_STRING(6)).
 -define(NODE_ID_DOMAIN,   ?FIXED_DEC_OCTET_STRING(6)).
 -define(NODE_ID_RESERVED, ?EMPTY).
 
-%%%
-% npi
-%
-% %@doc Used on: addr_npi, source_addr_npi, dest_addr_npi, esme_addr_npi, 
-% dest_address, unsuccess_sme, callback_num
-% %@end
+%% npi
 %%
+%% %@doc Used on: addr_npi, source_addr_npi, dest_addr_npi, esme_addr_npi, 
+%% dest_address, unsuccess_sme, callback_num
+%% %@end
 -define(NPI_DATATYPE, ?INTEGER(1)).
 -define(NPI_DOMAIN, 
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00000001),
@@ -344,36 +318,32 @@
 -define(NPI_INTERNET,      2#00001110). % IP
 -define(NPI_WAP_CLIENT_ID, 2#00010010). % To be defined by WAP Forum
 
-%%%
-% port
-%
-% %@doc All values allowed 
-%
-% <p>Used on: dest_port, source_port</p>
-% %@end
+%% port
 %%
+%% %@doc All values allowed 
+%%
+%% <p>Used on: dest_port, source_port</p>
+%% %@end
 -define(PORT_DATATYPE, ?INTEGER(2)).
 -define(PORT_DOMAIN,   ?INTEGER(2)).
 -define(PORT_RESERVED, ?EMPTY).
 
-%%%
-% protocol_identifier
-%
-% %@doc According to [3GPP TS 23.040] GSM values are listed below.
-%
-% <p>On both, TDMA and CDMA, protocol_id is Ignored for mobile terminated
-% messages and set to NULL by the MC for mobile originated messages.</p>
-%
-% <p>[3GPP TS 23.040] recommends to reject messages with a TP-Protocol 
-% Identifier containing a reserced value or one which is not supported.
-% That's why PROTOCOL_IDENTIFIER_RESERVED is set to  <tt>?EMPTY</tt>.</p>
-%
-% <p>Used on: protocol_id</p>
-%
-% %@TODO Review the domain declaration.  What about the SM-AL protocol
-% identifier values (when bits 7, 6 and 5 are 0).
-% %@end
+%% protocol_identifier
 %%
+%% %@doc According to [3GPP TS 23.040] GSM values are listed below.
+%%
+%% <p>On both, TDMA and CDMA, protocol_id is Ignored for mobile terminated
+%% messages and set to NULL by the MC for mobile originated messages.</p>
+%%
+%% <p>[3GPP TS 23.040] recommends to reject messages with a TP-Protocol 
+%% Identifier containing a reserced value or one which is not supported.
+%% That's why PROTOCOL_IDENTIFIER_RESERVED is set to  <tt>?EMPTY</tt>.</p>
+%%
+%% <p>Used on: protocol_id</p>
+%%
+%% %@TODO Review the domain declaration.  What about the SM-AL protocol
+%% identifier values (when bits 7, 6 and 5 are 0).
+%% %@end
 -define(PROTOCOL_IDENTIFIER_DATATYPE, ?INTEGER(1)).
 -define(PROTOCOL_IDENTIFIER_DOMAIN,   
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00011111), 
@@ -391,17 +361,15 @@
 -define(PROTOCOL_IDENTIFIER_TDMA, ?NULL_INTEGER).
 -define(PROTOCOL_IDENTIFIER_CDMA, ?NULL_INTEGER).
 
-%%%
-% smpp_error
-%
-% %@doc A list with all the SMPP Error Codes can be found on 
-% <b>smpp_globals.hrl</b>
-%
-% <p>Used on: command_status, error_status_code, unsuccess_sme</p>
-%
-% %@see smpp_globals.hrl
-% %@end
+%% smpp_error
 %%
+%% %@doc A list with all the SMPP Error Codes can be found on 
+%% <b>smpp_globals.hrl</b>
+%%
+%% <p>Used on: command_status, error_status_code, unsuccess_sme</p>
+%%
+%% %@see smpp_globals.hrl
+%% %@end
 -define(SMPP_ERROR_DATATYPE, ?INTEGER(4)).
 -define(SMPP_ERROR_DOMAIN,  
         ?UNION([?RANGE_INTEGER(4, 16#00000000, 16#00000008),
@@ -433,12 +401,10 @@
                 ?RANGE_INTEGER(4, 16#000000C5, 16#000000FD),
                 ?RANGE_INTEGER(4, 16#00000113, 16#FFFFFFFF)])).
 
-%%%
-% smpp_version
-%
-% %@doc Used on: interface_version, sc_interface_version
-% %@end
+%% smpp_version
 %%
+%% %@doc Used on: interface_version, sc_interface_version
+%% %@end
 -define(SMPP_VERSION_DATATYPE, ?INTEGER(1)).
 -define(SMPP_VERSION_DOMAIN,   
         ?UNION([?RANGE_INTEGER(1, 16#00, 16#34),
@@ -454,16 +420,14 @@
 -define(SMPP_VERSION_3_4,     16#34).  % Version 3.4
 -define(SMPP_VERSION_5_0,     16#50).  % Version 5.0
 
-%%%
-% subaddress
-%
-% %@doc A subaddress value should be defined using the subaddress record.
-%
-% <p>Used on: dest_subaddress, source_subaddress</p>
-%
-% %@see subaddress record definition below
-% %@end
+%% subaddress
 %%
+%% %@doc A subaddress value should be defined using the subaddress record.
+%%
+%% <p>Used on: dest_subaddress, source_subaddress</p>
+%%
+%% %@see subaddress record definition below
+%% %@end
 -define(SUBADDRESS_TAG_DATATYPE, ?INTEGER(1)).
 -define(SUBADDRESS_TAG_DOMAIN,   ?SET([2#10000000, 2#10001000, 2#10100000])).
 -define(SUBADDRESS_TAG_RESERVED,
@@ -494,17 +458,16 @@
 -define(SUBADDRESS_TAG_NSAP_ODD,  2#10001000). % NSAP (Odd) [ITUT X.213]
 -define(SUBADDRESS_TAG_USER,      2#10100000). % User Specific
 
-%%%
-% telematics_id
-%
-% %@doc A telematics_id value should be defined using the telematics_id record.
-%
-% <p>Used on: dest_telematics_id, source_telematics_id</p>
-%
-% %@see telematics_id record definition below
-% %@see protocol_identifier definition above
-% %@end
+%% telematics_id
 %%
+%% %@doc A telematics_id value should be defined using the telematics_id 
+%% record.
+%%
+%% <p>Used on: dest_telematics_id, source_telematics_id</p>
+%%
+%% %@see telematics_id record definition below
+%% %@see protocol_identifier definition above
+%% %@end
 -define(TELEMATICS_ID_RESERVED_DATATYPE, ?INTEGER(1)).
 -define(TELEMATICS_ID_RESERVED_DOMAIN,   ?INTEGER(1)).
 
@@ -519,13 +482,11 @@
 -define(TELEMATICS_ID_RESERVED, ?EMPTY).
 
 
-%%%
-% ton 
-%
-% %@doc Used on: addr_ton, source_addr_ton, dest_addr_ton, esme_addr_ton, 
-% dest_address, unsuccess_sme, callback_num
-% %@end
+%% ton 
 %%
+%% %@doc Used on: addr_ton, source_addr_ton, dest_addr_ton, esme_addr_ton, 
+%% dest_address, unsuccess_sme, callback_num
+%% %@end
 -define(TON_DATATYPE, ?INTEGER(1)).
 -define(TON_DOMAIN,   ?BOUND_INTEGER(1, 2#00000110)).
 -define(TON_RESERVED, ?RANGE_INTEGER(1, 2#00000111, 2#11111111)).
@@ -540,15 +501,13 @@
 -define(TON_ABBREVIATED,       2#00000110).
 
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% PDU Field Base Syntax Definitions
-%
-% %@see section 4.7 on [SMPP 5.0]
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% PDU Field Base Syntax Definitions
 %%%
-% addr_ton, source_addr_ton, dest_addr_ton, esme_addr_ton 
-%
-% %@see ton definition above
+%%%%@see section 4.7 on [SMPP 5.0]
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% addr_ton, source_addr_ton, dest_addr_ton, esme_addr_ton 
 %%
+%% %@see ton definition above
 -define(ADDR_TON_DATATYPE, ?TON_DATATYPE).
 -define(ADDR_TON_DOMAIN,   ?TON_DOMAIN).
 -define(ADDR_TON_RESERVED, ?TON_RESERVED).
@@ -565,11 +524,9 @@
 -define(ESME_ADDR_TON_DOMAIN,   ?TON_DOMAIN).
 -define(ESME_ADDR_TON_RESERVED, ?TON_RESERVED).
 
-%%%
-% addr_npi, source_addr_npi, dest_addr_npi, esme_addr_npi
-%
-% %@see npi definition above
+%% addr_npi, source_addr_npi, dest_addr_npi, esme_addr_npi
 %%
+%% %@see npi definition above
 -define(ADDR_NPI_DATATYPE, ?NPI_DATATYPE).
 -define(ADDR_NPI_DOMAIN,   ?NPI_DOMAIN).
 -define(ADDR_NPI_RESERVED, ?NPI_RESERVED).
@@ -586,49 +543,43 @@
 -define(ESME_ADDR_NPI_DOMAIN,   ?NPI_DOMAIN).
 -define(ESME_ADDR_NPI_RESERVED, ?NPI_RESERVED).
 
-%%%
-% address_range
-%
-% %@doc 
-% 
-% <ul> 
-%   <li>Single SME address</li>
-%   <li>Range of addresses using UNIX Regular Expression notation</li>
-% </ul>
-% %@end
+%% address_range
 %%
+%% %@doc 
+%% 
+%% <ul> 
+%%   <li>Single SME address</li>
+%%   <li>Range of addresses using UNIX Regular Expression notation</li>
+%% </ul>
+%% %@end
 -define(ADDRESS_RANGE_DATATYPE, ?VAR_C_OCTET_STRING(41)).
 -define(ADDRESS_RANGE_DOMAIN,   ?VAR_C_OCTET_STRING(41)).
 -define(ADDRESS_RANGE_RESERVED, ?EMPTY).
 
-%%%
-% command_length
-%
-% %@doc Represents the actual size of the PDU including the PDU header and body
-% (command_length included).
-%
-% <p>On current implementation, encoding/decoding this value is implicitly 
-% done by unpacking/packing functions, thus this field must not be included in
-% the PDU definitions.  Never used.</p>
-% %@end
+%% command_length
 %%
+%% %@doc Represents the actual size of the PDU including the PDU header and 
+%% body (command_length included).
+%%
+%% <p>On current implementation, encoding/decoding this value is implicitly 
+%% done by unpacking/packing functions, thus this field must not be included in
+%% the PDU definitions.  Never used.</p>
+%% %@end
 % -define(COMMAND_LENGTH_DATATYPE, ?INTEGER(4)).
 % -define(COMMAND_LENGTH_DOMAIN,   ?INTEGER(4)).
 % -define(COMMAND_LENGTH_RESERVED, ?EMPTY).
 
-%%%
-% command_id
-%
-% %@doc A list with all the SMPP Commmand Ids can be found on 
-% <b>smpp_globals.hrl</b>
-%
-% <p>On current implementation, encoding/decoding this value is implicitly 
-% done by unpacking/packing functions, thus this field must not be included in
-% the PDU definitions.  Never used.</p>
-%
-% %@see smpp_globals.hrl
-% %@end
+%% command_id
 %%
+%% %@doc A list with all the SMPP Commmand Ids can be found on 
+%% <b>smpp_globals.hrl</b>
+%%
+%% <p>On current implementation, encoding/decoding this value is implicitly 
+%% done by unpacking/packing functions, thus this field must not be included in
+%% the PDU definitions.  Never used.</p>
+%%
+%% %@see smpp_globals.hrl
+%% %@end
 % -define(COMMAND_ID_DATATYPE, ?INTEGER(4)).
 % -define(COMMAND_ID_DOMAIN, 
 %         ?UNION([?RANGE_INTEGER(4, 16#00000001, 16#00000009),
@@ -655,16 +606,14 @@
 %                 ?RANGE_INTEGER(4, 16#80000104, 16#80000110),
 %                 ?RANGE_INTEGER(4, 16#80000114, 16#FFFFFFFF)])).
 
-%%%
-% command_status, error_status_code
-%
-% <p>On current implementation, encoding/decoding the command_status value is
-% implicitly done by unpacking/packing functions, thus this field must not be
-% included in the PDU definitions.  Never used.</p>
-%
-% %@see smpp_error definition above
-% %@end
+%% command_status, error_status_code
 %%
+%% <p>On current implementation, encoding/decoding the command_status value is
+%% implicitly done by unpacking/packing functions, thus this field must not be
+%% included in the PDU definitions.  Never used.</p>
+%%
+%% %@see smpp_error definition above
+%% %@end
 % -define(COMMAND_STATUS_DATATYPE, ?SMPP_ERROR_DATATYPE).
 % -define(COMMAND_STATUS_DOMAIN,   ?SMPP_ERROR_DOMAIN).
 % -define(COMMAND_STATUS_RESERVED, ?SMPP_ERROR_RESERVED).
@@ -673,24 +622,20 @@
 -define(ERROR_STATUS_CODE_DOMAIN,   ?SMPP_ERROR_DOMAIN).
 -define(ERROR_STATUS_CODE_RESERVED, ?SMPP_ERROR_RESERVED).
 
-%%%
-% data_coding
-%
-% %@see encoding_scheme definition above
-% %@end
+%% data_coding
 %%
+%% %@see encoding_scheme definition above
+%% %@end
 -define(DATA_CODING_DATATYPE, ?ENCODING_SCHEME_DATATYPE).
 -define(DATA_CODING_DOMAIN,   ?ENCODING_SCHEME_DOMAIN).
 -define(DATA_CODING_RESERVED, ?ENCODING_SCHEME_RESERVED).
 
-%%%
-% destination_addr
-%
-% %@doc Specifies the destination SME address.
-%
-% %@see addr definition above
-% %@end
+%% destination_addr
 %%
+%% %@doc Specifies the destination SME address.
+%%
+%% %@see addr definition above
+%% %@end
 -define(DESTINATION_ADDR_21_DATATYPE, ?ADDR_21_DATATYPE).
 -define(DESTINATION_ADDR_21_DOMAIN,   ?ADDR_21_DOMAIN).
 -define(DESTINATION_ADDR_21_RESERVED, ?ADDR_21_RESERVED).
@@ -699,13 +644,11 @@
 -define(DESTINATION_ADDR_65_DOMAIN,   ?ADDR_65_DOMAIN).
 -define(DESTINATION_ADDR_65_RESERVED, ?ADDR_65_RESERVED).
 
-%%%
-% dest_flag
-%
-% %@doc This field is used to identify the type of destination address, values 
-% are defined as constant within the type descriptors.
-% %@end
+%% dest_flag
 %%
+%% %@doc This field is used to identify the type of destination address, values 
+%% are defined as constant within the type descriptors.
+%% %@end
 -define(DEST_FLAG_DATATYPE,   ?INTEGER(1)).
 -define(DEST_FLAG_SME_DOMAIN, ?CONSTANT(16#01)).  % SME Address
 -define(DEST_FLAG_DL_DOMAIN,  ?CONSTANT(16#02)).  % Distribution List Name
@@ -715,26 +658,22 @@
 -define(DEST_FLAG_SME, 16#01).  % SME Address
 -define(DEST_FLAG_DL,  16#02).  % Distribution List Name
 
-%%%
-% dl_name
-%%
+%% dl_name
 -define(DL_NAME_DATATYPE, ?VAR_C_OCTET_STRING(21)).
 -define(DL_NAME_DOMAIN,   ?VAR_C_OCTET_STRING(21)).
 -define(DL_NAME_RESERVED, ?EMPTY).
 
-%%%
-% dest_address_multi
-%
-% %@doc This field is a composite field containing a mandatory field and then
-% either an SME address or a Distribution List.  Additionally this field
-% can be encoded multiple times.
-%
-% %@see dest_address_sme and dest_address_dl record definitions below
-% %@see ton definition above
-% %@see npi definition above
-% %@see addr definition above
-% %@end
+%% dest_address_multi
 %%
+%% %@doc This field is a composite field containing a mandatory field and then
+%% either an SME address or a Distribution List.  Additionally this field
+%% can be encoded multiple times.
+%%
+%% %@see dest_address_sme and dest_address_dl record definitions below
+%% %@see ton definition above
+%% %@see npi definition above
+%% %@see addr definition above
+%% %@end
 -define(DEST_ADDRESS_SME_DATATYPE,
         ?COMPOSITE(dest_address_sme,
                    {?DEST_FLAG_DATATYPE,
@@ -767,22 +706,18 @@
 -define(DEST_ADDRESS_DATATYPE, ?LIST(?DEST_ADDRESS_ITEM_DATATYPE)).
 -define(DEST_ADDRESS_DOMAIN,   ?LIST(?DEST_ADDRESS_ITEM_DOMAIN)).
 
-%%%
-% esme_addr
-%
-% %@doc Specifies the address of an ESME to which an alert_notification should 
-% be routed.
-%
-% %@see addr definition above
-% %@end
+%% esme_addr
 %%
+%% %@doc Specifies the address of an ESME to which an alert_notification should 
+%% be routed.
+%%
+%% %@see addr definition above
+%% %@end
 -define(ESME_ADDR_DATATYPE, ?ADDR_65_DATATYPE).
 -define(ESME_ADDR_DOMAIN,   ?ADDR_65_DOMAIN).
 -define(ESME_ADDR_RESERVED, ?ADDR_65_RESERVED).
 
-%%%
-% esm_class
-%%
+%% esm_class
 -define(ESM_CLASS_DATATYPE, ?INTEGER(1)).
 -define(ESM_CLASS_DOMAIN,
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00000111),
@@ -810,17 +745,17 @@
 % esm_class Values
 -define(ESM_CLASS_DEFAULT, ?NULL_INTEGER).
 
-% esm_class Bits Values  
-%
-% <p>To compound the complete esm_class value from the Bits, pick a Bit Value
-% from every type and do the bitwise "or" of the parts.</p>
-%
-% <p><center><tt>
-% ?ESM_CLASS_MODE_DEFAULT bor ?ESM_CLASS_TYPE_DEFAULT bor ?ESM_CLASS_GSM_UDHI
-% </tt></center></p>.
-% %@end
-%
-% Messaging Mode (bits 1-0)
+%% esm_class Bits Values  
+%%
+%% <p>To compound the complete esm_class value from the Bits, pick a Bit Value
+%% from every type and do the bitwise "or" of the parts.</p>
+%%
+%% <p><center><tt>
+%% ?ESM_CLASS_MODE_DEFAULT bor ?ESM_CLASS_TYPE_DEFAULT bor ?ESM_CLASS_GSM_UDHI
+%% </tt></center></p>.
+%% %@end
+%%
+%% Messaging Mode (bits 1-0)
 -define(ESM_CLASS_MODE_DEFAULT,        2#00000000).
 -define(ESM_CLASS_MODE_DATAGRAM,       2#00000001).
 -define(ESM_CLASS_MODE_FORWARD,        2#00000010).
@@ -842,46 +777,36 @@
 -define(ESM_CLASS_GSM_REPLY_PATH,      2#10000000).
 -define(ESM_CLASS_GSM_UDHI_REPLY_PATH, 2#11000000).
 
-%%%
-% interface_version
-%
-% %@see smpp_version definition above
+%% interface_version
 %%
+%% %@see smpp_version definition above
 -define(INTERFACE_VERSION_DATATYPE, ?SMPP_VERSION_DATATYPE).
 -define(INTERFACE_VERSION_DOMAIN,   ?SMPP_VERSION_DOMAIN).
 -define(INTERFACE_VERSION_RESERVED, ?SMPP_VERSION_RESERVED).
 
-%%%
-% message_id
-%
-% %@see message_identifier definition above
+%% message_id
 %%
+%% %@see message_identifier definition above
 -define(MESSAGE_ID_DATATYPE, ?MESSAGE_IDENTIFIER_DATATYPE).
 -define(MESSAGE_ID_DOMAIN,   ?MESSAGE_IDENTIFIER_DOMAIN).
 -define(MESSAGE_ID_RESERVED, ?MESSAGE_IDENTIFIER_RESERVED).
 
-%%%
-% message_state_std
-%
-% %@see message_state definition above
+%% message_state_std
 %%
+%% %@see message_state definition above
 -define(MESSAGE_STATE_STD_DATATYPE, ?MESSAGE_STATE_DATATYPE).
 -define(MESSAGE_STATE_STD_DOMAIN,   ?MESSAGE_STATE_DOMAIN).
 -define(MESSAGE_STATE_STD_RESERVED, ?MESSAGE_STATE_RESERVED).
 
-%%%
-% password
-%
-% %@doc The password is normally issued by the MC system administrator.
-% %@end
+%% password
 %%
+%% %@doc The password is normally issued by the MC system administrator.
+%% %@end
 -define(PASSWORD_DATATYPE, ?VAR_C_OCTET_STRING(9)).
 -define(PASSWORD_DOMAIN,   ?VAR_C_OCTET_STRING(9)).
 -define(PASSWORD_RESERVED, ?EMPTY).
 
-%%%
-% priority_flag
-%%
+%% priority_flag
 -define(PRIORITY_FLAG_DATATYPE, ?INTEGER(1)).
 -define(PRIORITY_FLAG_DOMAIN,   ?BOUND_INTEGER(1, 4)).
 -define(PRIORITY_FLAG_RESERVED, ?RANGE_INTEGER(1, 5, 255)).
@@ -907,18 +832,14 @@
 -define(PRIORITY_FLAG_ANSI_41_CBS_URGENT,          2).
 -define(PRIORITY_FLAG_ANSI_41_CBS_EMERGENCY,       3).
 
-%%%
-% protocol_id
-%
-% %@see protocol_identifier definition above
+%% protocol_id
 %%
+%% %@see protocol_identifier definition above
 -define(PROTOCOL_ID_DATATYPE, ?PROTOCOL_IDENTIFIER_DATATYPE).
 -define(PROTOCOL_ID_DOMAIN,   ?PROTOCOL_IDENTIFIER_DOMAIN).
 -define(PROTOCOL_ID_RESERVED, ?PROTOCOL_IDENTIFIER_RESERVED).
 
-%%%
-% registered_delivery
-%%
+%% registered_delivery
 -define(REGISTERED_DELIVERY_DATATYPE, ?INTEGER(1)).
 -define(REGISTERED_DELIVERY_DOMAIN,   ?BOUND_INTEGER(1, 2#00011111)).
 -define(REGISTERED_DELIVERY_RESERVED, 
@@ -952,9 +873,7 @@
 -define(REGISTERED_DELIVERY_INTERMEDIATE_NO,  2#00000000). % Not requested
 -define(REGISTERED_DELIVERY_INTERMEDIATE_YES, 2#00010000). % Notific. Requested
 
-%%%
-% replace_if_present_flag
-%%
+%% replace_if_present_flag
 -define(REPLACE_IF_PRESENT_FLAG_DATATYPE, ?INTEGER(1)).
 -define(REPLACE_IF_PRESENT_FLAG_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(REPLACE_IF_PRESENT_FLAG_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -963,12 +882,10 @@
 -define(REPLACE_IF_PRESENT_FLAG_DO_NOT_REPLACE, 0).
 -define(REPLACE_IF_PRESENT_FLAG_REPLACE,        1).
 
-%%%
-% schedule_delivery_time
-%
-% %@doc Either absolute or relative.
-% %@end
+%% schedule_delivery_time
 %%
+%% %@doc Either absolute or relative.
+%% %@end
 -define(SCHEDULE_DELIVERY_TIME_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
 -define(SCHEDULE_DELIVERY_TIME_DOMAIN,   ?UNION([?ATIME_C_OCTET_STRING, 
 		                                         ?RTIME_C_OCTET_STRING])).
@@ -977,12 +894,10 @@
 % schedule_delivery_time Values
 -define(SCHEDULE_DELIVERY_TIME_IMMEDIATE, ?NULL_C_OCTET_STRING).  % Immediate
 
-%%%
-% validity_period
-%
-% %@doc Either absolute or relative.
-% %@end
+%% validity_period
 %%
+%% %@doc Either absolute or relative.
+%% %@end
 -define(VALIDITY_PERIOD_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
 -define(VALIDITY_PERIOD_DOMAIN,   ?UNION([?ATIME_C_OCTET_STRING, 
                                           ?RTIME_C_OCTET_STRING])).
@@ -991,12 +906,10 @@
 % validity_period Values
 -define(VALIDITY_PERIOD_DEFAULT, ?NULL_C_OCTET_STRING).  % Use MC defaults
 
-%%%
-% final_date
-%
-% %@doc It must be specified in absolute time format.
-% %@end
+%% final_date
 %%
+%% %@doc It must be specified in absolute time format.
+%% %@end
 -define(FINAL_DATE_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
 -define(FINAL_DATE_DOMAIN,   ?ATIME_C_OCTET_STRING).
 -define(FINAL_DATE_RESERVED, ?EMPTY).
@@ -1004,27 +917,23 @@
 % final_date Values
 -define(FINAL_DATE_FINAL_STATE_NOT_REACHED, ?NULL_C_OCTET_STRING).
 
-%%%
-% sequence_number
-%
-% %@doc Allows a response PDU to be correlated with a request PDU.  The allowed
-% sequence_number range is from 16#00000001 to 16#7FFFFFFFFF.  16#00000000 is
-% recomended for use when issuing a generic_nack where the original PDU was
-% deemed completely invalid and its PDU header, was not used to derive a
-% sequence_number for the response PDU.
-%
-% <p>On current implementation, encoding/decoding this value is implicitly 
-% done by unpacking/packing functions, thus this field must not be included in
-% the PDU definitions.  Never used.</p>
-% %@end
+%% sequence_number
 %%
+%% %@doc Allows a response PDU to be correlated with a request PDU.  The allowed
+%% sequence_number range is from 16#00000001 to 16#7FFFFFFFFF.  16#00000000 is
+%% recomended for use when issuing a generic_nack where the original PDU was
+%% deemed completely invalid and its PDU header, was not used to derive a
+%% sequence_number for the response PDU.
+%%
+%% <p>On current implementation, encoding/decoding this value is implicitly 
+%% done by unpacking/packing functions, thus this field must not be included in
+%% the PDU definitions.  Never used.</p>
+%%%@end
 % -define(SEQUENCE_NUMBER_DATATYPE, ?INTEGER(4)).
 % -define(SEQUENCE_NUMBER_DOMAIN, ?RANGE_INTEGER(4, 16#00000000, 16#7FFFFFFFFF)).
 % -define(SEQUENCE_NUMBER_RESERVED, ?EMPTY).
 
-%%%
-% service_type
-%%
+%% service_type
 -define(SERVICE_TYPE_DATATYPE, ?VAR_C_OCTET_STRING(6)).
 -define(SERVICE_TYPE_DOMAIN,   ?VAR_C_OCTET_STRING(6)).
 -define(SERVICE_TYPE_RESERVED, ?EMPTY).
@@ -1045,26 +954,22 @@
 -define(SERVICE_TYPE_CBS,  "CBS").   % Cell Broadcast Service
 -define(SERVICE_TYPE_GUTS, "GUTS").  % Generic UDP Transport Service
 
-%%%
-% short_message
-%%
+%% short_message
 -define(SHORT_MESSAGE_DATATYPE, ?LIST(?INTEGER(1))).
 -define(SHORT_MESSAGE_DOMAIN,   ?LIST(?INTEGER(1))).
 -define(SHORT_MESSAGE_RESERVED, ?EMPTY).
 
-%%%
-% sm_default_msg_id
-%%
+
+%% sm_default_msg_id
 -define(SM_DEFAULT_MSG_ID_DATATYPE, ?INTEGER(1)).
 -define(SM_DEFAULT_MSG_ID_DOMAIN,   ?INTEGER(1)).
 -define(SM_DEFAULT_MSG_ID_RESERVED, ?EMPTY).
 
-%%%
-% sm_length
-%
-% %@doc This field is implicitly encoded within short_message.
-% %@end
+%% sm_length
 %%
+%% %@doc This field is implicitly encoded within short_message.
+%% %@end
+
 -define(SM_LENGTH_DATATYPE, ?INTEGER(1)).
 -define(SM_LENGTH_DOMAIN,   ?INTEGER(1)).
 -define(SM_LENGTH_RESERVED, ?EMPTY).
@@ -1072,14 +977,12 @@
 % sm_length Values
 -define(SM_LENGTH_NO_DATA, ?NULL_INTEGER).
 
-%%%
-% source_addr
-%
-% %@doc Specifies the address of the SME which originated this message.
-%
-% %@see addr definition above
-% %@end
+%% source_addr
 %%
+%% %@doc Specifies the address of the SME which originated this message.
+%%
+%% %@see addr definition above
+%% %@end
 -define(SOURCE_ADDR_21_DATATYPE, ?ADDR_21_DATATYPE).
 -define(SOURCE_ADDR_21_DOMAIN,   ?ADDR_21_DOMAIN).
 -define(SOURCE_ADDR_21_RESERVED, ?ADDR_21_RESERVED).
@@ -1088,17 +991,14 @@
 -define(SOURCE_ADDR_65_DOMAIN,   ?ADDR_65_DOMAIN).
 -define(SOURCE_ADDR_65_RESERVED, ?ADDR_65_RESERVED).
 
-%%%
-% system_id
-%
-% %@doc Identifies an ESME or a MC at bind time.
-% %@end
+%% system_id
 %%
+%% %@doc Identifies an ESME or a MC at bind time.
+%% %@end
 -define(SYSTEM_ID_DATATYPE, ?VAR_C_OCTET_STRING(16)).
 -define(SYSTEM_ID_DOMAIN,   ?VAR_C_OCTET_STRING(16)).
 -define(SYSTEM_ID_RESERVED, ?EMPTY).
 
-%%%
 % system_type
 %
 % %@doc Used to categorize the type of ESME that is binding to the MC.
@@ -1106,7 +1006,6 @@
 % <p>Some MCs may not require this parameter, in this case a NULL can be
 % used.</p>
 % %@end
-%%
 -define(SYSTEM_TYPE_DATATYPE, ?VAR_C_OCTET_STRING(13)).
 -define(SYSTEM_TYPE_DOMAIN,   ?VAR_C_OCTET_STRING(13)).
 -define(SYSTEM_TYPE_RESERVED, ?EMPTY).
@@ -1116,29 +1015,25 @@
 -define(SYSTEM_TYPE_VMS,     "VMS").  % Voice Mail System
 -define(SYSTEM_TYPE_OTA,     "OTA").  % Over-The-Air Activation System
 
-%%%
-% error_code
-%
-% %@doc The range of values returned depends on the underlying 
-% telecommunications network.
-% %@end
+%% error_code
 %%
+%% %@doc The range of values returned depends on the underlying 
+%% telecommunications network.
+%% %@end
 -define(ERROR_CODE_DATATYPE, ?INTEGER(1)).
 -define(ERROR_CODE_DOMAIN,   ?INTEGER(1)).
 
-%%%
-% unsuccess_sme
-%
-% %@doc This field is a composite field containing an SME address and an error
-% code.  Additionally this field can be encoded multiple times.
-%
-% %@see unsuccess_sme record definition below
-% %@see ton definition above
-% %@see npi definition above
-% %@see addr_21 definition above
-% %@see smpp_error definition above
-% %@end
+%% unsuccess_sme
 %%
+%% %@doc This field is a composite field containing an SME address and an error
+%% code.  Additionally this field can be encoded multiple times.
+%%
+%% %@see unsuccess_sme record definition below
+%% %@see ton definition above
+%% %@see npi definition above
+%% %@see addr_21 definition above
+%% %@see smpp_error definition above
+%% %@end
 -define(UNSUCCESS_SME_ITEM_DATATYPE,
         ?COMPOSITE(unsuccess_sme,
                    {?TON_DATATYPE,
@@ -1157,23 +1052,19 @@
 
 
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% PDU TLV Base Syntax Definitions
-%
-% %@see section 4.8 on [SMPP 5.0]
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% PDU TLV Base Syntax Definitions
 %%%
-% additional_status_info_text
-%
-% %@doc Free format text. 
-% %@end
+%%%%@see section 4.8 on [SMPP 5.0]
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% additional_status_info_text
 %%
+%% %@doc Free format text. 
+%% %@end
 -define(ADDITIONAL_STATUS_INFO_TEXT_DATATYPE, ?VAR_C_OCTET_STRING(256)).
 -define(ADDITIONAL_STATUS_INFO_TEXT_DOMAIN,   ?VAR_C_OCTET_STRING(256)).
 -define(ADDITIONAL_STATUS_INFO_TEXT_RESERVED, ?EMPTY).
 
-%%%
-% alert_on_message_delivery
-%%
+%% alert_on_message_delivery
 -define(ALERT_ON_MESSAGE_DELIVERY_DATATYPE, ?INTEGER(1)).
 -define(ALERT_ON_MESSAGE_DELIVERY_DOMAIN,   ?BOUND_INTEGER(1, 3)).
 -define(ALERT_ON_MESSAGE_DELIVERY_RESERVED, ?RANGE_INTEGER(1, 4, 255)).
@@ -1184,22 +1075,18 @@
 -define(ALERT_ON_MESSAGE_DELIVERY_MEDIUM,  2).  % Use medium-priority alert
 -define(ALERT_ON_MESSAGE_DELIVERY_HIGH,    3).  % Use high-priority alert
 
-%%%
-% billing_identification
-%
-% %@doc The first octet represents the Billing Format tag and indicates the 
-% format of the billing information in the remaining octets. 
-% %@end
+%% billing_identification
 %%
+%% %@doc The first octet represents the Billing Format tag and indicates the 
+%% format of the billing information in the remaining octets. 
+%% %@end
 -define(BILLING_IDENTIFICATION_DATATYPE, ?VAR_OCTET_STRING(1024)).
 -define(BILLING_IDENTIFICATION_DOMAIN,   ?VAR_OCTET_STRING(1024)).
 -define(BILLING_IDENTIFICATION_RESERVED, ?EMPTY).
 
-%%%
-% broadcast_area_identifier, failed_broadcast_area_identifier
-%
-% %@see broadcast_area definition above.
+%% broadcast_area_identifier, failed_broadcast_area_identifier
 %%
+%% %@see broadcast_area definition above.
 -define(BROADCAST_AREA_IDENTIFIER_DATATYPE,        ?BROADCAST_AREA_DATATYPE).
 -define(BROADCAST_AREA_IDENTIFIER_DOMAIN,          ?BROADCAST_AREA_DOMAIN).
 -define(BROADCAST_AREA_IDENTIFIER_RESERVED,        ?BROADCAST_AREA_RESERVED).
@@ -1208,17 +1095,15 @@
 -define(FAILED_BROADCAST_AREA_IDENTIFIER_DOMAIN,   ?BROADCAST_AREA_DOMAIN).
 -define(FAILED_BROADCAST_AREA_IDENTIFIER_RESERVED, ?BROADCAST_AREA_RESERVED).
 
-%%%
-% broadcast_area_success
-%
-% %@doc 
-%
-% <ul>
-%   <li>0-100 = allowed range.</li>
-%   <li>255 = Information not available</li>
-% </ul>
-% %@end
+%% broadcast_area_success
 %%
+%% %@doc 
+%%
+%% <ul>
+%%   <li>0-100 = allowed range.</li>
+%%   <li>255 = Information not available</li>
+%% </ul>
+%% %@end
 -define(BROADCAST_AREA_SUCCESS_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_AREA_SUCCESS_DOMAIN, 
         ?UNION([?BOUND_INTEGER(1, 100), ?CONSTANT(255)])).
@@ -1227,19 +1112,15 @@
 % broadcast_area_success Values
 -define(BROADCAST_AREA_SUCCESS_INFORMATION_NOT_AVAILABLE, 255).
 
-%%%
-% broadcast_content_type_info
-%
-% %@doc The value is a free format Octet String
-% %@end
+%% broadcast_content_type_info
 %%
+%% %@doc The value is a free format Octet String
+%% %@end
 -define(BROADCAST_CONTENT_TYPE_INFO_DATATYPE, ?VAR_OCTET_STRING(255)).
 -define(BROADCAST_CONTENT_TYPE_INFO_DOMAIN,   ?VAR_OCTET_STRING(255)).
 -define(BROADCAST_CONTENT_TYPE_INFO_RESERVED, ?EMPTY).
 
-%%%
-% broadcast_channel_indicator
-%%
+%% broadcast_channel_indicator
 -define(BROADCAST_CHANNEL_INDICATOR_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_CHANNEL_INDICATOR_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(BROADCAST_CHANNEL_INDICATOR_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -1248,15 +1129,13 @@
 -define(BROADCAST_CHANNEL_INDICATOR_BASIC,    0). % Basic Channel (Default)
 -define(BROADCAST_CHANNEL_INDICATOR_EXTENDED, 1). % Extended Channel
 
-%%%
-% broadcast_content_type
-%
-% %@doc A broadcast_content_type value should be defined using the 
-% broadcast_content_type record.
-%
-% %@see broadcast_content_type record definition below.
-% %@end
+%% broadcast_content_type
 %%
+%% %@doc A broadcast_content_type value should be defined using the 
+%% broadcast_content_type record.
+%%
+%% %@see broadcast_content_type record definition below.
+%% %@end
 -define(BROADCAST_CONTENT_TYPE_NETWORK_TYPE_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_CONTENT_TYPE_NETWORK_TYPE_DOMAIN,   ?BOUND_INTEGER(1, 3)).
 -define(BROADCAST_CONTENT_TYPE_NETWORK_TYPE_RESERVED, ?RANGE_INTEGER(1,4,255)).
@@ -1343,32 +1222,26 @@
 -define(BROADCAST_CONTENT_TYPE_SERVICE_LOCAL_TIME_ZONE,              16#0085).
 -define(BROADCAST_CONTENT_TYPE_SERVICE_MULTI_CATEGORY_SERVICES,      16#0100).
 
-%%%
-% broadcast_end_time
-%
-% %@doc It must be specified in absolute time format "YYMMDDhhmmsstnnp"
-% %@end
+%% broadcast_end_time
 %%
+%% %@doc It must be specified in absolute time format "YYMMDDhhmmsstnnp"
+%% %@end
 -define(BROADCAST_END_TIME_DATATYPE, ?FIXED_C_OCTET_STRING(17)).
 -define(BROADCAST_END_TIME_DOMAIN,   ?ATIME_C_OCTET_STRING).
 -define(BROADCAST_END_TIME_RESERVED, ?EMPTY).
 
-%%%
-% broadcast_error_status
-% 
-% %@doc The value is one of the SMPP Error Code Values as defined for
-% error_status_code
-%
-% %@see error_status_code definition above
-% %@end
+%% broadcast_error_status
+%% 
+%% %@doc The value is one of the SMPP Error Code Values as defined for
+%% error_status_code
 %%
+%% %@see error_status_code definition above
+%% %@end
 -define(BROADCAST_ERROR_STATUS_DATATYPE, ?ERROR_STATUS_CODE_DATATYPE).
 -define(BROADCAST_ERROR_STATUS_DOMAIN,   ?ERROR_STATUS_CODE_DOMAIN).
 -define(BROADCAST_ERROR_STATUS_RESERVED, ?ERROR_STATUS_CODE_RESERVED).
 
-%%%
-% broadcast_frequency_interval
-%%
+%% broadcast_frequency_interval
 -define(BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_DOMAIN, 
         ?UNION([?CONSTANT(16#00), ?RANGE_INTEGER(1, 16#08, 16#0E)])).
@@ -1403,9 +1276,7 @@
 -define(BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_MONTHS,  16#0D).
 -define(BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_YEARS,   16#0E).
 
-%%%
-% broadcast_message_class
-%%
+%% broadcast_message_class
 -define(BROADCAST_MESSAGE_CLASS_DATATYPE, ?INTEGER(1)).
 -define(BROADCAST_MESSAGE_CLASS_DOMAIN,   ?BOUND_INTEGER(1, 16#03)).
 -define(BROADCAST_MESSAGE_CLASS_RESERVED, ?RANGE_INTEGER(1, 16#04, 16#FF)).
@@ -1416,26 +1287,24 @@
 -define(BROADCAST_MESSAGE_CLASS_CLASS_2,  16#02).% Class 2 (User Defined)
 -define(BROADCAST_MESSAGE_CLASS_CLASS_3,  16#03).% Class 3 (Terminal Equipment)
 
-%%%
-% broadcast_rep_num
-%
-% %@doc The value 0 has the following significance:
-%
-% <ul>
-%   <li>If no validity_period has been specified for a broadcast, then the
-%     broadcasts should be repeated indefinitely.
-%   </li>
-%   <li>If a validity_period and a broadcast_frequency_interval have been
-%     specified, then 0 in this field indicates that the broadcast_rep_num is
-%     implicit according to the settings of these parameters.
-%   </li>
-% </ul>
-%
-% <p>Where a broadcast priority (i.e. priority_flag setting) of 1 (Immediate
-% Broadcast) has been requested, then the broadcast_rep_num parameter should
-% not be supplied and be ignored if supplied.</p>
-% %@end
+%% broadcast_rep_num
 %%
+%% %@doc The value 0 has the following significance:
+%%
+%% <ul>
+%%   <li>If no validity_period has been specified for a broadcast, then the
+%%     broadcasts should be repeated indefinitely.
+%%   </li>
+%%   <li>If a validity_period and a broadcast_frequency_interval have been
+%%     specified, then 0 in this field indicates that the broadcast_rep_num is
+%%     implicit according to the settings of these parameters.
+%%   </li>
+%% </ul>
+%%
+%% <p>Where a broadcast priority (i.e. priority_flag setting) of 1 (Immediate
+%% Broadcast) has been requested, then the broadcast_rep_num parameter should
+%% not be supplied and be ignored if supplied.</p>
+%% %@end
 -define(BROADCAST_REP_NUM_DATATYPE, ?INTEGER(2)).
 -define(BROADCAST_REP_NUM_DOMAIN,   ?INTEGER(2)).
 -define(BROADCAST_REP_NUM_RESERVED, ?EMPTY).
@@ -1443,26 +1312,22 @@
 % broadcast_rep_num Values
 -define(BROADCAST_REP_NUM_DEFAULT, 1).  % Implementation specific
 
-%%%
-% broadcast_service_group
-%
-% %@doc The value is a free format Octet String.
-% %@end
+%% broadcast_service_group
 %%
+%% %@doc The value is a free format Octet String.
+%% %@end
 -define(BROADCAST_SERVICE_GROUP_DATATYPE, ?VAR_OCTET_STRING(255)).
 -define(BROADCAST_SERVICE_GROUP_DOMAIN,   ?VAR_OCTET_STRING(255)).
 -define(BROADCAST_SERVICE_GROUP_RESERVED, ?EMPTY).
 
-%%%
-% callback_num
-%
-% %@doc A callback_num value should be defined using the callback_num record.
-%
-% %@see ton definition above
-% %@see npi definition above
-% %@see callback_num record definition below
-% %@end
+%% callback_num
 %%
+%% %@doc A callback_num value should be defined using the callback_num record.
+%%
+%% %@see ton definition above
+%% %@see npi definition above
+%% %@see callback_num record definition below
+%% %@end
 -define(CALLBACK_NUM_DIGIT_MODE_INDICATOR_DATATYPE, ?INTEGER(1)).
 -define(CALLBACK_NUM_DIGIT_MODE_INDICATOR_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 
@@ -1487,16 +1352,14 @@
 -define(CALLBACK_NUM_DIGIT_MODE_INDICATOR_TBCD,  0).
 -define(CALLBACK_NUM_DIGIT_MODE_INDICATOR_ASCII, 1).
 
-%%%
-% callback_num_atag
-%
-% %@doc A callback_num_atag value should be defined using the callback_num 
-% record.
-%
-% %@see callback_num_atag record definition below
-% %@see encoding_scheme definition above
-% %@end
+%% callback_num_atag
 %%
+%% %@doc A callback_num_atag value should be defined using the callback_num 
+%% record.
+%%
+%% %@see callback_num_atag record definition below
+%% %@see encoding_scheme definition above
+%% %@end
 -define(CALLBACK_NUM_ATAG_DISPLAY_CHARACTERS_DATATYPE, ?VAR_OCTET_STRING(64)).
 -define(CALLBACK_NUM_ATAG_DISPLAY_CHARACTERS_DOMAIN,   ?VAR_OCTET_STRING(64)).
 
@@ -1510,9 +1373,7 @@
                      ?CALLBACK_NUM_ATAG_DISPLAY_CHARACTERS_DOMAIN})). 
 -define(CALLBACK_NUM_ATAG_RESERVED, ?EMPTY).
 
-%%%
-% callback_num_pres_ind
-%%
+%% callback_num_pres_ind
 -define(CALLBACK_NUM_PRES_IND_DATATYPE, ?INTEGER(1)).
 -define(CALLBACK_NUM_PRES_IND_DOMAIN,   
         ?RANGE_INTEGER(1, 2#00000000, 2#00001011)).
@@ -1533,9 +1394,7 @@
 -define(CALLBACK_NUM_PRES_IND_NOT_AVAILABLE_FAILED,       2#00001010).
 -define(CALLBACK_NUM_PRES_IND_NOT_AVAILABLE_NETWORK,      2#00001011).
 
-%%%
-% congestion_state
-%%
+%% congestion_state
 -define(CONGESTION_STATE_DATATYPE, ?INTEGER(1)).
 -define(CONGESTION_STATE_DOMAIN,   ?BOUND_INTEGER(1, 99)).
 -define(CONGESTION_STATE_RESERVED, ?RANGE_INTEGER(1, 100, 255)).
@@ -1548,9 +1407,7 @@
 -define(CONGESTION_STATE_OPTIMUM_LOAD,       85).  % 80-89
 -define(CONGESTION_STATE_NEARING_CONGESTION, 95).  % 90-99
 
-%%%
-% delivery_failure_reason
-%%
+%% delivery_failure_reason
 -define(DELIVERY_FAILURE_REASON_DATATYPE, ?INTEGER(1)).
 -define(DELIVERY_FAILURE_REASON_DOMAIN,   ?BOUND_INTEGER(1, 3)).
 -define(DELIVERY_FAILURE_REASON_RESERVED, ?RANGE_INTEGER(1, 4, 255)).
@@ -1563,35 +1420,29 @@
 -define(DELIVERY_FAILURE_REASON_PERMANENT_ERROR, 2).  % Permanent network error
 -define(DELIVERY_FAILURE_REASON_TEMPORARY_ERROR, 3).  % Temporary network error
 
-%%%
-% dest_addr_np_country
-%
-% %@doc A list with all countries and global destinations with a country codes
-% can be found on e164.hrl
-%
-% %@see e164.hrl
-% %@end
+%% dest_addr_np_country
 %%
+%% %@doc A list with all countries and global destinations with a country codes
+%% can be found on e164.hrl
+%%
+%% %@see e164.hrl
+%% %@end
 -define(DEST_ADDR_NP_COUNTRY_DATATYPE, ?INTEGER(5)).
 -define(DEST_ADDR_NP_COUNTRY_DOMAIN,   ?INTEGER(5)).
 -define(DEST_ADDR_NP_COUNTRY_RESERVED, ?EMPTY).
 
 % dest_addr_np_country Values
 
-%%%
-% dest_addr_np_information
-%
-% %@TODO Review the domain declaration for this parameter.
+%% dest_addr_np_information
 %%
+%% %@TODO Review the domain declaration for this parameter.
 -define(DEST_ADDR_NP_INFORMATION_DATATYPE, ?FIXED_OCTET_STRING(10)).
 -define(DEST_ADDR_NP_INFORMATION_DOMAIN,   ?FIXED_OCTET_STRING(10)).
 -define(DEST_ADDR_NP_INFORMATION_RESERVED, ?EMPTY).
 
-%%%
-% dest_addr_np_resolution
-%
-% %@TODO Confirm that there are no reserved values.
+%% dest_addr_np_resolution
 %%
+%% %@TODO Confirm that there are no reserved values.
 -define(DEST_ADDR_NP_RESOLUTION_DATATYPE, ?INTEGER(1)).
 -define(DEST_ADDR_NP_RESOLUTION_DOMAIN,   ?BOUND_INTEGER(1, 2)).
 -define(DEST_ADDR_NP_RESOLUTION_RESERVED, ?EMPTY).
@@ -1601,85 +1452,67 @@
 -define(DEST_ADDR_NP_RESOLUTION_NUMBER_NOT_PORTED,  1). % Query performed
 -define(DEST_ADDR_NP_RESOLUTION_NUMBER_PORTED,      2). % Query performed
 
-%%%
-% dest_addr_subunit
-%
-% %@see addr_subunit definition above
+%% dest_addr_subunit
 %%
+%% %@see addr_subunit definition above
 -define(DEST_ADDR_SUBUNIT_DATATYPE, ?ADDR_SUBUNIT_DATATYPE).
 -define(DEST_ADDR_SUBUNIT_DOMAIN,   ?ADDR_SUBUNIT_DOMAIN).
 -define(DEST_ADDR_SUBUNIT_RESERVED, ?ADDR_SUBUNIT_RESERVED).
 
-%%%
-% dest_bearer_type
-%
-% %@see bearer_type definition above
+%% dest_bearer_type
 %%
+%% %@see bearer_type definition above
 -define(DEST_BEARER_TYPE_DATATYPE, ?BEARER_TYPE_DATATYPE).
 -define(DEST_BEARER_TYPE_DOMAIN,   ?BEARER_TYPE_DOMAIN).
 -define(DEST_BEARER_TYPE_RESERVED, ?BEARER_TYPE_RESERVED).
 
-%%%
-% dest_network_id
-%
-% %@doc When this TLV is specified, it must be accompanied with a dest_node_id
-% TLV.
-%
-% %@see network_id definition above
-% %@end
+%% dest_network_id
 %%
+%% %@doc When this TLV is specified, it must be accompanied with a dest_node_id
+%% TLV.
+%%
+%% %@see network_id definition above
+%% %@end
 -define(DEST_NETWORK_ID_DATATYPE, ?NETWORK_ID_DATATYPE).
 -define(DEST_NETWORK_ID_DOMAIN,   ?NETWORK_ID_DOMAIN).
 -define(DEST_NETWORK_ID_RESERVED, ?NETWORK_ID_RESERVED).
 
-%%%
-% dest_network_type
-%
-% %@see network_type definition above
+%% dest_network_type
 %%
+%% %@see network_type definition above
 -define(DEST_NETWORK_TYPE_DATATYPE, ?NETWORK_TYPE_DATATYPE).
 -define(DEST_NETWORK_TYPE_DOMAIN,   ?NETWORK_TYPE_DOMAIN).
 -define(DEST_NETWORK_TYPE_RESERVED, ?NETWORK_TYPE_RESERVED).
 
-%%%
-% dest_node_id
-%
-% %@see node_id definition above
+%% dest_node_id
 %%
+%% %@see node_id definition above
 -define(DEST_NODE_ID_DATATYPE, ?NODE_ID_DATATYPE).
 -define(DEST_NODE_ID_DOMAIN,   ?NODE_ID_DOMAIN).
 -define(DEST_NODE_ID_RESERVED, ?NODE_ID_RESERVED).
 
-%%%
-% dest_subaddress
-%
-% %@see subaddress definition above
+%% dest_subaddress
 %%
+%% %@see subaddress definition above
 -define(DEST_SUBADDRESS_DATATYPE, ?SUBADDRESS_DATATYPE).
 -define(DEST_SUBADDRESS_DOMAIN,   ?SUBADDRESS_DOMAIN).
 -define(DEST_SUBADDRESS_RESERVED, ?SUBADDRESS_RESERVED).
 
-%%%
-% dest_telematics_id
-%
-% %@see telematics_id definition above
+%% dest_telematics_id
 %%
+%% %@see telematics_id definition above
 -define(DEST_TELEMATICS_ID_DATATYPE, ?TELEMATICS_ID_DATATYPE).
 -define(DEST_TELEMATICS_ID_DOMAIN,   ?TELEMATICS_ID_DOMAIN).
 -define(DEST_TELEMATICS_ID_RESERVED, ?TELEMATICS_ID_RESERVED).
 
-%%%
-% dest_port
-%
-% %@see port definition above
+%% dest_port
 %%
+%% %@see port definition above
 -define(DEST_PORT_DATATYPE, ?PORT_DATATYPE).
 -define(DEST_PORT_DOMAIN,   ?PORT_DOMAIN).
 -define(DEST_PORT_RESERVED, ?PORT_RESERVED).
 
-%%%
-% display_time
-%%
+%% display_time
 -define(DISPLAY_TIME_DATATYPE, ?INTEGER(1)).
 -define(DISPLAY_TIME_DOMAIN,   ?BOUND_INTEGER(1, 2)).
 -define(DISPLAY_TIME_RESERVED, ?RANGE_INTEGER(1, 3, 255)).
@@ -1689,9 +1522,7 @@
 -define(DISPLAY_TIME_DEFAULT,   1).  % Default
 -define(DISPLAY_TIME_INVOKE,    3).
 
-%%%
-% dpf_result
-%%
+%% dpf_result
 -define(DPF_RESULT_DATATYPE, ?INTEGER(1)).
 -define(DPF_RESULT_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(DPF_RESULT_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -1700,9 +1531,7 @@
 -define(DPF_RESULT_NOT_SET, 0).  % DPF not set
 -define(DPF_RESULT_SET,     1).  % DPF set
 
-%%%
-% its_reply_type
-%%
+%% its_reply_type
 -define(ITS_REPLY_TYPE_DATATYPE, ?INTEGER(1)).
 -define(ITS_REPLY_TYPE_DOMAIN,   ?BOUND_INTEGER(1, 8)).
 -define(ITS_REPLY_TYPE_RESERVED, ?RANGE_INTEGER(1, 9, 255)).
@@ -1718,13 +1547,11 @@
 -define(ITS_REPLY_TYPE_TIME,           7).
 -define(ITS_REPLY_TYPE_CONTINUE,       8).
 
-%%%
-% its_session_info
-%
-% %@doc A its_session_info value should be defined using the its_session_info
-% record.
-% %@end
+%% its_session_info
 %%
+%% %@doc A its_session_info value should be defined using the its_session_info
+%% record.
+%% %@end
 -define(ITS_SESSION_INFO_SESSION_NUMBER_DATATYPE, ?INTEGER(1)).
 -define(ITS_SESSION_INFO_SESSION_NUMBER_DOMAIN,   ?INTEGER(1)).
 
@@ -1741,9 +1568,7 @@
                     ?ITS_SESSION_INFO_SEQUENCE_NUMBER_DOMAIN})).
 -define(ITS_SESSION_INFO_RESERVED, ?EMPTY).
 
-%%%
-% language_indicator
-%%
+%% language_indicator
 -define(LANGUAGE_INDICATOR_DATATYPE, ?INTEGER(1)).
 -define(LANGUAGE_INDICATOR_DOMAIN,   ?INTEGER(1)).
 -define(LANGUAGE_INDICATOR_RESERVED, ?EMPTY).
@@ -1756,28 +1581,22 @@
 -define(LANGUAGE_INDICATOR_GERMAN,      4).
 -define(LANGUAGE_INDICATOR_PORTUGUESE,  5).
 
-%%%
-% message_payload
-%
-% %@doc The maximun size is MC and network implementation specific.
-% %@end
+%% message_payload
 %%
+%% %@doc The maximun size is MC and network implementation specific.
+%% %@end
 -define(MESSAGE_PAYLOAD_DATATYPE, ?VAR_OCTET_STRING(65536)).
 -define(MESSAGE_PAYLOAD_DOMAIN,   ?VAR_OCTET_STRING(65536)).
 -define(MESSAGE_PAYLOAD_RESERVED, ?EMPTY).
 
-%%%
-% message_state_tlv
-%
-% %@see message_state definition above
+%% message_state_tlv
 %%
+%% %@see message_state definition above
 -define(MESSAGE_STATE_TLV_DATATYPE, ?MESSAGE_STATE_DATATYPE).
 -define(MESSAGE_STATE_TLV_DOMAIN,   ?MESSAGE_STATE_DOMAIN).
 -define(MESSAGE_STATE_TLV_RESERVED, ?MESSAGE_STATE_RESERVED).
 
-%%%
-% more_messages_to_send
-%%
+%% more_messages_to_send
 -define(MORE_MESSAGES_TO_SEND_DATATYPE, ?INTEGER(1)).
 -define(MORE_MESSAGES_TO_SEND_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(MORE_MESSAGES_TO_SEND_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -1786,9 +1605,7 @@
 -define(MORE_MESSAGES_TO_SEND_NO,  0).  % No more messages to follow
 -define(MORE_MESSAGES_TO_SEND_YES, 1).  % More messages to follow (default)
 
-%%%
-% ms_availability_status
-%%
+%% ms_availability_status
 -define(MS_AVAILABILITY_STATUS_DATATYPE, ?INTEGER(1)).
 -define(MS_AVAILABILITY_STATUS_DOMAIN,   ?BOUND_INTEGER(1, 2)).
 -define(MS_AVAILABILITY_STATUS_RESERVED, ?RANGE_INTEGER(1, 3, 255)).
@@ -1798,9 +1615,7 @@
 -define(MS_AVAILABILITY_STATUS_DENIED,      1).  % Suspended, no SMS capability
 -define(MS_AVAILABILITY_STATUS_UNAVAILABLE, 2).  % Unavailable
 
-%%%
-% ms_msg_wait_facilities
-%%
+%% ms_msg_wait_facilities
 -define(MS_MSG_WAIT_FACILITIES_DATATYPE, ?INTEGER(1)).
 -define(MS_MSG_WAIT_FACILITIES_DOMAIN,  
         ?UNION([?RANGE_INTEGER(1, 2#00000000, 2#00000011),
@@ -1817,15 +1632,13 @@
 -define(MS_MSG_WAIT_FACILITIES_ACTIVE_EMAIL,       2#10000010).
 -define(MS_MSG_WAIT_FACILITIES_ACTIVE_OTHER,       2#10000011).
 
-%%%
-% ms_validity
-%
-% %@doc A ms_validity value should be defined using the ms_validity_absolute or
-% ms_validity_relative record.
-%
-% %@see ms_validity_absolute and ms_validity_relative record definitions below
-% %@end
+%% ms_validity
 %%
+%% %@doc A ms_validity value should be defined using the ms_validity_absolute 
+%% or ms_validity_relative record.
+%%
+%% %@see ms_validity_absolute and ms_validity_relative record definitions below
+%% %@end
 -define(MS_VALIDITY_TIME_BEHAVIOUR_DATATYPE, ?INTEGER(1)).
 -define(MS_VALIDITY_ABSOLUTE_TIME_DOMAIN,    ?BOUND_INTEGER(1, 3)).
 -define(MS_VALIDITY_RELATIVE_TIME_DOMAIN,    ?CONSTANT(4)).
@@ -1893,15 +1706,13 @@
 -define(MS_VALIDITY_TIME_UNIT_MONTHS,  2#00000101).
 -define(MS_VALIDITY_TIME_UNIT_YEARS,   2#00000110).
 
-%%%
-% network_error_code 
-%
-% %@doc A network_error_code value should be defined using the 
-% network_error_code record.
-%
-% %@see network_error_code record definition below
-% %@end
+%% network_error_code 
 %%
+%% %@doc A network_error_code value should be defined using the 
+%% network_error_code record.
+%%
+%% %@see network_error_code record definition below
+%% %@end
 -define(NETWORK_ERROR_CODE_TYPE_DATATYPE, ?INTEGER(1)).
 -define(NETWORK_ERROR_CODE_TYPE_DOMAIN,   ?RANGE_INTEGER(1, 1, 8)).
 -define(NETWORK_ERROR_CODE_TYPE_RESERVED,   
@@ -1934,16 +1745,12 @@
 -define(NETWORK_ERROR_CODE_TYPE_SMPP_ERROR,                    7).
 -define(NETWORK_ERROR_CODE_TYPE_MESSAGE_CENTER_SPECIFIC,       8).
 
-%%%
-% number_of_messages
-%%
+%% number_of_messages
 -define(NUMBER_OF_MESSAGES_DATATYPE, ?INTEGER(1)).
 -define(NUMBER_OF_MESSAGES_DOMAIN,   ?BOUND_INTEGER(1, 99)).
 -define(NUMBER_OF_MESSAGES_RESERVED, ?RANGE_INTEGER(1, 100, 255)).
 
-%%%
-% payload_type
-%%
+%% payload_type
 -define(PAYLOAD_TYPE_DATATYPE, ?INTEGER(1)).
 -define(PAYLOAD_TYPE_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(PAYLOAD_TYPE_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -1953,9 +1760,7 @@
 -define(PAYLOAD_TYPE_WDP,     0).  % WAP
 -define(PAYLOAD_TYPE_WCMP,    1).  % Wireless Control Message Protocol.
 
-%%%
-% privacy_indicator
-%%
+%% privacy_indicator
 -define(PRIVACY_INDICATOR_DATATYPE, ?INTEGER(1)).
 -define(PRIVACY_INDICATOR_DOMAIN,   ?BOUND_INTEGER(1, 3)).
 -define(PRIVACY_INDICATOR_RESERVED, ?RANGE_INTEGER(1, 4, 255)).
@@ -1966,43 +1771,35 @@
 -define(PRIVACY_INDICATOR_CONFIDENTIAL,   2).  % Privacy Level 2
 -define(PRIVACY_INDICATOR_SECRET,         3).  % Privacy Level 3
 
-%%%
-% qos_time_to_live 
-%
-% %@doc If not present, the MC may apply a default value. 
-% %@end
+%% qos_time_to_live 
 %%
+%% %@doc If not present, the MC may apply a default value. 
+%% %@end
 -define(QOS_TIME_TO_LIVE_DATATYPE, ?INTEGER(4)).
 -define(QOS_TIME_TO_LIVE_DOMAIN,   ?INTEGER(4)).
 -define(QOS_TIME_TO_LIVE_RESERVED, ?EMPTY).
 
-%%%
-% receipted_message_id 
-%
-% %@see message_identifier definition above
+%% receipted_message_id 
 %%
+%% %@see message_identifier definition above
 -define(RECEIPTED_MESSAGE_ID_DATATYPE, ?MESSAGE_IDENTIFIER_DATATYPE).
 -define(RECEIPTED_MESSAGE_ID_DOMAIN,   ?MESSAGE_IDENTIFIER_DOMAIN).
 -define(RECEIPTED_MESSAGE_ID_RESERVED, ?MESSAGE_IDENTIFIER_RESERVED).
 
-%%%
-% sar_msg_ref_num
-%
-% %@doc Current implementation automatically fills this field with the lower 
-% order bytes of the sequence_number of the first segment.
-% %@end
+%% sar_msg_ref_num
 %%
+%% %@doc Current implementation automatically fills this field with the lower 
+%% order bytes of the sequence_number of the first segment.
+%% %@end
 -define(SAR_MSG_REF_NUM_DATATYPE, ?INTEGER(2)).
 -define(SAR_MSG_REF_NUM_DOMAIN,   ?INTEGER(2)).
 -define(SAR_MSG_REF_NUM_RESERVED, ?EMPTY).
 
-%%%
-% sar_segment_seqnum
-%
-% %@doc A Value in the range 1 to 255 indicating the sequence number of a
-% particular message within the concatenated short message.
-% %@end
+%% sar_segment_seqnum
 %%
+%% %@doc A Value in the range 1 to 255 indicating the sequence number of a
+%% particular message within the concatenated short message.
+%% %@end
 -define(SAR_SEGMENT_SEQNUM_DATATYPE, ?INTEGER(1)).
 -define(SAR_SEGMENT_SEQNUM_DOMAIN,   ?RANGE_INTEGER(1, 1, 255)).
 -define(SAR_SEGMENT_SEQNUM_RESERVED, ?EMPTY).
@@ -2010,13 +1807,11 @@
 % sar_segment_seqnum Values
 -define(SAR_SEGMENT_SEQNUM_FIRST, 1).
 
-%%%
-% sar_total_segments
-%
-% %@doc A Value in the range 1 to 255 indicating the total number of fragments
-% within the concatenated short message.
-% %@end
+%% sar_total_segments
 %%
+%% %@doc A Value in the range 1 to 255 indicating the total number of fragments
+%% within the concatenated short message.
+%% %@end
 -define(SAR_TOTAL_SEGMENTS_DATATYPE, ?INTEGER(1)).
 -define(SAR_TOTAL_SEGMENTS_DOMAIN,   ?RANGE_INTEGER(1, 1, 255)).
 -define(SAR_TOTAL_SEGMENTS_RESERVED, ?EMPTY).
@@ -2024,18 +1819,14 @@
 % sar_total_segments Values
 -define(SAR_TOTAL_SEGMENTS_SINGLE, 1).
 
-%%%
-% sc_interface_version
-%
-% %@see smpp_version definition above
+%% sc_interface_version
 %%
+%% %@see smpp_version definition above
 -define(SC_INTERFACE_VERSION_DATATYPE, ?SMPP_VERSION_DATATYPE).
 -define(SC_INTERFACE_VERSION_DOMAIN,   ?SMPP_VERSION_DOMAIN).
 -define(SC_INTERFACE_VERSION_RESERVED, ?SMPP_VERSION_RESERVED).
 
-%%%
-% set_dpf
-%%
+%% set_dpf
 -define(SET_DPF_DATATYPE, ?INTEGER(1)).
 -define(SET_DPF_DOMAIN,   ?BOUND_INTEGER(1, 1)).
 -define(SET_DPF_RESERVED, ?RANGE_INTEGER(1, 2, 255)).
@@ -2044,119 +1835,95 @@
 -define(SET_DPF_NOT_REQUESTED, 0). % DPF for delivery to MS not requested
 -define(SET_DPF_REQUESTED,     1). % Delivery Pending Flag requested (default)
 
-%%%
-% sms_signal
-%
-% %@TODO Review the domain and reserved values of this parameter.
+%% sms_signal
 %%
+%% %@TODO Review the domain and reserved values of this parameter.
 -define(SMS_SIGNAL_DATATYPE, ?INTEGER(2)).
 -define(SMS_SIGNAL_DOMAIN,   ?INTEGER(2)).
 -define(SMS_SIGNAL_RESERVED, ?EMPTY).
 
-%%%
-% source_addr_subunit
-%
-% %@see addr_subunit definition above
+%% source_addr_subunit
 %%
+%% %@see addr_subunit definition above
 -define(SOURCE_ADDR_SUBUNIT_DATATYPE, ?ADDR_SUBUNIT_DATATYPE).
 -define(SOURCE_ADDR_SUBUNIT_DOMAIN,   ?ADDR_SUBUNIT_DOMAIN).
 -define(SOURCE_ADDR_SUBUNIT_RESERVED, ?ADDR_SUBUNIT_RESERVED).
 
-%%%
-% source_bearer_type
-%
-% %@see bearer_type definition above
+%% source_bearer_type
 %%
+%% %@see bearer_type definition above
 -define(SOURCE_BEARER_TYPE_DATATYPE, ?BEARER_TYPE_DATATYPE).
 -define(SOURCE_BEARER_TYPE_DOMAIN,   ?BEARER_TYPE_DOMAIN).
 -define(SOURCE_BEARER_TYPE_RESERVED, ?BEARER_TYPE_RESERVED).
 
-%%%
-% source_network_id
-%
-% %@doc When this TLV is specified, it must be accompanied with a 
-% source_node_id TLV.
-%
-% %@see network_id definition above
-% %@end
+%% source_network_id
 %%
+%% %@doc When this TLV is specified, it must be accompanied with a 
+%% source_node_id TLV.
+%%
+%% %@see network_id definition above
+%% %@end
 -define(SOURCE_NETWORK_ID_DATATYPE, ?NETWORK_ID_DATATYPE).
 -define(SOURCE_NETWORK_ID_DOMAIN,   ?NETWORK_ID_DOMAIN).
 -define(SOURCE_NETWORK_ID_RESERVED, ?NETWORK_ID_RESERVED).
 
-%%%
-% source_network_type
-%
-% %@see network_type definition above
+%% source_network_type
 %%
+%% %@see network_type definition above
 -define(SOURCE_NETWORK_TYPE_DATATYPE, ?NETWORK_TYPE_DATATYPE).
 -define(SOURCE_NETWORK_TYPE_DOMAIN,   ?NETWORK_TYPE_DOMAIN).
 -define(SOURCE_NETWORK_TYPE_RESERVED, ?NETWORK_TYPE_RESERVED).
 
-%%%
-% source_node_id
-%
-% %@see node_id definition above
+%% source_node_id
 %%
+%% %@see node_id definition above
 -define(SOURCE_NODE_ID_DATATYPE, ?NODE_ID_DATATYPE).
 -define(SOURCE_NODE_ID_DOMAIN,   ?NODE_ID_DOMAIN).
 -define(SOURCE_NODE_ID_RESERVED, ?NODE_ID_RESERVED).
 
-%%%
-% source_port
-%
-% %@see port definition above
+%% source_port
 %%
+%% %@see port definition above
 -define(SOURCE_PORT_DATATYPE, ?PORT_DATATYPE).
 -define(SOURCE_PORT_DOMAIN,   ?PORT_DOMAIN).
 -define(SOURCE_PORT_RESERVED, ?PORT_RESERVED).
 
-%%%
-% source_subaddress
-%
-% %@see subaddress definition above
+%% source_subaddress
 %%
+%% %@see subaddress definition above
 -define(SOURCE_SUBADDRESS_DATATYPE, ?SUBADDRESS_DATATYPE).
 -define(SOURCE_SUBADDRESS_DOMAIN,   ?SUBADDRESS_DOMAIN).
 -define(SOURCE_SUBADDRESS_RESERVED, ?SUBADDRESS_RESERVED).
 
-%%%
-% source_telematics_id
-%
-% %@see telematics_id definition above
+%% source_telematics_id
 %%
+%% %@see telematics_id definition above
 -define(SOURCE_TELEMATICS_ID_DATATYPE, ?TELEMATICS_ID_DATATYPE).
 -define(SOURCE_TELEMATICS_ID_DOMAIN,   ?TELEMATICS_ID_DOMAIN).
 -define(SOURCE_TELEMATICS_ID_RESERVED, ?TELEMATICS_ID_RESERVED).
 
-%%%
-% user_message_reference 
-%
-% %@doc All values allowed.
+%% user_message_reference 
 %%
+%% %@doc All values allowed.
 -define(USER_MESSAGE_REFERENCE_DATATYPE, ?INTEGER(2)).
 -define(USER_MESSAGE_REFERENCE_DOMAIN,   ?INTEGER(2)).
 -define(USER_MESSAGE_REFERENCE_RESERVED, ?EMPTY).
 
-%%%
-% user_response_code 
-%
-% %@doc Application specific.  
-%
-% <ul>
-%   <li>0 to 255 (IS-96 CDMA)</li> 
-%   <li>0 to 15 (CMT-136 TDMA)</li>
-% </ul>
-% %@end
+%% user_response_code 
 %%
+%% %@doc Application specific.  
+%%
+%% <ul>
+%%   <li>0 to 255 (IS-96 CDMA)</li> 
+%%   <li>0 to 15 (CMT-136 TDMA)</li>
+%% </ul>
+%% %@end
 -define(USER_RESPONSE_CODE_DATATYPE,    ?INTEGER(1)).
 -define(USER_RESPONSE_CODE_CDMA_DOMAIN, ?INTEGER(1)).
 -define(USER_RESPONSE_CODE_TDMA_DOMAIN, ?BOUND_INTEGER(1, 15)).
 -define(USER_RESPONSE_CODE_RESERVED,    ?EMPTY).
 
-%%%
-% ussd_service_op
-%%
+%% ussd_service_op
 -define(USSD_SERVICE_OP_DATATYPE, ?INTEGER(1)).
 -define(USSD_SERVICE_OP_DOMAIN,   
         ?UNION([?RANGE_INTEGER(1,  0,   3),
@@ -2178,10 +1945,10 @@
 
 
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% Standard and TLV Composite Parameters Value Definitions
-%
-% %@see section 4.1 to 4.6 on [SMPP 5.0]
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% Standard and TLV Composite Parameters Value Definitions
+%%%
+%%% %@see section 4.1 to 4.6 on [SMPP 5.0]
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 -define(DEST_ADDRESS_SME_DEFAULT_VALUE, #dest_address_sme{}).
 -define(DEST_ADDRESS_SME_VALUE(DestFlag, DestAddrTon, DestAddrNpi, DestAddr), 
         #dest_address_sme{ 
@@ -2258,111 +2025,105 @@
         #network_error_code{type = Type, error = Error}).
 
 %%%-------------------------------------------------------------------
-% Records
-%%--------------------------------------------------------------------
+%%% Records
+%%%-------------------------------------------------------------------
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% PDU Composite Field Record Definitions
-%
-% %@see sections 4.1 to 4.6 on [SMPP 5.0]
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% PDU Composite Field Record Definitions
 %%%
-% %@spec {dest_address_sme, 
-%         DestFlag, 
-%         DestAddrTon, 
-%         DestAddrNpi,
-%         DestinationAddr}
-%    DestFlag        = int()
-%    DestAddrTon     = int()
-%    DestAddrNpi     = int()
-%    DestinationAddr = string()
-%
-% %@doc dest_address_sme composite record definition.
-%
-% <p>The macro ?DEST_ADDRESS_SME_DATATYPE defines the type specifier for this
-% field.</p>
-%
-% <dl>
-%   <dt>DestFlag: </dt><dd>Identifies the kind of address, 0x01 for SME 
-%     address.  Integer, 1 octets (default is ?DEST_FLAG_SME).
-%   </dd>
-%   <dt>DestAddrTon: </dt><dd>Indicates Type of Number for destination.  
-%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
-%   </dd>
-%   <dt>DestAddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
-%     Integer, 1 octet  (default is ?NPI_ISDN).
-%   </dd>
-%   <dt>DestinationAddr: </dt><dd>Destination address of this short message.
-%     For mobile terminated messages, this is the directory number of the
-%     recipient MS.  C-Octet String, Var. max 21 octets.
-%   </dd>
-% </dl>
-% %@end
+%%% %@see sections 4.1 to 4.6 on [SMPP 5.0]
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% %@spec {dest_address_sme, 
+%%         DestFlag, 
+%%         DestAddrTon, 
+%%         DestAddrNpi,
+%%         DestinationAddr}
+%%    DestFlag        = int()
+%%    DestAddrTon     = int()
+%%    DestAddrNpi     = int()
+%%    DestinationAddr = string()
 %%
+%% %@doc dest_address_sme composite record definition.
+%%
+%% <p>The macro ?DEST_ADDRESS_SME_DATATYPE defines the type specifier for this
+%% field.</p>
+%%
+%% <dl>
+%%   <dt>DestFlag: </dt><dd>Identifies the kind of address, 0x01 for SME 
+%%     address.  Integer, 1 octets (default is ?DEST_FLAG_SME).
+%%   </dd>
+%%   <dt>DestAddrTon: </dt><dd>Indicates Type of Number for destination.  
+%%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
+%%   </dd>
+%%   <dt>DestAddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
+%%     Integer, 1 octet  (default is ?NPI_ISDN).
+%%   </dd>
+%%   <dt>DestinationAddr: </dt><dd>Destination address of this short message.
+%%     For mobile terminated messages, this is the directory number of the
+%%     recipient MS.  C-Octet String, Var. max 21 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(dest_address_sme, 
         {dest_flag       = ?DEST_FLAG_SME,
          dest_addr_ton   = ?TON_INTERNATIONAL,
          dest_addr_npi   = ?NPI_ISDN,
          destination_addr}).
 
-%%%
-% %@spec {dest_address_dl, DestFlag, DlName}
-%    DestFlag  = int()
-%    DlName    = string()
-%
-% %@doc dest_address_dl composite record definition.
-%
-% <p>The macro ?DEST_ADDRESS_DL_DATATYPE defines the type specifier for this
-% field.</p>
-%
-% <dl>
-%   <dt>DestFlag: </dt><dd>Identifies the kind of address, 0x02 for 
-%     Distribution List.  Integer, 1 octets (default is ?DEST_FLAG_DL)).
-%   </dd>
-%   <dt>DlName: </dt><dd>Name of the Distribution List.  C-Octet String, 
-%     Var. max 21 octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {dest_address_dl, DestFlag, DlName}
+%%    DestFlag  = int()
+%%    DlName    = string()
 %%
+%% %@doc dest_address_dl composite record definition.
+%%
+%% <p>The macro ?DEST_ADDRESS_DL_DATATYPE defines the type specifier for this
+%% field.</p>
+%%
+%% <dl>
+%%   <dt>DestFlag: </dt><dd>Identifies the kind of address, 0x02 for 
+%%     Distribution List.  Integer, 1 octets (default is ?DEST_FLAG_DL)).
+%%   </dd>
+%%   <dt>DlName: </dt><dd>Name of the Distribution List.  C-Octet String, 
+%%     Var. max 21 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(dest_address_dl, 
         {dest_flag = ?DEST_FLAG_DL,
          dl_name}).
 
 
-%%%
-% %@spec {unsuccess_sme, 
-%         DestAddrTon, 
-%         DestAddrNpi, 
-%         DestinationAddr,
-%         ErrorStatusCode}
-%    DestAddrTon     = int()
-%    DestAddrNpi     = int()
-%    DestinationAddr = string()
-%    ErrorStatusCode = int()
-%
-% %@doc unsuccess_sme composite record definition.
-%
-% <p>The macro ?UNSUCCESS_SME_DATATYPE defines the type specifier for this 
-% field.</p>
-%
-% <dl>
-%   <dt>DestAddrTon: </dt><dd>Indicates Type of Number for destination.  
-%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
-%   </dd>
-%   <dt>DestAddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
-%     Integer, 1 octet  (default is ?NPI_ISDN).
-%   </dd>
-%   <dt>DestinationAddr: </dt><dd>Destination address of this short message.
-%     For mobile terminated messages, this is the directory number of the
-%     recipient MS.  C-Octet String, Var. max 21 octets.
-%   </dd>
-%   <dt>ErrorStatusCode: </dt><dd>Indicates the success or failure of the 
-%     submit_multi request to this SME address.  Check command_status 
-%     macros for a complete list of SMPP Error codes.  Integer, 4 octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {unsuccess_sme, 
+%%         DestAddrTon, 
+%%         DestAddrNpi, 
+%%         DestinationAddr,
+%%         ErrorStatusCode}
+%%    DestAddrTon     = int()
+%%    DestAddrNpi     = int()
+%%    DestinationAddr = string()
+%%    ErrorStatusCode = int()
 %%
+%% %@doc unsuccess_sme composite record definition.
+%%
+%% <p>The macro ?UNSUCCESS_SME_DATATYPE defines the type specifier for this 
+%% field.</p>
+%%
+%% <dl>
+%%   <dt>DestAddrTon: </dt><dd>Indicates Type of Number for destination.  
+%%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
+%%   </dd>
+%%   <dt>DestAddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
+%%     Integer, 1 octet  (default is ?NPI_ISDN).
+%%   </dd>
+%%   <dt>DestinationAddr: </dt><dd>Destination address of this short message.
+%%     For mobile terminated messages, this is the directory number of the
+%%     recipient MS.  C-Octet String, Var. max 21 octets.
+%%   </dd>
+%%   <dt>ErrorStatusCode: </dt><dd>Indicates the success or failure of the 
+%%     submit_multi request to this SME address.  Check command_status 
+%%     macros for a complete list of SMPP Error codes.  Integer, 4 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(unsuccess_sme, 
         {dest_addr_ton     = ?TON_INTERNATIONAL,
          dest_addr_npi     = ?NPI_ISDN,
@@ -2371,301 +2132,279 @@
 
 
 %%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% PDU TLV Record Definitions
-%
-% %@see section 4.8.4 on [SMPP 5.0]
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%%% PDU TLV Record Definitions
 %%%
-% %@spec {broadcast_area, Format, Details} 
-%    Format  = int()
-%    Details = string()
-%
-% %@doc broadcast_area TLV record definition.
-%
-% <p>The macro ?BROADCAST_AREA_DATATYPE defines the type specifier for this
-% TLV.</p>
-%
-% <dl>
-%   <dt>Format: </dt><dd>Used to specify the area format.  Integer, 1 octet
-%     (default is ?BROADCAST_AREA_FORMAT_ALIAS).
-%   </dd>
-%   <dt>Details: </dt><dd>Used to specify the broadcast area details.  Octet 
-%     String, Var. max 100 octets.
-%   </dd>
-% </dl>
-% %@end
+%%% %@see section 4.8.4 on [SMPP 5.0]
+%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%% %@spec {broadcast_area, Format, Details} 
+%%    Format  = int()
+%%    Details = string()
 %%
+%% %@doc broadcast_area TLV record definition.
+%%
+%% <p>The macro ?BROADCAST_AREA_DATATYPE defines the type specifier for this
+%% TLV.</p>
+%%
+%% <dl>
+%%   <dt>Format: </dt><dd>Used to specify the area format.  Integer, 1 octet
+%%     (default is ?BROADCAST_AREA_FORMAT_ALIAS).
+%%   </dd>
+%%   <dt>Details: </dt><dd>Used to specify the broadcast area details.  Octet 
+%%     String, Var. max 100 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(broadcast_area, 
         {format = ?BROADCAST_AREA_FORMAT_ALIAS,
          details}).
 
-%%%
-% %@spec {broadcast_content_type, NetworkType, Service} 
-%    NetworkType = int()
-%    Service     = int()
-%
-% %@doc broadcast_content_type TLV record definition.
-%
-% <p>The macro ?BROADCAST_CONTENT_TYPE_DATATYPE defines the type specifier for
-% this TLV.</p>
-%
-% <dl>
-%   <dt>NetworkType: </dt><dd>Tag indicating the network type.  Integer, 1 
-%     octet (default is ?BROADCAST_CONTENT_TYPE_NETWORK_TYPE_GSM).
-%   </dd>
-%   <dt>Service: </dt><dd>Broadcast service type.  Integer, 2 octets (default
-%     is ?BROADCAST_CONTENT_TYPE_SERVICE_MULTI_CATEGORY_SERVICES).
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {broadcast_content_type, NetworkType, Service} 
+%%    NetworkType = int()
+%%    Service     = int()
 %%
+%% %@doc broadcast_content_type TLV record definition.
+%%
+%% <p>The macro ?BROADCAST_CONTENT_TYPE_DATATYPE defines the type specifier for
+%% this TLV.</p>
+%%
+%% <dl>
+%%   <dt>NetworkType: </dt><dd>Tag indicating the network type.  Integer, 1 
+%%     octet (default is ?BROADCAST_CONTENT_TYPE_NETWORK_TYPE_GSM).
+%%   </dd>
+%%   <dt>Service: </dt><dd>Broadcast service type.  Integer, 2 octets (default
+%%     is ?BROADCAST_CONTENT_TYPE_SERVICE_MULTI_CATEGORY_SERVICES).
+%%   </dd>
+%% </dl>
+%% %@end
 -record(broadcast_content_type, 
         {network_type = ?BROADCAST_CONTENT_TYPE_NETWORK_TYPE_GSM,
          service = ?BROADCAST_CONTENT_TYPE_SERVICE_MULTI_CATEGORY_SERVICES}).
 
-%%%
-% %@spec {broadcast_frequency_interval, TimeUnit, Number} 
-%    TimeUnit = int()
-%    Number   = int()
-%
-% %@doc broadcast_frequency_interval TLV record definition.
-%
-% <p>The macro ?BROADCAST_FREQUENCY_INTERVALY_DATATYPE defines the type 
-% specifier for this TLV.</p>
-%
-% <dl>
-%   <dt>TimeUnit: </dt><dd>Specifies the Units of Time.  Integer, 1 
-%     octet (default is ?BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_MINUTES).
-%   </dd>
-%   <dt>Number: </dt><dd>Number of the specified time units.  Integer, 
-%     2 octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {broadcast_frequency_interval, TimeUnit, Number} 
+%%    TimeUnit = int()
+%%    Number   = int()
 %%
+%% %@doc broadcast_frequency_interval TLV record definition.
+%%
+%% <p>The macro ?BROADCAST_FREQUENCY_INTERVALY_DATATYPE defines the type 
+%% specifier for this TLV.</p>
+%%
+%% <dl>
+%%   <dt>TimeUnit: </dt><dd>Specifies the Units of Time.  Integer, 1 
+%%     octet (default is ?BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_MINUTES).
+%%   </dd>
+%%   <dt>Number: </dt><dd>Number of the specified time units.  Integer, 
+%%     2 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(broadcast_frequency_interval, 
         {time_unit = ?BROADCAST_FREQUENCY_INTERVAL_TIME_UNIT_MINUTES,
          number}).
 
-%%%
-% %@spec {subaddress, Tag, Data} 
-%    Tag  = int()
-%    Data = string()
-%
-% %@doc dest_subaddress and source_subaddress TLV record definition.
-%
-% <p>The macro ?SUBADDRESS_DATATYPE defines the type specifier for these 
-% TLVs.</p>
-%
-% <dl>
-%   <dt>Tag: </dt><dd>Indicates the type of sub-addressing information 
-%     included in Data, and implies the type and length of sub-addressing
-%     information which can accompany this tag value in the Data field.
-%     Integer, 1 octet (default is ?SUBADDRESS_TAG_USER).
-%   </dd>
-%   <dt>Data: </dt><dd>Contain the subaddress.  Octet String, Var. max 22 
-%     octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {subaddress, Tag, Data} 
+%%    Tag  = int()
+%%    Data = string()
 %%
+%% %@doc dest_subaddress and source_subaddress TLV record definition.
+%%
+%% <p>The macro ?SUBADDRESS_DATATYPE defines the type specifier for these 
+%% TLVs.</p>
+%%
+%% <dl>
+%%   <dt>Tag: </dt><dd>Indicates the type of sub-addressing information 
+%%     included in Data, and implies the type and length of sub-addressing
+%%     information which can accompany this tag value in the Data field.
+%%     Integer, 1 octet (default is ?SUBADDRESS_TAG_USER).
+%%   </dd>
+%%   <dt>Data: </dt><dd>Contain the subaddress.  Octet String, Var. max 22 
+%%     octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(subaddress, 
         {tag = ?SUBADDRESS_TAG_USER,
          data}).
 
-%%%
-% %@spec {callback_num, 
-%         DigitModeIndicator, 
-%         AddrTon, 
-%         AddrNpi,
-%         NumberDigits}
-%    DigitModeIndicator = int()
-%    AddrTon            = int()
-%    AddrNpi            = int()
-%    NumberDigits       = string()
-%
-% %@doc callback_num TLV record definition.
-%
-% <p>The macro ?CALLBACK_NUM_DATATYPE defines the type specifier for this 
-% TLV.</p>
-%
-% <dl>
-%   <dt>DigitModeIndicator: </dt><dd>Indicates that the Call Back Number is 
-%     sent to the mobile as DTMF digits encoded in TBCC (Value = 0) or as 
-%     ASCII digits (Value 1).  Integer, 1 octet (default is 
-%     ?CALLBACK_NUM_DIGIT_MODE_INDICATOR_ASCII).
-%   </dd>
-%   <dt>AddrTon: </dt><dd>Indicates Type of Number for destination.  
-%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
-%   </dd>
-%   <dt>AddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
-%     Integer, 1 octet  (default is ?NPI_ISDN).
-%   </dd>
-%   <dt>NumberDigits: </dt><dd>The Call Back Number Digits.  Octet String, 
-%     Var. max 16 octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {callback_num, 
+%%         DigitModeIndicator, 
+%%         AddrTon, 
+%%         AddrNpi,
+%%         NumberDigits}
+%%    DigitModeIndicator = int()
+%%    AddrTon            = int()
+%%    AddrNpi            = int()
+%%    NumberDigits       = string()
 %%
+%% %@doc callback_num TLV record definition.
+%%
+%% <p>The macro ?CALLBACK_NUM_DATATYPE defines the type specifier for this 
+%% TLV.</p>
+%%
+%% <dl>
+%%   <dt>DigitModeIndicator: </dt><dd>Indicates that the Call Back Number is 
+%%     sent to the mobile as DTMF digits encoded in TBCC (Value = 0) or as 
+%%     ASCII digits (Value 1).  Integer, 1 octet (default is 
+%%     ?CALLBACK_NUM_DIGIT_MODE_INDICATOR_ASCII).
+%%   </dd>
+%%   <dt>AddrTon: </dt><dd>Indicates Type of Number for destination.  
+%%     Integer, 1 octet (default is ?TON_INTERNATIONAL).
+%%   </dd>
+%%   <dt>AddrNpi: </dt><dd>Numbering Plan Indicator for destination.  
+%%     Integer, 1 octet  (default is ?NPI_ISDN).
+%%   </dd>
+%%   <dt>NumberDigits: </dt><dd>The Call Back Number Digits.  Octet String, 
+%%     Var. max 16 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(callback_num, 
         {digit_mode_indicator = ?CALLBACK_NUM_DIGIT_MODE_INDICATOR_ASCII,
          addr_ton             = ?TON_INTERNATIONAL,
          addr_npi             = ?NPI_ISDN,
          number_digits}).
 
-%%%
-% %@spec {callback_num_atag, DataCoding, DisplayCharacters} 
-%    DataCoding        = int()
-%    DisplayCharacters = string()
-%
-% %@doc callback_num_atag TLV record definition.
-%
-% <p>The macro ?CALLBACK_NUM_ATAG_DATATYPE defines the type specifier for this
-% TLV.</p>
-%
-% <dl>
-%   <dt>DataCoding: </dt><dd>Defines the encoding scheme of the Alpha Tag 
-%     display characters.  Integer, 1 octet (default is 
-%     ?ENCODING_SCHEME_LATIN_1).
-%   </dd>
-%   <dt>DisplayCharacters: </dt><dd>The Alpha Tag display Characters.  Octet
-%     String, Var. max 64 octets.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {callback_num_atag, DataCoding, DisplayCharacters} 
+%%    DataCoding        = int()
+%%    DisplayCharacters = string()
 %%
+%% %@doc callback_num_atag TLV record definition.
+%%
+%% <p>The macro ?CALLBACK_NUM_ATAG_DATATYPE defines the type specifier for this
+%% TLV.</p>
+%%
+%% <dl>
+%%   <dt>DataCoding: </dt><dd>Defines the encoding scheme of the Alpha Tag 
+%%     display characters.  Integer, 1 octet (default is 
+%%     ?ENCODING_SCHEME_LATIN_1).
+%%   </dd>
+%%   <dt>DisplayCharacters: </dt><dd>The Alpha Tag display Characters.  Octet
+%%     String, Var. max 64 octets.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(callback_num_atag, 
         {data_coding = ?ENCODING_SCHEME_LATIN_1,
          display_characters}).
 
 
-%%%
-% %@spec {telematics_id, ProtocolId, Reserved} 
-%    ProtocolId = int()
-%    Reserver   = int()
-%
-% %@doc dest_telematics_id and source_telematics_id TLV record definition.
-%
-% <p>The macro ?TELEMATICS_ID_DATATYPE defines the type specifier for these 
-% TLV.</p>
-%
-% <dl>
-%   <dt>ProtocolId: </dt><dd>Protocol Identifier.  Network specific field.  
-%     Integer, 1 octet (default is ?PROTOCOL_IDENTIFIER_GSM).
-%   </dd>
-%   <dt>Reserved: </dt><dd>Reserved. Integer, 1 octet (default is 
-%     ?NULL_INTEGER).
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {telematics_id, ProtocolId, Reserved} 
+%%    ProtocolId = int()
+%%    Reserver   = int()
 %%
+%% %@doc dest_telematics_id and source_telematics_id TLV record definition.
+%%
+%% <p>The macro ?TELEMATICS_ID_DATATYPE defines the type specifier for these 
+%% TLV.</p>
+%%
+%% <dl>
+%%   <dt>ProtocolId: </dt><dd>Protocol Identifier.  Network specific field.  
+%%     Integer, 1 octet (default is ?PROTOCOL_IDENTIFIER_GSM).
+%%   </dd>
+%%   <dt>Reserved: </dt><dd>Reserved. Integer, 1 octet (default is 
+%%     ?NULL_INTEGER).
+%%   </dd>
+%% </dl>
+%% %@end
 -record(telematics_id, 
         {protocol_id = ?PROTOCOL_IDENTIFIER_GSM,
          reserved    = ?NULL_INTEGER}).
 
-%%%
-% %@spec {its_session_info, SessionNumber, SequenceNumber} 
-%    SessionNumber  = int()
-%    SequenceNumber = int()
-%
-% %@doc its_session_info TLV record definition.
-%
-% <p>The macro ?ITS_SESSION_INFO_DATATYPE defines the type specifier for this
-% TLV.</p>
-%
-% <dl>
-%   <dt>SessionNumber: </dt><dd>Remains constant for each session.  
-%     Integer, 1 octet (default is 0).
-%   </dd>
-%   <dt>SequenceNumber: </dt><dd>Sequence number of the dialogue unit (as
-%     assigned bye the ESME) within the session is encoded in bits 7..1. The
-%     End of Session Indicator indicates the message is the end of the 
-%     conversation session and is encoded in bit 0 as follows:
-%
-%     <ul>
-%       <li>0 = End of Session Indicator Inactive.</li>
-%       <li>1 = End of Session Indicator Active.</li>
-%     </ul>
-%
-%     <p>While the end of session is inactive the SequenceNumber is an even 
-%     number and is increased by 2.  The Session Indicator becomes active it 
-%     should be incremented by 1, (an odd number).  Integer, 1 octet (default 
-%     is 0).</p>
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {its_session_info, SessionNumber, SequenceNumber} 
+%%    SessionNumber  = int()
+%%    SequenceNumber = int()
 %%
+%% %@doc its_session_info TLV record definition.
+%%
+%% <p>The macro ?ITS_SESSION_INFO_DATATYPE defines the type specifier for this
+%% TLV.</p>
+%%
+%% <dl>
+%%   <dt>SessionNumber: </dt><dd>Remains constant for each session.  
+%%     Integer, 1 octet (default is 0).
+%%   </dd>
+%%   <dt>SequenceNumber: </dt><dd>Sequence number of the dialogue unit (as
+%%     assigned bye the ESME) within the session is encoded in bits 7..1. The
+%%     End of Session Indicator indicates the message is the end of the 
+%%     conversation session and is encoded in bit 0 as follows:
+%%
+%%     <ul>
+%%       <li>0 = End of Session Indicator Inactive.</li>
+%%       <li>1 = End of Session Indicator Active.</li>
+%%     </ul>
+%%
+%%     <p>While the end of session is inactive the SequenceNumber is an even 
+%%     number and is increased by 2.  The Session Indicator becomes active it 
+%%     should be incremented by 1, (an odd number).  Integer, 1 octet (default 
+%%     is 0).</p>
+%%   </dd>
+%% </dl>
+%% %@end
 -record(its_session_info, 
         {session_number  = 0,
          sequence_number = 0}).
 
-%%%
-% %@spec {ms_validity_absolute, Behaviour} 
-%    Behaviour = int()
-%
-% %@doc ms_validity_absolute TLV record definition.
-%
-% <p>The macro ?MS_VALIDITY_ABSOLUTE_DATATYPE defines the type specifier for
-% this TLV.</p>
-%
-% <dl>
-%   <dt>Behaviour: </dt><dd>Validity behaviour.  Integer, 1 octet 
-%     (default is ?MS_VALIDITY_STORE_INDEFINITELY).
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {ms_validity_absolute, Behaviour} 
+%%    Behaviour = int()
 %%
+%% %@doc ms_validity_absolute TLV record definition.
+%%
+%% <p>The macro ?MS_VALIDITY_ABSOLUTE_DATATYPE defines the type specifier for
+%% this TLV.</p>
+%%
+%% <dl>
+%%   <dt>Behaviour: </dt><dd>Validity behaviour.  Integer, 1 octet 
+%%     (default is ?MS_VALIDITY_STORE_INDEFINITELY).
+%%   </dd>
+%% </dl>
+%% %@end
 -record(ms_validity_absolute, {behaviour = ?MS_VALIDITY_STORE_INDEFINITELY}).
 
-%%%
-% %@spec {ms_validity_relative, Behaviour, TimeUnit, Number} 
-%    Behaviour = int()
-%    TimeUnit  = int()
-%    Number    = int()
-%
-% %@doc ms_validity_relative TLV record definition.
-%
-% <p>The macro ?MS_VALIDITY_RELATIVE_DATATYPE defines the type specifier for
-% this TLV.</p>
-%
-% <dl>
-%   <dt>Behaviour: </dt><dd>Validity behaviour.  Integer, 1 octet 
-%     (default is ?MS_VALIDITY_RELATIVE_TIME_PERIOD).
-%   </dd>
-%   <dt>TimeUnit: </dt><dd>Specifies the Units of Time.  Integer, 1 octet 
-%     (default is ?TIME_UNIT_SECONDS).
-%   </dd>
-%   <dt>Number: </dt><dd>The number of the specified time units.  Integer, 2 
-%     octet.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {ms_validity_relative, Behaviour, TimeUnit, Number} 
+%%    Behaviour = int()
+%%    TimeUnit  = int()
+%%    Number    = int()
 %%
+%% %@doc ms_validity_relative TLV record definition.
+%%
+%% <p>The macro ?MS_VALIDITY_RELATIVE_DATATYPE defines the type specifier for
+%% this TLV.</p>
+%%
+%% <dl>
+%%   <dt>Behaviour: </dt><dd>Validity behaviour.  Integer, 1 octet 
+%%     (default is ?MS_VALIDITY_RELATIVE_TIME_PERIOD).
+%%   </dd>
+%%   <dt>TimeUnit: </dt><dd>Specifies the Units of Time.  Integer, 1 octet 
+%%     (default is ?TIME_UNIT_SECONDS).
+%%   </dd>
+%%   <dt>Number: </dt><dd>The number of the specified time units.  Integer, 2 
+%%     octet.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(ms_validity_relative, 
         {behaviour = ?MS_VALIDITY_RELATIVE_TIME_PERIOD,
          time_unit = ?MS_VALIDITY_TIME_UNIT_SECONDS,
          number}).
 
-%%%
-% %@spec {network_error_code, Type, Error} 
-%    Type  = int()
-%    Error = int()
-%
-% %@doc network_error_code TLV record definition.
-%
-% <p>The macro ?NETWORK_ERROR_CODE_DATATYPE defines the type specifier for this
-% TLV.</p>
-%
-% <dl>
-%   <dt>Type: </dt><dd>Network type.  Integer, 1 octet (default is 
-%     ?NETWORK_ERROR_CODE_TYPE_GSM).
-%   </dd>
-%   <dt>Error: </dt><dd>Specify the actual network error code approproate to 
-%     the network type.  Integer, 2 octet.
-%   </dd>
-% </dl>
-% %@end
+%% %@spec {network_error_code, Type, Error} 
+%%    Type  = int()
+%%    Error = int()
 %%
+%% %@doc network_error_code TLV record definition.
+%%
+%% <p>The macro ?NETWORK_ERROR_CODE_DATATYPE defines the type specifier for 
+%% this TLV.</p>
+%%
+%% <dl>
+%%   <dt>Type: </dt><dd>Network type.  Integer, 1 octet (default is 
+%%     ?NETWORK_ERROR_CODE_TYPE_GSM).
+%%   </dd>
+%%   <dt>Error: </dt><dd>Specify the actual network error code approproate to 
+%%     the network type.  Integer, 2 octet.
+%%   </dd>
+%% </dl>
+%% %@end
 -record(network_error_code, 
         {type  = ?NETWORK_ERROR_CODE_TYPE_GSM,
          error}).

@@ -32,7 +32,7 @@
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
-%%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 1.0 beta, {17 May 2004} {@time}.
 %%% @end

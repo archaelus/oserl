@@ -13,7 +13,6 @@
 %%% You should have received a copy of the GNU Lesser General Public
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%%
 
 %%% @doc SMPP Global definitions.
 %%%
@@ -64,7 +63,7 @@
 %%%
 %%%
 %%% @copyright 2003 Enrique Marcote Peña
-%%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 0.1 alpha, {27 Apr 2003} {@time}.
 %%% @end

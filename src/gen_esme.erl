@@ -16,7 +16,33 @@
 
 %%% @doc Generic ESME.
 %%%
-%%% <p>A generic ESME implemented as a gen_server.</p>
+%%% <p>A generic ESME implemented as a <i>gen_server</i>.</p>
+%%%
+%%% <p>This behaviour acts as an extended <i>gen_server</i>, homonymous 
+%%% functions have the exact same meaning.</p>
+%%%
+%%% <p>By default sessions are NOT linked to the parent ESME, thus silently
+%%% dropped if an error occurs.  To monitor sessions, ESME programmers may 
+%%% either use <tt>erlang:monitor(process, Session)</tt> or explicitly create 
+%%% a link to them.</p>
+%%%
+%%% <p>SMPP operations are directly issued upon underlying sessions, they
+%%% don't go through the ESME server loop.  This means you may call the 
+%%% functions <a href="#bind_receiver-3">bind_receiver/3</a>,
+%%% <a href="#bind_transmitter-3">bind_transmitter/3</a>,
+%%% <a href="#bind_transceiver-3">bind_transceiver/3</a>, 
+%%% <a href="#broadcast_sm-3">broadcast_sm/3</a>, 
+%%% <a href="#cancel_broadcast_sm-3">cancel_broadcast_sm/3</a>, 
+%%% <a href="#cancel_sm-3">cancel_sm/3</a>, <a href="#data_sm-3">data_sm/3</a>,
+%%% <a href="#query_broadcast_sm-3">query_broadcast_sm/3</a>, 
+%%% <a href="#query_sm-3">query_sm/3</a>, <a href="#replace_sm-3">replace_sm/3
+%%% </a>, <a href="#submit_multi-3">submit_multi/3</a>, 
+%%% <a href="#submit_sm-3">submit_sm/3</a> or <a href="#unbind-2">unbind/2</a>
+%%% from within any callback without having the risk of blocking the ESME
+%%% server.</p>
+%%%
+%%% <p>Please refer to <a href="examples/echo_esme.erl">echo_esme.erl</a>
+%%% for a minimal ESME example.</p>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
@@ -26,6 +52,11 @@
 %%% particular function is called.</p>
 %%%
 %%% <table width="100%" border="1">
+%%%   <tr>
+%%%     <td valign="top"><a href="#init-1">init/1</a></td>
+%%%     <td>Forwards <i>gen_server:init/1</i> callbacks to the ESME server.
+%%%     </td>
+%%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_outbind-3">handle_outbind/3</a></td>
 %%%     <td>Forwards <i>outbind</i> operations (from the peer SMSCs) to the 
@@ -55,11 +86,57 @@
 %%%       to the callback ESME.
 %%%     </td>
 %%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_listen_error-1">handle_listen_error/1
+%%%       </a></td>
+%%%     <td>Notifies listen socket failures to the callback ESME.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_call-3">handle_call/3</a></td>
+%%%     <td>Forwards <i>gen_server:handle_call/3</i> callbacks to the ESME 
+%%%       server.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td>
+%%%     <td>Forwards <i>gen_server:handle_cast/2</i> callbacks to the ESME 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_info-2">handle_info/2
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:handle_info/2</i> callbacks to the ESME 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#terminate-2">terminate/2
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:terminate/2</i> callbacks to the ESME 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#code_change-3">code_change/3
+%%%       </a></td>
+%%%     <td>Forwards <i>gen_server:code_change/3</i> callbacks to the ESME 
+%%%       server.</td>
+%%%     <td>.</td>
+%%%   </tr>
 %%% </table>
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
 %%% 
+%%% <h3><a name="init-1">init/1</a></h3>
+%%%
+%%% <tt>init(Args) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:init/1</i> callbacks to the SMSC server.</p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
 %%% <h3><a name="handle_outbind-3">handle_outbind/3</a></h3>
 %%%
 %%% <tt>handle_outbind(Outbind, From, State) -> Result</tt>
@@ -75,6 +152,9 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>outbind</i>, operations (from the peer SMSCs) to the 
@@ -98,6 +178,9 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>alert_notification</i>, operations (from the peer SMSCs) 
@@ -124,6 +207,9 @@
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>Forwards <i>deliver_sm</i> and <i>data_sm</i> operations (from the peer
@@ -151,6 +237,9 @@
 %%%                    {stop, Reason, NewState}</tt></li>
 %%%   <li><tt>Reply = ok | {error, Error}</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
 %%% <p>This callback forwards an unbind request (issued by peer ESMEs) to the 
@@ -163,11 +252,83 @@
 %%% command_status and the session will remain on it's current bound state
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
+%%% 
+%%% <h3><a name="handle_listen_error-1">handle_listen_error/1</a></h3>
+%%%
+%%% <tt>handle_listen_error(State) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Notifies listen socket failures to the callback SMSC.</p>
+%%%
+%%%
+%%% <h3><a name="handle_call-3">handle_call/3</a></h3>
+%%%
+%%% <tt>handle_call(Request, From, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_call/3</i> callbacks to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="handle_cast-2">handle_cast/2</a></h3>
+%%%
+%%% <tt>handle_cast(Request, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_cast/2</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="handle_info-2">handle_info/2</a></h3>
+%%%
+%%% <tt>handle_info(Info, State) -> Result</tt>
+%%%
+%%% <p>Forwards <i>gen_server:handle_info/2</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="terminate-2">terminate/2</a></h3>
+%%%
+%%% <tt>terminate(Reason, State)</tt>
+%%%
+%%% <p>Forwards <i>gen_server:terminate/2</i> callback to the SMSC server.</p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
+%%%
+%%% <h3><a name="code_change-3">code_change/3</a></h3>
+%%%
+%%% <tt>code_change(OldVsn, State, Extra) -> {ok, NewState}</tt>
+%%%
+%%% <p>Forwards <i>gen_server:code_change/3</i> callback to the SMSC server.
+%%% </p>
+%%%
+%%% <p>Refer to OTP <i>gen_server</i> behaviour documentation for greater
+%%% details on this callback.</p>
+%%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 0.1, {13 May 2004} {@time}.
+%%%         [http://oserl.sourceforge.net/]
+%%% @version 1.1, {13 May 2004} {@time}.
 %%% @end
 -module(gen_esme).
 

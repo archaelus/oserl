@@ -1,46 +1,39 @@
+%%% Copyright (C) 2003 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%
-
+%%% This library is free software; you can redistribute it and/or
+%%% modify it under the terms of the GNU Lesser General Public
+%%% License as published by the Free Software Foundation; either
+%%% version 2.1 of the License, or (at your option) any later version.
 %%%
-% @doc E.164 macros.
-%
-% <p>Macros related to E.164 recomendation.</p>
-%
-% @copyright 2003 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, {18 Apr 2003} {@time}.
-% @end
-%%
+%%% This library is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%%% Lesser General Public License for more details.
+%%%
+%%% You should have received a copy of the GNU Lesser General Public
+%%% License along with this library; if not, write to the Free Software
+%%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+%%% @doc E.164 macros.
+%%%
+%%% <p>Macros related to E.164 recomendation.</p>
+%%%
+%%% @copyright 2003 Enrique Marcote Peña
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
+%%%         [http://www.des.udc.es/~mpquique/]
+%%% @version 0.1 alpha, {18 Apr 2003} {@time}.
+%%% @end
 -ifndef(e164).
 -define(e164, true).
 
 %%%-------------------------------------------------------------------
-% Macros
-%%--------------------------------------------------------------------
-%%%
-% %@doc Country Codes
-%
-% <p>As defined in <a href="http://www.numberingplans.com">International 
-% Numbering Plans</a></p> 
-% %@end
+%%% Macros
+%%%-------------------------------------------------------------------
+%% %@doc Country Codes
 %%
+%% <p>As defined in <a href="http://www.numberingplans.com">International 
+%% Numbering Plans</a></p> 
+%% %@end
 -define(COUNTRY_CODE_AFGHANISTAN,                       93).
 -define(COUNTRY_CODE_ALBANIA,                          355).
 -define(COUNTRY_CODE_ALGERIA,                          213).
@@ -288,7 +281,7 @@
 
 
 %%%-------------------------------------------------------------------
-% Records
-%%--------------------------------------------------------------------
+%%% Records
+%%%-------------------------------------------------------------------
 
 -endif.  % -ifndef(e164)

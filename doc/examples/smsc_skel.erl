@@ -14,18 +14,19 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc Sample echo ESME.
+%%% @doc SMSC Skeleton.
 %%%
-%%% <p>This ESME echoes SMs back to the caller.</p>
+%%% <p>You may use this skeleton as the starting point to implement your
+%%% own SMSCs.</p>
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 1.1, {23 Jun 2004} {@time}.
+%%% @version 1.1, { 6 Jul 2004} {@time}.
 %%% @end
--module(echo_esme).
+-module(smsc_skel).
 
--behaviour(gen_esme).
+-behaviour(gen_smsc).
 
 %%%-------------------------------------------------------------------
 %%% Include files
@@ -38,11 +39,10 @@
 -export([start_link/0, stop/0]).
 
 %%%-------------------------------------------------------------------
-%%% Internal ESME exports
+%%% Internal SMSC exports
 %%%-------------------------------------------------------------------
 -export([init/1,
-         handle_outbind/3,
-         handle_alert_notification/3,
+         handle_bind/3,
          handle_operation/3,
          handle_unbind/3,
          handle_listen_error/1,
@@ -56,25 +56,21 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(SMSC_ADDRESS, {192, 168, 1, 4}).
--define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
--define(PASSWORD, "secret").
--define(SOURCE_ADDR, "1949").
 
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, TrxSession}
+%% %@spec {state}
 %%
-%% %@doc Representation of the ESME server state.
+%% %@doc Representation of the SMSC server state.
 %%
 %% <dl>
-%%   <dt>TrxSession: </dt><dd>Pid of the transceiver session.</dd>
+%%   <dt>: </dt><dd>
+%%   </dd>
 %% </dl>
 %% %@end
--record(state, {trx_session}).
-
+-record(state, {}).
 
 %%%===================================================================
 %%% External functions
@@ -84,26 +80,25 @@
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the ESME server.
+%% @doc Starts the SMSC server.
 %%
-%% @see gen_esme
+%% @see gen_smsc
 %% @see start/0
 %% @end
 start_link() ->
-    gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []),
-	gen_esme:call(?SERVER, {bind, ?SMSC_ADDRESS, ?SMPP_PORT}, infinity).
+    gen_smsc:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 
 %% @spec stop() -> ok
 %%
-%% @doc Stops the ESME server.
+%% @doc Stops the SMSC server.
 %%
 %% @see handle_call/3
 %%
-%% @equiv gen_esme:call(?SERVER, die, 10000).
+%% @equiv gen_smsc:call(?SERVER, die, 10000).
 %% @end
 stop() ->
-    gen_esme:call(?SERVER, die, 10000).
+    gen_smsc:call(?SERVER, die, 10000).
 
 %%%===================================================================
 %%% Server functions
@@ -115,65 +110,19 @@ stop() ->
 %%    Timeout = int() | infinity
 %%    Reason  = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#init-1">
-%% gen_esme - init/1</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#init-1">
+%% gen_smsc - init/1</a> callback implementation.
 %% 
 %% <p>Initiates the server.</p>
 %% @end
 init([]) ->
-	{ok, #state{}}.
+    % You may start sessions and issue bind requests here.
+    {ok, #state{}}.
 
 
-%% @spec handle_outbind(Outbind, From, State) -> Result
-%%    OutBind = {outbind, Session, Pdu}
-%%    Session = pid()
-%%    Pdu = pdu()
-%%    From = term()
-%%    State = term()
-%%    Result = {noreply, NewState}               |
-%%             {noreply, NewState, Timeout}      |
-%%             {stop, Reason, NewState}
-%%    ParamList = [{ParamName, ParamValue}]
-%%    ParamName = atom()
-%%    ParamValue = term()
-%%    NewState = term()
-%%    Timeout = int()
-%%    Reason = term()
-%%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_outbind-3">gen_esme - handle_outbind/3</a> callback implementation.
-%%
-%% <p>Handle <i>oubind</i> requests from the peer SMSC.</p>
-%% @end
-handle_outbind({outbind, Session, Pdu}, From, State) ->
-    {noreply, State}.
-
-
-%% @spec handle_alert_notification(AlertNotification, From, State) -> Result
-%%    AlertNotification = {alert_notification, Session, Pdu}
-%%    Session = pid()
-%%    Pdu = pdu()
-%%    From = term()
-%%    State = term()
-%%    Result = {noreply, NewState}               |
-%%             {noreply, NewState, Timeout}      |
-%%             {stop, Reason, NewState}
-%%    ParamList = [{ParamName, ParamValue}]
-%%    ParamName = atom()
-%%    ParamValue = term()
-%%    NewState = term()
-%%    Timeout = int()
-%%    Reason = term()
-%%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-3">gen_esme - handle_alert_notification/3</a> callback implementation.
-%%
-%% <p>Handle <i>alert_notification</i> requests from the peer SMSC.</p>
-%% @end
-handle_alert_notification({alert_notification, Session, Pdu}, From, State) -> 
-    {noreply, State}.
-
-
-%% @spec handle_operation(Operation, From, State) -> Result
-%%    Operation = {deliver_sm, Session, Pdu} | {data_sm, Session, Pdu}
+%% @spec handle_bind(Bind, From, State) -> Result
+%%    Bind = {CmdName, Session, Pdu}
+%%    CmdName = bind_receiver | bind_transmitter | bind_transceiver
 %%    Session = pid()
 %%    Pdu = pdu()
 %%    From = term()
@@ -192,32 +141,65 @@ handle_alert_notification({alert_notification, Session, Pdu}, From, State) ->
 %%    Timeout = int()
 %%    Reason = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_operation-3">gen_esme - handle_operation/3</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_bind-3">gen_smsc - handle_bind/3</a> callback implementation.
 %%
-%% <p>Handle <i>deliver_sm</i> and <i>data_sm</i> operations (from the peer
-%% SMSCs) to the callback ESME.</p>
+%% <p>Handle <i>bind</i> requests from the peer ESME.</p>
 %%
 %% <p>The <tt>ParamList</tt> included in the response is used to construct
-%% the response PDU.  If a command_status other than ESME_ROK is to
-%% be returned by the ESME in the response PDU, the callback should return the
+%% the bind response PDU.  If a command_status other than ESME_ROK is to
+%% be returned by the SMSC in the response PDU, the callback should return the
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({deliver_sm, _Session, Pdu}, From, S) ->
-    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:submit_sm(?SERVER, S#state.trx_session, [Mesg|Dest]),
-    {reply, {ok, []}, S};
-handle_operation({data_sm, Session, Pdu}, From, S) ->
-    Mesg = sm:message_user_data(Pdu),   % gets incoming short message
-    Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
-    gen_esme:data_sm(?SERVER, S#state.trx_session, [Mesg|Dest]), 
-    {reply, {ok, []}, S};
-handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
+handle_bind({CmdName, Session, Pdu}, From, State) ->
+    ParamList = [{system_id, ?SYSTEM_ID}],
+    {reply, {ok, ParamList}, State}.
+
+
+%% @spec handle_operation(Operation, From, State) -> Result
+%%    Operation = {CmdName, Session, Pdu}
+%%    CmdName = broadcast_sm        |
+%%              cancel_broadcast_sm |
+%%              cancel_sm           |
+%%              query_broadcast_sm  |
+%%              query_sm            |
+%%              replace_sm          |
+%%              submit_multi        |
+%%              submit_sm           |
+%%              data_sm
+%%    Session = pid()
+%%    Pdu = pdu()
+%%    From = term()
+%%    State = term()
+%%    Result = {reply, Reply, NewState}          |
+%%             {reply, Reply, NewState, Timeout} |
+%%             {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, Reply, NewState}   |
+%%             {stop, Reason, NewState}
+%%    Reply = {ok, ParamList} | {error, Error, ParamList}
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_operation-3">gen_smsc - handle_operation/3</a> callback implementation.
+%%
+%% <p>Handle <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
+%% <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
+%% <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
+%% <i>data_sm</i> operations from peer ESMEs.</p>
+%%
+%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%% the response PDU.  If a command_status other than ESME_ROK is to
+%% be returned by the SMSC in the response PDU, the callback should return the
+%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%% desired command_status error code.</p>
+%% @end
+handle_operation({CmdName, Session, Pdu}, From, S) ->
     % Don't know how to handle CmdName
-    io:format("Don't know how to handle ~p~n", [CmdName]),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
 
@@ -237,9 +219,9 @@ handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
 %%    Timeout = int()
 %%    Reason = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_unbind-3">gen_esme - handle_unbind/3</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_unbind-3">gen_smsc - handle_unbind/3</a> callback implementation.
 %%
-%% <p>Handle <i>unbind</i> requests from the peer SMSC.</p>
+%% <p>Handle <i>unbind</i> requests from the peer ESMEs.</p>
 %%
 %% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
 %% command_status is sent to the MC and the session moves into the unbound
@@ -248,9 +230,8 @@ handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Trx, Pdu}, From, #state{trx_session = Trx} = S) -> 
-    io:format("unbind: ~p~n", [Trx]),
-    {stop, normal, S#state{trx_session = undefined}}.
+handle_unbind({unbind, Session, Pdu}, From, State) -> 
+    {reply, ok, State}.
 
 
 %% @spec handle_listen_error(State) -> Result
@@ -262,12 +243,12 @@ handle_unbind({unbind, Trx, Pdu}, From, #state{trx_session = Trx} = S) ->
 %%    Timeout = int()
 %%    Reason = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_listen_error-1">gen_esme - handle_listen_error/1</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_listen_error-1">gen_smsc - handle_listen_error/1</a> callback implementation.
 %%
 %% <p>Handle listen failures.</p>
 %% @end
 handle_listen_error(State) ->
-    {stop, {error, listen_error}, State}.
+    {noreply, State}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -285,7 +266,7 @@ handle_listen_error(State) ->
 %%    Timeout   = int() | infinity
 %%    Reason    = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_call-3">gen_esme - handle_call/3</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_call-3">gen_smsc - handle_call/3</a> callback implementation.
 %%
 %% <p>Handling call messages.</p>
 %%
@@ -298,22 +279,9 @@ handle_listen_error(State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({bind, SMSCAddr, Port}, From, S) ->
-    case gen_esme:session_start(?SERVER, SMSCAddr, Port) of
-        {ok, Trx} ->
-%			erlang:monitor(process, Trx),
-            ParamList = [{system_id, ?SYSTEM_ID},
-                         {password, ?PASSWORD},
-                         {source_addr, ?SOURCE_ADDR}],
-            case gen_esme:bind_transmitter(?SERVER, Trx, ParamList) of
-                {ok, _PduResp} ->
-                    {reply, ok, #state{trx_session = Trx}};
-                BindError ->
-                    {stop, BindError, S}
-            end;
-        SessionError ->
-            {stop, SessionError, S}
-	end;
+handle_call(Request, From, State) ->
+    Reply = ok,
+    {reply, Reply, State};
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
@@ -327,7 +295,7 @@ handle_call(die, _From, State) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_cast-2"> gen_esme - handle_cast/2</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_cast-2"> gen_smsc - handle_cast/2</a> callback implementation.
 %%
 %% <p>Handling cast messages.</p>
 %%
@@ -351,7 +319,7 @@ handle_cast(Request, State) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_info-2"> gen_esme - handle_info/2</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#handle_info-2"> gen_smsc - handle_info/2</a> callback implementation.
 %%
 %% <p>Handling all non call/cast messages.</p>
 %%
@@ -361,28 +329,24 @@ handle_cast(Request, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'DOWN', _, process, Trx, Info}, #state{trx_session = Trx} = S) ->
-	{stop, Info, S};
-handle_info(Info, S) ->
-    {noreply, S}.
+handle_info(Info, State) ->
+    {noreply, State}.
 
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#terminate-2">
-%% gen_esme - terminate/2</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#terminate-2">
+%% gen_smsc - terminate/2</a> callback implementation.
 %%
-%% <p>Shutdown the ESME server.</p>
+%% <p>Shutdown the SMSC server.</p>
 %%
-%% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
+%% <p>Return value is ignored by <tt>gen_smsc</tt>.</p>
 %% @end
-terminate(kill, S) ->
-    ok;
-terminate(Reason, S) ->
-    catch gen_smsc:unbind(?SERVER, S#state.trx_session),
-    catch gen_smsc:session_stop(?SERVER, S#state.trx_session).
+terminate(Reason, State) ->
+    % You may stop sessions and issue unbind requests here.
+    ok.
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
@@ -391,7 +355,7 @@ terminate(Reason, S) ->
 %%    Extra    = term
 %%    NewState = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#code_change-2"> gen_esme - code_change/2</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_smsc.html#code_change-2"> gen_smsc - code_change/2</a> callback implementation.
 %%
 %% <p>Convert process state when code is changed.</p>
 %% @end
@@ -401,4 +365,3 @@ code_change(OldVsn, State, Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-

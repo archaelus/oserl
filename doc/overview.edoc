@@ -2220,6 +2220,9 @@ Find OSERL's PICS proforma in openoffice format
 <ul>
   <li>Version 1.2
     <ol>
+      <li>Do not spawn a process for each request. Replace request brokers 
+        (processes) by request status (static) information.
+      </li>
       <li><a href="gen_esme_session.html">gen_esme_session</a> and
         <a href="gen_smsc_session.html">gen_smsc_session</a> are almost
         identical.

@@ -14,7 +14,7 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc SMPP PDU Library.
+%%% @doc SMPP PDU Library
 %%%
 %%% <p>Library functions for the SMPP PDU manipulation.</p>
 %%%
@@ -46,8 +46,8 @@
 %%% [13 Jul 2004]
 %%%
 %%% <ul>
-%%%   <li>Condition <tt>CommandId of < 16#800000000</tt> removed from guards
-%%%     in functions <a href="#pack-2">pack/2</a> and 
+%%%   <li>Condition <tt>CommandId</tt> of <tt>16#800000000</tt> removed from 
+%%%     guards in functions <a href="#pack-2">pack/2</a> and 
 %%%     <a href="#unpack-2">unpack/2</a>.
 %%%     <br/>
 %%%     There was one 0 too many on that conditions.

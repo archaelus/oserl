@@ -14,10 +14,22 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc OSERL Setup records.
+%%% @doc OSERL global definitions.
 %%%
-%%% <p>Header for oserl's behaviours setup records.  Includes required files 
-%%% and defines behaviours setup records.</p>
+%%% <p>Some global OSERL macros.  Default values may be changed to fit
+%%% your particular needs.</p>
+%%%
+%%% <p>As a guideline, some comments reference the section number of the
+%%% document [SMPP 5.0].</p>
+%%%
+%%%
+%%% <h2>References</h2>
+%%% <dl>
+%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
+%%%     Version 5.0. SMS Forum.
+%%%   </dd>
+%%% </dl>
+%%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
@@ -35,15 +47,35 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-%% Timers
--define(DEFAULT_TIMERS, #timers{}).
+%% Default Port Number (Standardised by IANA)
+%%
+%% %@see section 2.2 on [SMPP 5.0]
+-define(DEFAULT_SMPP_PORT, 2775).
 
--define(TIMERS(STime, ETime, ITime, RTime, RetryT),
+
+%% Timers default values
+%%
+%% %@doc Besides the timers declared on [SMPP 5.0], a rebind timer default is
+%% defined.  This timer sets the time lapse in which the ESME should try to
+%% rebind once the MC becomes unavailable.</p>
+%%
+%% %@TODO Review these default values.
+%%
+%% %@see section 2.7 on [SMPP 5.0]
+-define(SESSION_INIT_TIME, 180000).  % 3 minutes
+-define(ENQUIRE_LINK_TIME,  60000).  % 1 minute
+-define(INACTIVITY_TIME, infinity).  % No timeout, never drop the session.
+-define(RESPONSE_TIME,      60000).  % 1 minute
+
+
+%% Timers record
+-define(DEFAULT_SMPP_TIMERS, #timers{}).
+
+-define(TIMERS(STime, ETime, ITime, RTime),
         #timers{session_init_time = STime,
                 enquire_link_time = ETime,
                 inactivity_time   = ITime,
-                response_time     = RTime,
-                retry_time        = RetryT}).
+                response_time     = RTime}).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -52,13 +84,11 @@
 %%         SessionInitTime,
 %%         EnquireLinkTime,
 %%         InactivityTime,
-%%         ResponseTime,
-%%         RetryTime}
+%%         ResponseTime}
 %%    SessionInitTime = int() | infinity
 %%    EnquireLinkTime = int() | infinity
 %%    InactivityTime  = int() | infinity
 %%    ResponseTime    = int() | infinity
-%%    RetryTime       = int() | infinity
 %%
 %% %@doc The times are expressed in milliseconds.  The atom <tt>infinity
 %% </tt> disables the timer.
@@ -90,19 +120,12 @@
 %%     <p>On expiration assume the operation have failed  (default value is
 %%     ?RESPONSE_TIME).</p>
 %%   </dd>
-%%   <dt>RetryTime: </dt><dd>This timer sets the time lapse in which the ESME
-%%     should try to reconnect once the MC becomes unavailable.
-%%
-%%     <p>On expiration a new connection attempt is issued.  (default value is
-%%     ?REBIND_TIME).</p>
-%%   </dd>
 %% </dl>
 %% %@end
 -record(timers, 
         {session_init_time = ?SESSION_INIT_TIME,
          enquire_link_time = ?ENQUIRE_LINK_TIME,
          inactivity_time   = ?INACTIVITY_TIME,
-         response_time     = ?RESPONSE_TIME,
-         retry_time        = ?REBIND_TIME}).
+         response_time     = ?RESPONSE_TIME}).
 
 -endif.  % -ifndef(oserl)

@@ -1733,6 +1733,7 @@
 %
 % <p><b>See also:</b> <tt>callback_outbind/2</tt></p>
 %
+%
 % <h3><a name="unbind-2">unbind/2</a></h3>
 %
 % <tt>unbind(Pid, Sid) -> ok | {error, Error}</tt>
@@ -1923,6 +1924,12 @@
 %   <li><tt>request_broker</tt> fixed when <tt>Caller</tt> is
 %     <tt>undefined</tt>.
 %   </li>
+% </ul>
+%
+% [27 Feb 2004]
+%
+% <ul>
+%   <li>Changes in comments.</li>
 % </ul>
 %
 %
@@ -2624,7 +2631,7 @@ stop(Sid) ->
 %    Timeout    = int()
 %    StopReason = term()
 %
-% @doc Initializes the the fsm.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - init/1</a> callback implementation. Initializes the the fsm.
 % @end
 %%
 init([Pid, Module, #gen_esme_session_setup{retry_time = T} = Setup]) ->
@@ -2665,7 +2672,8 @@ init([Pid, Module, #gen_esme_session_setup{retry_time = T} = Setup]) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name open.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name open.
 % @end
 %%
 open({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -2739,7 +2747,8 @@ open(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name outbound.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name outbound.
 % @end
 %%
 outbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -2812,7 +2821,8 @@ outbound(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name bound_rx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name bound_rx.
 % @end
 %%
 bound_rx({alert_notification, Pdu}, StateData) ->
@@ -2914,7 +2924,8 @@ bound_rx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name bound_tx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name bound_tx.
 % @end
 %%
 bound_tx({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -2995,7 +3006,8 @@ bound_tx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name bound_trx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name bound_trx.
 % @end
 %%
 bound_trx({alert_notification, Pdu}, StateData) ->
@@ -3098,7 +3110,8 @@ bound_trx(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name unbound.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name unbound.
 % @end
 %%
 unbound({alert_notification, Pdu}, #state{connection = C} = StateData) ->
@@ -3152,7 +3165,8 @@ unbound(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name listening.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name listening.
 % @end
 %%
 listening(_Event, StateData) ->
@@ -3171,7 +3185,8 @@ listening(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles async events for the state name closed.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/2</a> callback implementation.  Handles async events 
+% for the state name closed.
 % @end
 %%
 closed(_Event, StateData) ->
@@ -3195,7 +3210,8 @@ closed(_Event, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name open.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+% the state name open.
 % @end
 %%
 open({bind_receiver, ParamList}, From, StateData) ->
@@ -3266,7 +3282,8 @@ open(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name outbound.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+% the state name outbound.
 % @end
 %%
 outbound({bind_receiver, ParamList}, From, StateData) ->
@@ -3332,7 +3349,8 @@ outbound(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_rx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+% the state name bound_rx.
 % @end
 %%
 bound_rx({Bind, _ParamList}, _From, StateData) when Bind == bind_receiver;
@@ -3371,7 +3389,8 @@ bound_rx(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_tx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
+% the state name bound_tx.
 % @end
 %%
 bound_tx({Bind, _ParamList}, _From, StateData) when Bind == bind_receiver;
@@ -3517,7 +3536,8 @@ bound_tx(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name bound_trx.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
+% the state name bound_trx.
 % @end
 %%
 bound_trx({Bind,_ParamList}, _From, StateData) when Bind == bind_receiver;
@@ -3663,7 +3683,8 @@ bound_trx(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name unbound.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
+% the state name unbound.
 % @end
 %%
 unbound(close, _From, #state{connection = C} = StateData) ->
@@ -3703,7 +3724,8 @@ unbound(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name listening.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
+% the state name listening.
 % @end
 %%
 listening(close, _From, #state{connection = C} = StateData) ->
@@ -3740,7 +3762,8 @@ listening(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events for the state name closed.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
+% the state name closed.
 % @end
 %%
 closed(close, _From, StateData) ->
@@ -3775,7 +3798,8 @@ closed(_Event, _From, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events received by <tt>gen_fsm:send_all_state_event/2</tt>.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_event/3</a> callback implementation.  Handles
+% events received by <tt>gen_fsm:send_all_state_event/2</tt>.
 % @end
 %%
 handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
@@ -3980,8 +4004,8 @@ congestion_state(Lapse, Index, Time) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Handles events received via 
-% <tt>gen_fsm:sync_send_all_state_event/2,3</tt>.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_sync_event/4</a> callback implementation.  Handles
+% events received via <tt>gen_fsm:sync_send_all_state_event/2,3</tt>.
 % @end
 %%
 handle_sync_event(_Event, _From, StateName, StateData) ->
@@ -4001,8 +4025,8 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %    Timeout       = int() | infinity
 %    Reason        = term()
 %
-% @doc Call on reception of any other messages than a synchronous or
-% asynchronous event.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
+% of any other messages than a synchronous or asynchronous event.
 % @end
 %%
 handle_info({'EXIT', C, R}, _StateName, #state{connection = C} = StateData) ->
@@ -4025,7 +4049,7 @@ handle_info(_Info, StateName, StateData) ->
 %    StateName = atom()
 %    StateData = term()
 %
-% @doc Shutdown the fsm.
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - terminate/3</a> callback implementation.  Shutdown the fsm.
 %
 % <p>Return value is ignored by the server.</p>
 % @end
@@ -4049,7 +4073,8 @@ terminate(_Reason, _StateName, #state{self = S} = _StateData) ->
 %    NextStateName = atom()
 %    NewStateData  = term()
 %
-% @doc Convert process state when code is changed
+% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - code_change/4</a> callback implementation.  Convert process 
+% state when code is changed
 % @end
 %%
 code_change(_OldVsn, StateName, StateData, _Extra) ->
@@ -4064,11 +4089,8 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %    Pid = pid()
 %    Cid = pid()
 %
-% @doc Whenever an incoming connection is accepted under a listening state, 
-% the gen_connection turns into connect state and triggers this callback to 
-% notify such an event to the parent of the connection. <tt>Cid</tt> is
-% the pid of the connection, <tt>Pid</tt> is the connection's 
-% parent pid.
+% @doc <a href="gen_connection.html#handle_accept-2">gen_connection 
+% - handle_accept/2</a> callback implementation.
 % @end
 %
 % %@see
@@ -4087,13 +4109,8 @@ handle_accept(Pid, Cid) ->
 %    RestBuffer = binary()
 %    Lapse = int()
 %
-% @doc Every time the connection receives new data, this function is called to 
-% let the callback function consume data from the <tt>Input</tt> and from
-% the stored <tt>Buffer</tt>.  This function should return the unused data.
-% <tt>Cid</tt> is the pid of the connection, <tt>Pid</tt> is the
-% connection's parent pid.
-%
-% <p><tt>Lapse</tt> are the microseconds waited until input came.</p>
+% @doc <a href="gen_connection.html#handle_input-4">gen_connection
+% - handle_input/4</a> callback implementation.
 % @end
 %
 % %@see
@@ -4126,15 +4143,8 @@ handle_input(_Pid, _Cid, Buffer, _Lapse, _N) ->
 %    Pid = pid()
 %    Cid = pid()
 %
-% @doc If the connection is listening on port <tt>Port</tt> and an error
-% occurs, this function reports the failure to the callback module so it can
-% take the appropriate actions.  The connection may try to recover itself
-% every <tt>#state.retry_timer</tt> milliseconds, if this timeout wasn't
-% set to the atom <tt>infinity</tt>, in such a case the callback module
-% should take care of this situation. <tt>Cid</tt> is the pid of the
-% connection, <tt>Pid</tt> is the connection's parent pid.
-%
-% <p>Return value is ignored by the connection.</p>
+% @doc <a href="gen_connection.html#handle_listen_error-3">gen_connection 
+% - handle_listen_error/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -4152,16 +4162,8 @@ handle_listen_error(Pid, _Cid, Port) ->
 %    Pid = pid()
 %    Cid = pid()
 %
-% @doc If the connection is active (sending/receiving data to/from address
-% <tt>Address</tt> on port <tt>Port</tt>) and an error occurs, this 
-% function reports the failure to the callback module so it can take the
-% appropriate actions.  The connection may try to recover itself every
-% <tt>#state.retry_timer</tt> milliseconds, if this timeout wasn't set
-% to the atom <tt>infinity</tt>, in such a case the callback module should
-% take care of this situation.  <tt>Cid</tt> is the pid of the connection,
-% <tt>Pid</tt> is the connection's parent pid.
-%
-% <p>Return value is ignored by the connection.</p>
+% @doc <a href="gen_connection.html#handle_connect_error-4">gen_connection 
+% - handle_connect_error/4</a> callback implementation.
 % @end
 %
 % %@see
@@ -4178,11 +4180,8 @@ handle_connect_error(Pid, _Cid, Address, Port) ->
 %    Pid = pid()
 %    Cid = pid()
 %
-% @doc Notifies the callback module than the connection is again, after a 
-% failure, up and listening on port <tt>Port</tt>. <tt>Cid</tt> is the
-% pid of the connection, <tt>Pid</tt> is the connection's parent pid.
-%
-% <p>Return value is ignored by the connection.</p>
+% @doc <a href="gen_connection.html#handle_listen_recovery-3">gen_connection 
+% - handle_listen_recovery/3</a> callback implementation.
 % @end
 %
 % %@see
@@ -4200,12 +4199,8 @@ handle_listen_recovery(Pid, _Cid, Port) ->
 %    Pid = pid()
 %    Cid = pid()
 %
-% @doc Notifies the callback module than the connection is again, after a 
-% failure, up and ready to send/receive data to address <tt>Address</tt>
-% on port <tt>Port</tt> . <tt>Cid</tt> is the pid of the connection. 
-% <tt>Pid</tt> is the connection's parent pid.
-%
-% <p>Return value is ignored by the connection.</p>
+% @doc <a href="gen_connection.html#handle_connect_recovery-4">gen_connection 
+% - handle_connect_recovery/4</a> callback implementation.
 % @end
 %
 % %@see

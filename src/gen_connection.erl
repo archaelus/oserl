@@ -298,6 +298,12 @@
 %   </li>
 % </ul>
 %
+% [27 Feb 2004]
+%
+% <ul>
+%   <li>Changes in comments.</li>
+% </ul>
+%
 %
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>

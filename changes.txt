@@ -108,3 +108,68 @@ How these changes affected individual files is described below.
 1.11 Other changes
 
 - Makefiles were fixed to find compiled behaviors.
+
+
+code_lock_esme.erl = echo_esme.erl = submit_esme.erl
+
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>
+%
+
+smpp_globals.hrl
+
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>$\0 removed from the NULL_C_OCTET_STRING macro.</li>
+% </ul>
+
+
+base_syntax.erl
+
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+%
+% <ul>
+%   <li>Trailing <tt>NULL_CHARACTER</tt> is transparetly handled by 
+%     <a href="#encode-2">base_syntax:encode/2</a> and
+%     <a href="#decode-2">base_syntax:decode/2</a> functions.
+%   </li>
+%   <li>
+%   <a href="http://oserl.sourceforge.net/common_lib/binary.html#take_until-3">
+%   take_until/3</a> moved to module <a href="binary.html">binary.erl</a> of 
+%   the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+%   </a>.
+%   </li>
+%   <li>
+%   <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_dec-1">
+%   is_dec/1</a> and 
+%   <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_hex-1">
+%   is_hex/1</a> moved to module <a href="my_string.html">my_string.erl</a> of 
+%   the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+%   </a>.
+%   </li>
+% </ul>
+%
+
+
+smpp_base.hrl
+
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>

@@ -351,15 +351,28 @@
 %    Format = free | hex | dec | Pred
 %    Pred   = fun(string()) -> bool()
 %
-% %@doc C-Octet String data-type declaration.  A C-Octet String must always 
-% be NULL terminated, thus the minimun length allowed is 1 octet.
+% %@doc C-Octet String data-type declaration.  In SMPP, a C-Octet String must 
+% always be NULL terminated, thus the minimun length allowed is 1 octet.
+%
+% <p><b>Important (Since version 0.2).</b>  The base syntax takes care of
+% trailing NULL_CHARACTERs for you so, <i>even you have to count this character
+% when setting the <tt>Size</tt> field</i>, <b>do not</b> add a trailing 
+% NULL_CHARACTER in your c_octet_string values, base_syntax:encode/2 and 
+% base_syntax:decode/2 handle NULLs on their own.</p>
+%
+% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string 
+% accordingly to SMPP specs.  Do not add the trailing NULL_CHARACTER to the
+% values of the c_octet_string parameters.  The NULL_CHARACTER is automatically
+% included at encode time.  An of course, do not expect decoded c_octet_string
+% values to have a trailing NULL_CHARACTER.  This character is automatically
+% removed at decode time.</p>
 %
 % <dl>
 %   <dt>Fixed: </dt><dd>String size may be of variable or fixed length.  When
 %     fixed the length must be exactly Size octets long, if not fixed it may
 %     be from 1 up to Size octets long.
 %   </dd>
-%   <dt>Size: </dt><dd>Size in octets.</dd>
+%   <dt>Size: </dt><dd>Size in octets including trailing NULL_CHARACTER.</dd>
 %   <dt>Format: </dt><dd>
 %     <ul>
 %       <li>free: a free fomat string.</li>

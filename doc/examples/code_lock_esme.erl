@@ -21,6 +21,16 @@
 %
 % <p>FSM-ESME sample.</p>
 %
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>
+%
+%
 % @copyright 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique]
@@ -39,7 +49,7 @@
 -export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
 
 start() ->
-    start_link("banana\0", "secret\0", "1949\0", "1949\0", {193, 144, 50, 51}, [1,2]).
+    start_link("banana", "secret", "1949", "1949", {193, 144, 50, 51}, [1,2]).
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) ->
 	io:format("Starting the code lock ESME...", []),

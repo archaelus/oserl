@@ -40,6 +40,15 @@
 % only preserved because they help document parameter definitions.</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -566,8 +575,8 @@
 -define(TIME_RELATION_ABSOLUTE_DATATYPE, ?SET(["+", "-"])).
 -define(TIME_RELATION_ABSOLUTE_DOMAIN,   ?SET(["+", "-"])).
 
--define(TIME_NULL_TERMINATOR_DATATYPE, ?CONSTANT(?NULL_C_OCTET_STRING)).
--define(TIME_NULL_TERMINATOR_DOMAIN,   ?CONSTANT(?NULL_C_OCTET_STRING)).
+-define(TIME_NULL_TERMINATOR_DATATYPE, ?CONSTANT("\0")).
+-define(TIME_NULL_TERMINATOR_DOMAIN,   ?CONSTANT("\0")).
 
 -define(TIME_COMPOSITE_RELATIVE_DATATYPE,
         ?COMPOSITE(time,
@@ -1095,7 +1104,7 @@
 -define(SCHEDULE_DELIVERY_TIME_RESERVED, ?TIME_RESERVED).
 
 % schedule_delivery_time Values
--define(SCHEDULE_DELIVERY_TIME_IMMEDIATE, ?NULL_C_OCTET_STRING).  % Immediate
+-define(SCHEDULE_DELIVERY_TIME_IMMEDIATE, "\0").  % Immediate
 
 %%%
 % validity_period
@@ -1110,7 +1119,7 @@
 -define(VALIDITY_PERIOD_RESERVED, ?TIME_RESERVED).
 
 % validity_period Values
--define(VALIDITY_PERIOD_DEFAULT, ?NULL_C_OCTET_STRING).  % Use MC defaults
+-define(VALIDITY_PERIOD_DEFAULT, "\0").  % Use MC defaults
 
 %%%
 % final_date
@@ -1125,7 +1134,7 @@
 -define(FINAL_DATE_RESERVED, ?TIME_ABSOLUTE_RESERVED).
 
 % final_date Values
--define(FINAL_DATE_FINAL_STATE_NOT_REACHED, ?NULL_C_OCTET_STRING).
+-define(FINAL_DATE_FINAL_STATE_NOT_REACHED, "\0").
 
 %%%
 % sequence_number
@@ -1158,15 +1167,15 @@
 % carrier specific and defined by mutual agreement between the MC Service
 % provider and the ESME application.</p>
 -define(SERVICE_TYPE_NULL, ?NULL_C_OCTET_STRING).  % Default
--define(SERVICE_TYPE_CMT,  "CMT\0").   % Cellular Messaging
--define(SERVICE_TYPE_CPT,  "CPT\0").   % Cellular Paging
--define(SERVICE_TYPE_VMN,  "VMN\0").   % Voice Mail Notification
--define(SERVICE_TYPE_VMA,  "VMA\0").   % Voice Mail Alerting
--define(SERVICE_TYPE_WAP,  "WAP\0").   % Wireless Application Protocol
--define(SERVICE_TYPE_USSD, "USSD\0").  % Unstructured Supplementary 
-                                       % Services Data
--define(SERVICE_TYPE_CBS,  "CBS\0").   % Cell Broadcast Service
--define(SERVICE_TYPE_GUTS, "GUTS\0").  % Generic UDP Transport Service
+-define(SERVICE_TYPE_CMT,  "CMT").   % Cellular Messaging
+-define(SERVICE_TYPE_CPT,  "CPT").   % Cellular Paging
+-define(SERVICE_TYPE_VMN,  "VMN").   % Voice Mail Notification
+-define(SERVICE_TYPE_VMA,  "VMA").   % Voice Mail Alerting
+-define(SERVICE_TYPE_WAP,  "WAP").   % Wireless Application Protocol
+-define(SERVICE_TYPE_USSD, "USSD").  % Unstructured Supplementary 
+                                     % Services Data
+-define(SERVICE_TYPE_CBS,  "CBS").   % Cell Broadcast Service
+-define(SERVICE_TYPE_GUTS, "GUTS").  % Generic UDP Transport Service
 
 %%%
 % short_message
@@ -1236,8 +1245,8 @@
 
 % system_type Values
 -define(SYSTEM_TYPE_UNKNOWN, ?NULL_C_OCTET_STRING).
--define(SYSTEM_TYPE_VMS,     "VMS\0").  % Voice Mail System
--define(SYSTEM_TYPE_OTA,     "OTA\0").  % Over-The-Air Activation System
+-define(SYSTEM_TYPE_VMS,     "VMS").  % Voice Mail System
+-define(SYSTEM_TYPE_OTA,     "OTA").  % Over-The-Air Activation System
 
 %%%
 % error_code
@@ -2433,7 +2442,7 @@
 %   </dd>
 %   <dt>NullTerminator: </dt><dd>A dummy field holding the NULL terminating 
 %     character of the C-Octet String representing the time.  Constant 
-%     ?NULL_C_OCTET_STRING.
+%     "\0".
 %
 %     <p>This field is always initialized to the correct value and must be 
 %     ignored by the programmer using this type definition.  It's only present
@@ -2452,7 +2461,7 @@
          tenths_of_second,
          difference,
          relation_to_utc,
-         null_terminator = ?NULL_C_OCTET_STRING}).
+         null_terminator = "\0"}).
 
 %%%
 % %@spec {unsuccess_sme, 

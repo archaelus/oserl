@@ -21,6 +21,16 @@
 %
 % <p>A complete echo ESME.</p>
 %
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>
+%
+%
 % @copyright 2003 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique]
@@ -86,7 +96,7 @@
 % %@equiv
 %%
 start() ->
-    start_link("banana\0", "secret\0", "1948\0", "1948\0", {193, 144, 50, 51}).
+    start_link("banana", "secret", "1948", "1948", {193, 144, 50, 51}).
     
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->

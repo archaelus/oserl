@@ -25,6 +25,32 @@
 % numbers on [SMPP 5.0].</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+%
+% <ul>
+%   <li>Trailing <tt>NULL_CHARACTER</tt> is transparetly handled by 
+%     <a href="#encode-2">base_syntax:encode/2</a> and
+%     <a href="#decode-2">base_syntax:decode/2</a> functions.
+%   </li>
+%   <li>
+%   <a href="http://oserl.sourceforge.net/common_lib/binary.html#take_until-3">
+%   take_until/3</a> moved to module <a href="binary.html">binary.erl</a> of 
+%   the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+%   </a>.
+%   </li>
+%   <li>
+%   <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_dec-1">
+%   is_dec/1</a> and 
+%   <a href="http://oserl.sourceforge.net/common_lib/my_string.html#is_hex-1">
+%   is_hex/1</a> moved to module <a href="my_string.html">my_string.erl</a> of 
+%   the <a href="http://oserl.sourceforge.net/common_lib/index.html">common_lib
+%   </a>.
+%   </li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol 
@@ -35,7 +61,7 @@
 % @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.2 alpha, {09 Feb 2004} {@time}.
+% @version 0.2 alpha, {09 Feb 2003} {@time}.
 % @end
 %%
 -module(base_syntax).
@@ -132,16 +158,25 @@
 % <p>Checks if Value is a valid C-Octet String.  A C-Octet String must be 
 % NULL_CHARACTER ($\0) terminated.</p>
 %
-% <p>When a fixed size is given and the Size-th octet on the Binary represents
-% the NULL_CHARACTER, a Size long binary is taken an translated into a string
-% using the binary_to_list BIF.</p>
+% <p>When a fixed size is given and the Size-th octet on the Binary is the
+% NULL_CHARACTER, a <tt>Size - 1</tt> long binary is taken an translated into 
+% string using the binary_to_list BIF.</p>
 %
-% <p>On variable length strings every octet until the NULL_CHARACTER is taken
-% using the function <tt>base_syntax:take_until/3</tt>.  The result is
+% <p>On variable length strings, every octet until the NULL_CHARACTER is taken
+% using the function <tt>binary:take_until/3</tt> (common_lib).  The result is
 % translated to a list with the BIF binary_to_list.  Notice that the resulting
-% Value must be smaller or  equal to Size characters long.</p>
+% <tt>Value</tt> is always smaller than <tt>Size</tt> characters long.</p>
 %
-% <p>On a C-Octet String the NULL_CHARACTER is *always* included in Value.</p>
+% <p><font color="red">Important (Since version 0.2).</font>  The base syntax 
+% takes care of trailing NULL_CHARACTERs for you so, <i>even you have to count 
+% this character when setting the <tt>Size</tt> field</i>, <b>do not</b> add a 
+% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:decode/2 
+% handles NULLs on its own.</p>
+%
+% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string 
+% accordingly to SMPP specs.  Do not expect decoded c_octet_string values to 
+% have a trailing NULL_CHARACTER.  This character is automatically removed at 
+% decode time.</p>
 %
 %
 % <h4><a name="decode-octet_string">octet_string</a></h4>
@@ -193,8 +228,9 @@
 % @see decode_iter/3
 % @see decode_list/2
 % @see decode_try/2
-% @see is_hex_string/1
-% @see is_dec_string/1
+% @see binary:take_until/3
+% @see my_string:is_dec/1
+% @see my_string:is_hex/1
 % @end
 %%
 decode(Binary, #constant{value = Value} = Type) ->
@@ -229,7 +265,7 @@ decode(Binary, #integer{size = Size} = Type) ->
 decode(Binary, #c_octet_string{format = hex} = Type) ->
     case decode(Binary, Type#c_octet_string{format = free}) of
         {ok, Value, Rest} ->
-            case is_hex_string(Value) of
+            case my_string:is_hex(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -242,7 +278,7 @@ decode(Binary, #c_octet_string{format = hex} = Type) ->
 decode(Binary, #c_octet_string{format = dec} = Type) ->
     case decode(Binary, Type#c_octet_string{format = free}) of
         {ok, Value, Rest} ->
-            case is_dec_string(Value) of
+            case my_string:is_dec(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -256,9 +292,9 @@ decode(Binary, #c_octet_string{fixed = true, size = Size} = Type) ->
     Len = Size - 1,
     case Binary of
         <<?NULL_CHARACTER:8, Rest/binary>> ->
-            {ok, [?NULL_CHARACTER], Rest};
+            {ok, "", Rest};
         <<Value:Len/binary-unit:8, ?NULL_CHARACTER:8, Rest/binary>> ->
-            {ok, binary_to_list(Value) ++ [?NULL_CHARACTER], Rest};
+            {ok, binary_to_list(Value), Rest};
         <<NotNullTerminated:Size/binary-unit:8, _Rest/binary>> ->
             {error, {type_mismatch, Type, binary_to_list(NotNullTerminated)}};
         _Mismatch ->
@@ -266,8 +302,8 @@ decode(Binary, #c_octet_string{fixed = true, size = Size} = Type) ->
     end;
 
 decode(Binary, #c_octet_string{fixed = false, size = Size} = Type) ->
-    case take_until(Binary, list_to_binary([?NULL_CHARACTER]), Size) of
-        {ok, UntilNull, Rest} ->
+    case binary:take_until(Binary, <<?NULL_CHARACTER:8>>, Size) of
+        {ok, UntilNull, <<?NULL_CHARACTER:8, Rest/binary>>} ->
             {ok, binary_to_list(UntilNull), Rest};
         {error, {not_found, _Null, UntilSize}} ->
             {error, {type_mismatch, Type, binary_to_list(UntilSize)}}
@@ -277,7 +313,7 @@ decode(Binary, #c_octet_string{fixed = false, size = Size} = Type) ->
 decode(Binary, #octet_string{format = hex} = Type) ->
     case decode(Binary, Type#octet_string{format = free}) of
         {ok, Value, Rest} ->
-            case is_hex_string(Value) of
+            case my_string:is_hex(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -290,7 +326,7 @@ decode(Binary, #octet_string{format = hex} = Type) ->
 decode(Binary, #octet_string{format = dec} = Type) ->
     case decode(Binary, Type#octet_string{format = free}) of
         {ok, Value, Rest} ->
-            case is_dec_string(Value) of
+            case my_string:is_dec(Value) of
                 true ->
                     {ok, Value, Rest};
                 false ->
@@ -317,9 +353,9 @@ decode(Binary, #octet_string{fixed = false, size = Size}) ->
     end;
 
 decode(Binary, #list{type = InnerType, size = Size} = Type) ->
-    LenSize = trunc(Size / 256) + 1,
+    Len = trunc(Size / 256) + 1,
     case Binary of
-        <<Times:LenSize/integer-unit:8, Bin/binary>> ->
+        <<Times:Len/integer-unit:8, Bin/binary>> ->
             case decode_iter(Bin, InnerType, Times) of
                 {error, Reason} ->
                     {error, {type_mismatch, Type, Reason}};
@@ -530,16 +566,29 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %
 % <h4><a name="encode-c_octet_string">c_octet_string</a></h4>
 %
-% <p>Checks if Value is a valid C-Octet String.  A C-Octet String must be 
-% NULL_CHARACTER ($\0) terminated.</p>
+% <p>Checks if Value is a valid C-Octet String: Just a string with Size - 1 
+% characters.  Notice that C-Octet Strings (erlang) Values should not include 
+% the terminating NULL_CHARACTER ($\0), it is automatically included by the 
+% encode function.</p>
 %
-% <p>When a fixed size is given, the Value, including the terminating 
-% NULL_CHARACTER, must be exactly 1 or Size characters long.  For variable
-% lengths any range between 1 and Size octets is considered to be correct.</p>
+% <p>When a fixed size is given, the <tt>Value</tt> (having no terminating 
+% NULL_CHARACTER) must be exactly 0 or Size - 1 characters long.  For variable
+% lengths any range between 0 and Size - 1 octets is considered to be correct.
+% </p>
 %
-% <p>An string is translated into binary using the BIF 
-% <tt>list_to_binary</tt>, thus one octet per character, NULL terminating
-% character included.</p>
+% <p>The string is translated into binary using the BIF <tt>list_to_binary
+% </tt>, thus one octet per character.</p>
+%
+% <p><font color="red">Important (Since version 0.2).</font>  The base syntax 
+% takes care of trailing NULL_CHARACTERs for you so, <i>even you have to count 
+% this character when setting the <tt>Size</tt> field</i>, <b>do not</b> add a 
+% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:encode/2 
+% handles NULLs on its own.</p>
+%
+% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string 
+% accordingly to SMPP specs.  Do not add the trailing NULL_CHARACTER to the
+% values of the c_octet_string parameters.  The NULL_CHARACTER is automatically
+% included at encode time.</p>
 %
 %
 % <h4><a name="encode-octet_string">octet_string</a></h4>
@@ -584,8 +633,8 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 % @see encode_iter/2
 % @see encode_list/2
 % @see encode_try/2
-% @see is_hex_string/1
-% @see is_dec_string/1
+% @see my_string:is_dec/1
+% @see my_string:is_hex/1
 % @end
 %%
 encode(Value, #constant{value = Value}) when list(Value) -> 
@@ -602,7 +651,7 @@ encode(Value, #integer{size = Size, min = Min, max = Max})
     {ok, <<Value:Size/integer-unit:8>>};
 
 encode(Value, #c_octet_string{format = hex} = Type) ->
-    case is_hex_string(Value) of
+    case my_string:is_hex(Value) of
         true ->
             encode(Value, Type#c_octet_string{format = free});
         false ->
@@ -610,28 +659,23 @@ encode(Value, #c_octet_string{format = hex} = Type) ->
     end;
 
 encode(Value, #c_octet_string{format = dec} = Type) ->
-    case is_dec_string(Value) of
+    case my_string:is_dec(Value) of
         true ->
             encode(Value, Type#c_octet_string{format = free});
         false ->
             {error, {type_mismatch, Type, Value}}
     end;
 
-encode(Value, #c_octet_string{fixed = true, size = Size} = Type)
-  when list(Value), (length(Value) == Size) or (length(Value) == 1) ->
-    encode(Value, Type#c_octet_string{fixed = false});
+encode(Value, #c_octet_string{fixed = true, size = Size})
+  when list(Value), (length(Value) == Size - 1) or (length(Value) == 0) ->
+    {ok, list_to_binary(Value ++ [?NULL_CHARACTER])};
 
-encode(Value, #c_octet_string{size = Size} = Type)
-  when list(Value), length(Value) =< Size ->
-    case lists:last(Value) of
-        ?NULL_CHARACTER ->
-            {ok, list_to_binary(Value)};
-        _Other ->
-            {error, {type_mismatch, Type, Value}}
-    end;
+encode(Value, #c_octet_string{size = Size})
+  when list(Value), length(Value) < Size -> % was =<
+    {ok, list_to_binary(Value ++ [?NULL_CHARACTER])};
 
 encode(Value, #octet_string{format = hex} = Type) ->
-    case is_hex_string(Value) of
+    case my_string:is_hex(Value) of
         true ->
             encode(Value, Type#octet_string{format = free});
         false ->
@@ -639,16 +683,16 @@ encode(Value, #octet_string{format = hex} = Type) ->
     end;
 
 encode(Value, #octet_string{format = dec} = Type) ->
-    case is_dec_string(Value) of
+    case my_string:is_dec(Value) of
         true ->
             encode(Value, Type#octet_string{format = free});
         false ->
             {error, {type_mismatch, Type, Value}}
     end;
 
-encode(Value, #octet_string{fixed = true, size = Size} = Type) 
+encode(Value, #octet_string{fixed = true, size = Size}) 
   when list(Value), (length(Value) == Size) or (length(Value) == 0) ->
-    encode(Value, Type#octet_string{fixed = false});
+    {ok, list_to_binary(Value)};
 
 encode(Value, #octet_string{size = Size} = Type) 
   when list(Value), length(Value) =< Size ->
@@ -857,62 +901,6 @@ fit(Type, Size) ->
 % Internal functions
 %%====================================================================
 %%%
-% @spec take_until(Binary, Pattern, Size) -> Result
-%    Binary       = bin()
-%    Pattern      = bin()
-%    Size         = int()
-%    Result       = {ok, UntilPattern, Rest}                 | 
-%                   {error, {not_found, Pattern, UntilSize}}
-%    UntilPattern = bin()
-%    Rest         = bin()
-%    Prefix       = bin()
-%
-% @doc Gets the leading octets of a Binary until Pattern is found or Size 
-% octets are inspected.
-%
-% <p>If found before Size bytes are consumed a binary with the leading octets 
-% UntilPattern (Pattern included) is returned along the remainder of the 
-% binary, otherwise an error is reported (the Pattern and the first Size bytes 
-% are returned as additional information).</p>
-%
-% @see take_until/3
-% @end
-%
-% %@equiv
-%%
-take_until(Binary, Pattern, Size) ->
-    case take_until(Binary, Pattern, Size, []) of
-        not_found ->
-            MinSize = lists:min([Size, size(Binary)]),
-            <<UntilSize:MinSize/binary-unit:8, _Rest/binary>> = Binary,
-            {error, {not_found, Pattern, UntilSize}};
-        {ok, UntilPattern, Rest} ->
-            {ok, UntilPattern, Rest}
-    end.
-
-%%%
-% @doc Auxiliary function for take_until/3
-% @end
-%
-% %@see
-%%
-take_until(<<>>, _Pattern, _Size, _Acc) ->
-    not_found;
-
-take_until(_Binary, Pattern, Size, _Acc) when size(Pattern) > Size ->
-    not_found;
-
-take_until(Binary, Pattern, Size, Acc) ->
-    Len = size(Pattern),
-    case Binary of
-        <<Pattern:Len/binary-unit:8, Rest/binary>> ->
-            Prefix = list_to_binary(lists:reverse(Acc)),
-            {ok, concat_binary([Prefix, Pattern]), Rest};
-        <<Octet:8, Rest/binary>> ->
-            take_until(Rest, Pattern, Size - 1, [Octet|Acc])
-    end.
-
-%%%
 % @spec error_priority(Error) -> int()
 %    Error     = {error, Reason}
 %    Reason    = {Id, Type, Details}
@@ -965,56 +953,3 @@ error_priority({type_mismatch, T, _R}, Depth) when record(T, union);
 
 error_priority(_Other, Depth) -> % contants and unknown errors
     (Depth * 3) + 0.
-
-
-%%%
-% @spec is_hex_string(String) -> true | false
-%    String = string()
-%
-% @doc Checks if String is a sequence of hexadecimal digits, every character
-% belongs to [$0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $A, $B, $C, $D, $E, $F,
-% $a, $b, $c, $d, $e, $f].
-%
-% @see is_dec_string/1
-% @end
-%
-% %@equiv
-%%
-is_hex_string([]) ->
-    true;
-
-is_hex_string([?NULL_CHARACTER]) ->
-    true;
-
-is_hex_string([Digit|Rest]) when (Digit >= 47) and (Digit =< 57);
-                                 (Digit >= 65) and (Digit =< 70);
-                                 (Digit >= 97) and (Digit =< 102) ->
-    is_hex_string(Rest);
-
-is_hex_string(_String) ->
-    false.
-
-
-%%%
-% @spec is_dec_string(String) -> true | false
-%    String = string()
-%
-% @doc Checks if String is a sequence of decimal digits, every character
-% belongs to [$0, $1, $2, $3, $4, $5, $6, $7, $8, $9].
-%
-% @see is_hex_string/1
-% @end
-%
-% %@equiv
-%%
-is_dec_string([]) ->
-    true;
-
-is_dec_string([?NULL_CHARACTER]) ->
-    true;
-
-is_dec_string([Digit|Rest]) when (Digit >= 48) and (Digit =< 57) ->
-    is_dec_string(Rest);
-
-is_dec_string(_String) ->
-    false.

@@ -25,6 +25,15 @@
 % document [SMPP 5.0].</p>
 %
 %
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>$\0 removed from the NULL_C_OCTET_STRING macro.</li>
+% </ul>
+%
+%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -213,7 +222,7 @@
 %%
 -define(NULL_CHARACTER, 0).
 -define(NULL_INTEGER,   0).
--define(NULL_C_OCTET_STRING, "\0").
+-define(NULL_C_OCTET_STRING, "").
 -define(NULL_OCTET_STRING,   "").
 
 

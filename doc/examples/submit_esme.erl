@@ -21,6 +21,16 @@
 %
 % <p>A very simple ESME for submitting short messages.</p>
 %
+%
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [18 Feb 2004]
+% 
+% <ul>
+%   <li>Trailing $\0 removed from the c_octet_string values.</li>
+% </ul>
+%
+%
 % @copyright 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique]
@@ -78,7 +88,7 @@
 % %@equiv
 %%
 start() ->
-    start_link("banana\0", "secret\0", "1950\0", "1950\0", {193, 144, 50, 51}).
+    start_link("banana", "secret", "1950", "1950", {193, 144, 50, 51}).
     
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),
@@ -332,10 +342,6 @@ submit_sm(ParamList) ->
 %     What   = term()
 %
 % @doc Reads a string from the standard input.
-%
-% <p>Notice that NULL characters must be explicitly assigned in C-Octet
-% Strings :-(  This won't be true in the next version of the library :-)
-% </p>
 % @end 
 %
 % % @see
@@ -345,7 +351,7 @@ submit_sm(ParamList) ->
 read_string(Prompt) ->
     case io:fread(Prompt, "~s") of
         {ok, InputList} ->
-            hd(InputList) ++ "\0";
+            hd(InputList);
         Error ->
             Error
     end.

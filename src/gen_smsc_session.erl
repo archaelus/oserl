@@ -1207,6 +1207,12 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             handle_input_corrupt_pdu(undefined,?ESME_RUNKNOWNERR,0,StateData),
             {next_state, StateName, StateData}
     end;
+handle_event({recv_error, _Error}, unbound, StateData) ->
+    io:format("Underlying connection closed while ~p~n", [unbound]),
+    {stop, normal, StateData#state{socket = closed}};
+handle_event({recv_error, _Error} = R, StateName, StateData) ->
+    io:format("Underlying connection closed while ~p~n", [StateName]),
+    {stop, R, StateData#state{socket = closed}};
 handle_event(die, StateName, StateData) ->
     {stop, normal, StateData}.
 
@@ -1334,16 +1340,8 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
-handle_info({'EXIT', _, {recv_error, C}}, unbound, #state{socket = C} = S) ->
-    io:format("Underlying connection closed: ~p~n", [unbound]),
-    {stop, normal, S#state{socket = closed}};
-handle_info({'EXIT', _, {recv_error, C} = R}, N, #state{socket = C} = S) ->
-    io:format("Underlying connection closed: ~p~n", [N]),
-    {stop, R, S#state{socket = closed}};
-handle_info({'EXIT', _, normal}, N, S) ->
-    {next_state, N, S};
-handle_info({'EXIT', _, R}, _N, S) ->
-    {stop, R, S}.
+handle_info(Info, StateName, StateData) -> 
+    {next_state, StateName, StateData}.
     
 
 %% @spec terminate(Reason, StateName, StateData) -> true
@@ -1364,7 +1362,6 @@ terminate(R, _N, S) when S#state.socket == closed; R == kill ->
             true
     end;
 terminate(R, N, S) ->
-    process_flag(trap_exit, false),
     gen_tcp:close(S#state.socket),
     terminate(R, N, S#state{socket = closed}).
 
@@ -1617,8 +1614,8 @@ request_broker(Caller, CmdId, Time) ->
     end.
 
 
-%% @spec wait_recv(Session, Socket) -> void()
-%%    Session   = pid()
+%% @spec wait_recv(FsmRef, Socket) -> void()
+%%    FsmRef   = pid()
 %%    Socket = socket()
 %%
 %% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
@@ -1627,30 +1624,30 @@ request_broker(Caller, CmdId, Time) ->
 %%
 %% <p>If the <tt>Socket</tt> is closed a failure is reported.</p>
 %% @end
-wait_recv(Session, Socket, Buffer) ->
+wait_recv(FsmRef, Socket, Buffer) ->
     Timestamp = now(),
     case gen_tcp:recv(Socket, 0) of
         {ok, Input} ->
             L = my_calendar:time_since(Timestamp),
-            B = handle_input(Session, concat_binary([Buffer, Input]), L, 1),
-            recv_loop(Session, Socket, B);
-        _Error ->
-            exit({recv_error, Socket})
+            B = handle_input(FsmRef, concat_binary([Buffer, Input]), L, 1),
+            recv_loop(FsmRef, Socket, B);
+        Error ->
+            gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
 
 %% @doc Auxiliary function for wait_recv/2
 %%
 %% @see wait_recv/2
 %% @end
-recv_loop(Session, Socket, Buffer) ->
+recv_loop(FsmRef, Socket, Buffer) ->
     case gen_tcp:recv(Socket, 0, 0) of
         {ok, Input} ->                    % Some input waiting already 
-            B = handle_input(Session, concat_binary([Buffer, Input]), 0, 1),
-            recv_loop(Session, Socket, B);
+            B = handle_input(FsmRef, concat_binary([Buffer, Input]), 0, 1),
+            recv_loop(FsmRef, Socket, B);
         {error, timeout} ->               % No data inmediately available
-            wait_recv(Session, Socket, Buffer);
-        _Error ->
-            exit({recv_error, Socket})
+            wait_recv(FsmRef, Socket, Buffer);
+        Error ->
+            gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
 
 %% @doc Auxiliary function for wait_recv/3 and recv_loop/3.  Splits input
@@ -1658,18 +1655,18 @@ recv_loop(Session, Socket, Buffer) ->
 %%
 %% <p><tt>N</tt> counts the PDUs in Buffer.</p>
 %% @end
-handle_input(Session, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
+handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
     Len = CommandLength - 4,
     case Rest of
         <<PduRest:Len/binary-unit:8, NextPdus/binary>> -> 
             BinaryPdu = <<CommandLength:32, PduRest/binary>>,
-            gen_fsm:send_all_state_event(Session,{input, BinaryPdu, Lapse, N}),
+            gen_fsm:send_all_state_event(FsmRef, {input, BinaryPdu, Lapse, N}),
             % The buffer may carry more than one SMPP PDU.
-            handle_input(Session, NextPdus, Lapse, N + 1);
+            handle_input(FsmRef, NextPdus, Lapse, N + 1);
         _IncompletePdu ->
             Buffer
     end;
-handle_input(_Session, Buffer, _Lapse, _N) ->
+handle_input(_FsmRef, Buffer, _Lapse, _N) ->
     Buffer.
 
 
@@ -1697,16 +1694,16 @@ start_timer(Time, Msg) ->
 
 %% @doc Auxiliary function for start_timer/2.
 %% @end
-timer_loop(_Parent, infinity, _Event) ->
+timer_loop(_FsmRef, infinity, _Event) ->
     ok;
-timer_loop(Parent, Time, Event) ->
+timer_loop(FsmRef, Time, Event) ->
     receive 
-        {Parent, cancel_timer} ->
+        {FsmRef, cancel_timer} ->
             ok;
         Reset ->
-            timer_loop(Parent, Time, Event)
+            timer_loop(FsmRef, Time, Event)
     after Time ->
-            gen_fsm:send_event(Parent, {timeout, self(), Event})
+            gen_fsm:send_event(FsmRef, {timeout, self(), Event})
     end.
 
 

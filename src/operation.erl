@@ -93,8 +93,8 @@
 -export([get_param/2, 
          set_param/3, 
          merge_params/2,
-		 from_list/1,
-		 to_list/1,
+         from_list/1,
+         to_list/1,
          new/3,
          new/4,
          pack/1,
@@ -195,7 +195,7 @@ merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
 %% % @see dict:from_list/1
 %% @end 
 from_list(List) ->
-	dict:from_list(List).
+    dict:from_list(List).
 
 
 %% @spec to_list(Pdu) -> List
@@ -212,7 +212,7 @@ from_list(List) ->
 %% % @see dict:to_list/1
 %% @end 
 to_list(Pdu) ->
-	dict:to_list(Pdu).
+    dict:to_list(Pdu).
 
 
 %% @spec new(CommandId, SequenceNumber, InitParams) -> Pdu

@@ -173,7 +173,6 @@
 
 -behaviour(gen_server).
 -behaviour(gen_esme_session).
--behaviour(gen_connection).
 
 %%%-------------------------------------------------------------------
 %%% Include files
@@ -193,11 +192,11 @@
          start/5,
          start_link/4,
          start_link/5, 
-         listen/1,
-         listen/3,
-         close_listen/1,
-         session/3,
-         close_session/2,
+         listen_start/1,
+         listen_start/3,
+         listen_stop/1,
+         session_start/3,
+         session_stop/2,
          bind_receiver/3,
          bind_transmitter/3,
          bind_transceiver/3,
@@ -235,14 +234,15 @@
          handle_unbind/3]).
 
 %%%-------------------------------------------------------------------
-%%% Internal gen_connection exports
-%%%-------------------------------------------------------------------
--export([handle_accept/3, handle_input/4]).
-
-%%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
--define(SESSION_MODULE, gen_esme_session).
+-define(CONNECT_TIME, 30000).
+-define(LISTEN_OPTIONS, 
+        [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
+-define(CONNECT_OPTIONS, 
+        [binary, {packet, 0}, {active, false}]).
+
+-define(DECR(X), if is_integer(X) -> X - 1; true -> X end).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -264,7 +264,7 @@
 %%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, timers, listener, sessions}).
+-record(state, {mod, mod_state, timers, lsocket = closed}).
 
 
 %%%===================================================================
@@ -285,7 +285,6 @@ behaviour_info(callbacks) ->
      {handle_alert_notification, 3}, 
      {handle_operation, 3}, 
      {handle_unbind, 3}, 
-     {handle_session_failure, 2},
      {handle_listen_error, 1},
      {handle_call, 3},
      {handle_cast, 2},
@@ -400,7 +399,7 @@ start_link(ServerName, Module, Timers, Args, Options) ->
     gen_server:start_link(ServerName, ?MODULE, {Module,Timers,Args}, Options).
 
 
-%% @spec listen(ServerRef) -> ok | {error, Reason}
+%% @spec listen_start(ServerRef) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
@@ -412,14 +411,14 @@ start_link(ServerName, Module, Timers, Args, Options) ->
 %% <p>By default only one connection is accepted, then the listen socket
 %% will be closed.</p>
 %%
-%% @see listen/2
+%% @see listen_start/3
 %% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, 1)
 %% @end 
-listen(ServerRef) -> 
-    listen(ServerRef, ?DEFAULT_SMPP_PORT, 1).
+listen_start(ServerRef) -> 
+    listen_start(ServerRef, ?DEFAULT_SMPP_PORT, 1).
 
 
-%% @spec listen(ServerRef, Port, Count) -> ok | {error, Reason}
+%% @spec listen_start(ServerRef, Port, Count) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
@@ -431,22 +430,22 @@ listen(ServerRef) ->
 %%
 %% <p><tt>Count</tt> connections are accepted.</p>
 %% @end 
-listen(ServerRef, Port, Count) ->
-    gen_server:call(ServerRef, {listen, Port, Count}).
+listen_start(ServerRef, Port, Count) ->
+    gen_server:call(ServerRef, {listen_start, Port, Count}).
 
 
-%% @spec close_listen(ServerRef) -> ok
+%% @spec listen_stop(ServerRef) -> ok
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
 %%
 %% @doc Stops listening.
 %% @end 
-close_listen(ServerRef) ->
-    gen_server:cast(ServerRef, close_listen).
+listen_stop(ServerRef) ->
+    gen_server:cast(ServerRef, listen_stop).
 
 
-%% @spec session(ServerRef, Address, Port) -> Result
+%% @spec session_start(ServerRef, Address, Port) -> Result
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
@@ -461,11 +460,22 @@ close_listen(ServerRef) ->
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
 %% @end 
-session(ServerRef, Address, Port) ->
-    gen_server:call(ServerRef, {session, Address, Port}, infinity).
+session_start(ServerRef, Address, Port) ->
+    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
+        {ok, Socket} ->
+            case gen_server:call(ServerRef, {session_start, Socket}) of
+                {ok, Session} ->
+                    gen_tcp:controlling_process(Socket, Session),
+                    {ok, Session};
+                SessionError ->
+                    SessionError
+            end;
+        ConnectError ->
+            ConnectError
+    end.
 
 
-%% @spec close_session(ServerRef, Session) -> ok
+%% @spec session_stop(ServerRef, Session) -> ok
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
@@ -473,8 +483,8 @@ session(ServerRef, Address, Port) ->
 %%
 %% @doc Closes the <tt>Session</tt>.
 %% @end 
-close_session(ServerRef, Session) ->
-    gen_server:cast(ServerRef, {close_session, Session}).
+session_stop(_ServerRef, Session) ->
+    gen_esme_session:stop(Session).
 
 
 %% @spec bind_receiver(ServerRef, Session, ParamList) -> Result
@@ -492,8 +502,8 @@ close_session(ServerRef, Session) ->
 %% @doc Issues a <i>bind_receiver</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-bind_receiver(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {bind_receiver, Session, ParamList}, infinity).
+bind_receiver(_ServerRef, Session, ParamList) ->
+    gen_esme_session:bind_receiver(Session, ParamList).
 
 
 %% @spec bind_transmitter(ServerRef, Session, ParamList) -> Result
@@ -511,8 +521,8 @@ bind_receiver(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>bind_transmitter</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-bind_transmitter(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {bind_transmitter,Session,ParamList}, infinity).
+bind_transmitter(_ServerRef, Session, ParamList) ->
+    gen_esme_session:bind_transmitter(Session, ParamList).
 
 
 %% @spec bind_transceiver(ServerRef, Session, ParamList) -> Result
@@ -530,8 +540,8 @@ bind_transmitter(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>bind_transceiver</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-bind_transceiver(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {bind_transceiver,Session,ParamList}, infinity).
+bind_transceiver(_ServerRef, Session, ParamList) ->
+    gen_esme_session:bind_transceiver(Session, ParamList).
 
 
 %% @spec broadcast_sm(ServerRef, Session, ParamList) -> Result
@@ -549,8 +559,8 @@ bind_transceiver(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>broadcast_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-broadcast_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {broadcast_sm, Session, ParamList}, infinity).
+broadcast_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:broadcast_sm(Session, ParamList).
 
 
 %% @spec cancel_broadcast_sm(ServerRef, Session, ParamList) -> Result
@@ -568,9 +578,8 @@ broadcast_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>cancel_broadcast_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-cancel_broadcast_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(
-      ServerRef, {cancel_broadcast_sm, Session, ParamList}, infinity).
+cancel_broadcast_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:cancel_broadcast_sm(Session, ParamList).
 
 
 %% @spec cancel_sm(ServerRef, Session, ParamList) -> Result
@@ -588,8 +597,8 @@ cancel_broadcast_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>cancel_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-cancel_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {cancel_sm, Session, ParamList}, infinity).
+cancel_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:cancel_sm(Session, ParamList).
 
 
 %% @spec data_sm(ServerRef, Session, ParamList) -> Result
@@ -607,8 +616,8 @@ cancel_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>data_sm</i> operation on the session identified by 
 %% <tt>Session</tt>.
 %% @end
-data_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {data_sm, Session, ParamList}, infinity).
+data_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:data_sm(Session, ParamList).
 
 
 %% @spec query_broadcast_sm(ServerRef, Session, ParamList) -> Result
@@ -626,9 +635,8 @@ data_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>query_broadcast_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-query_broadcast_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(
-      ServerRef, {query_broadcast_sm, Session, ParamList}, infinity).
+query_broadcast_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:query_broadcast_sm(Session, ParamList).
 
 
 %% @spec query_sm(ServerRef, Session, ParamList) -> Result
@@ -646,8 +654,8 @@ query_broadcast_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>query_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-query_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {query_sm, Session, ParamList}, infinity).
+query_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:query_sm(Session, ParamList).
 
 
 %% @spec replace_sm(ServerRef, Session, ParamList) -> Result
@@ -665,8 +673,8 @@ query_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>replace_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-replace_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {replace_sm, Session, ParamList}, infinity).
+replace_sm(_ServerRef, Session, ParamList) ->
+    gen_esme_session:replace_sm(Session, ParamList).
 
 
 %% @spec submit_multi(ServerRef, Session, ParamList) -> Result
@@ -684,8 +692,8 @@ replace_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues a <i>submit_multi</i> operation on the session 
 %% identified by <tt>Session</tt>.
 %% @end
-submit_multi(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {submit_multi, Session, ParamList}, infinity).
+submit_multi(_ServerRef, Session, ParamList) ->
+    gen_esme_session:submit_multi(Session, ParamList).
 
 
 %% @spec submit_sm(ServerRef, Session, ParamList) -> Result
@@ -704,7 +712,7 @@ submit_multi(ServerRef, Session, ParamList) ->
 %% identified by <tt>Session</tt>.
 %% @end
 submit_sm(ServerRef, Session, ParamList) ->
-    gen_server:call(ServerRef, {submit_sm, Session, ParamList}, infinity).
+    gen_esme_session:submit_sm(Session, ParamList).
 
 
 %% @spec unbind(ServerRef, Session) -> Result
@@ -719,8 +727,8 @@ submit_sm(ServerRef, Session, ParamList) ->
 %% @doc Issues an <i>unbind</i> operation on the session identified by 
 %% <tt>Session</tt>.
 %% @end
-unbind(ServerRef, Session) ->
-    gen_server:call(ServerRef, {unbind_session, Session}, infinity).
+unbind(_ServerRef, Session) ->
+    gen_esme_session:unbind(Session).
 
 
 %% @spec call(ServerRef, Request) -> Reply
@@ -802,12 +810,7 @@ reply(Client, Reply) ->
 %% <p>Initiates the server.</p>
 %% @end
 init({Mod, Timers, Args}) ->
-    S = #state{mod      = Mod, 
-               timers   = Timers, 
-               listener = closed,
-               sessions = ets:new(sessions,[])},
-    process_flag(trap_exit, true),
-    pack(Mod:init(Args), S).
+    pack(Mod:init(Args), #state{mod = Mod, timers = Timers}).
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -841,43 +844,24 @@ init({Mod, Timers, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({accept, Conn, _Socket}, From, S) ->
-    case gen_esme_session:start_link(?MODULE, Conn, S#state.timers) of
-        {ok, Session} ->
-            ets:insert(S#state.sessions, {Session}),
-            {reply, {ok, Session}, S};
+handle_call({listen_start, Port, Count}, From, S) ->
+    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
+        {ok, LSocket} ->
+            Self = self(),
+            spawn_link(fun() -> listener(Self, LSocket, Count) end),
+            {reply, true, S#state{lsocket = LSocket}};
         _Error ->
-            {reply, error, S}
+            {reply, false, S}
     end;
-handle_call({listen, Port, Count}, From, S) ->
-    case gen_connection:start_listen(?MODULE, ?SESSION_MODULE, Port, Count) of
-        {ok, Listener} ->
-            {reply, ok, S#state{listener = Listener}};
-        Error ->
-            {reply, Error, S}
-    end;
-handle_call({session, Address, Port}, From, S) ->
-    case gen_connection:start_connect(?SESSION_MODULE, Address, Port) of
-        {ok, Conn} ->
-            % If the connection fails in the meanwhile and undesired exit
-            % is received by handle_info
-            case gen_esme_session:start_link(?MODULE, Conn, S#state.timers) of
-                {ok, Session} ->
-                    gen_connection:controlling_process(Conn, Session),
-                    ets:insert(S#state.sessions, {Session}),
-                    {reply, {ok, Session}, S};
-                SessionError ->
-                    {reply, SessionError, S}
-            end;
-        ConnectError ->
-            {reply, ConnectError, S}
-    end;
-handle_call({unbind_session, Session}, From, S) ->
-    spawn_link(fun() -> unbind_session(Session, From) end),
-    {noreply, S};
-handle_call({CmdName, Session, ParamList}, From, S) when list(ParamList) ->
-    spawn_link(fun() -> operation(CmdName, Session, ParamList, From) end),
-    {noreply, S};
+handle_call({session_start, Socket}, From, S) ->
+    {reply, gen_esme_session:start_link(?MODULE, Socket, S#state.timers), S};
+handle_call({session_accept, Socket}, From, S) ->
+    {reply, gen_esme_session:start(?MODULE, Socket, S#state.timers), S};
+handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
+                                                    Bind == bind_transmitter;
+                                                    Bind == bind_receiver ->
+    link(Session),
+    pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
 handle_call({unbind, Session, Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
 handle_call({CmdName, Session, Pdu} = R, From, S) ->
@@ -910,14 +894,15 @@ handle_cast({outbind, Session, Pdu} = R, S) ->
     pack((S#state.mod):handle_outbind(R, S#state.mod_state), S);
 handle_cast({alert_notification, Session, Pdu} = R, S) ->
     pack((S#state.mod):handle_alert_notification(R, S#state.mod_state), S);
-handle_cast(close_listen, S) ->
-    % Cleaning is done in handle_info upon trap exit
-    gen_connection:stop(S#state.listener),
+handle_cast(listen_error, S) when S#state.lsocket == closed ->
     {noreply, S};
-handle_cast({close_session, Session}, S) ->
-    % Cleaning is done by handle_info upon trap exit
-    gen_esme_session:stop(Session),
-    {noreply, S}.
+handle_cast(listen_error, S) ->
+    gen_tcp:close(S#state.lsocket),  % Close it anyway
+    NewS = S#state{lsocket = closed},
+    pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
+handle_cast(listen_stop, S) ->
+    gen_tcp:close(S#state.lsocket),
+    {noreply, S#state{lsocket = closed}}.
 
 
 %% @spec handle_info(Info, State) -> Result
@@ -941,31 +926,6 @@ handle_cast({close_session, Session}, S) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'EXIT', P, normal}, S) when P == S#state.listener ->
-    % The listener terminates with normal status.
-    {noreply, S#state{listener = closed}};
-handle_info({'EXIT', P, Reason}, S) when P == S#state.listener ->
-    % The listener terminates on error.
-    NewS = S#state{listener = closed},
-    pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
-handle_info({'EXIT', P, normal} = Info, S) ->
-    % Child process P terminates with normal status.
-    case ets:member(S#state.sessions, P) of
-        true ->
-            ets:delete(S#state.sessions, P),
-            {noreply, S};
-        false ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
-    end;
-handle_info({'EXIT', P, Reason} = Info, S) ->
-    % Child process P terminates on error.
-    case ets:member(S#state.sessions, P) of
-        true ->
-            ets:delete(S#state.sessions, P),
-            pack((S#state.mod):handle_session_failure(P,S#state.mod_state), S);
-        false ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
-    end;
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
@@ -981,9 +941,9 @@ handle_info(Info, S) ->
 %%
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
-terminate(Reason, S) ->
-    io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), Reason]),
-    pack((S#state.mod):terminate(Reason, S#state.mod_state), S).
+terminate(R, S) ->
+    io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), R]),
+    pack((S#state.mod):terminate(R, S#state.mod_state), S).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
@@ -1001,32 +961,32 @@ code_change(OldVsn, S, Extra) ->
 %%%===================================================================
 %%% ESME Session functions
 %%%===================================================================
-%% @spec handle_outbind(ESME, Session, Pdu) -> ok
-%%    ESME = pid()
+%% @spec handle_outbind(ServerRef, Session, Pdu) -> ok
+%%    ServerRef = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
 %%
 %% @doc <a href="gen_esme_session.html#handle_outbind-3">gen_esme_session - 
 %% handle_outbind/3</a> callback implementation.
 %% @end
-handle_outbind(ESME, Session, Pdu) ->
-    gen_server:cast(ESME, {outbind, Session, Pdu}).
+handle_outbind(ServerRef, Session, Pdu) ->
+    gen_server:cast(ServerRef, {outbind, Session, Pdu}).
 
 
-%% @spec handle_alert_notification(ESME, Session, Pdu) -> ok
-%%    ESME = pid()
+%% @spec handle_alert_notification(ServerRef, Session, Pdu) -> ok
+%%    ServerRef = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
 %%
 %% @doc <a href="gen_esme_session.html#handle_alert_notification-3">
 %% gen_esme_session - handle_alert_notification/3</a> callback implementation.
 %% @end
-handle_alert_notification(ESME, Session, Pdu) ->
-    gen_server:cast(ESME, {alert_notification, Session, Pdu}).
+handle_alert_notification(ServerRef, Session, Pdu) ->
+    gen_server:cast(ServerRef, {alert_notification, Session, Pdu}).
 
 
-%% @spec handle_operation(ESME, Session, {CmdName, Pdu}) -> Result
-%%    ESME = pid()
+%% @spec handle_operation(ServerRef, Session, {CmdName, Pdu}) -> Result
+%%    ServerRef = pid()
 %%    Session = pid()
 %%    CmdName = data_sm | deliver_sm
 %%    Pdu = pdu()
@@ -1038,12 +998,12 @@ handle_alert_notification(ESME, Session, Pdu) ->
 %% @doc <a href="gen_esme_session.html#handle_operation-3">gen_esme_session - 
 %% handle_operation/3</a> callback implementation.
 %% @end
-handle_operation(ESME, Session, {CmdName, Pdu}) ->
-    gen_server:call(ESME, {CmdName, Session, Pdu}, infinity).
+handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
+    gen_server:call(ServerRef, {CmdName, Session, Pdu}, infinity).
 
 
-%% @spec handle_unbind(ESME, Session, Pdu) -> ok | {error, Error}
-%%    ESME = pid()
+%% @spec handle_unbind(ServerRef, Session, Pdu) -> ok | {error, Error}
+%%    ServerRef = pid()
 %%    Session = pid()
 %%    Pdu = pdu()
 %%    Error = int()
@@ -1051,59 +1011,13 @@ handle_operation(ESME, Session, {CmdName, Pdu}) ->
 %% @doc <a href="gen_esme_session.html#handle_unbind-3">gen_esme_session - 
 %% handle_unbind/3</a> callback implementation.
 %% @end
-handle_unbind(ESME, Session, Pdu) ->
-    gen_server:call(ESME, {unbind, Session, Pdu}, infinity).
+handle_unbind(ServerRef, Session, Pdu) ->
+    gen_server:call(ServerRef, {unbind, Session, Pdu}, infinity).
 
-
-%%%===================================================================
-%%% Server gen_connection functions
-%%%===================================================================
-%% @spec handle_accept(Owner, Conn, Socket) -> Result
-%%    Owner = Conn = NewOwner = pid()
-%%    Socket = socket()
-%%    Result = {ok, NewOwner} | error
-%%
-%% @doc <a href="gen_connection.html#handle_accept-3">gen_connection 
-%% - handle_accept/3</a> callback implementation.
-%% @end
-handle_accept(Owner, Conn, Socket) -> 
-    gen_server:call(Owner, {accept, Conn, Socket}, infinity).
-
-
-%% @spec handle_input(Owner, Conn, Input, Lapse) -> {ok, RestBuffer}
-%%    Pid = pid()
-%%    Conn = pid()
-%%    Input = binary()
-%%    RestBuffer = binary()
-%%    Lapse = int()
-%%
-%% @doc <a href="gen_connection.html#handle_input-4">gen_connection
-%% - handle_input/4</a> callback implementation.
-%% @end
-handle_input(_Owner, _Conn, _Input, _Lapse) -> 
-    exit({unexpected_callback, handle_input}).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-%% @spec operation(CmdName, Session, ParamList, From) -> true
-%%
-%% @doc Issues a SMPP operation on the given <tt>Session</tt>.
-%% @end 
-operation(CmdName, Session, ParamList, From) ->
-    Reply = gen_esme_session:CmdName(Session, ParamList),
-    gen_server:reply(From, Reply).
-
-
-%% @spec unbind(CmdName, Session, ParamList, From) -> true
-%%
-%% @doc Issues an <i>unbind</i> on the given <tt>Session</tt>.
-%% @end 
-unbind_session(Session, From) ->
-    Reply = gen_esme_session:unbind(Session),
-    gen_server:reply(From, Reply).
-
-
 %% @spec pack(CallbackReply, State) -> Reply
 %%
 %% @doc The callback module replies as if I were gen_server.  Pack his
@@ -1129,3 +1043,33 @@ pack({ok, MS, Timeout}, S) ->
     {ok, S#state{mod_state = MS}, Timeout};
 pack(Other, _S) ->
     Other.
+
+
+%% @spec listener(ServerRef, LSocket) -> void()
+%%    ServerRef     = pid()
+%%    LSocket = socket()
+%%
+%% @doc Waits until a connection is requested on <tt>LSocket</tt> or an
+%% error occurs.  If successful the event <i>accept</i> is triggered. On
+%% error an exit on the listen socket is reported.
+%% @end
+listener(ServerRef, LSocket, Count) ->
+    case gen_tcp:accept(LSocket) of
+        {ok, Socket} ->
+            inet:setopts(Socket, ?CONNECT_OPTIONS),
+            case gen_server:call(ServerRef, {session_accept, Socket}) of
+                {ok, Pid} ->
+                    gen_tcp:controlling_process(Socket, Pid),
+                    if
+                        Count > 1 ->
+                            listener(ServerRef, LSocket, ?DECR(Count));
+                        true ->
+                            gen_server:cast(ServerRef, listen_stop)
+                    end;
+                _Error ->
+                    gen_tcp:close(Socket),
+                    listener(ServerRef, LSocket, Count)
+            end;
+        _Error ->
+            gen_server:cast(ServerRef, listen_error)
+    end.

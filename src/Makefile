@@ -18,7 +18,6 @@ EDOC_MODULES = \
 	pdu_syntax \
 	operation \
 	sm \
-	gen_connection \
 	gen_esme_session \
 	gen_smsc_session \
 	gen_esme \
@@ -110,5 +109,6 @@ $(EBIN)/pdu_syntax.beam:../include/pdu_syntax.hrl
 $(EBIN)/operation.beam:../include/smpp_globals.hrl
 $(EBIN)/operation.beam:../include/smpp_pdu.hrl
 $(EBIN)/gen_esme_session.beam:../include/oserl.hrl
+$(EBIN)/gen_smsc_session.beam:../include/oserl.hrl
 $(EBIN)/gen_esme.beam:../include/oserl.hrl
-$(EBIN)/gen_mc_session.beam:../include/oserl.hrl
+$(EBIN)/gen_smsc.beam:../include/oserl.hrl

@@ -42,15 +42,15 @@
 %%% Internal exports
 %%%-------------------------------------------------------------------
 -export([init/1,
-		 handle_bind/3, 
-		 handle_operation/3, 
-		 handle_unbind/3, 
-		 handle_listen_error/1,
-		 handle_call/3,
-		 handle_cast/2,
-		 handle_info/2,
-		 terminate/2,
-		 code_change/3]).
+         handle_bind/3, 
+         handle_operation/3, 
+         handle_unbind/3, 
+         handle_listen_error/1,
+         handle_call/3,
+         handle_cast/2,
+         handle_info/2,
+         terminate/2,
+         code_change/3]).
 
 %%%-------------------------------------------------------------------
 %%% Macros
@@ -88,15 +88,15 @@
 %% @see start/0
 %% @end
 start_link() ->
-	gen_smsc:start_link({local,?SERVER}, ?MODULE, ?DEFAULT_TIMERS, [],[]),
+    gen_smsc:start_link({local,?SERVER}, ?MODULE, ?DEFAULT_TIMERS, [],[]),
     gen_smsc:listen_start(?SERVER, ?SMPP_PORT, infinity).
 
 
 deliver_sm(SourceAddress, ShortMessage) ->
     ParamList = [{source_addr, SourceAddress}, 
-				 {destination_addr, ?DESTINATION_ADDR}, 
-				 {short_message, ShortMessage}],
-	gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
+                 {destination_addr, ?DESTINATION_ADDR}, 
+                 {short_message, ShortMessage}],
+    gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
 
 
 %% @spec stop() -> ok
@@ -108,7 +108,7 @@ deliver_sm(SourceAddress, ShortMessage) ->
 %% @equiv gen_server:call(?SERVER, die, 10000).
 %% @end
 stop() ->
-	gen_smsc:call(?SERVER, die, 10000).
+    gen_smsc:call(?SERVER, die, 10000).
 
 %%%===================================================================
 %%% Server functions
@@ -122,7 +122,8 @@ stop() ->
 %%
 %% @doc Initiates the server
 init(Args) ->
-	{ok, #state{}}.
+    process_flag(trap_exit, true),
+    {ok, #state{}}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -152,7 +153,7 @@ init(Args) ->
 %% @see terminate/2
 %% @end
 handle_call(die, _From, State) ->
-	{stop, normal, ok, State}.
+    {stop, normal, ok, State}.
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -172,8 +173,8 @@ handle_call(die, _From, State) ->
 %% @see terminate/2
 %% @end
 handle_cast({deliver_sm, ParamList}, S) ->
-	deliver_sm_iter(ParamList, S#state.rx),
-	{noreply, S}.
+    deliver_sm_iter(ParamList, S#state.rx),
+    {noreply, S}.
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -193,8 +194,23 @@ handle_cast({deliver_sm, ParamList}, S) ->
 %%
 %% @see terminate/2
 %% @end
+handle_info({'EXIT', P, R}, S) when R /= normal ->
+    case {lists:member(P, S#state.rx), lists:member(P, S#state.tx)} of
+        {true, true} ->
+            io:format("trx_session failure: ~p~n", [P]),
+            {noreply, S#state{rx = lists:delete(P, S#state.rx),
+                              tx = lists:delete(P, S#state.tx)}};
+        {true, false} ->
+            io:format("rx_session failure: ~p~n", [P]),
+            {noreply, S#state{rx = lists:delete(P, S#state.rx)}};
+        {false, true} ->
+            io:format("tx_session failure: ~p~n", [P]),
+            {noreply, S#state{tx = lists:delete(P, S#state.tx)}};
+        _NotASession ->
+            {stop, R, S}
+    end;
 handle_info(Info, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
@@ -205,7 +221,7 @@ handle_info(Info, State) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, State) ->
-	ok.
+    ok.
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
@@ -216,7 +232,7 @@ terminate(Reason, State) ->
 %% @doc Convert process state when code is changed
 %% @end
 code_change(OldVsn, State, Extra) ->
-	{ok, State}.
+    {ok, State}.
 
 
 %%%===================================================================
@@ -244,15 +260,15 @@ code_change(OldVsn, State, Extra) ->
 %% handle_bind/3</a> callback implementation.
 %% @end
 handle_bind({bind_receiver, Rx, Pdu}, From, S) ->
-	io:format("bound_rx ~n"),
-	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Rx|S#state.rx]}};
+    io:format("bound_rx: ~p~n", [Rx]),
+    {reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Rx|S#state.rx]}};
 handle_bind({bind_transmitter, Tx, Pdu}, From, S) ->
-	io:format("bound_tx ~n"),
-	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{tx = [Tx|S#state.tx]}};
+    io:format("bound_tx: ~p~n", [Tx]),
+    {reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{tx = [Tx|S#state.tx]}};
 handle_bind({bind_transceiver, Trx, Pdu}, From, S) ->
-	io:format("bound_trx ~n"),
-	{reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Trx|S#state.rx],
-													 tx = [Trx|S#state.tx]}}.
+    io:format("bound_trx: ~p~n", [Trx]),
+    {reply, {ok, [{system_id, ?SYSTEM_ID}]}, S#state{rx = [Trx|S#state.rx],
+                                                     tx = [Trx|S#state.tx]}}.
 
 
 %% @spec handle_operation(Operation, From, State) -> Result</tt>
@@ -288,11 +304,11 @@ handle_operation({Submit, Session, Pdu}, From, S) when Submit == submit_sm;
     N = operation:get_param(destination_addr, Pdu),
     T = element(2, sm:message_user_data(Pdu)),
     I = S#state.message_id,
-	io:format("New  SM: ~p - ~p~n", [N, T]),
+    io:format("New  SM: ~p - ~p~n", [N, T]),
     {reply, {ok, [{message_id, integer_to_list(I)}]}, S#state{message_id=I+1}};
 handle_operation({_Operation, Session, Pdu}, From, S) ->
-	io:format("*** operation - ~p ***~n", [operation:to_list(Pdu)]),
-	{reply, {error, ?ESME_RINVCMDID, []}, S}.
+    io:format("*** operation - ~p ***~n", [operation:to_list(Pdu)]),
+    {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
 
 %% @spec handle_unbind(Unbind, From, State) -> Result
@@ -312,7 +328,7 @@ handle_operation({_Operation, Session, Pdu}, From, S) ->
 %% handle_unbind/3</a> callback implementation.
 %% @end
 handle_unbind({unbind, Session, Pdu}, _From, S) ->
-    io:format("*** unbind - ~p ***~n", [operation:to_list(Pdu)]),
+    io:format("unbind: ~p~n", [Session]),
     {reply, ok, S#state{rx = lists:delete(Session, S#state.rx),
                         tx = lists:delete(Session, S#state.tx)}}.
 
@@ -328,14 +344,14 @@ handle_unbind({unbind, Session, Pdu}, _From, S) ->
 %% handle_listen_error/1</a> callback implementation.
 %% @end
 handle_listen_error(State) ->
-	io:format("*** listen error ***~n", []),
-	{noreply, State}.
+    io:format("*** listen error ***~n", []),
+    {noreply, State}.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
 deliver_sm_iter(ParamList, []) ->
-	ok;
+    ok;
 deliver_sm_iter(ParamList, [H|T]) ->
-	gen_smsc:deliver_sm(?SERVER, H, ParamList),
-	deliver_sm_iter(ParamList, T).
+    gen_smsc:deliver_sm(?SERVER, H, ParamList),
+    deliver_sm_iter(ParamList, T).

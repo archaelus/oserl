@@ -221,9 +221,7 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-%-define(SESSION_MODULE, gen_smsc_session).
 -define(CONNECT_TIME, 30000).
-%-define(ACCEPT_TIME, 30000).
 -define(LISTEN_OPTIONS, 
         [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
 -define(CONNECT_OPTIONS, 
@@ -396,7 +394,7 @@ start_link(ServerName, Module, Timers, Args, Options) ->
 %%
 %% <p>By default infinity connections are accepted.</p>
 %%
-%% @see listen/2
+%% @see listen_start/3
 %% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, infinity)
 %% @end 
 listen_start(ServerRef) -> 
@@ -717,6 +715,12 @@ handle_call({CmdName, Session, Pdu} = R, From, S) ->
 %% @end
 handle_cast({cast, Request}, S) ->
     pack((S#state.mod):handle_cast(Request, S#state.mod_state), S);
+handle_cast(listen_error, S) when S#state.lsocket == closed ->
+    {noreply, S};
+handle_cast(listen_error, S) ->
+    gen_tcp:close(S#state.lsocket),  % Close it anyway
+    NewS = S#state{lsocket = closed},
+    pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
 handle_cast(listen_stop, S) ->
     gen_tcp:close(S#state.lsocket),
     {noreply, S#state{lsocket = closed}}.
@@ -743,13 +747,6 @@ handle_cast(listen_stop, S) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'EXIT', _, {listen_error,_}}, S) when S#state.lsocket == closed ->
-    % The listener terminates after stop_listen event.
-    {noreply, S};
-handle_info({'EXIT', _, {listen_error, L}}, #state{lsocket = L} = S) ->
-    % LSocket fails and the listener terminates.
-    NewS = S#state{lsocket = closed},
-    pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
@@ -889,12 +886,12 @@ listener(ServerRef, LSocket, Count) ->
                         Count > 1 ->
                             listener(ServerRef, LSocket, ?DECR(Count));
                         true ->
-                            gen_tcp:close(LSocket)
+                            gen_server:cast(ServerRef, listen_stop)
                     end;
                 _Error ->
                     gen_tcp:close(Socket),
                     listener(ServerRef, LSocket, Count)
             end;
         _Error ->
-            exit(ServerRef, {listen_error, LSocket})
+            gen_server:cast(ServerRef, listen_error)
     end.

@@ -17,8 +17,6 @@ Contents
 
 1. Version 0.2
 
-- Review the timeout event on get_esme_session
-
 - Don't like current PDU packing/unpacking mechanism using the pdu_type/1 
   function.
 
@@ -35,6 +33,8 @@ Contents
   DEST_TELEMATICS_ID_DEFAULT_VALUE
   DEST_TELEMATICS_ID_VALUE(...)
 
+- Implement the functions (do_)open_receiver/open_transmitter/open_transceiver
+  and (do_)close_receiver/close_transmitter/close_transceiver in gen_esme.
 
 2. Version 1.0
 

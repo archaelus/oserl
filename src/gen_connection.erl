@@ -1351,6 +1351,7 @@ wait_accept(Cid, LSocket) ->
     case gen_tcp:accept(LSocket) of
         {ok, Socket} ->
             inet:setopts(Socket, ?CONNECT_OPTIONS),  % Needed?
+            gen_tcp:controlling_process(Socket, Cid),
             accept(Cid, Socket);
         {error, Reason} ->
             fail(Cid, LSocket)

@@ -93,6 +93,8 @@
 -export([get_param/2, 
          set_param/3, 
          merge_params/2,
+		 from_list/1,
+		 to_list/1,
          new/3,
          new/4,
          pack/1,
@@ -102,6 +104,42 @@
          esme_unpack/1,
          smsc_unpack/1,
          request_failure_code/1]).
+
+-export([new_bind_transmitter/2,
+         new_bind_transmitter_resp/3,
+         new_bind_receiver/2,
+         new_bind_receiver_resp/3,
+         new_bind_transceiver/2,
+         new_bind_transceiver_resp/3,
+         new_outbind/2,
+         new_unbind/2,
+         new_unbind_resp/3,
+         new_enquire_link/2,
+         new_enquire_link_resp/3,
+         new_alert_notification/2,
+         new_generic_nack/3,
+         new_submit_sm/2,
+         new_submit_sm_resp/3,
+         new_data_sm/2,
+         new_data_sm_resp/3,
+         new_submit_multi/2,
+         new_submit_multi_resp/3,
+         new_deliver_sm/2,
+         new_deliver_sm_resp/3,
+         new_broadcast_sm/2,
+         new_broadcast_sm_resp/3,
+         new_cancel_sm/2,
+         new_cancel_sm_resp/3,
+         new_query_sm/2,
+         new_query_sm_resp/3,
+         new_replace_sm/2,
+         new_replace_sm_resp/3,
+         new_query_broadcast_sm/2,
+         new_query_broadcast_sm_resp/3,
+         new_cancel_broadcast_sm/2,
+         new_cancel_broadcast_sm_resp/3,
+         response_command_id/1,
+         request_command_id/1]).
 
 
 %%%-------------------------------------------------------------------
@@ -120,17 +158,17 @@
 %%%===================================================================
 %%% External functions
 %%%===================================================================
-%% @spec get_param(ParamName, PduDict) -> ParamValue
+%% @spec get_param(ParamName, Pdu) -> ParamValue
 %%    ParamName  = atom()
-%%    PduDict    = dictionary()
+%%    Pdu    = pdu()
 %%    ParamValue = term()
 %%
 %% @doc Gets the value of a parameter from a PDU dictionary given the parameter
 %% name.  If the parameter is not defined on the PDU the atom <tt>undefined
 %% </tt> is returned.
 %% @end
-get_param(ParamName, PduDict) ->
-    case dict:find(ParamName, PduDict) of
+get_param(ParamName, Pdu) ->
+    case dict:find(ParamName, Pdu) of
         {ok, ParamValue} ->
             ParamValue;
         error ->
@@ -138,17 +176,17 @@ get_param(ParamName, PduDict) ->
     end.
 
 
-%% @spec set_param(ParamName, ParamValue, PduDict) -> NewPduDict
+%% @spec set_param(ParamName, ParamValue, Pdu) -> NewPdu
 %%    ParamName  = atom()
 %%    ParamValue = term()
-%%    PduDict    = dictionary()
-%%    NewPduDict = dictionary()
+%%    Pdu    = pdu()
+%%    NewPdu = pdu()
 %%
 %% @doc Sets the value of a parameter on a PDU dictionary given the parameter
 %% name, the new PDU dictionary is returned.
 %% @end
-set_param(ParamName, ParamValue, PduDict) ->
-    dict:store(ParamName, ParamValue, PduDict).
+set_param(ParamName, ParamValue, Pdu) ->
+    dict:store(ParamName, ParamValue, Pdu).
 
 
 %% @spec merge_params(ParamList1, ParamList2) -> NewParamList
@@ -180,13 +218,47 @@ merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
     merge_params([{I1,V1}|T1], T2, [{I2, V2}|MergedParamList]).
 
 
-%% @spec new(CommandId, SequenceNumber, InitParams) -> PduDict
+%% @spec from_list(List) -> Pdu
+%%    List = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    Pdu = pdu()
+%%
+%% @doc Converts the Pdu to a list representation.
+%%
+%% <p>Notice that <i>command_length</i> is automatically added by packing
+%% functions, thus should not be included on the <tt>List</tt>.</p>
+%%
+%% % @see dict:from_list/1
+%% @end 
+from_list(List) ->
+	dict:from_list(List).
+
+
+%% @spec to_list(Pdu) -> List
+%%    Pdu = pdu()
+%%    List = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%
+%% @doc Converts the Pdu to a list representation.
+%%
+%% <p>Notice that <i>command_length</i> won't be included on the resulting 
+%% <tt>List</tt>.</p>
+%%
+%% % @see dict:to_list/1
+%% @end 
+to_list(Pdu) ->
+	dict:to_list(Pdu).
+
+
+%% @spec new(CommandId, SequenceNumber, InitParams) -> Pdu
 %%    CommandId      = int()
 %%    SequenceNumber = int()
 %%    InitParams     = [{ParamName, ParamValue}]
 %%    ParamName      = atom()
 %%    ParamValue     = term()
-%%    PduDict        = dictionary()
+%%    Pdu        = pdu()
 %%
 %% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
 %% <tt>InitParams</tt> and the default values defined for this PDU.
@@ -199,14 +271,14 @@ new(CommandId, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(CommandId, ?ESME_ROK, SequenceNumber, InitParams).
 
 
-%% @spec new(CommandId, SequenceNumber, InitParams) -> PduDict
+%% @spec new(CommandId, SequenceNumber, InitParams) -> Pdu
 %%    CommandId      = int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
 %%    InitParams     = [{ParamName, ParamValue}]
 %%    ParamName      = atom()
 %%    ParamValue     = term()
-%%    PduDict        = dictionary()
+%%    Pdu        = pdu()
 %%
 %% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
 %% <tt>InitParams</tt> and the default values defined for this PDU.
@@ -219,8 +291,8 @@ new(CommandId, CommandStatus, SequenceNumber, InitParams) ->
     pdu_syntax:new_pdu(CommandId, CommandStatus, SequenceNumber, InitParams).
 
 
-%% @spec pack(PduDict) -> Result
-%%    PduDict        = dictionary()
+%% @spec pack(Pdu) -> Result
+%%    Pdu        = pdu()
 %%    Result         = {ok, BinaryPdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
@@ -240,81 +312,81 @@ new(CommandId, CommandStatus, SequenceNumber, InitParams) ->
 %% @see esme_pack/1
 %% @see smsc_pack/1
 %% @end
-pack(PduDict) ->
-    case pdu_syntax:command_id(PduDict) of
+pack(Pdu) ->
+    case pdu_syntax:command_id(Pdu) of
         ?COMMAND_ID_DATA_SM -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM);
+            pdu_syntax:pack(Pdu, ?DATA_SM);
         ?COMMAND_ID_DATA_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM_RESP);
+            pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
         ?COMMAND_ID_DELIVER_SM -> 
-            pdu_syntax:pack(PduDict, ?DELIVER_SM);
+            pdu_syntax:pack(Pdu, ?DELIVER_SM);
         ?COMMAND_ID_SUBMIT_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_SM_RESP);
+            pdu_syntax:pack(Pdu, ?SUBMIT_SM_RESP);
         ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_MULTI_RESP);
+            pdu_syntax:pack(Pdu, ?SUBMIT_MULTI_RESP);
         ?COMMAND_ID_ALERT_NOTIFICATION -> 
-            pdu_syntax:pack(PduDict, ?ALERT_NOTIFICATION);
+            pdu_syntax:pack(Pdu, ?ALERT_NOTIFICATION);
         ?COMMAND_ID_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?BROADCAST_SM_RESP);
         ?COMMAND_ID_QUERY_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?QUERY_SM_RESP);
+            pdu_syntax:pack(Pdu, ?QUERY_SM_RESP);
         ?COMMAND_ID_REPLACE_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?REPLACE_SM_RESP);
+            pdu_syntax:pack(Pdu, ?REPLACE_SM_RESP);
         ?COMMAND_ID_CANCEL_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_SM_RESP);
+            pdu_syntax:pack(Pdu, ?CANCEL_SM_RESP);
         ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?QUERY_BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM_RESP);
         ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM_RESP);
         ?COMMAND_ID_DELIVER_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?DELIVER_SM_RESP);
+            pdu_syntax:pack(Pdu, ?DELIVER_SM_RESP);
         ?COMMAND_ID_SUBMIT_SM -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_SM);
+            pdu_syntax:pack(Pdu, ?SUBMIT_SM);
         ?COMMAND_ID_SUBMIT_MULTI -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_MULTI);
+            pdu_syntax:pack(Pdu, ?SUBMIT_MULTI);
         ?COMMAND_ID_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?BROADCAST_SM);
         ?COMMAND_ID_QUERY_SM -> 
-            pdu_syntax:pack(PduDict, ?QUERY_SM);
+            pdu_syntax:pack(Pdu, ?QUERY_SM);
         ?COMMAND_ID_REPLACE_SM -> 
-            pdu_syntax:pack(PduDict, ?REPLACE_SM);
+            pdu_syntax:pack(Pdu, ?REPLACE_SM);
         ?COMMAND_ID_CANCEL_SM -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_SM);
+            pdu_syntax:pack(Pdu, ?CANCEL_SM);
         ?COMMAND_ID_QUERY_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?QUERY_BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM);
         ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM);
         ?COMMAND_ID_ENQUIRE_LINK -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
         ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK_RESP);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
         ?COMMAND_ID_GENERIC_NACK -> 
-            pdu_syntax:pack(PduDict, ?GENERIC_NACK);
+            pdu_syntax:pack(Pdu, ?GENERIC_NACK);
         ?COMMAND_ID_UNBIND -> 
-            pdu_syntax:pack(PduDict, ?UNBIND);
+            pdu_syntax:pack(Pdu, ?UNBIND);
         ?COMMAND_ID_UNBIND_RESP -> 
-            pdu_syntax:pack(PduDict, ?UNBIND_RESP);
+            pdu_syntax:pack(Pdu, ?UNBIND_RESP);
         ?COMMAND_ID_BIND_RECEIVER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_RECEIVER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_RECEIVER_RESP);
         ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSCEIVER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER_RESP);
         ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSMITTER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER_RESP);
         ?COMMAND_ID_OUTBIND -> 
-            pdu_syntax:pack(PduDict, ?OUTBIND);
+            pdu_syntax:pack(Pdu, ?OUTBIND);
         ?COMMAND_ID_BIND_RECEIVER -> 
-            pdu_syntax:pack(PduDict, ?BIND_RECEIVER);
+            pdu_syntax:pack(Pdu, ?BIND_RECEIVER);
         ?COMMAND_ID_BIND_TRANSCEIVER -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSCEIVER);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER);
         ?COMMAND_ID_BIND_TRANSMITTER -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSMITTER);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER);
         Other ->
-            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(PduDict)}
+            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(Pdu)}
     end.
 
 
-%% @spec esme_pack(PduDict) -> Result
-%%    PduDict        = dictionary()
+%% @spec esme_pack(Pdu) -> Result
+%%    Pdu        = pdu()
 %%    Result         = {ok, BinaryPdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
@@ -331,53 +403,53 @@ pack(PduDict) ->
 %%
 %% @see pdu_syntax:pack/2
 %% @end
-esme_pack(PduDict) ->
-    case pdu_syntax:command_id(PduDict) of
+esme_pack(Pdu) ->
+    case pdu_syntax:command_id(Pdu) of
         ?COMMAND_ID_DATA_SM -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM);
+            pdu_syntax:pack(Pdu, ?DATA_SM);
         ?COMMAND_ID_DATA_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM_RESP);
+            pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
         ?COMMAND_ID_DELIVER_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?DELIVER_SM_RESP);
+            pdu_syntax:pack(Pdu, ?DELIVER_SM_RESP);
         ?COMMAND_ID_SUBMIT_SM -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_SM);
+            pdu_syntax:pack(Pdu, ?SUBMIT_SM);
         ?COMMAND_ID_SUBMIT_MULTI -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_MULTI);
+            pdu_syntax:pack(Pdu, ?SUBMIT_MULTI);
         ?COMMAND_ID_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?BROADCAST_SM);
         ?COMMAND_ID_QUERY_SM -> 
-            pdu_syntax:pack(PduDict, ?QUERY_SM);
+            pdu_syntax:pack(Pdu, ?QUERY_SM);
         ?COMMAND_ID_REPLACE_SM -> 
-            pdu_syntax:pack(PduDict, ?REPLACE_SM);
+            pdu_syntax:pack(Pdu, ?REPLACE_SM);
         ?COMMAND_ID_CANCEL_SM -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_SM);
+            pdu_syntax:pack(Pdu, ?CANCEL_SM);
         ?COMMAND_ID_QUERY_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?QUERY_BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM);
         ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_BROADCAST_SM);
+            pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM);
         ?COMMAND_ID_ENQUIRE_LINK -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
         ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK_RESP);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
         ?COMMAND_ID_GENERIC_NACK -> 
-            pdu_syntax:pack(PduDict, ?GENERIC_NACK);
+            pdu_syntax:pack(Pdu, ?GENERIC_NACK);
         ?COMMAND_ID_UNBIND -> 
-            pdu_syntax:pack(PduDict, ?UNBIND);
+            pdu_syntax:pack(Pdu, ?UNBIND);
         ?COMMAND_ID_UNBIND_RESP -> 
-            pdu_syntax:pack(PduDict, ?UNBIND_RESP);
+            pdu_syntax:pack(Pdu, ?UNBIND_RESP);
         ?COMMAND_ID_BIND_RECEIVER -> 
-            pdu_syntax:pack(PduDict, ?BIND_RECEIVER);
+            pdu_syntax:pack(Pdu, ?BIND_RECEIVER);
         ?COMMAND_ID_BIND_TRANSCEIVER -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSCEIVER);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER);
         ?COMMAND_ID_BIND_TRANSMITTER -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSMITTER);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER);
         Other ->
-            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(PduDict)}
+            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(Pdu)}
     end.
 
 
-%% @spec smsc_pack(PduDict) -> Result
-%%    PduDict        = dictionary()
+%% @spec smsc_pack(Pdu) -> Result
+%%    Pdu        = pdu()
 %%    Result         = {ok, BinaryPdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
@@ -394,60 +466,60 @@ esme_pack(PduDict) ->
 %%
 %% @see pdu_syntax:pack/2
 %% @end
-smsc_pack(PduDict) ->
-    case pdu_syntax:command_id(PduDict) of
+smsc_pack(Pdu) ->
+    case pdu_syntax:command_id(Pdu) of
         ?COMMAND_ID_DATA_SM -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM);
+            pdu_syntax:pack(Pdu, ?DATA_SM);
         ?COMMAND_ID_DATA_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?DATA_SM_RESP);
+            pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
         ?COMMAND_ID_DELIVER_SM -> 
-            pdu_syntax:pack(PduDict, ?DELIVER_SM);
+            pdu_syntax:pack(Pdu, ?DELIVER_SM);
         ?COMMAND_ID_SUBMIT_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_SM_RESP);
+            pdu_syntax:pack(Pdu, ?SUBMIT_SM_RESP);
         ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
-            pdu_syntax:pack(PduDict, ?SUBMIT_MULTI_RESP);
+            pdu_syntax:pack(Pdu, ?SUBMIT_MULTI_RESP);
         ?COMMAND_ID_ALERT_NOTIFICATION -> 
-            pdu_syntax:pack(PduDict, ?ALERT_NOTIFICATION);
+            pdu_syntax:pack(Pdu, ?ALERT_NOTIFICATION);
         ?COMMAND_ID_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?BROADCAST_SM_RESP);
         ?COMMAND_ID_QUERY_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?QUERY_SM_RESP);
+            pdu_syntax:pack(Pdu, ?QUERY_SM_RESP);
         ?COMMAND_ID_REPLACE_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?REPLACE_SM_RESP);
+            pdu_syntax:pack(Pdu, ?REPLACE_SM_RESP);
         ?COMMAND_ID_CANCEL_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_SM_RESP);
+            pdu_syntax:pack(Pdu, ?CANCEL_SM_RESP);
         ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?QUERY_BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM_RESP);
         ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
-            pdu_syntax:pack(PduDict, ?CANCEL_BROADCAST_SM_RESP);
+            pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM_RESP);
         ?COMMAND_ID_ENQUIRE_LINK -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
         ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
-            pdu_syntax:pack(PduDict, ?ENQUIRE_LINK_RESP);
+            pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
         ?COMMAND_ID_GENERIC_NACK -> 
-            pdu_syntax:pack(PduDict, ?GENERIC_NACK);
+            pdu_syntax:pack(Pdu, ?GENERIC_NACK);
         ?COMMAND_ID_UNBIND -> 
-            pdu_syntax:pack(PduDict, ?UNBIND);
+            pdu_syntax:pack(Pdu, ?UNBIND);
         ?COMMAND_ID_UNBIND_RESP -> 
-            pdu_syntax:pack(PduDict, ?UNBIND_RESP);
+            pdu_syntax:pack(Pdu, ?UNBIND_RESP);
         ?COMMAND_ID_BIND_RECEIVER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_RECEIVER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_RECEIVER_RESP);
         ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSCEIVER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER_RESP);
         ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
-            pdu_syntax:pack(PduDict, ?BIND_TRANSMITTER_RESP);
+            pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER_RESP);
         ?COMMAND_ID_OUTBIND -> 
-            pdu_syntax:pack(PduDict, ?OUTBIND);
+            pdu_syntax:pack(Pdu, ?OUTBIND);
         Other ->
-            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(PduDict)}
+            {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(Pdu)}
     end.
 
 
 %% @spec unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, PduDict} | 
+%%    Result         = {ok, Pdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
-%%    PduDict        = dictionary()
+%%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
@@ -538,9 +610,9 @@ unpack(BinaryPdu) ->
 
 %% @spec esme_unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, PduDict} | 
+%%    Result         = {ok, Pdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
-%%    PduDict        = dictionary()
+%%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
@@ -604,9 +676,9 @@ esme_unpack(BinaryPdu) ->
 
 %% @spec smsc_unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, PduDict} | 
+%%    Result         = {ok, Pdu} | 
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
-%%    PduDict        = dictionary()
+%%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
@@ -688,7 +760,829 @@ request_failure_code(?COMMAND_ID_QUERY_SM)           -> ?ESME_RQUERYFAIL;
 request_failure_code(?COMMAND_ID_REPLACE_SM)         -> ?ESME_RREPLACEFAIL;
 request_failure_code(CommandId)                      -> ?ESME_RUNKNOWNERR.
 
-
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+
+
+
+
+%%%
+% @spec response_command_id(RequestCommandId) -> ResponseCommandId
+%    RequestCommandId  = int()
+%    ResponseCommandId = int()
+%
+% @doc Computes the response command id related to a given request command id.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+response_command_id(RequestCommandId) ->
+    RequestCommandId + 16#80000000.
+
+
+%%%
+% @spec request_command_id(ResponseCommandId) -> RequestCommandId
+%     ResponseCommandId = int()
+%     RequestCommandId  = int()
+%
+% @doc Computes the request command id related to a given response command id.
+% @end
+%
+% %@see
+%
+% %@equiv
+%%
+request_command_id(ResponseCommandId) ->
+    ResponseCommandId - 16#80000000.
+
+
+%%%
+% @spec new_bind_transmitter(SequenceNumber, InitParams) -> Pdu
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    Pdu        = pdu()
+%
+% @doc Creates a new bind_transmitter PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_transmitter(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_bind_transmitter_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new bind_transmitter_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_transmitter_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_bind_receiver(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new bind_receiver PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_receiver(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_bind_receiver_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new bind_receiver_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_receiver_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_bind_transceiver(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new bind_transceiver PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_transceiver(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_bind_transceiver_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new bind_transceiver_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_bind_transceiver_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_outbind(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new outbind PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_outbind(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_OUTBIND, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_unbind(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new unbind PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_unbind(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_UNBIND, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_unbind_resp(CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new unbind_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_unbind_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_UNBIND_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_enquire_link(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new enquire_link PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_enquire_link(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_enquire_link_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new enquire_link_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_enquire_link_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_alert_notification(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new alert_notification PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_alert_notification(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_ALERT_NOTIFICATION, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_generic_nack(CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new generic_nack PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_generic_nack(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_GENERIC_NACK, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_submit_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new submit_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_submit_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_submit_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new submit_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_submit_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_data_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new data_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_data_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new data_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_submit_multi(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new submit_multi PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_submit_multi(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_submit_multi_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new submit_multi_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_submit_multi_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_deliver_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new deliver_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_deliver_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_deliver_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new deliver_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_deliver_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_broadcast_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new broadcast_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_broadcast_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_broadcast_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new broadcast_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_cancel_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new cancel_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_cancel_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_cancel_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new cancel_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_cancel_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_query_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new query_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_query_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new query_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_replace_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new replace_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_replace_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_replace_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new replace_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_replace_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_query_broadcast_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new query_broadcast_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_query_broadcast_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_query_broadcast_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new query_broadcast_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_query_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_cancel_broadcast_sm(SequenceNumber, InitParams) -> PduDict
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new cancel_broadcast_sm PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_cancel_broadcast_sm(SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM, 
+                       ?ESME_ROK, 
+                       SequenceNumber,
+                       InitParams).
+
+
+%%%
+% @spec new_cancel_broadcast_sm_resp(
+%           CommandStatus, SequenceNumber, InitParams) -> PduDict
+%    CommandStatus  = int()
+%    SequenceNumber = int()
+%    InitParams     = [{ParamName, ParamValue}]
+%    ParamName      = atom()
+%    ParamValue     = term()
+%    PduDict        = dictionary()
+%
+% @doc Creates a new cancel_broadcast_sm_resp PDU dictionary with the given 
+% <tt>InitParams</tt> and the default values defined for this PDU.
+%
+% @see pdu_syntax:new_pdu/4
+% @end
+%
+% %@equiv
+%%
+new_cancel_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP, 
+                       CommandStatus, 
+                       SequenceNumber,
+                       InitParams).
+

@@ -16,7 +16,28 @@
 
 %%% @doc Generic TCP connection.
 %%%
-%%% <p></p>
+%%% <p>A generic connection behavior.  Wraps regular gen_tcp sockets to add
+%%% support for a few things:</p>
+%%%
+%%% <ul>
+%%%   <li><tt>Lapse</tt> argument in <a href="#handle_input-4">handle_input/4
+%%%     </a> callback may be used to control congestion.
+%%%   </li>
+%%%   <li>Adds support for buffered input.</li>
+%%%   <li>When started on listening mode, spawns a new process for every new
+%%%     incomming connection.
+%%%   </li>
+%%% </ul>
+%%%
+%%% <p>and this is it.</p>
+%%%
+%%% <p>When the behaviour is terminated an exit signal is sent to the 
+%%% controlling process.  The exit signal is:</p>
+%%%
+%%% <ul>
+%%%   <li><tt>{recv_error,{error,closed}}</tt> if in connect mode.</p></li>
+%%%   <li><tt>{accept_error,{error,closed}}</tt> if in listen mode.</p></li>
+%%% </ul>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
@@ -39,9 +60,9 @@
 %%%
 %%% <h3><a name="handle_accept-3">handle_accept/3</a></h3>
 %%%
-%%% <tt>handle_accept(Owner, Conn, Socket) -> true | false</tt>
+%%% <tt>handle_accept(Owner, Conn, Socket) -> {ok, NewOwner} | error</tt>
 %%% <ul>
-%%%   <li><tt>Owner = Conn = pid()</tt></li>
+%%%   <li><tt>Owner = Conn = NewOwner = pid()</tt></li>
 %%%   <li><tt>Socket = socket()</tt></li>
 %%% </ul>
 %%%
@@ -124,7 +145,6 @@
 
 -define(DECR(X), if is_integer(X) -> X - 1; true -> X end).
                          
-
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
@@ -186,8 +206,8 @@ behaviour_info(_Other) ->
 %% @see start_link/4
 %% @end
 start_connect(Module, Address, Port) ->
-    ConnectMode = {connect, Address, Port},
-    gen_server:start_link(?MODULE, [self(), Module, ConnectMode], []).
+    Connect = {connect, Address, Port},
+    gen_server:start_link(?MODULE, [self(), Module, Connect], []).
 
 
 %% @spec start_connect(CName, Module, Address, Port) -> Result
@@ -210,8 +230,8 @@ start_connect(Module, Address, Port) ->
 %% @see start_link/3
 %% @end
 start_connect(CName, Module, Address, Port) ->
-    ConnectMode = {connect, Address, Port},
-    gen_server:start_link(CName, ?MODULE, [self(), Module, ConnectMode], []).
+    Connect = {connect, Address, Port},
+    gen_server:start_link(CName, ?MODULE, [self(), Module, Connect], []).
 
 
 %% @spec start_listen(Module, Port, Count) -> Result
@@ -230,8 +250,8 @@ start_connect(CName, Module, Address, Port) ->
 %% @see start_link/4
 %% @end
 start_listen(Module, Port, Count) ->
-    ListenMode = {listen, Port, Count},
-    gen_server:start_link(?MODULE, [self(), Module, ListenMode], []).
+    Listen = {listen, Port, Count},
+    gen_server:start_link(?MODULE, [self(), Module, Listen], []).
 
 
 %% @spec start_listen(CName, Module, Port, Count) -> Result
@@ -254,8 +274,8 @@ start_listen(Module, Port, Count) ->
 %% @see start_link/3
 %% @end
 start_listen(CName, Module, Port, Count) ->
-    ListenMode = {listen, Port, Count},
-    gen_server:start_link(CName, ?MODULE, [self(), Module, ListenMode], []).
+    Listen = {listen, Port, Count},
+    gen_server:start_link(CName, ?MODULE, [self(), Module, Listen], []).
 
 
 %% @spec controlling_process(Conn, NewOwner) -> ok | {error, eperm}
@@ -326,9 +346,13 @@ init([Pid, Module, {listen, Port, Count}]) ->
         Error ->
             {stop, Error}
     end;
-init([Pid, Module]) ->
+init([Pid, Module, {accept, Socket, From}]) ->
+    Self = self(),
+    link(Pid),
+    unlink(From),
     process_flag(trap_exit, true),
-    {ok, #state{owner = Pid, mod = Module}}.
+    spawn_link(fun() -> wait_recv(Self, Socket) end),
+    {ok, #state{owner = Pid, socket = Socket, mod = Module}}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -362,15 +386,20 @@ handle_call({send, Output}, From, S) ->
 handle_call({accept, Socket}, _From, S) ->
     Self = self(),
     case (S#state.mod):handle_accept(S#state.owner, Self, Socket) of
-        true ->
-            spawn_link(fun() -> wait_recv(Self, Socket) end),
-            {reply, {ok, Self}, S#state{socket = Socket}};
-        false ->
+        {ok, NewOwner} ->
+            {reply, {ok, Self}, S#state{owner = NewOwner, socket = Socket}};
+        _Reject ->
             {reply, {error, reject}, S}
     end;
 handle_call({spawn_accept, Socket}, From, S) ->
-    spawn(fun() -> start_accept(Socket, From, S#state.owner, S#state.mod) end),
-    {noreply, S};
+    Self = self(),
+    case (S#state.mod):handle_accept(S#state.owner, Self, Socket) of
+        {ok, NewOwner} ->
+            Reply = start_accept(NewOwner, S#state.mod, Socket),
+            {reply, Reply, S};
+        _Reject ->
+            {reply, {error, reject}, S}
+    end;
 handle_call({owner, NewOwner}, From, #state{owner = From} = S) ->
     {reply, ok, S#state{owner = NewOwner}};
 handle_call({owner, NewOwner}, From, S) ->
@@ -426,14 +455,15 @@ handle_cast({recv, Socket, Input, Lapse}, S) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'EXIT', _AcceptLoop, {accept_error, Reason}}, State) ->
-    % A wait_accept loop exits on error
-    {stop, Reason, State};
-handle_info({'EXIT', _RecvLoop, {recv_error, Reason}}, State) ->
-    % A wait_recv loop exits on error
-    {stop, Reason, State};
-handle_info(Info, State) ->
-    {noreply, State}.
+handle_info({'EXIT', _Child, normal}, S) ->
+    % A socket or loop exits with normal status
+    {noreply, S};
+handle_info({'EXIT', _Child, Reason}, S) ->
+    % A wait_accept or wait_recv loop exits on error
+    {stop, Reason, S};
+handle_info(Info, S) ->
+    {noreply, S}.
+
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
@@ -454,6 +484,7 @@ terminate(Reason, S) ->
     (S#state.mod):handle_input(S#state.owner, self(), S#state.buffer, 0),
     terminate(Reason, S#state{buffer = <<>>}).
 
+
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
 %%    State    = term()
@@ -473,14 +504,9 @@ code_change(OldVsn, State, Extra) ->
 %%
 %% @doc Starts a separate gen_connection with the given <tt>Socket</tt>.
 %% @end 
-start_accept(Socket, From, Owner, Module) ->
-    case gen_server:start_link(?MODULE, [Owner, Module], []) of
-        {ok, Pid} ->
-            Reply = gen_server:call(Pid, {accept, Socket}),
-            gen_server:reply(From, Reply);
-        Error ->
-            gen_server:reply(From, Error)
-    end.
+start_accept(Owner, Module, Socket) ->
+    Accept = {accept, Socket, self()},
+    gen_server:start_link(?MODULE, [Owner, Module, Accept], []).
 
 
 %% @spec wait_accept(Conn, LSocket) -> void()
@@ -498,7 +524,8 @@ wait_accept(Conn, LSocket, Count) ->
             case gen_server:call(Conn, {accept, Socket}, ?ACCEPT_TIME) of
                 {ok, Pid} ->
                     gen_tcp:controlling_process(Socket, Pid),
-                    gen_tcp:close(LSocket);
+                    gen_tcp:close(LSocket),
+                    wait_recv(Pid, Socket);  % Receive data
                 {error, reject} ->
                     gen_tcp:close(Socket),
                     wait_accept(Conn, LSocket, Count)

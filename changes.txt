@@ -31,6 +31,7 @@ Contents
 
 2.   Changes 0.2 -> 1.0
 2.1  gen_esme_session.erl
+2.2  operation.erl
 
 ---
 
@@ -209,3 +210,8 @@ How these changes affected individual files is described below.
   deliver_sm/2, enquire_link/2, outbind/2, unbind/2 and unbind_resp/1 removed.
 - handle_input_corrupt_pdu/4 responds to corrupt unbind PDUs with an 
   unbind_resp (due to a bug, a generic_nack was issued on previous versions.
+
+2.2  operation.erl
+
+- pack_mc/1 is now called pack_smsc/1.
+- unpack_mc/1 is now called unpack_smsc/1.

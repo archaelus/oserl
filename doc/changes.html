@@ -37,6 +37,7 @@
   <li><a href="#changes0_2-1_0">Changes 0.2 -> 1.0</a>
     <ol>
       <li><a href="#changes0_2-1_0-gen_esme_session-erl">gen_esme_session.erl</a></li>
+      <li><a href="#changes0_2-1_0-operation-erl">operation.erl</a></li>
     </ol>
   </li>
 </ol>
@@ -325,6 +326,17 @@
   <li><tt>handle_input_corrupt_pdu/4</tt> responds to corrupt unbind PDUs
     with an <i>unbind_resp</i> (due to a bug, a <i>generic_nack</i> was
     issued on previous versions.
+  </li>
+</ul>
+
+
+<h3><a name="changes0_2-1_0-operation-erl">operation.erl</a></h3>
+
+<ul>
+  <li><tt>pack_mc/1</tt> is now called <a href="#pack_smsc-1">pack_smsc/1</a>.
+  </li>
+  <li><tt>unpack_mc/1</tt> is now called 
+    <a href="#unpack_smsc-1">unpack_smsc/1</a>.
   </li>
 </ul>
 

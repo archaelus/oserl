@@ -22,7 +22,8 @@ EDOC_MODULES = \
 	gen_tcp_connection \
 	gen_esme_session \
 	gen_smsc_session \
-	gen_esme
+	gen_esme \
+	gen_smsc
 #	echo_server \
 #	echo_client \
 

@@ -22,10 +22,11 @@ Contents
 1.9  smpp_pdu.hrl
 1.10 operation.erl
 1.11 sm.erl
-1.12 gen_esme_session.erl
-1.13 gen_esme.erl
-1.14 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
-1.15 Other changes
+1.12 gen_connection.erl
+1.13 gen_esme_session.erl
+1.14 gen_esme.erl
+1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
+1.16 Other changes
 
 ---
 
@@ -132,23 +133,35 @@ How these changes affected individual files is described below.
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 
-1.12 gen_esme_session.erl
+1.12 gen_connection.erl
+
+- retry_status is disabled on die event.
+- If already listening on Port, the term {error, {already_listening, Port}} is
+  returned for a request to listen on Port (instead of "ok").
+- If already connected to Address on Port, the term 
+  {error, {already_listening, Address, Port}} is returned for a request to 
+  connect to Address on Port (instead of ok).
+
+
+1.13 gen_esme_session.erl
+
+- Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
+- All timers reviewed (fixed).
+- request_broker fixed when Caller is undefined.
+
+
+1.14 gen_esme.erl
 
 - Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
 
 
-1.13 gen_esme.erl
-
-- Calls to pdu_syntax:get_value/2 replaced by operation:get_param/2.
-
-
-1.14 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
+1.15 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
 
 - Trailing $\0 removed from the c_octet_string values.
 - Absolute/relative time implemented as pure C-Octet Strings.  Time record 
   finally removed.  Time manipulation is now much more natural... and easy.
 
 
-1.15 Other changes
+1.16 Other changes
 
 - Makefiles were fixed to find compiled behaviors.

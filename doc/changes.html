@@ -26,6 +26,7 @@
       <li><a href="#changes0_1-0_2-smpp_pdu">smpp_pdu.hrl</a></li>
       <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
       <li><a href="#changes0_1-0_2-sm">sm.erl</a></li>
+      <li><a href="#changes0_1-0_2-gen_connection">gen_connection.erl</a></li>
       <li><a href="#changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></li>
       <li><a href="#changes0_1-0_2-gen_esme">gen_esme.erl</a></li>
       <li><a href="#changes0_1-0_2-sample">Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)</a></li>
@@ -196,11 +197,30 @@
 </ul>
 
 
+<h3><a name="changes0_1-0_2-gen_connection">gen_connection.erl</a></h3>
+
+<ul>
+  <li><tt>retry_status</tt> is <tt>disabled</tt> on <tt>die</tt> event.</li>
+  <li>If already listening on <tt>Port</tt>, the term
+    <tt>{error, {already_listening, Port}}</tt> is returned for a request to
+    <tt>listen</tt> on <tt>Port</tt> (instead of <tt>ok</tt>).
+  </li>
+  <li>If already connected to <tt>Address</tt> on <tt>Port</tt>, the term
+    <tt>{error, {already_listening, Address, Port}}</tt> is returned for a
+    request to <tt>connect</tt> to <tt>Address</tt> on <tt>Port</tt> 
+    (instead of <tt>ok</tt>).
+  </li>
+</ul>
+
+
 <h3><a name="changes0_1-0_2-gen_esme_session">gen_esme_session.erl</a></h3>
 
 <ul>
   <li>Calls to <tt>pdu_syntax:get_value/2</tt> replaced by 
     <a href="operation.html#get_param-2">operation:get_param/2</a>.
+  </li>
+  <li>All timers reviewed (fixed).</li>
+  <li><tt>request_broker</tt> fixed when <tt>Caller</tt> is <tt>undefined</tt>.
   </li>
 </ul>
 

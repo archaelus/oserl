@@ -122,8 +122,8 @@
 %%-compile(export_all).
 -export([start_connect/3, 
          start_connect/4,
-         start_listen/3,
          start_listen/4,
+         start_listen/5,
          controlling_process/2,
          send/2,
          stop/1]).
@@ -176,7 +176,7 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, {owner, mod, socket, buffer = <<>>}).
+-record(state, {owner, mod, child_mod, socket, buffer = <<>>}).
 
 %%%===================================================================
 %%% External functions
@@ -240,8 +240,9 @@ start_connect(CName, Module, Address, Port) ->
     gen_server:start_link(CName, ?MODULE, [self(), Module, Connect], []).
 
 
-%% @spec start_listen(Module, Port, Count) -> Result
+%% @spec start_listen(Module, ChildModule, Port, Count) -> Result
 %%    Module = atom()
+%%    ChildModule = atom()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -249,28 +250,33 @@ start_connect(CName, Module, Address, Port) ->
 %% @doc Starts the server setting up a socket to listen on <tt>Port</tt>.
 %%
 %% <p><tt>Module</tt> is the callback module.
+%%
+%% <p><tt>ChildModule</tt> is the callback module for child connections.</p>
 %%
 %% <p>The gen_connection is not registered.</p>
 %%
 %% @see gen_server:start_link/3
 %% @see start_link/4
 %% @end
-start_listen(Module, Port, Count) ->
-    Listen = {listen, Port, Count},
+start_listen(Module, ChildModule, Port, Count) ->
+    Listen = {listen, ChildModule, Port, Count},
     gen_server:start_link(?MODULE, [self(), Module, Listen], []).
 
 
-%% @spec start_listen(CName, Module, Port, Count) -> Result
+%% @spec start_listen(CName, Module, ChildModule, Port, Count) -> Result
 %%    CName  = {local, Name} | {global, Name}
 %%    Name   = atom()
 %%    Module = atom()
+%%    ChildModule = atom()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting up a socket to listen on <tt>Port</tt>.
 %%
-%% <p><tt>Module</tt> is the callback module.
+%% <p><tt>Module</tt> is the callback module.</p>
+%%
+%% <p><tt>ChildModule</tt> is the callback module for child connections.</p>
 %%
 %% <p>If <tt>CName = {local, Name}</tt>, the gen_connection is registered
 %% locally as <tt>Name</tt>.  If <tt>CName = {global, Name}</tt>, the
@@ -279,8 +285,8 @@ start_listen(Module, Port, Count) ->
 %% @see gen_server:start_link/4
 %% @see start_link/3
 %% @end
-start_listen(CName, Module, Port, Count) ->
-    Listen = {listen, Port, Count},
+start_listen(CName, Module, ChildModule, Port, Count) ->
+    Listen = {listen, ChildModule, Port, Count},
     gen_server:start_link(CName, ?MODULE, [self(), Module, Listen], []).
 
 
@@ -332,31 +338,31 @@ stop(Conn) ->
 %%    Reason  = term()
 %%
 %% @doc Initiates the server
-init([Pid, Module, {connect, Address, Port}]) ->
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of 
+init([Pid, Mod, {connect, Addr, Port}]) ->
+    case gen_tcp:connect(Addr, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of 
         {ok, Socket} ->
             Self = self(),
             process_flag(trap_exit, true),
             spawn_link(fun() -> wait_recv(Self, Socket) end),
-            {ok, #state{owner = Pid, socket = Socket, mod = Module}};
+            {ok, #state{owner=Pid, socket=Socket, mod=Mod, child_mod=Mod}};
         Error ->
             {stop, Error}
     end;
-init([Pid, Module, {listen, Port, Count}]) ->
+init([Pid, Mod, {listen, ChildMod, Port, Count}]) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
             process_flag(trap_exit, true),
             spawn_link(fun() -> wait_accept(Self, LSocket, Count) end),
-            {ok, #state{owner = Pid, socket = LSocket, mod = Module}};
+            {ok, #state{owner=Pid,socket=LSocket,mod=Mod,child_mod=ChildMod}};
         Error ->
             {stop, Error}
-    end;
-init([Pid, Module, {accept, Socket}]) ->
-    Self = self(),
-    process_flag(trap_exit, true),
-    spawn_link(fun() -> wait_recv(Self, Socket) end),
-    {ok, #state{owner = Pid, socket = Socket, mod = Module}}.
+    end.
+% init([Pid, Mod, {accept, Socket}]) ->
+%     Self = self(),
+%     process_flag(trap_exit, true),
+%     spawn_link(fun() -> wait_recv(Self, Socket) end),
+%     {ok, #state{owner = Pid, socket = Socket, mod = Mod}}.
 
 
 %% @spec handle_call(Request, From, State) -> Result
@@ -403,7 +409,7 @@ handle_call({spawn_accept, Socket}, From, S) ->
     % Here we talk about the controlling process of the behaviour.  Notice that
     % the controller of the underlying tcp socket is stablished in wait_accept.
     Accept = {accept, Socket},
-    case gen_server:start_link(?MODULE, [self(), S#state.mod, Accept], []) of
+    case gen_server:start_link(?MODULE,[self(),S#state.child_mod,Accept],[]) of
         {ok, Pid} ->
             case (S#state.mod):handle_accept(S#state.owner, Pid, Socket) of
                 {ok, NewOwner} ->

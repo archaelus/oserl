@@ -1,7 +1,7 @@
 {name, "oserl"}.
-{vsn, {0,2}}.
+{vsn, {1,0}}.
 {summary, "SMPP v5.0 implementation"}.
-{author, "Enrique Marcote Peña", "mpquique@users.sourceforge.net", "20040301"}.
+{author, "Enrique Marcote Peña", "mpquique@users.sourceforge.net", "20040517"}.
 {keywords, ["SMPP", "SMS", "ESME", "MC", "RE"]}.
 {needs, [{common_lib, {0,2}}]}.
 {abstract,"Short Message Peer to Peer Protocol implementation."}.

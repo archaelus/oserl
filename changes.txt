@@ -1,4 +1,4 @@
-changes.txt - OSERL Version 0.2                              March 01, 2004
+changes.txt - OSERL Version 1.0                              May 17, 2004
 
                     http://sourceforge.net/projects/oserl/
 
@@ -29,12 +29,12 @@ Contents
 1.16 Sample files (code_lock_esme.erl, echo_esme.erl and submit_esme.erl)
 1.17 Other changes
 
+2.   Changes 0.2 -> 1.0
+
 ---
 
 
 1.   Changes 0.1 -> 0.2
-
-General description:
 
 - Default values of standard parameters included in the parameter
   descriptor (just like in TLVs).  Lists of PDUs default values do no longer
@@ -192,3 +192,8 @@ How these changes affected individual files is described below.
 1.16 Other changes
 
 - Makefiles were fixed to find compiled behaviors.
+
+
+2.   Changes 0.2 -> 1.0
+
+- Now shipped under the GNU Lesser General Public License.

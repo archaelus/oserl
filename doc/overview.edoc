@@ -3,7 +3,7 @@
 
 @author Enrique Marcote Peña <mpquique@users.sourceforge.net> [http://www.des.udc.es/~mpquique/]
 @copyright 2003 - 2004 Enrique Marcote Peña
-@version 0.2 alpha
+@version 1.0 beta
 
 @doc OSERL is an Erlang implementation of the Short Message Peer to Peer 
 Protocol version 5.0.
@@ -46,11 +46,7 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#pdumacros">PDU Syntax Macros</a></li>
   <li><a href="#behaviours">Behaviours</a></li>
   <li><a href="#pics">PICS Proforma</a></li>
-  <li><a href="#changes">Changes</a>
-    <ol>
-      <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></li>
-    </ol>
-  </li>
+  <li><a href="#changes">Changes</a></li>
   <li><a href="#todo">TODO</a></li>
   <li><a href="#references">References</a></li>
 </ol>
@@ -2444,38 +2440,7 @@ Find OSERL's PICS proforma in openoffice format
 
 <h2><a name="changes">Changes</a></h2>
 
-<h3><a name="changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></h3>
-
-<ul>
-  <li>Default values of standard parameters included in the parameter
-    descriptor (just like in TLVs).  Lists of PDUs default values do no longer
-    exist.<br/>
-    <br/>
-    Refer to <a href="../include/smpp_param.hrl">smpp_param.hrl</a> in order 
-    to change the default value of a parameter.
-  </li>
-  <li>Trailing <tt>NULL_CHARACTERs</tt> in C-Octet Strings are transparently 
-    handled by encoding/decoding functions.  Application layer does not handle 
-    terminating NULLs any more.
-  </li>
-  <li>Absolute and relative time formats are now pure C-Octet Strings (Not 
-    records).  <tt>time</tt> record removed.  (Refer to 
-    <a href="base_syntax.html">base_syntax.erl</a>, 
-    <a href="../include/base_syntax.hrl">base_syntax.hrl</a> and 
-    <a href="../include/smpp_base.hrl">smpp_base.hrl</a> for further details).
-  </li>
-  <li><a href="gen_esme.html">gen_esme</a> callback interface redefined.</li>
-  <li>PDU packing/unpacking functions redefined.</li>
-  <li>New macros for composite parameters value definitions.<br/>
-    <br/>
-    For instance, <tt>?DEST_ADDRESS_SME_DEFAULT_VALUE</tt> and
-    <tt>?DEST_ADDRESS_SME_VALUE/4</tt> were defined for parameter 
-    <i>dest_address_sme</i>.
-  </li>
-</ul>
-
-<p>How these changes affected individual files is described 
-<a href="changes.html">here</a>.</p>
+<p>See changes log <a href="changes.html">here</a>.</p>
 
 
 <h2><a name="todo">TODO</a></h2>

@@ -14,6 +14,9 @@ Contents
 
 1. Version 1.2
 
+- Do not spawn a process for each request. Replace request brokers (processes) 
+  by request status (static) information.
+
 - gen_esme_session and gen_smsc_session are almost identical.
 
   Implement a gen_session to hold code common to gen_esme_session and

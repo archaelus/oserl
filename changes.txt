@@ -34,12 +34,13 @@ Contents
 
 1.   Changes 0.1 -> 0.2
 
-- Default values of standard parameters were included in the parameter
+General description:
+
+- Default values of standard parameters included in the parameter
   descriptor (just like in TLVs).  Lists of PDUs default values do no longer
   exist.
 
-  Refer to smpp_param.hrl if you want to change the default value of any
-  parameter.
+  Refer to smpp_param.hrl in order to change the default value of a parameter.
 - Trailing NULL_CHARACTERs in C-Octet Strings are transparently handled
   by encoding/decoding functions.  Application layer does not handle 
   terminating NULLs any more.

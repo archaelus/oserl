@@ -200,7 +200,7 @@ the include directory:
 </p>
 
 <pre>
-   -I &lt;path-to-oserl&gt;/include 
+   -I &lt;path-to-oserl&gt;/include -pz &lt;path-to-oserl&gt;/ebin
 </pre>
 
 
@@ -211,15 +211,14 @@ Open SMPP Erlang Library.
 
 <p>Even if you don't have any prior experience with it, I strongly recommend 
 you considering erlang as the programming language for the development of 
-your ESME/MC or RE.
-</p>
-<p>If you are reluctant to experience with a new (and better) development 
+your ESME/MC or RE.</p>
+
+<p>If you are reluctant to experience with a new (better ;-) development 
 environment, you may want to consider using OSERL anyway.  Erlang has 
 <a href="http://www.erlang.org/doc/r9c/doc/tutorial/part_frame.html">mechanisms
-to talk to other languages</a> such us C or java.
-</p>
-<p>Examples below only apply to erlang development.
-</p>
+to talk to other languages</a> such us C or java.</p>
+
+<p>Examples below only apply to erlang development.</p>
 
 
 <h3><a name="howto_esme">How to implement an ESME</a></h3>
@@ -230,8 +229,8 @@ of the documentation (I realize there was a lack of code samples on it).
 <p>I assume you have OSERL installed and you are already familiar with 
 <a href="http://www.erlang.org/doc/r9c/doc/design_principles/part_frame.html">
 OTP behaviors</a>.  Should you encounter any problems installing OSERL, please 
-let me know.
-</p>
+let me know.</p>
+
 <p>To implement an ESME I recommend using the <a href="gen_esme.html">gen_esme
 </a> behavior.  This is a custom behavior (provided within OSERL), which 
 automatically handles many of the cumbersome details associated to an ESME 
@@ -239,12 +238,12 @@ implementation.  If you use this behavior you won't need to care about SMPP
 timers, PDU sequencing, link enquires, PDU encoding/decoding, error checking, 
 error responses, recovering/reconnection strategies  and so forth.  The 
 <a href="gen_esme.html">gen_esme behavior</a> takes care of these things 
-for you.
-</p>
+for you.</p>
+
 <p>Let us see how the whole thing works by example.  First, we'll examine the
 <a href="examples/echo_esme.erl">echo_esme.erl</a> example.  Next we'll find 
-out how to implement a more complex ESME.
-</p>
+out how to implement a more complex ESME.</p>
+
 
 <h4><a name="submit">Submit SM sample (java vs. erlang)</a></h4>
 

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2004 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
 %
 %
 % @copyright 2004 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@udc.es>
+% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %         [http://www.des.udc.es/~mpquique]
 % @version 1.0, {05 Feb 2004} {@time}.
 % @end

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 % <p>Macros related to E.164 recomendation.</p>
 %
 % @copyright 2003 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@udc.es>
+% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %         [http://www.des.udc.es/~mpquique/]
 % @version 0.1 alpha, {18 Apr 2003} {@time}.
 % @end

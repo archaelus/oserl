@@ -23,7 +23,8 @@
 %%% <p>Every SMPP session works over a single TCP/IP connection.  If the 
 %%% underlying connection exits, the session is also terminated.</p>
 %%%
-%%% <p>Connection errors must be handled by the SMSC.</p>
+%%% <p>Session failures due to connection errors must be handled by the
+%%% callback SMSC.</p>
 %%%
 %%%
 %%% <h2>State transitions table</h2>
@@ -48,1147 +49,6 @@
 %%%
 %%% <p>Operations issued by the other peer (ESME) are treated asynchronously
 %%% by the SMSC session, thus represented by async events.</p>
-%%%
-%%% <p>Empty cells mean that events are not possible for those states.</p>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>&#160;</small></th>
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>alert_notification (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>deliver_data_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>deliver_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>enquire_link (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>open</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>outbind</small></th>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>replace_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_multi</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_sm</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by MC (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>unbound/bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>unbound/bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>unbound/bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by ESME</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>open</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>unbound</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>timeout (async)</small></th>
-%%%     <td valign="top" align="center"><small>closed</small></td>
-%%%     <td valign="top" align="center"><small>outbound</small></td>
-%%%     <td valign="top" align="center"><small>bound_rx</small></td>
-%%%     <td valign="top" align="center"><small>bound_tx</small></td>
-%%%     <td valign="top" align="center"><small>bound_trx</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%%
-%%%
-%%% <h2>Timers</h2>
-%%%
-%%% <p>Timers are implemented as shown in tables below.  There's is a table
-%%% for each timer, indicating which events on every state force timers to be 
-%%% started, restarted or stopped.</p>
-%%%
-%%% <h3>session_init_timer</h3>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>&#160;</small></th>
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>alert_notification (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>close</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>deliver_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>enquire_link (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>open</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>outbind</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>replace_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_multi</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by MC (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by ESME</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%% <p>Actions on timeout.</p>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top" align="center"><small>close connection</small></td>
-%%%     <td valign="top" align="center"><small>close connection</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%%
-%%% <h3>inactivity_timer</h3>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>&#160;</small></th>
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%     <th><small>closed</small></th>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>alert_notification (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>close</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>deliver_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>enquire_link (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>open</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>outbind</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>replace_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_multi</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by MC (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by ESME</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%% <p>Actions on timeout.</p>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>unbind</small></td>
-%%%     <td valign="top" align="center"><small>unbind</small></td>
-%%%     <td valign="top" align="center"><small>unbind</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%%
-%%% <h3>enquire_link_timer</h3>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>&#160;</small></th>
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>accept (async)</small></th>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%   </tr>
-%%%   <tr> 
-%%%     <th align="left"><small>alert_notification (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>cancel_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>close</small></th>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>cancel</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>data_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>deliver_sm (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>die (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>enquire_link (async)</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>input (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>open</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>start</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>outbind</small></th>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_broadcast_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>query_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>replace_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_multi</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>submit_sm</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by MC (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind issued by ESME</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%%   <tr>
-%%%     <th align="left"><small>unbind_resp (async)</small></th>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>reset</small></td>
-%%%     <td valign="top" align="center"><small>&#160;</small></td>
-%%%   </tr>
-%%% </table>
-%%%
-%%% <p>Actions on timeout.</p>
-%%%
-%%% <table width="100%" border="1" cellpadding="5">
-%%%   <tr> 
-%%%     <th><small>open</small></th>
-%%%     <th><small>outbound</small></th>
-%%%     <th><small>bound_rx</small></th>
-%%%     <th><small>bound_tx</small></th>
-%%%     <th><small>bound_trx</small></th>
-%%%     <th><small>unbound</small></th>
-%%%   </tr>
-%%%   <tr>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%     <td valign="top" align="center"><small>enquire_link</small></td>
-%%%   </tr>
-%%% </table>
 %%%
 %%%
 %%% <h3>response_timer</h3>
@@ -1349,11 +209,8 @@
 %%% argument and return {ok, NewStateData} | error.  Put canceled timers to
 %%% undefined)
 %%%
-%%% %@TODO On submit_sm operations, split into several short messages those 
-%%% with a content larger than 160 characters.
+%%% %@TODO Review timers.  What if the enquire_link doesn't receive a response?
 -module(gen_smsc_session).
-
-% ARREGLAR EL ALERT NOTIFICAITON
 
 -behaviour(gen_fsm).
 -behaviour(gen_tcp_connection).
@@ -1469,8 +326,9 @@
 %%   </dd>
 %%   <dt>SelfCongestionState: </dt><dd>ESME congestion state (default is 0).
 %%   </dd>
-%%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might be always
-%%     0 if the peer ESME doesn't support the congestion_state parameter.
+%%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might the atom
+%%     <tt>undefined</tt> if the peer ESME doesn't support the 
+%%     <i>congestion_state</i> parameter.
 %%   </dd>
 %%   <dt>SessionInitTime: </dt><dd>A value in milliseconds or the atom
 %%     <tt>infinity</tt> (the later disables the timer).
@@ -1533,7 +391,7 @@
          conn,
          requests,
          self_congestion_state = 0,
-         peer_congestion_state = 0,
+         peer_congestion_state,
          session_init_time,
          session_init_timer,
          enquire_link_time,
@@ -2108,7 +966,7 @@ esme_rinvbndsts_resp({CmdId, Pdu}, Conn) ->
 %% the state name open.
 %% @end
 open({?COMMAND_ID_OUTBIND, ParamList}, _From, S) ->
-    case send_request(?COMMAND_ID_OUTBIND, ParamList, undefined, S) of
+    case send_request(?COMMAND_ID_OUTBIND, ParamList, S) of
         {ok, NewS} ->
             reset_timer(S#state.session_init_timer),
             reset_timer(S#state.enquire_link_timer),
@@ -2163,7 +1021,8 @@ outbound(_Event, _From, S) ->
 %% the state name bound_rx.  Bound against a receiver ESME.
 %% @end
 bound_rx({CmdId, _}, _From, S) 
-  when (S#state.peer_congestion_state > 90) and
+  when is_integer(S#state.peer_congestion_state) and
+	   (S#state.peer_congestion_state > 90) and
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
@@ -2175,15 +1034,22 @@ bound_rx({CmdId, _}, _From, S)
     reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_rx, S#state{peer_congestion_state = 90}};
-bound_rx({CmdId, ParamList}, From, S) 
-  when CmdId == ?COMMAND_ID_DATA_SM;
-       CmdId == ?COMMAND_ID_DELIVER_SM;
-       CmdId == ?COMMAND_ID_ALERT_NOTIFICATION ->
+bound_rx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
+										   CmdId == ?COMMAND_ID_DELIVER_SM ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
             reset_timer(S#state.enquire_link_timer),
             {next_state, bound_rx, NewS};
+        Error ->
+            {reply, Error, bound_rx, S}
+    end;
+bound_rx({?COMMAND_ID_ALERT_NOTIFICATION, ParamList}, _From, S) ->
+    case send_request(?COMMAND_ID_ALERT_NOTIFICATION, ParamList, S) of 
+        {ok, NewS} ->
+            reset_timer(S#state.inactivity_timer),
+            reset_timer(S#state.enquire_link_timer),
+            {reply, ok, bound_rx, NewS};   % Do not wait for a response
         Error ->
             {reply, Error, bound_rx, S}
     end;
@@ -2252,7 +1118,8 @@ bound_tx(_Event, _From, S) ->
 %% the state name bound_trx.  Bound against a transceiver ESME.
 %% @end
 bound_trx({CmdId, _}, _From, S) 
-  when (S#state.peer_congestion_state > 90) and 
+  when is_integer(S#state.peer_congestion_state) and 
+	   (S#state.peer_congestion_state > 90) and 
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
@@ -2264,15 +1131,22 @@ bound_trx({CmdId, _}, _From, S)
     reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_trx, S#state{peer_congestion_state = 90}};
-bound_trx({CmdId, ParamList}, From, S) 
-  when CmdId == ?COMMAND_ID_DATA_SM;
-       CmdId == ?COMMAND_ID_DELIVER_SM;
-       CmdId == ?COMMAND_ID_ALERT_NOTIFICATION ->
+bound_trx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
+											CmdId == ?COMMAND_ID_DELIVER_SM ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
             reset_timer(S#state.enquire_link_timer),
             {next_state, bound_trx, NewS};
+        Error ->
+            {reply, Error, bound_trx, S}
+    end;
+bound_trx({?COMMAND_ID_ALERT_NOTIFICATION, ParamList}, _From, S) ->
+    case send_request(?COMMAND_ID_ALERT_NOTIFICATION, ParamList, S) of 
+        {ok, NewS} ->
+            reset_timer(S#state.inactivity_timer),
+            reset_timer(S#state.enquire_link_timer),
+            {reply, ok, bound_trx, NewS};   % Do not wait for a response
         Error ->
             {reply, Error, bound_trx, S}
     end;
@@ -2690,6 +1564,35 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
     end.
 
 
+%% @spec send_request(CmdId, ParamList, StateData) -> Result
+%%    CmdId        = atom()
+%%    ParamList    = [{ParamName, ParamValue}]
+%%    ParamName    = atom()
+%%    ParamValue   = term()
+%%    StateData    = state()
+%%    Result       = {ok, NewStateData} | {error, Error}
+%%    NewStateData = state()
+%%    Error        = int()
+%%
+%% @doc Send a SMPP request given the command PDU.</p>
+%%
+%% <p>This function doesn't expect any response, thus no request broker is
+%% spawned.  Used by the <i>outbind</i> and <i>alert_notification</i> 
+%% operations.</p
+%%
+%% @see send_request/4
+%% @end
+send_request(CmdId, ParamList, StateData) ->
+    SeqNum = StateData#state.sequence_number + 1,
+    Pdu    = operation:new(CmdId, SeqNum, ParamList),
+    case send_pdu(StateData#state.conn, Pdu) of
+        ok ->
+            {ok, StateData#state{sequence_number = SeqNum}};
+        Error ->
+            Error
+    end.
+
+
 %% @spec send_request(CmdId, ParamList, From, StateData) -> Result
 %%    CmdId        = atom()
 %%    ParamList    = [{ParamName, ParamValue}]
@@ -2706,18 +1609,17 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
 %% the caller issuing the request (might be the atom <tt>undefined</tt>).
 %% </p>
 %%
-%% <p>Refer to <a href="operation.html#command_name-3">operation:command_name/3
-%% </a> for a complete list of valid values for <tt>CommandName</tt>.</p>
+%% <p>This function spawns a request broker that waits for the response.</p>
+%%
+%% @see send_request/3
 %% @end
 send_request(CmdId, ParamList, From, StateData) ->
     SeqNum = StateData#state.sequence_number + 1,
     Pdu    = operation:new(CmdId, SeqNum, ParamList),
     case send_pdu(StateData#state.conn, Pdu) of
         ok ->
-            CmdId  = operation:get_param(command_id, Pdu),
-            Err    = operation:request_failure_code(CmdId),
-            Time   = StateData#state.response_time,
-            Broker = spawn_link(fun() -> request_broker(From, Err, Time) end),
+            Time  = StateData#state.response_time,
+            Broker= spawn_link(fun() -> request_broker(From, CmdId, Time) end),
             ets:insert(StateData#state.requests, {SeqNum, CmdId, Broker}),
             {ok, StateData#state{sequence_number = SeqNum}};
         Error ->
@@ -2780,11 +1682,11 @@ send_pdu(Conn, Pdu) ->
 %% before any response is received, the term <tt>{error, TimeoutError}</tt> 
 %% is reported to the <tt>Caller</tt>.
 %% @end
-request_broker(undefined, TimeoutError, Time) ->
+request_broker(undefined, CmdId, Time) ->
     receive 
-        {Sid, {response, CmdId, Pdu}} ->
+        {Sid, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
-                ?ESME_ROK when CmdId == ?COMMAND_ID_UNBIND_RESP ->
+                ?ESME_ROK when RespId == ?COMMAND_ID_UNBIND_RESP ->
 					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
                 ?ESME_ROK ->
 					ok;
@@ -2792,16 +1694,17 @@ request_broker(undefined, TimeoutError, Time) ->
                     {error, Error}
             end
     after Time ->
-            {error, TimeoutError}
+            Error = operation:request_failure_code(CmdId),
+            {error, Error}
     end;
-request_broker(Caller, TimeoutError, Time) ->
+request_broker(Caller, CmdId, Time) ->
     receive
-        {Sid, {response, CmdId, Pdu}} ->
+        {Sid, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
-                ?ESME_ROK when CmdId == ?COMMAND_ID_UNBIND_RESP ->
+                ?ESME_ROK when RespId == ?COMMAND_ID_UNBIND_RESP ->
 					gen_fsm:reply(Caller, {ok, Pdu}),
 					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
-				?ESME_ROK when CmdId == ?COMMAND_ID_GENERIC_NACK ->
+				?ESME_ROK when RespId == ?COMMAND_ID_GENERIC_NACK ->
 					gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
                 ?ESME_ROK ->
 					gen_fsm:reply(Caller, {ok, Pdu});
@@ -2809,7 +1712,8 @@ request_broker(Caller, TimeoutError, Time) ->
                     gen_fsm:reply(Caller, {error, Error})
             end
     after Time ->
-            gen_fsm:reply(Caller, {error, TimeoutError})
+            Error = operation:request_failure_code(CmdId),
+            gen_fsm:reply(Caller, {error, Error})
     end.
 
 

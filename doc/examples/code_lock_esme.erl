@@ -34,10 +34,12 @@
 
 -include("gen_esme.hrl").
 
--export([start_link/6, stop/0]).
+-export([start/0, start_link/6, stop/0]).
 -export([deliver_sm/3]).
 -export([init/1, closed/2, open/2, handle_event/3, terminate/3]).
 
+start() ->
+    start_link("banana\0", "secret\0", "1949\0", "1949\0", {193, 144, 50, 51}, [1,2]).
 
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr, Code) ->
 	io:format("Starting the code lock ESME...", []),

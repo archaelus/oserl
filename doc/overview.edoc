@@ -49,7 +49,6 @@ numbers on [SMPP 5.0].</p>
     <ol>
       <li><a href="#changes0_1-0_2">Changes 0.1 -&gt; 0.2</a>
         <ol>
-          <li><a href="#changes0_1-0_2-smpp_base">smpp_base.hrl</a></li>
           <li><a href="#changes0_1-0_2-base_syntax">base_syntax.hrl</a></li>
           <li><a href="#changes0_1-0_2-pdu_syntax">pdu_syntax.erl</a></li>
           <li><a href="#changes0_1-0_2-operation">operation.erl</a></li>
@@ -2288,19 +2287,6 @@ Find OSERL's PICS proforma in openoffice format
 <h2><a name="changes">Changes</a></h2>
 
 <h3><a name="changes0_1-0_2">Changes 0.1 -&gt; 0.2</a></h3>
-
-<h4><a name="changes0_1-0_2-smpp_base">smpp_base.hrl</a></h4>
-
-<ul>
-  <li>Domain for <i>sm_default_msg_id</i> parameter was<br/>
-    <br/>
-    <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).</tt><br/>
-    <br/>
-    now corrected to<br/>
-    <br/>
-    <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).</tt>
-  </li>
-</ul>
 
 
 <h4><a name="changes0_1-0_2-base_syntax">base_syntax.hrl</a></h4>

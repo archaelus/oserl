@@ -95,6 +95,7 @@ start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
         {ok, Eid} ->
             gen_esme:bind_receiver(echo_esme, McAddr),
             gen_esme:bind_transmitter(echo_esme, McAddr),
+            process_flag(trap_exit, true),
             {ok, Eid};
         Error ->
             Error
@@ -501,7 +502,7 @@ deliver_sm(_Pid, Eid, Pdu) ->
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
     io:format("Echoing SM: ~p~n", [Mesg]),
-    spawn(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
+    spawn_link(fun() -> gen_esme:submit_sm(Eid, [Mesg|Dest]) end), 
     {ok, []}.
 
 

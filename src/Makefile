@@ -73,7 +73,7 @@ TARGET_FILES = $(MODULES:%=$(EBIN)/%.$(EMULATOR))
 # FLAGS
 # ----------------------------------------------------
 ERL_FLAGS += -W
-ERL_COMPILE_FLAGS += $(DEBUG) -I $(INCLUDE)
+ERL_COMPILE_FLAGS += $(DEBUG) -I $(INCLUDE) -pz $(EBIN)
 
 
 # ----------------------------------------------------

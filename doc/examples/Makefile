@@ -1,6 +1,7 @@
 ERLC = erlc
 EMULATOR = beam
 EBIN = .
+EBIN_OSERL = ../../ebin
 RM = rm -f
 
 # ----------------------------------------------------
@@ -14,7 +15,7 @@ MODULES = echo_esme code_lock_esme submit_esme
 
 
 ERL_FLAGS += -W
-ERL_COMPILE_FLAGS += $(DEBUG) -I ../../include
+ERL_COMPILE_FLAGS += $(DEBUG) -I ../../include -pz $(EBIN_OSERL)
 
 SUB_DIRECTORIES = 
 

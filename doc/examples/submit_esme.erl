@@ -78,7 +78,7 @@
 % %@equiv
 %%
 start() ->
-    start_link("banana\0", "secret\0", "1948\0", "1948\0", {192, 168, 1, 2}).
+    start_link("banana\0", "secret\0", "1950\0", "1950\0", {193, 144, 50, 51}).
     
 start_link(SystemId, Password, AddrRange, SourceAddr, McAddr) ->
     Setup = ?GEN_ESME_SETUP(SystemId, Password, AddrRange, SourceAddr),

@@ -40,22 +40,6 @@
 % definitely discarded</p>
 %
 %
-% <h2>Changes 0.1 -&gt; 0.2</h2>
-%
-% [09 Feb 2004]
-%
-% <ul>
-%   <li>Domain for <i>sm_default_msg_id</i> parameter was<br/>
-%     <br/>
-% 	  <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?INTEGER(1)).</tt><br/>
-%     <br/>
-%     now corrected to<br/>
-%     <br/>
-% 	  <tt>-define(SM_DEFAULT_MSG_ID_DOMAIN, ?RANGE_INTEGER(1, 1, 255)).</tt>
-%   </li>
-% </ul>
-%
-%
 % <h2>References</h2>
 % <dl>
 %   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -1195,7 +1179,7 @@
 % sm_default_msg_id
 %%
 -define(SM_DEFAULT_MSG_ID_DATATYPE, ?INTEGER(1)).
--define(SM_DEFAULT_MSG_ID_DOMAIN,   ?RANGE_INTEGER(1, 1, 255)).
+-define(SM_DEFAULT_MSG_ID_DOMAIN,   ?INTEGER(1)).
 -define(SM_DEFAULT_MSG_ID_RESERVED, ?EMPTY).
 
 %%%

@@ -1,5 +1,5 @@
 %%%
-% Copyright (C) 2003 Enrique Marcote Peña <mpquique@udc.es>
+% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@udc.es>
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -281,10 +281,28 @@
 % <p><b>See also:</b> <tt>callback_handle_connect_recovery/1</tt></p>
 %
 %
-% @copyright 2003 Enrique Marcote Peña
+% <h2>Changes 0.1 -&gt; 0.2</h2>
+%
+% [22 Feb 2004]
+%
+% <ul>
+%   <li><tt>retry_status</tt> is <tt>disabled</tt> on <tt>die</tt> event.</li>
+%   <li>If already listening on <tt>Port</tt>, the term
+%     <tt>{error, {already_listening, Port}}</tt> is returned for a request to
+%     <tt>listen</tt> on <tt>Port</tt> (instead of <tt>ok</tt>).
+%   </li>
+%   <li>If already connected to <tt>Address</tt> on <tt>Port</tt>, the term
+%     <tt>{error, {already_listening, Address, Port}}</tt> is returned for a
+%     request to <tt>connect</tt> to <tt>Address</tt> on <tt>Port</tt> 
+%     (instead of <tt>ok</tt>).
+%   </li>
+% </ul>
+%
+%
+% @copyright 2003 - 2004 Enrique Marcote Peña
 % @author Enrique Marcote Peña <mpquique@udc.es>
 %         [http://www.des.udc.es/~mpquique/]
-% @version 0.1 alpha, { 1 Jun 2003} {@time}.
+% @version 0.2 alpha, { 1 Jun 2003} {@time}.
 % @end
 %
 % %@TODO ¿Output buffer?  Buffer output on send operations under a connect 
@@ -907,7 +925,7 @@ listening({fail, _Socket}, _From, StateData) ->
     {reply, ok, listening, StateData};
 
 listening({listen, P}, _From, #state{port = P} = StateData) ->
-    {reply, ok, listening, StateData};
+    {reply, {error, {already_listening, P}}, listening, StateData};
 
 listening({listen, Port}, _From, StateData) ->
     NewStateData = StateData#state{port = Port},
@@ -956,7 +974,7 @@ connected(close, _From, StateData) ->
     {reply, gen_tcp:close(StateData#state.socket), closed, StateData};
 
 connected({connect, A, P, _},  _From, #state{address=A, port=P} = StateData) ->
-    {reply, ok, connected, StateData};
+    {reply, {error, {already_connected, A, P}}, connected, StateData};
 
 connected({connect, Address, Port, CTime}, _From, StateData) ->
     NewStateData = StateData#state{address      = Address,
@@ -1090,7 +1108,7 @@ failure({send, _Output}, _From, StateData) ->
 % @end
 %%
 handle_event(die, _StateName, StateData) ->
-    {stop, normal, StateData}.
+    {stop, normal, StateData#state{retry_status = disabled}}.
 
 
 %%%

@@ -35,6 +35,9 @@
     </ol> 
   </li>
   <li><a href="#changes0_2-1_0">Changes 0.2 -> 1.0</a>
+    <ol>
+      <li><a href="#changes0_2-1_0-gen_esme_session-erl">gen_esme_session.erl</a></li>
+    </ol>
   </li>
 </ol>
 
@@ -302,6 +305,27 @@
 
 <ul>
   <li>Now shipped under the GNU Lesser General Public License.</li>
+  <li><i>gen_esme.hrl</i> and <i>gen_esme_session.hrl</i> replaced by 
+    <i>oserl.hrl</i>.
+  </li>
+</ul>
+
+<p>How these changes affected individual files is described below.</p>
+
+
+<h3><a name="changes0_2-1_0-gen_esme_session-erl">gen_esme_session.erl</a></h3>
+
+<ul>
+  <li>Internal functions <tt>alert_notification/2</tt>, 
+    <tt>bind_receiver_resp/1</tt>, <tt>bind_transceiver_resp/1</tt>, 
+    <tt>bind_transmitter_resp/1</tt>, <tt>deliver_data_sm/2</tt>, 
+    <tt>deliver_sm/2</tt>, <tt>enquire_link/2</tt>, <tt>outbind/2</tt>, 
+    <tt>unbind/2</tt> and <tt>unbind_resp/1</tt> removed.
+  </li>
+  <li><tt>handle_input_corrupt_pdu/4</tt> responds to corrupt unbind PDUs
+    with an <i>unbind_resp</i> (due to a bug, a <i>generic_nack</i> was
+    issued on previous versions.
+  </li>
 </ul>
 
 </body>

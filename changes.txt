@@ -30,8 +30,9 @@ Contents
 1.17 Other changes
 
 2.   Changes 0.2 -> 1.0
-2.1  gen_esme_session.erl
-2.2  operation.erl
+2.1  smpp_globals.hrl
+2.2  gen_esme_session.erl
+2.3  operation.erl
 
 ---
 
@@ -203,7 +204,19 @@ How these changes affected individual files is described below.
 
 How these changes affected individual files is described below.
 
-2.1  gen_esme_session.erl
+
+2.1  smpp_globals.hrl
+
+- VALID_COMMAND_ID macro defined.
+- Two new macros added:  REQUEST and RESPONSE.  To compute the counterpart of
+  a command_id.
+- The macro COMMAND_ID gets the command_id (int) for a given command_name 
+  (atom).
+- The macro COMMAND_NAME gets the command_name (atom) for a given command_id 
+  (int).
+
+
+2.2  gen_esme_session.erl
 
 - Internal functions alert_notification/2, bind_receiver_resp/1, 
   bind_transceiver_resp/1, bind_transmitter_resp/1, deliver_data_sm/2, 
@@ -211,7 +224,12 @@ How these changes affected individual files is described below.
 - handle_input_corrupt_pdu/4 responds to corrupt unbind PDUs with an 
   unbind_resp (due to a bug, a generic_nack was issued on previous versions.
 
-2.2  operation.erl
+
+2.3  operation.erl
 
 - pack_mc/1 is now called pack_smsc/1.
 - unpack_mc/1 is now called unpack_smsc/1.
+- new_xxx/2 and new_xxx/3 functions removed.  See generic functions new/3 and 
+  new/4.
+- request_command_id/1 and response_command_id/1 redefined as macros in 
+  smpp_globals.hrl.

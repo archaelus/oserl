@@ -36,6 +36,7 @@
   </li>
   <li><a href="#changes0_2-1_0">Changes 0.2 -> 1.0</a>
     <ol>
+      <li><a href="#changes0_2-1_0-smpp_globals-hrl">smpp_globals.hrl</a></li>
       <li><a href="#changes0_2-1_0-gen_esme_session-erl">gen_esme_session.erl</a></li>
       <li><a href="#changes0_2-1_0-operation-erl">operation.erl</a></li>
     </ol>
@@ -314,6 +315,22 @@
 <p>How these changes affected individual files is described below.</p>
 
 
+<h3><a name="changes0_2-1_0-smpp_globals-hrl">smpp_globals.hrl</a></h3>
+
+<ul>
+  <li>VALID_COMMAND_ID macro defined.</li>
+  <li>Two new macros added:  REQUEST and RESPONSE.  To compute the
+    counterpart of a <i>command_id</i>
+ </li>
+ <li>The macro COMMAND_ID gets the <i>command_id</i> (int) for a given
+   <i>command_name</i> (atom).
+ </li>
+ <li>The macro COMMAND_NAME gets the <i>command_name</i> (atom) for a 
+   given <i>command_id</i> (int).
+ </li>
+</ul>
+
+
 <h3><a name="changes0_2-1_0-gen_esme_session-erl">gen_esme_session.erl</a></h3>
 
 <ul>
@@ -337,6 +354,13 @@
   </li>
   <li><tt>unpack_mc/1</tt> is now called 
     <a href="#unpack_smsc-1">unpack_smsc/1</a>.
+  </li>
+  <li><tt>new_xxx/2</tt> and <tt>new_xxx/3</tt> functions removed.  See
+    generic functions <a href="#new-3">new/3</a> and <a href="#new-4">new/4</a>
+    below.
+  </li>
+  <li><tt>request_command_id/1</tt> and <tt>response_command_id/1</tt> 
+    redefined as macros in <a href="smpp_globals.html">smpp_globals.hrl</a>.
   </li>
 </ul>
 

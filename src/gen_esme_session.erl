@@ -3812,6 +3812,7 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             handle_input_corrupt_pdu(CmdId, Status, SeqNum, StateData),
             {next_state, StateName, StateData};
         {'EXIT', _What} ->
+%             io:format("What's going on? ~p~n", [What]),
             handle_input_corrupt_pdu(undefined,?ESME_RUNKNOWNERR,0,StateData),
             {next_state, StateName, StateData}
     end;

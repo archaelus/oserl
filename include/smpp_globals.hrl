@@ -136,7 +136,15 @@
           (CmdId =< ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP)))).
             
 % Gets the counterpart response command_id
--define(RESPONSE(CmdId), (CmdId + 16#80000000)).
+-define(RESPONSE(CmdId), 
+		if
+			CmdId == ?COMMAND_ID_OUTBIND ->
+				?COMMAND_ID_GENERIC_NACK;
+			CmdId == ?COMMAND_ID_ALERT_NOTIFICATION ->
+				?COMMAND_ID_GENERIC_NACK;
+			true ->
+				CmdId + 16#80000000
+		end).
 
 % Gets the counterpart request command_id
 -define(REQUEST(CmdId), (CmdId - 16#80000000)).

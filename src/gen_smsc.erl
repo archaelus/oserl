@@ -166,7 +166,7 @@
 
 -behaviour(gen_server).
 -behaviour(gen_smsc_session).
--behaviour(gen_tcp_connection).
+-behaviour(gen_connection).
 
 %%%-------------------------------------------------------------------
 %%% Include files
@@ -221,7 +221,6 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-%-define(SERVER, ?MODULE).
 -define(SESSION_MODULE, gen_smsc_session).
 
 %%%-------------------------------------------------------------------
@@ -627,7 +626,7 @@ handle_call({alert_notification, SystemId, ParamList}, From, S) ->
 	end;
 handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
 	% This shoud be asynchronous.
-	case gen_tcp_connection:start_connect(?SESSION_MODULE, Addr, Port) of
+	case gen_connection:start_connect(?SESSION_MODULE, Addr, Port) of
 		{ok, Conn} ->
 			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
 				{ok, Session} ->
@@ -669,7 +668,7 @@ handle_call({accept, Conn, _Socket}, From, S) ->
             {reply, error, S}
     end;
 handle_call({listen, Port, Count}, From, S) ->
-    case gen_tcp_connection:start_listen(?MODULE,?SESSION_MODULE,Port,Count) of
+    case gen_connection:start_listen(?MODULE, ?SESSION_MODULE, Port, Count) of
         {ok, Listener} ->
             {reply, ok, S#state{listener = Listener}};
         Error ->

@@ -14,15 +14,15 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc Generic SMSC.
+%%% @doc Generic ESME.
 %%%
-%%% <p>A generic SMSC implemented as a gen_server.</p>
+%%% <p>A generic ESME implemented as a gen_server.</p>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
 %%%
 %%% <p>A module implementing this behaviour must export these functions.  
-%%% Leaving a callback undefined crashes the entire SMSC whenever that
+%%% Leaving a callback undefined crashes the entire ESME whenever that
 %%% particular function is called.</p>
 %%%
 %%% <table width="100%" border="1">
@@ -159,14 +159,11 @@
 %%%         [http://www.des.udc.es/~mpquique/]
 %%% @version 0.1, {13 May 2004} {@time}.
 %%% @end
-%%%
-%%% %@TODO Outbind is synchronous, may block the entire SMSC during connection
-%%% establishment.
 -module(gen_esme).
 
 -behaviour(gen_server).
--behaviour(gen_smsc_session).
--behaviour(gen_tcp_connection).
+-behaviour(gen_esme_session).
+-behaviour(gen_connection).
 
 %%%-------------------------------------------------------------------
 %%% Include files
@@ -188,10 +185,18 @@
          start_link/5, 
          listen/1,
          listen/3,
-         alert_notification/3,
-         outbind/4,
-         deliver_sm/3,
-         data_sm/3,
+         bind_receiver/2,
+         bind_transmitter/2,
+         bind_transceiver/2,
+         broadcast_sm/2,
+         cancel_broadcast_sm/2,
+         cancel_sm/2,
+         data_sm/2,
+         query_broadcast_sm/2,
+         query_sm/2,
+         replace_sm/2,
+         submit_multi/2,
+         submit_sm/2,
          unbind/3,
          call/2, 
          call/3, 
@@ -209,9 +214,12 @@
          code_change/3]).
 
 %%%-------------------------------------------------------------------
-%%% Internal gen_smsc_session exports
+%%% Internal gen_esme_session exports
 %%%-------------------------------------------------------------------
--export([handle_bind/3, handle_operation/3, handle_unbind/3]).
+-export([handle_outbind/3, 
+		 handle_alert_notification/3, 
+		 handle_operation/3, 
+		 handle_unbind/3]).
 
 %%%-------------------------------------------------------------------
 %%% Internal gen_connection exports
@@ -221,8 +229,7 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-%-define(SERVER, ?MODULE).
--define(SESSION_MODULE, gen_smsc_session).
+-define(SESSION_MODULE, gen_esme_session).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -242,7 +249,7 @@
 %%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, timers, listener, sessions}).
+-record(state, {mod, mod_state, timers, listener, rx_session, tx_session}).
 
 
 %%%===================================================================
@@ -259,7 +266,8 @@
 %% @end
 behaviour_info(callbacks) ->
     [{init, 1},
-     {handle_bind, 3}, 
+     {handle_outbind, 3}, 
+     {handle_alert_notification, 3}, 
      {handle_operation, 3}, 
      {handle_unbind, 3}, 
      {handle_session_failure, 2},
@@ -411,7 +419,7 @@ listen(ServerRef, Port, Count) ->
     gen_server:call(ServerRef, {listen, Port, Count}).
 
 
-%% @spec alert_notification(ServerRef, SystemId, ParamList) -> Result
+%% @spec bind_receiver(ServerRef, ParamList) -> Result
 %%    Sid        = atom()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
@@ -420,11 +428,40 @@ listen(ServerRef, Port, Count) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues an alert notification operation on the session identified by 
-%% <tt>Sid</tt>.
+%% @doc Issues a <i>bind_receiver</i> operation.
 %% @end
-alert_notification(ServerRef, SystemId, ParamList) ->
-    gen_server:cast(ServerRef, {alert_notification, SystemId, ParamList}).
+bind_receiver(ServerRef, ParamList) ->
+    gen_server:cast(ServerRef, {bind_receiver, ParamList}).
+
+
+%% @spec bind_transmitter(ServerRef, ParamList) -> Result
+%%    Sid        = atom()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>bind_transmitter</i> operation.
+%% @end
+bind_transmitter(ServerRef, ParamList) ->
+    gen_server:cast(ServerRef, {bind_transmitter, ParamList}).
+
+
+%% @spec bind_transceiver(ServerRef, ParamList) -> Result
+%%    Sid        = atom()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>bind_transceiver</i> operation.
+%% @end
+bind_transceiver(ServerRef, ParamList) ->
+    gen_server:cast(ServerRef, {bind_transceiver, ParamList}).
 
 
 %% @spec outbind(ServerRef, SystemId, ParamList) -> Result
@@ -562,10 +599,7 @@ reply(Client, Reply) ->
 %%
 %% @doc Initiates the server
 init({Mod, Timers, Args}) ->
-	S = #state{mod      = Mod, 
-			   timers   = Timers, 
-			   listener = closed,
-			   sessions = ets:new(sessions,[])},
+	S = #state{mod = Mod, timers = Timers, listener = closed},
     process_flag(trap_exit, true),
     pack(Mod:init(Args), S).
 
@@ -627,7 +661,7 @@ handle_call({alert_notification, SystemId, ParamList}, From, S) ->
 	end;
 handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
 	% This shoud be asynchronous.
-	case gen_tcp_connection:start_connect(?SESSION_MODULE, Addr, Port) of
+	case gen_connection:start_connect(?SESSION_MODULE, Addr, Port) of
 		{ok, Conn} ->
 			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
 				{ok, Session} ->
@@ -669,7 +703,7 @@ handle_call({accept, Conn, _Socket}, From, S) ->
             {reply, error, S}
     end;
 handle_call({listen, Port, Count}, From, S) ->
-    case gen_tcp_connection:start_listen(?MODULE,?SESSION_MODULE,Port,Count) of
+    case gen_connection:start_listen(?MODULE, ?SESSION_MODULE, Port, Count) of
         {ok, Listener} ->
             {reply, ok, S#state{listener = Listener}};
         Error ->
@@ -725,28 +759,32 @@ handle_info({'EXIT', Child, Reason}, S) when Child == S#state.listener ->
     % The listener terminates on error.
 	NewS = S#state{listener = closed},
 	pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
-handle_info({'EXIT', Child, normal} = Info, S) ->
-    % A Child process terminates with normal status.
-    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
-        {[[SystemId, _BoundAs]], _Continuation} ->  % Child is a session
-            ets:delete(S#state.sessions, Child),
-            {noreply, S};
-        _Otherwise ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
-    end;
-handle_info({'EXIT', Child, Reason} = Info, S) ->
-    % A Child process terminates on error.
-    case ets:match(S#state.sessions, {Child, '$1', '$2'}, 1) of
-        {[[undefined, undefined]], _Continuation} -> % An unbound session
-            ets:delete(S#state.sessions, Child),
-            {noreply, S};
-        {[[SystemId, BoundAs]], _Continuation} ->    % Child is a bound session
-            ets:delete(S#state.sessions, Child),
-			R = {SystemId, BoundAs},
-            pack((S#state.mod):handle_session_failure(R, S#state.mod_state),S);
-        _Otherwise ->
-            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
-    end;
+handle_info({'EXIT', Child, normal}, S) when Child == S#state.rx_session,
+											 Child == S#state.tx_session ->
+    % The trx_session process terminates with normal status.
+	{noreply, S#state{rx_session = undefined, tx_session = undefined}};
+handle_info({'EXIT', Child, Reason}, S) when Child == S#state.rx_session,
+											 Child == S#state.tx_session ->
+    % The trx_session process terminates on error.
+	NewS = S#state{rx_session = undefined, tx_session = undefined},
+    pack((NewS#state.mod):handle_session_failure(
+		   transceiver, NewS#state.mod_state), NewS);
+handle_info({'EXIT', Child, normal}, S) when Child == S#state.rx_session ->
+    % The rx_session process terminates with normal status.
+	{noreply, S#state{rx_session = undefined}};
+handle_info({'EXIT', Child, Reason}, S) when Child == S#state.rx_session ->
+    % The rx_session process terminates on error.
+	NewS = S#state{rx_session = undefined},
+    pack((NewS#state.mod):handle_session_failure(
+		   receiver, NewS#state.mod_state), NewS);
+handle_info({'EXIT', Child, normal}, S) when Child == S#state.tx_session ->
+    % The tx_session process terminates with normal status.
+	{noreply, S#state{tx_session = undefined}};
+handle_info({'EXIT', Child, Reason}, S) when Child == S#state.tx_session ->
+    % The tx_session process terminates on error.
+	NewS = S#state{tx_session = undefined},
+    pack((NewS#state.mod):handle_session_failure(
+		   transmitter, NewS#state.mod_state), NewS);
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
@@ -760,7 +798,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, S) ->
-	io:format("*** gen_smsc terminating: ~p - ~p ***~n", [self(), Reason]),
+	io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), Reason]),
     pack((S#state.mod):terminate(Reason, S#state.mod_state), S).
 
 
@@ -777,7 +815,7 @@ code_change(OldVsn, S, Extra) ->
 
 
 %%%===================================================================
-%%% SMSC Session functions
+%%% ESME Session functions
 %%%===================================================================
 %% @spec handle_bind(SMSC, Session, Bind) -> Result
 %%    SMSC = pid()

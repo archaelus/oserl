@@ -1,1542 +1,615 @@
+%%% Copyright (C) 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
-% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-%%
+%%% This library is free software; you can redistribute it and/or
+%%% modify it under the terms of the GNU Lesser General Public
+%%% License as published by the Free Software Foundation; either
+%%% version 2.1 of the License, or (at your option) any later version.
+%%%
+%%% This library is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%%% Lesser General Public License for more details.
+%%%
+%%% You should have received a copy of the GNU Lesser General Public
+%%% License along with this library; if not, write to the Free Software
+%%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+%%% @doc Generic TCP connection.
 %%%
-% @doc TCP connection behaviour.
-%
-% <p>A generic TCP connection modeled as a simple FSM.</p>
-%
-%
-% <h2>State transitions table</h2>
-%
-% <p>Possible states for the Connection FSM are shown in the first row.
-% Events are those in the first column.  This table shows the next state given
-% an event and the current state.</p>
-%
-% <table width="100%" border="1" cellpadding="5">
-%   <tr> 
-%     <th><small>&#160;</small></th>
-%     <th><small>closed</small></th>
-%     <th><small>listening</small></th>
-%     <th><small>connected</small></th>
-%     <th><small>failure</small></th>
-%   </tr>
-%   <tr> 
-%     <th align="left"><small>accept</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>close</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>closed</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>connect</small></th>
-%     <td valign="top" align="center"><small>connected/failure</small></td>
-%     <td valign="top" align="center"><small>connected/failure</small></td>
-%     <td valign="top" align="center"><small>connected/failure</small></td>
-%     <td valign="top" align="center"><small>connected/failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>die</small></th>
-%     <td valign="top" align="center"><small>STOP</small></td>
-%     <td valign="top" align="center"><small>STOP</small></td>
-%     <td valign="top" align="center"><small>STOP</small></td>
-%     <td valign="top" align="center"><small>STOP</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>disable_retry</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>enable_retry</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>fail</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>failure/listening</small></td>
-%     <td valign="top" align="center"><small>failure/connected</small></td>
-%     <td valign="top" align="center"><small>failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>listen</small></th>
-%     <td valign="top" align="center"><small>listening/failure</small></td>
-%     <td valign="top" align="center"><small>listening/failure</small></td>
-%     <td valign="top" align="center"><small>listening/failure</small></td>
-%     <td valign="top" align="center"><small>listening/failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>recv</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>retry_connect (async)</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>connected/failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>retry_listen (async)</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>listening/failure</small></td>
-%   </tr>
-%   <tr>
-%     <th align="left"><small>send</small></th>
-%     <td valign="top" align="center"><small>closed</small></td>
-%     <td valign="top" align="center"><small>listening</small></td>
-%     <td valign="top" align="center"><small>connected</small></td>
-%     <td valign="top" align="center"><small>failure</small></td>
-%   </tr>
-% </table>
-%
-% <h2>Callback Function Index</h2>
-%
-% <p>A module implementing this behaviour may export these functions.  Leaving 
-% a function undefined preserves the default behaviour.</p>
-%
-% <table width="100%" border="1">
-%   <tr>
-%     <td valign="top"><a href="#handle_accept-2">handle_accept/2</a></td>
-%     <td>A connection was accepted.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top"><a href="#handle_input-4">handle_input/4</a></td>
-%     <td>New input data available.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%       <a href="#handle_listen_error-3">handle_listen_error/3</a>
-%     </td>
-%     <td>Error occurs when listening.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%       <a href="#handle_connect_error-4">handle_connect_error/4</a>
-%     </td>
-%     <td>Error occurs when connected.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%       <a href="#handle_listen_recovery-3">handle_listen_recovery/3</a>
-%     </td>
-%     <td>Listen error recovery.</td>
-%   </tr>
-%   <tr>
-%     <td valign="top">
-%       <a href="#handle_connect_recovery-4">handle_connect_recovery/4</a>
-%     </td>
-%     <td>Connect error recovery.</td>
-%   </tr>
-% </table>
-%
-%
-% <h2>Callback Function Details</h2>
-%
-% <h3><a name="handle_accept-2">handle_accept/2</a></h3>
-%
-% <tt>handle_accept(Pid, Cid) -> ok</tt>
-% <ul>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-% </ul>
-%
-% <p>Whenever an incoming connection is accepted under a listening state, 
-% the gen_connection turns into connect state and triggers this callback to 
-% notify such an event to the parent of the connection. <tt>Cid</tt> is
-% the pid of the connection, <tt>Pid</tt> is the connection's 
-% parent pid.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_accept/1</tt></p>
-%
-%
-% <h3><a name="handle_input-4">handle_input/4</a></h3>
-%
-% <tt>handle_input(Pid, Cid, Input, Lapse) -> {ok, RestBuffer}</tt>
-% <ul>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-%   <li><tt>Input = RestBuffer = binary()</tt></li>
-%   <li><tt>Lapse = int()</tt></li>
-% </ul>
-%
-% <p>Every time the connection receives new data, this function is called to 
-% let the callback module consume data from the <tt>Input</tt> and from
-% the stored <tt>Buffer</tt>.  This function should return the unused data.
-% <tt>Cid</tt> is the pid of the connection, <tt>Pid</tt> is the
-% connection's parent pid.</p>
-%
-% <p><tt>Lapse</tt> are the microseconds waited until input came.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_input/3</tt></p>
-%
-%
-% <h3><a name="handle_listen_error-3">handle_listen_error/3</a></h3>
-%
-% <tt>handle_listen_error(Pid, Cid, Port) -> ok</tt>
-% <ul>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-% </ul>
-%
-% <p>If the connection is listening on port <tt>Port</tt> and an error
-% occurs, this function reports the failure to the callback module so it can
-% take the appropriate actions.  The connection may try to recover itself
-% every <tt>#state.retry_time</tt> milliseconds, if this timer wasn't
-% set to the atom <tt>infinity</tt>, in such a case the callback module
-% should take care of this situation. <tt>Cid</tt> is the pid of the
-% connection, <tt>Pid</tt> is the connection's parent pid.</p>
-%
-% <p>Return value is ignored by the connection.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_listen_error/1</tt></p>
-%
-%
-% <h3><a name="handle_connect_error-4">handle_connect_error/4</a></h3>
-%
-% <tt>handle_connect_error(Pid, Cid, Address, Port) -> ok</tt>
-% <ul>
-%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-% </ul>
-%
-% <p>If the connection is active (sending/receiving data to/from address
-% <tt>Address</tt> on port <tt>Port</tt>) and an error occurs, this 
-% function reports the failure to the callback module so it can take the
-% appropriate actions.  The connection may try to recover itself every
-% <tt>#state.retry_time</tt> milliseconds, if this timer wasn't set
-% to the atom <tt>infinity</tt>, in such a case the callback module should
-% take care of this situation.  <tt>Cid</tt> is the pid of the connection,
-% <tt>Pid</tt> is the connection's parent pid.</p>
-%
-% <p>Return value is ignored by the connection.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_connect_error/1</tt></p>
-%
-%
-% <h3><a name="handle_listen_recovery-3">handle_listen_recovery/3</a></h3>
-%
-% <tt>handle_listen_recovery(Pid, Cid, Port) -> ok</tt>
-% <ul>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-% </ul>
-%
-% <p>Notifies the callback module than the connection is again, after a 
-% failure, up and listening on port <tt>Port</tt>. <tt>Cid</tt> is the
-% pid of the connection, <tt>Pid</tt> is the connection's parent pid.</p>
-%
-% <p>Return value is ignored by the connection.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_listen_recovery/1</tt></p>
-%
-%
-% <h3><a name="handle_connect_recovery-4">handle_connect_recovery/4</a></h3>
-%
-% <tt>handle_connect_recovery(Pid, Cid, Address, Port) -> ok</tt>
-% <ul>
-%   <li><tt>Address = string() | atom() | ip_address()</tt></li>
-%   <li><tt>Port = int()</tt></li>
-%   <li><tt>Pid = Cid = pid()</tt></li>
-% </ul>
-%
-% <p>Notifies the callback module than the connection is again, after a 
-% failure, up and ready to send/receive data to address <tt>Address</tt> 
-% on port <tt>Port</tt> . <tt>Cid</tt> is the pid of the connection. 
-% <tt>Pid</tt> is the connection's parent pid.</p>
-%
-% <p>Return value is ignored by the connection.</p>
-%
-% <p><b>See also:</b> <tt>callback_handle_connect_recovery/1</tt></p>
-%
-%
-% <h2>Changes 0.1 -&gt; 0.2</h2>
-%
-% [22 Feb 2004]
-%
-% <ul>
-%   <li><tt>retry_status</tt> is <tt>disabled</tt> on <tt>die</tt> event.</li>
-%   <li>If already listening on <tt>Port</tt>, the term
-%     <tt>{error, {already_listening, Port}}</tt> is returned for a request to
-%     <tt>listen</tt> on <tt>Port</tt> (instead of <tt>ok</tt>).
-%   </li>
-%   <li>If already connected to <tt>Address</tt> on <tt>Port</tt>, the term
-%     <tt>{error, {already_listening, Address, Port}}</tt> is returned for a
-%     request to <tt>connect</tt> to <tt>Address</tt> on <tt>Port</tt> 
-%     (instead of <tt>ok</tt>).
-%   </li>
-% </ul>
-%
-% [27 Feb 2004]
-%
-% <ul>
-%   <li>Changes in comments.</li>
-% </ul>
-%
-%
-% @copyright 2003 - 2004 Enrique Marcote Peña
-% @author Enrique Marcote Peña <mpquique@users.sourceforge.net>
-%         [http://www.des.udc.es/~mpquique/]
-% @version 0.2 alpha, { 1 Jun 2003} {@time}.
-% @end
-%
-% %@TODO ¿Output buffer?  Buffer output on send operations under a connect 
-% failure, flush buffer on recovery.
-%%
+%%% <p>A generic connection behavior.  Wraps regular gen_tcp sockets to add
+%%% support for a few things:</p>
+%%%
+%%% <ul>
+%%%   <li><tt>Lapse</tt> argument in <a href="#handle_input-4">handle_input/4
+%%%     </a> callback may be used to control congestion.
+%%%   </li>
+%%%   <li>Adds support for buffered input.</li>
+%%%   <li>When started on listening mode, spawns a new process for every new
+%%%     incomming connection.
+%%%   </li>
+%%% </ul>
+%%%
+%%% <p>and this is it.</p>
+%%%
+%%% <p>When the behaviour is terminated an exit signal is sent to the 
+%%% controlling process.  The exit signal is:</p>
+%%%
+%%% <ul>
+%%%   <li><tt>{recv_error,{error,closed}}</tt> if in connect mode.</p></li>
+%%%   <li><tt>{accept_error,{error,closed}}</tt> if in listen mode.</p></li>
+%%% </ul>
+%%%
+%%%
+%%% <h2>Callback Function Index</h2>
+%%%
+%%% <p>A module implementing this behaviour must export these functions.</p>
+%%%
+%%% <table width="100%" border="1">
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_accept-3">handle_accept/3</a></td>
+%%%     <td>A new incomming connection is available.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_input-4">handle_input/4</a></td>
+%%%     <td>New input data available.</td>
+%%%   </tr>
+%%% </table>
+%%%
+%%%
+%%% <h2>Callback Function Details</h2>
+%%%
+%%% <h3><a name="handle_accept-3">handle_accept/3</a></h3>
+%%%
+%%% <tt>handle_accept(Owner, Conn, Socket) -> {ok, NewOwner} | error</tt>
+%%% <ul>
+%%%   <li><tt>Owner = Conn = NewOwner = pid()</tt></li>
+%%%   <li><tt>Socket = socket()</tt></li>
+%%% </ul>
+%%%
+%%% <p>A new incomming connection is available.  <tt>Conn</tt> is the pid of 
+%%% the gen_connection, <tt>Owner</tt> the pid of the controlling process.</p>
+%%%
+%%% <p>The callback must return <tt>true</tt> if the connection is accepted,
+%%% <tt>false</tt> otherwise.</p>
+%%%
+%%%
+%%% <h3><a name="handle_input-4">handle_input/4</a></h3>
+%%%
+%%% <tt>handle_input(Owner, Conn, Input, Lapse) -> RestInput</tt>
+%%% <ul>
+%%%   <li><tt>Owner = Conn = pid()</tt></li>
+%%%   <li><tt>Input = RestInput = binary()</tt></li>
+%%%   <li><tt>Lapse = int()</tt></li>
+%%% </ul>
+%%%
+%%% <p>New input data available.  The callback module should consume desired
+%%% data from <tt>Input</tt> and return unused data.</p>
+%%%
+%%% <tt>Conn</tt> is the pid of the gen_connection, <tt>Owner</tt> the pid of 
+%%% the controlling process.</p>
+%%%
+%%% <p><tt>Lapse</tt> are the microseconds waited for input to come.  This
+%%% parameter may be used to control congestion.</p>
+%%%
+%%%
+%%% @TODO Change the meaning of <tt>Count</tt>.  Remove unlinks from
+%%% <a href="#handle_call-3">handle_call/3</a> on events 
+%%% <tt>controlling_process</tt> and <tt>spawn_accept</tt>.  Trap children 
+%%% exits.
+%%%
+%%%
+%%% @copyright 2004 Enrique Marcote Peña
+%%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
+%%%         [http://www.des.udc.es/~mpquique/]
+%%% @version 1.0 beta, {24 May 2004} {@time}.
+%%% @end
 -module(gen_connection).
 
--behaviour(gen_fsm).
+-behaviour(gen_server).
 
 %%%-------------------------------------------------------------------
-% Include files
-%%--------------------------------------------------------------------
+%%% Include files
+%%%-------------------------------------------------------------------
 
 %%%-------------------------------------------------------------------
-% Behaviour exports
-%%--------------------------------------------------------------------
+%%% Behaviour exports
+%%%-------------------------------------------------------------------
 -export([behaviour_info/1]).
 
 %%%-------------------------------------------------------------------
-% External exports
-%%--------------------------------------------------------------------
--export([start_link/2, 
-         start_link/3,
-         connect/3, 
-         connect/4, 
-         disable_retry/1,
-         enable_retry/1,
-         listen/2,
-         send/2, 
-         close/1, 
+%%% External exports
+%%%-------------------------------------------------------------------
+%%-compile(export_all).
+-export([start_connect/3, 
+         start_connect/4,
+         start_listen/4,
+         start_listen/5,
+         controlling_process/2,
+         send/2,
          stop/1]).
 
 %%%-------------------------------------------------------------------
-% Internal exports
-%%--------------------------------------------------------------------
+%%% Internal exports
+%%%-------------------------------------------------------------------
 -export([init/1,
-         closed/2,
-         listening/2,
-         connected/2,
-         failure/2,
-         closed/3,
-         listening/3,
-         connected/3,
-         failure/3,
-         handle_event/3,
-         handle_sync_event/4,
-         handle_info/3,
-         terminate/3,
-         code_change/4]).
+         handle_call/3,
+         handle_cast/2,
+         handle_info/2,
+         terminate/2,
+         code_change/3]).
 
 %%%-------------------------------------------------------------------
-% Macros
-%%--------------------------------------------------------------------
+%%% Macros
+%%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(RETRY_TIME, 5000).
 -define(CONNECT_TIME, 30000).
+-define(ACCEPT_TIME, 30000).
 -define(LISTEN_OPTIONS, 
         [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
 -define(CONNECT_OPTIONS, 
         [binary, {packet, 0}, {active, false}]).
 
+-define(DECR(X), if is_integer(X) -> X - 1; true -> X end).
+                         
 %%%-------------------------------------------------------------------
-% Records
-%%--------------------------------------------------------------------
-%%%
-% %@spec {state, 
-%         Parent, 
-%         Self,
-%         CallbackModule, 
-%         Address, 
-%         Port, 
-%         Socket, 
-%         Buffer, 
-%         ConnectTime,
-%         RetryTime, 
-%         RetryStatus,
-%         Role}
-%    Parent         = pid()
-%    Self           = pid()
-%    CallbackModule = atom()
-%    Address        = string() | atom() | ip_address()
-%    Port           = int()
-%    Socket         = socket()
-%    Buffer         = binary()
-%    ConnectTime    = int() | infinity
-%    RetryTime      = int() | infinity
-%    RetryStatus    = enabled | disabled
-%    Role           = client | server
-%
-% %@doc Representation of the fsm's state
-%
-% <dl>
-%   <dt>Parent: </dt><dd>Pid of the parent process.  Is passed in the
-%     callback functions to help identify the owner of the connection.
-%   </dd>
-%   <dt>Self: </dt><dd>The Pid of our gen_connection process.  Is passed in the
-%     callback functions to help identify the gen_connection.  Since
-%     a callback function might be called from a spawned procces, we want to
-%     keep a reference to our main process.
-%   </dd>
-%   <dt>CallbackModule: </dt><dd>Module where callbacks are defined.</dd>
-%   <dt>Address: </dt><dd>IP Address of the host to connect to.  Can be either 
-%     a hostname, or an IP address.
-%   </dd>
-%   <dt>Port: </dt><dd>Listen (acting as server) or connection port number 
-%     (acting as client).</dd>
-%   <dt>Socket: </dt><dd>Active socket of the connection.  Either a listen
-%     or a connection socket.
-%   </dd>
-%   <dt>Buffer: </dt><dd>Received data is stored in this buffer.  This buffer
-%     is passed to the callback module via the handle_input/4 function every
-%     time new input is received.  The callback module may consume all or
-%     part of the buffer.
-%   </dd>
-%   <dt>ConnectTime: </dt><dd>Timer for the connect operation timeout.  On 
-%     expiration the connect operation fails (default is ?CONNECT_TIME).
-%   </dd>
-%   <dt>RetryTime: </dt><dd>Retry timer.  If a failure occurs, the connection
-%     will try to reconnect every <tt>RetryTime</tt> milliseconds.  A
-%     <tt>infinity</tt> value permanently disables retrying (default is 
-%     ?RETRY_TIME).
-%   </dd>
-%   <dt>RetryStatus: </dt><dd>Flag used to dynamically enable/disable retry
-%     mechanisms.  This field might be used to disable retrying under certain
-%     especial circumstances.  Accepted values are <tt>enabled</tt> and
-%     <tt>disabled</tt> (default is <tt>enabled</tt>).
-%   </dd>
-%   <dt>Role: </dt><dd>The connection may be acting as a client or server.
-%     A server connection listens on <tt>Port</tt> and accepts incoming
-%     connections, a connection has a client role if the connect/1 function
-%     is explicitly called.
-%   </dd>
-% </dl>
-% %@end
+%%% Records
+%%%-------------------------------------------------------------------
+%% %@spec {state, Owner, Mod, Buffer}
+%%    Owner = pid()
+%%    Mod    = atom()
+%%    Buffer = binary()
 %%
--record(state, 
-        {parent,
-         self,
-         callback_module,
-         address, 
-         port, 
-         socket,
-         buffer       = <<>>,
-         connect_time = ?CONNECT_TIME,
-         retry_time   = ?RETRY_TIME,
-         retry_status = enabled,
-         role}).
+%% %@doc Representation of the fsm's state
+%%
+%% <dl>
+%%   <dt>Owner: </dt><dd>Pid of the controlling process.  Is passed in the
+%%     callback functions to help identify the owner of the connection.
+%%   </dd>
+%%   <dt>Mod: </dt><dd>Callback module.</dd>
+%%   <dt>Socket: </dt><dd>Active socket of the connection.  Either a listen
+%%     or a connection socket.
+%%   </dd>
+%%   <dt>Buffer: </dt><dd>Received data is stored in this buffer.  This buffer
+%%     is passed to the callback module via the handle_input/4 function every
+%%     time new input is received.  The callback module may consume all or
+%%     part of the buffer.
+%%   </dd>
+%% </dl>
+%% %@end
+-record(state, {owner, mod, child_mod, socket, buffer = <<>>}).
 
 %%%===================================================================
-% External functions
-%%====================================================================
-%%%
-% @spec behaviour_info(Category) -> Info
-%    Category      = callbacks | term()
-%    Info          = CallbacksInfo | term()
-%    CallbacksInfo = [{FunctionName, Arity}]
-%    FunctionName  = atom()
-%    Arity         = int()
-%
-% @doc Gives information about the behaviour.
-% @end
-%
-% %@see
-%
-% %@equiv
+%%% External functions
+%%%===================================================================
+%% @spec behaviour_info(Category) -> Info
+%%    Category      = callbacks | term()
+%%    Info          = CallbacksInfo | term()
+%%    CallbacksInfo = [{FunctionName, Arity}]
+%%    FunctionName  = atom()
+%%    Arity         = int()
 %%
+%% @doc Gives information about the behaviour.
+%% @end
 behaviour_info(callbacks) ->
-    [{handle_accept, 2}, 
-     {handle_input, 4}, 
-     {handle_listen_error, 3}, 
-     {handle_connect_error, 4},
-     {handle_listen_recovery, 3}, 
-     {handle_connect_recovery, 4}];
-
+    [{handle_accept, 3}, {handle_input, 4}];
 behaviour_info(_Other) ->
     undefined.
 
 
-%%%
-% @spec start_link(Module, RTime) -> Result
-%    Module = atom()
-%    RTime  = int() | infinity
-%    Result = {ok, Pid} | ignore | {error, Error}
-%    Pid    = pid()
-%    Error  = {already_started, Pid} | term()
-%
-% @doc Starts the connection server.
-%
-% <p><tt>Module</tt> is the callback module and <tt>RTime</tt> the
-% retry timer, the atom <tt>infinity</tt> disables the timeout.</p>
-%
-% <p>The gen_connection is not registered.</p>
-%
-% @see gen_fsm:start_link/3
-% @see start_link/3
-% @end
+%% @spec start_connect(Module, Address, Port) -> Result
+%%    Module = atom()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
-start_link(Module, RTime) ->
-    gen_fsm:start_link(?MODULE, [self(), Module, RTime], []).
-
-
-%%%
-% @spec start_link(CName, Module, RTime) -> Result
-%    CName  = {local, Name} | {global, Name}
-%    Name   = atom()
-%    Module = atom()
-%    RTime  = int() | infinity
-%    Result = {ok, Pid} | ignore | {error, Error}
-%    Pid    = pid()
-%    Error  = {already_started, Pid} | term()
-%
-% @doc Starts the connection server.
-%
-% <p><tt>Module</tt> is the callback module and <tt>RTime</tt> the
-% retry timer, the atom <tt>infinity</tt> disables the timeout.</p>
-%
-% <p>If <tt>CName = {local, Name}</tt>, the gen_connection is registered
-% locally as <tt>Name</tt>.  If <tt>CName = {global, Name}</tt>, the
-% gen_connection is registered globally as <tt>Name</tt>.</p>
-%
-% @see gen_fsm:start_link/4
-% @see start_link/2
-% @end
+%% @doc Starts the server opening a connection to <tt>Address:Port</tt>.
 %%
-start_link(CName, Module, RTime) ->
-    gen_fsm:start_link(CName, ?MODULE, [self(), Module, RTime], []).
-
-
-%%%
-% @spec connect(Cid, Address, Port) -> ok | {error, Reason}
-%    Cid     = pid()
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    Reason  = term()
-%
-% @doc
-% @see connect/4
-%
-% @equiv connect(Cid, Address, Port, CONNECT_TIME)
-% @end
+%% <p><tt>Module</tt> is the callback module.
 %%
-connect(Cid, Address, Port) ->
-    connect(Cid, Address, Port, ?CONNECT_TIME).
-
-
-%%%
-% @spec connect(Cid, Address, Port, CTime) -> ok | {error, Reason}
-%    Cid     = pid()
-%    Address = string() | atom() | ip_address()
-%    Port    = int()
-%    CTime   = int() | infinity
-%    Reason  = term()
-%
-% @doc Connects  to  a server on TCP port <tt>Port</tt> on the host
-% with IP address <tt>Address</tt> (the address fields can be either 
-% a hostname, or an IP address) waiting on the connect during 
-% <tt>CTime</tt>.  If <tt>CTime</tt> is not supplied the default
-% is assumed (defined by the macro ?CONNECT_TIME).
-%
-% <p>If the connection is already connected to <tt>Address</tt> on
-% <tt>Port</tt>, this function returns <tt>ok</tt> and nothing really
-% happens (no reconnection is done).</p>
-%
-% @see gen_fsm:syn_send_event/3
-% @see connect/3
-% @end
-%
-% %@equiv
+%% <p>The gen_connection is not registered.</p>
 %%
-connect(Cid, Address, Port, CTime) ->
-    gen_fsm:sync_send_event(Cid, {connect, Address, Port, CTime}, infinity).
+%% @see gen_server:start_link/3
+%% @see start_link/4
+%% @end
+start_connect(Module, Address, Port) ->
+    Connect = {connect, Address, Port},
+    gen_server:start_link(?MODULE, [self(), Module, Connect], []).
 
 
-%%%
-% @spec disable_retry(Cid) -> ok 
-%    Cid    = pid()
-%
-% @doc Disables retrying.  Under certain circumstances the automatic recovery
-% mechanisms are better disabled.  Use enable_retry/1 to enable them back up.
-%
-% @see gen_fsm:sync_send_all_state_event/3
-% @end
-%
-% %@equiv
+%% @spec start_connect(CName, Module, Address, Port) -> Result
+%%    CName  = {local, Name} | {global, Name}
+%%    Name   = atom()
+%%    Module = atom()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
-disable_retry(Cid) ->
-    gen_fsm:sync_send_all_state_event(Cid, disable_retry, infinity).
-
-
-%%%
-% @spec enable_retry(Cid) -> ok 
-%    Cid    = pid()
-%
-% @doc Enables retrying.
-%
-% @see gen_fsm:sync_send_all_state_event/3
-% @end
-%
-% %@equiv
+%% @doc Starts the server opening a connection to <tt>Address:Port</tt>.
 %%
-enable_retry(Cid) ->
-    gen_fsm:sync_send_all_state_event(Cid, enable_retry, infinity).
-
-
-
-%%%
-% @spec listen(Cid, Port) -> ok | {error, Reason}
-%    Cid    = pid()
-%    Port   = int()
-%    Reason = term()
-%
-% @doc  Sets up socket to listen on <tt>Port</tt> of the local host.
-%
-% <p>If already listening on <tt>Port</tt>, the atom <tt>ok</tt> is
-% returned and nothing else done.</p>
-%
-% @see gen_fsm:sync_send_event/3
-% @end
-%
-% %@equiv
+%% <p><tt>Module</tt> is the callback module.
 %%
-listen(Cid, Port) ->
-    gen_fsm:sync_send_event(Cid, {listen, Port}, infinity).
-
-
-%%%
-% @spec send(Cid, Output) -> ok | {error, Reason}
-%    Cid    = pid()
-%    Output = binary()
-%    Reason = term()
-%
-% @doc Sends a binary <tt>Output</tt> through the connection socket.
-%
-% @see gen_fsm:sync_send_event/3
-% @end
-%
-% %@equiv
+%% <p>If <tt>CName = {local, Name}</tt>, the gen_connection is registered
+%% locally as <tt>Name</tt>.  If <tt>CName = {global, Name}</tt>, the
+%% gen_connection is registered globally as <tt>Name</tt>.</p>
 %%
-send(Cid, Output) ->
-    gen_fsm:sync_send_event(Cid, {send, Output}, infinity).
+%% @see gen_server:start_link/4
+%% @see start_link/3
+%% @end
+start_connect(CName, Module, Address, Port) ->
+    Connect = {connect, Address, Port},
+    gen_server:start_link(CName, ?MODULE, [self(), Module, Connect], []).
 
 
-%%%
-% @spec close(Cid) -> ok | {error, Error}
-%    Cid   = pid()
-%    Error = term()
-%
-% @doc Closes the connection.  The result of this function is the term
-% returned by gen_tcp:close/1.
-%
-% @see gen_fsm:sync_send_event/3
-% @end
-%
-% %@equiv
+%% @spec start_listen(Module, ChildModule, Port, Count) -> Result
+%%    Module = atom()
+%%    ChildModule = atom()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
 %%
-close(Cid) ->
-    gen_fsm:sync_send_event(Cid, close, infinity).
-
-
-%%%
-% @spec stop(Cid) -> ok
-%    Cid = pid()
-%
-% @doc Stops the fsm.  Notice that the connection should have been previously
-% closed by <tt>close/1</tt> function.
-%
-% @see gen_fsm:send_all_state_event/2
-% @end
-%
-% %@equiv
+%% @doc Starts the server setting up a socket to listen on <tt>Port</tt>.
 %%
-stop(Cid) ->
-    gen_fsm:send_all_state_event(Cid, die).
+%% <p><tt>Module</tt> is the callback module.
+%%
+%% <p><tt>ChildModule</tt> is the callback module for child connections.</p>
+%%
+%% <p>The gen_connection is not registered.</p>
+%%
+%% @see gen_server:start_link/3
+%% @see start_link/4
+%% @end
+start_listen(Module, ChildModule, Port, Count) ->
+    Listen = {listen, ChildModule, Port, Count},
+    gen_server:start_link(?MODULE, [self(), Module, Listen], []).
 
+
+%% @spec start_listen(CName, Module, ChildModule, Port, Count) -> Result
+%%    CName  = {local, Name} | {global, Name}
+%%    Name   = atom()
+%%    Module = atom()
+%%    ChildModule = atom()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid} | term()
+%%
+%% @doc Starts the server setting up a socket to listen on <tt>Port</tt>.
+%%
+%% <p><tt>Module</tt> is the callback module.</p>
+%%
+%% <p><tt>ChildModule</tt> is the callback module for child connections.</p>
+%%
+%% <p>If <tt>CName = {local, Name}</tt>, the gen_connection is registered
+%% locally as <tt>Name</tt>.  If <tt>CName = {global, Name}</tt>, the
+%% gen_connection is registered globally as <tt>Name</tt>.</p>
+%%
+%% @see gen_server:start_link/4
+%% @see start_link/3
+%% @end
+start_listen(CName, Module, ChildModule, Port, Count) ->
+    Listen = {listen, ChildModule, Port, Count},
+    gen_server:start_link(CName, ?MODULE, [self(), Module, Listen], []).
+
+
+%% @spec controlling_process(Conn, NewOwner) -> ok | {error, eperm}
+%%    Conn = pid()
+%%    NewOwner = pid()
+%%
+%% @doc Assigns a new controlling process  to  Socket.  The controlling 
+%% process is the process which will receive callbacks from the connection. 
+%% If called by any other process than the current owner {error, eperm}
+%% will be returned.
+%% @end 
+controlling_process(Conn, NewOwner) ->
+    gen_server:call(Conn, {owner, NewOwner}, infinity).
+
+
+%% @spec send(Conn, Output) -> ok | {error, Reason}
+%%    Conn   = pid()
+%%    Output = binary()
+%%    Reason = term()
+%%
+%% @doc Sends a binary <tt>Output</tt> through the connection socket.
+%%
+%% @see gen_server:call/3
+%% @end
+send(Conn, Output) ->
+    gen_server:call(Conn, {send, Output}, infinity).
+
+
+%% @spec stop() -> ok
+%%
+%% @doc Stops the server.
+%%
+%% @see handle_call/3
+%%
+%% @equiv gen_server:call(?SERVER, die, 10000).
+%% @end
+stop(Conn) ->
+    gen_server:call(Conn, die, 10000).
 
 %%%===================================================================
-% Server functions
-%%====================================================================
-%%%
-% @spec init(Args) -> Result
-%    Args       = term()
-%    Result     = {ok, StateName, StateData}          |
-%                 {ok, StateName, StateData, Timeout} |
-%                 ignore                              |
-%                 {stop, StopReason}                   
-%    StateName  = atom()
-%    StateData  = term()
-%    Timeout    = int()
-%    StopReason = term()
-%
-% @doc Initializes the the fsm.
-% @end
+%%% Server functions
+%%%===================================================================
+%% @spec init(Args) -> Result
+%%    Args    = term()
+%%    Result  = {ok, State} | {ok, State, Timeout} | ignore | {stop, Reason}
+%%    State   = term()
+%%    Timeout = int() | infinity
+%%    Reason  = term()
 %%
-init([Pid, Module, RTime]) ->
-    StateData = #state{parent          = Pid,
-                       self            = self(),
-                       callback_module = Module,
-                       retry_time      = RTime},
-    process_flag(trap_exit, true),
-    {ok, closed, StateData}.
-
-
-%%%
-% @spec closed(Event, StateData) -> Result
-%    Event         = timeout | term()
-%    StateData     = gen_connection:state()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name closed.
-% @end
-%%
-closed(_Event, StateData) ->
-    {next_state, closed, StateData}.
-
-
-%%%
-% @spec listening(Event, StateData) -> Result
-%    Event         = timeout | term()
-%    StateData     = gen_connection:state()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name listening.
-% @end
-%%
-listening(_Event, StateData) ->
-    {next_state, listening, StateData}.
-
-
-%%%
-% @spec connected(Event, StateData) -> Result
-%    Event         = timeout | term()
-%    StateData     = gen_connection:state()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name connected.
-% @end
-%%
-connected(_Event, StateData) ->
-    {next_state, connected, StateData}.
-
-
-%%%
-% @spec failure(Event, StateData) -> Result
-%    Event         = timeout | term()
-%    StateData     = gen_connection:state()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name failure.
-% @end
-%%
-failure(retry_connect, #state{retry_status=R} = StateData) when R /= enabled ->
-    retry_connect_after(StateData#state.retry_time),
-    {next_state, failure, StateData};
-
-failure(retry_connect, #state{address=A,port=P,connect_time=T} = StateData) ->
-    case gen_tcp:connect(A, P, ?CONNECT_OPTIONS, T) of 
+%% @doc Initiates the server
+init([Pid, Mod, {connect, Addr, Port}]) ->
+    case gen_tcp:connect(Addr, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of 
         {ok, Socket} ->
-            spawn(fun() -> callback_handle_connect_recovery(StateData) end),
-            spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-            {next_state, connected, StateData#state{socket = Socket}};
-        _Error ->
-            retry_connect_after(StateData#state.retry_time),
-            {next_state, failure, StateData}
+            Self = self(),
+            process_flag(trap_exit, true),
+            spawn_link(fun() -> wait_recv(Self, Socket) end),
+            {ok, #state{owner=Pid, socket=Socket, mod=Mod, child_mod=Mod}};
+        Error ->
+            {stop, Error}
     end;
-
-failure(retry_listen, #state{retry_status=R} = StateData) when R /= enabled ->
-    retry_listen_after(StateData#state.retry_time),
-    {next_state, failure, StateData};
-
-failure(retry_listen, StateData) ->
-    case gen_tcp:listen(StateData#state.port, ?LISTEN_OPTIONS) of
+init([Pid, Mod, {listen, ChildMod, Port, Count}]) ->
+    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
-            spawn(fun() -> callback_handle_listen_recovery(StateData) end),
-            spawn_link(fun() -> wait_accept(StateData#state.self,LSocket) end),
-            {next_state, listening, StateData#state{socket = LSocket}};
-        _Error ->
-            retry_listen_after(StateData#state.retry_time),
-            {next_state, failure, StateData}
+            Self = self(),
+            process_flag(trap_exit, true),
+            spawn_link(fun() -> wait_accept(Self, LSocket, Count) end),
+            {ok, #state{owner=Pid,socket=LSocket,mod=Mod,child_mod=ChildMod}};
+        Error ->
+            {stop, Error}
+    end;
+init([Pid, Mod, {accept, Socket}]) ->
+    Self = self(),
+    process_flag(trap_exit, true),
+    spawn_link(fun() -> wait_recv(Self, Socket) end),
+    {ok, #state{owner = Pid, socket = Socket, mod = Mod, child_mod = Mod}}.
+
+
+%% @spec handle_call(Request, From, State) -> Result
+%%    Request   = term()
+%%    From      = {pid(), Tag}
+%%    State     = term()
+%%    Result    = {reply, Reply, NewState}          |
+%%                {reply, Reply, NewState, Timeout} |
+%%                {noreply, NewState}               |
+%%                {noreply, NewState, Timeout}      |
+%%                {stop, Reason, Reply, NewState}   |
+%%                {stop, Reason, NewState}
+%%    Reply     = term()
+%%    NewState  = term()
+%%    Timeout   = int() | infinity
+%%    Reason    = term()
+%%
+%% @doc Handling call messages.
+%%
+%% <ul>
+%%   <li>On <tt>{stop, Reason, Reply, NewState}</tt>
+%%   terminate/2 is called</li>
+%%   <li>On <tt>{stop, Reason, NewState}</tt>
+%%   terminate/2 is called</li>
+%% </ul>
+%%
+%% @see terminate/2
+%% @end
+handle_call({send, Output}, From, S) ->
+    {reply, gen_tcp:send(S#state.socket, Output), S};
+handle_call({accept, Socket}, _From, S) ->
+    Self = self(),
+    case (S#state.mod):handle_accept(S#state.owner, Self, Socket) of
+        {ok, NewOwner} ->
+            {reply, {ok, Self}, S#state{owner = NewOwner, socket = Socket}};
+        _Reject ->
+            {reply, {error, reject}, S}
+    end;
+handle_call({spawn_accept, Socket}, From, S) ->
+    % Start a gen_connection to handle the new Socket, setting self() as owner.
+    % Need to pass the pid() of this new gen_connection along with the
+    % handle_accept callback.
+    %
+    % Here we talk about the controlling process of the behaviour.  Notice that
+    % the controller of the underlying tcp socket is stablished in wait_accept.
+    Accept = {accept, Socket},
+    case gen_server:start_link(?MODULE,[self(),S#state.child_mod,Accept],[]) of
+        {ok, Pid} ->
+            case (S#state.mod):handle_accept(S#state.owner, Pid, Socket) of
+                {ok, NewOwner} ->
+                    % Transfer the control of the new connection to NewOwner. 
+                    controlling_process(Pid, NewOwner),
+                    {reply, {ok, Pid}, S};
+                _Reject ->
+                    % The socket will be closed, but don't need (want) to get
+                    % the exit signal (unlink from it).
+                    %
+                    % %@see TODOs
+                    unlink(Pid),  
+                    {reply, {error, reject}, S}
+            end;
+        Error ->
+            {reply, Error, S}
+    end;
+handle_call({owner, NewOwner}, {Owner, _Tag}, #state{owner = Owner} = S) ->
+    % %@see TODOs
+    link(NewOwner),
+    unlink(Owner),
+    {reply, ok, S#state{owner = NewOwner}};
+handle_call({owner, NewOwner}, From, S) ->
+    {reply, {error, eperm}, S};
+handle_call(die, _From, S) ->
+    {stop, normal, ok, S}.
+
+
+%% @spec handle_cast(Request, State) -> Result
+%%    Request  = term()
+%%    Result   = {noreply, NewState}          |
+%%               {noreply, NewState, Timeout} |
+%%               {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout  = int() | infinity
+%%    Reason   = normal | term()
+%%
+%% @doc Handling cast messages.
+%%
+%% <ul>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
+%% </ul>
+%%
+%% @see terminate/2
+%% @end
+handle_cast({recv, Socket, Input, Lapse}, S) ->
+    Buf = concat_binary([S#state.buffer, Input]),
+    case (S#state.mod):handle_input(S#state.owner, self(), Buf, Lapse) of
+        RestBuffer when binary(RestBuffer) ->
+            {noreply, S#state{buffer = RestBuffer}};
+        _Otherwise ->
+            {noreply, S#state{buffer = <<>>}}
     end.
 
 
-%%%
-% @spec closed(Event, From, StateData) -> Result
-%    Event         = term()
-%    From          = {pid(), Tag}
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}            |
-%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%                    {reply, Reply, NextStateName, NextStateData}          |
-%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                          |
-%                    {stop, Reason, Reply, NewStateData}                    
-%    Reply         = term()
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name closed.
-% @end
+%% @spec handle_info(Info, State) -> Result
+%%    Info     = timeout | term()
+%%    State    = term()
+%%    Result   = {noreply, NewState}          |
+%%               {noreply, NewState, Timeout} |
+%%               {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout  = int() | infinity
+%%    Reason   = normal | term()
 %%
-closed({accept, _Socket}, _From, StateData) ->
-    {reply, ok, closed, StateData};
-
-closed(close, _From, StateData) ->
-    {reply, ok, closed, StateData};
-
-closed({connect, Address, Port, CTime}, _From, StateData) ->
-    NewStateData = StateData#state{address      = Address,
-                                   port         = Port,
-                                   connect_time = CTime,
-                                   role         = client},
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, CTime) of 
-        {ok, Socket} ->
-            spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-            {reply, ok, connected, NewStateData#state{socket = Socket}};
-        Error ->
-            retry_connect_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-closed({fail, _Socket}, _From, StateData) ->
-    {reply, ok, closed, StateData};
-
-closed({listen, Port}, _From, StateData) ->
-    NewStateData = StateData#state{port = Port, role = server},
-    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
-        {ok, LSocket} ->
-            spawn_link(fun() -> wait_accept(StateData#state.self,LSocket) end),
-            {reply, ok, listening, NewStateData#state{socket = LSocket}};
-        Error ->
-            retry_listen_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-closed({recv, Input, _Lapse}, _From, StateData) ->
-    Buffer = concat_binary([StateData#state.buffer, Input]),
-    {reply, ok, closed, StateData#state{buffer = Buffer}};
-
-closed({send, _Output}, _From, StateData) ->
-    {reply, {error, closed}, closed, StateData}.
-
-
-%%%
-% @spec listening(Event, From, StateData) -> Result
-%    Event         = term()
-%    From          = {pid(), Tag}
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}            |
-%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%                    {reply, Reply, NextStateName, NextStateData}          |
-%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                          |
-%                    {stop, Reason, Reply, NewStateData}                    
-%    Reply         = term()
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name listening.
-% @end
+%% @doc Handling all non call/cast messages
 %%
-listening({accept, Socket}, _From, StateData) ->
-    gen_tcp:close(StateData#state.socket),  % Close listen socket.
-    spawn(fun() -> callback_handle_accept(StateData) end),
-    spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-    {reply, ok, connected, StateData#state{socket = Socket}};
-
-listening(close, _From, StateData) ->
-    {reply, gen_tcp:close(StateData#state.socket), closed, StateData};
-
-listening({connect, Address, Port, CTime}, _From, StateData) ->
-    NewStateData = StateData#state{address      = Address,
-                                   port         = Port,
-                                   connect_time = CTime,
-                                   role         = client},
-    gen_tcp:close(StateData#state.socket),  % Close listen socket.
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, CTime) of 
-        {ok, Socket} ->
-            spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-            {reply, ok, connected, NewStateData#state{socket = Socket}};
-        Error ->
-            retry_connect_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-listening({fail, S}, _From, #state{socket = S} = StateData) ->
-    % Failing Socket is active
-    spawn(fun() -> callback_handle_listen_error(StateData) end),
-    retry_listen_after(StateData#state.retry_time),
-    {reply, ok, failure, StateData};
-
-listening({fail, _Socket}, _From, StateData) ->
-    % Socket was closed and replaced, ignore failure
-    {reply, ok, listening, StateData};
-
-listening({listen, P}, _From, #state{port = P} = StateData) ->
-    {reply, {error, {already_listening, P}}, listening, StateData};
-
-listening({listen, Port}, _From, StateData) ->
-    NewStateData = StateData#state{port = Port},
-    gen_tcp:close(StateData#state.socket),  % Close actual listen socket.
-    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
-        {ok, LSocket} ->
-            spawn_link(fun() -> wait_accept(StateData#state.self,LSocket) end),
-            {reply, ok, listening, NewStateData#state{socket = LSocket}};
-        Error ->
-            retry_listen_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-listening({recv, Input, _Lapse}, _From, StateData) ->
-    Buffer = concat_binary([StateData#state.buffer, Input]),
-    {reply, ok, listening, StateData#state{buffer = Buffer}};
-
-listening({send, _Output}, _From, StateData) ->
-    {reply, {error, listening}, listening, StateData}.
-
-
-%%%
-% @spec connected(Event, From, StateData) -> Result
-%    Event         = term()
-%    From          = {pid(), Tag}
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}            |
-%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%                    {reply, Reply, NextStateName, NextStateData}          |
-%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                          |
-%                    {stop, Reason, Reply, NewStateData}                    
-%    Reply         = term()
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name connected.
-% @end
+%% <ul>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%% </ul>
 %%
-connected({accept, _Socket},  _From, StateData) ->
-    {reply, {error, connected}, connected, StateData};
-
-connected(close, _From, StateData) ->
-    {reply, gen_tcp:close(StateData#state.socket), closed, StateData};
-
-connected({connect, A, P, _},  _From, #state{address=A, port=P} = StateData) ->
-    {reply, {error, {already_connected, A, P}}, connected, StateData};
-
-connected({connect, Address, Port, CTime}, _From, StateData) ->
-    NewStateData = StateData#state{address      = Address,
-                                   port         = Port,
-                                   connect_time = CTime,
-                                   role         = client},
-    gen_tcp:close(StateData#state.socket),  % Close actual connection socket
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, CTime) of 
-        {ok, Socket} ->
-            spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-            {reply, ok, connected, NewStateData#state{socket = Socket}};
-        Error ->
-            retry_connect_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-connected({fail, S}, _From, #state{socket = S} = StateData) ->
-    % Failing Socket is active
-    case StateData#state.role of
-        client ->
-            spawn(fun() -> callback_handle_connect_error(StateData) end),
-            retry_connect_after(StateData#state.retry_time);
-        _Server ->
-            spawn(fun() -> callback_handle_listen_error(StateData) end),
-            retry_listen_after(StateData#state.retry_time)
-    end,
-    {reply, ok, failure, StateData};
-
-connected({fail, _Socket}, _From, StateData) ->
-    % Failing Socket was already closed and replaced, ignore failure
-    {reply, ok, connected, StateData};
-
-connected({listen, Port}, _From, StateData) ->
-    NewStateData = StateData#state{port = Port, role = server},
-    gen_tcp:close(StateData#state.socket),  % Close connection socket
-    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
-        {ok, LSocket} ->
-            spawn_link(fun() -> wait_accept(StateData#state.self,LSocket) end),
-            {reply, ok, listening, NewStateData#state{socket = LSocket}};
-        Error ->
-            retry_listen_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-connected({recv, Input, Lapse}, _From, StateData) ->
-    RestBuffer = callback_handle_input(StateData, Input, Lapse),
-    {reply, ok, connected, StateData#state{buffer = RestBuffer}};
-
-connected({send, Output}, _From, #state{socket = S} = StateData) ->
-    {reply, gen_tcp:send(S, Output), connected, StateData}.
+%% @see terminate/2
+%% @end
+handle_info({'EXIT', _Child, normal}, S) ->
+    % A socket or loop exits with normal status
+    {noreply, S};
+handle_info({'EXIT', _AcceptLoop, {accept_error, Reason}}, S) ->
+    % A wait_accept loop exits on error
+    {stop, Reason, S};
+handle_info({'EXIT', _RecvLoop, {recv_error, Reason}}, S) ->
+    % A wait_accept loop exits on error
+    {stop, Reason, S};
+handle_info({'EXIT', _Child, Reason}, S) ->
+    % A child gen_connection exits on error.  
+    %
+    % %@see TODOs
+    {noreply, S};
+handle_info(Info, S) ->
+    {noreply, S}.
 
 
-%%%
-% @spec failure(Event, From, StateData) -> Result
-%    Event         = term()
-%    From          = {pid(), Tag}
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}            |
-%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%                    {reply, Reply, NextStateName, NextStateData}          |
-%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                          |
-%                    {stop, Reason, Reply, NewStateData}                    
-%    Reply         = term()
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events for the state name failure.
-% @end
+%% @spec terminate(Reason, State) -> true
+%%    Reason = normal | shutdown | term()
+%%    State  = term()
 %%
-failure({accept, Socket}, _From, StateData) ->
-    spawn(fun() -> callback_handle_connect_recovery(StateData) end),
-    spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-    {reply, ok, connected, StateData#state{socket = Socket}};
-
-failure(close, _From, StateData) ->
-    {reply, ok, closed, StateData};
-
-failure({connect, Address, Port, CTime}, _From, StateData) ->
-    NewStateData = StateData#state{address      = Address,
-                                   port         = Port,
-                                   connect_time = CTime,
-                                   role         = client},
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, CTime) of 
-        {ok, Socket} ->
-            spawn_link(fun() -> wait_recv(StateData#state.self, Socket) end),
-            {reply, ok, connected, NewStateData#state{socket = Socket}};
-        Error ->
-            retry_connect_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-failure({fail, _Socket}, _From, StateData) ->
-    {reply, ok, failure, StateData};
-
-failure({listen, Port}, _From, StateData) ->
-    NewStateData = StateData#state{port = Port, role = server},
-    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
-        {ok, LSocket} ->
-            spawn_link(fun() -> wait_accept(StateData#state.self,LSocket) end),
-            {reply, ok, listening, NewStateData#state{socket = LSocket}};
-        Error ->
-            retry_listen_after(StateData#state.retry_time),
-            {reply, Error, failure, NewStateData}
-    end;
-
-failure({recv, Input, _Lapse}, _From, StateData) ->
-    Buffer = concat_binary([StateData#state.buffer, Input]),
-    {reply, ok, failure, StateData#state{buffer = Buffer}};
-
-failure({send, _Output}, _From, StateData) ->
-    {reply, {error, failure}, failure, StateData}.
-
-
-%%%
-% @spec handle_event(Event, StateName, StateData) -> Result
-%    Event         = die | term()
-%    StateName     = atom()
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                         
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events received by <tt>gen_fsm:send_all_state_event/2</tt>.
-% @end
+%% @doc Shutdown the server.
 %%
-handle_event(die, _StateName, StateData) ->
-    {stop, normal, StateData#state{retry_status = disabled}}.
-
-
-%%%
-% @spec handle_sync_event(Event, From, StateName, StateData) -> Result
-%    Event         = term()
-%    From          = {pid(), Tag}
-%    StateName     = atom()
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}            |
-%                    {next_state, NextStateName, NextStateData, Timeout}   |
-%                    {reply, Reply, NextStateName, NextStateData}          |
-%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                          |
-%                    {stop, Reason, Reply, NewStateData}                    
-%    Reply         = term()
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Handles events received via 
-% <tt>gen_fsm:sync_send_all_state_event/2,3</tt>.
-% @end
-%%
-handle_sync_event(disable_retry, _From, StateName, StateData) ->
-    {reply, ok, StateName, StateData#state{retry_status = disabled}};
-
-handle_sync_event(enable_retry, _From, StateName, StateData) ->
-    {reply, ok, StateName, StateData#state{retry_status = enabled}};
-
-handle_sync_event(_Event, _From, StateName, StateData) ->
-    {reply, ok, StateName, StateData}.
-
-
-%%%
-% @spec handle_info(Info, StateName, StateData) -> Result
-%    Info          = term()
-%    StateName     = atom()
-%    StateData     = term()
-%    Result        = {next_state, NextStateName, NextStateData}          |
-%                    {next_state, NextStateName, NextStateData, Timeout} |
-%                    {stop, Reason, NewStateData}                         
-%    NextStateName = atom()
-%    NextStateData = term()
-%    Timeout       = int() | infinity
-%    Reason        = term()
-%
-% @doc Call on reception of any other messages than a synchronous or
-% asynchronous event.
-% @end
-%%
-handle_info({'EXIT', _Child, Reason}, StateName, StateData) 
-  when Reason /= normal, StateName /= failure ->
-    % If a wait_accept or wait_recv child crashes the connection is stopped.
-    gen_tcp:close(StateData#state.socket),  % close active socket, necessary?
-    {stop, Reason, StateData};
-
-handle_info(_Info, StateName, StateData) ->
-    {next_state, StateName, StateData}.
-
-
-%%%
-% @spec terminate(Reason, StateName, StateData) -> true
-%    Reason    = normal | shutdown | term()
-%    StateName = atom()
-%    StateData = term()
-%
-% @doc Shutdown the fsm.
-%
-% <p>Return value is ignored by the server.</p>
-% @end
-%%
-terminate(_Reason, _StateName, #state{self = S} = StateData) ->
-    callback_handle_input(StateData, <<>>, 0),
-    case process_info(S, registered_name) of
+%% <p>Return value is ignored by <tt>gen_server</tt>.</p>
+%% @end
+terminate(Reason, #state{buffer = B} = S) when B == <<>>; Reason == kill ->
+	io:format("*** gen_connection terminating: ~p - ~p ***~n", [self(), Reason]),
+    process_flag(trap_exit, false),
+    gen_tcp:close(S#state.socket),
+    case process_info(self(), registered_name) of
         {registered_name, Name} ->
             unregister(Name);
         _NotRegistered ->
             true
-    end.
+    end;
+terminate(Reason, S) ->
+    (S#state.mod):handle_input(S#state.owner, self(), S#state.buffer, 0),
+    terminate(Reason, S#state{buffer = <<>>}).
 
 
-%%%
-% @spec code_change(OldVsn, StateName, StateData, Extra) -> Result
-%    OldVsn        = undefined | term()
-%    StateName     = term()
-%    StateData     = term()
-%    Extra         = term()
-%    Result        = {ok, NextStateName, NewStateData}
-%    NextStateName = atom()
-%    NewStateData  = term()
-%
-% @doc Convert process state when code is changed.
-% @end
+%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
+%%    OldVsn   = undefined | term()
+%%    State    = term()
+%%    Extra    = term
+%%    NewState = term()
 %%
-code_change(_OldVsn, StateName, StateData, _Extra) ->
-    {ok, StateName, StateData}.
-
+%% @doc Convert process state when code is changed
+%% @end
+code_change(OldVsn, State, Extra) ->
+    {ok, State}.
 
 %%%-------------------------------------------------------------------
-% Internal server calls
-%%--------------------------------------------------------------------
-%%%
-% @spec accept(Cid, Socket) -> ok
-%    Cid    = pid()
-%    Socket = socket()
-%
-% @doc Accepts an incoming connection request on the listen socket.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-accept(Cid, Socket) ->
-    gen_fsm:sync_send_event(Cid, {accept, Socket}, infinity).
-
-
-%%%
-% @spec fail(Cid, Socket) -> ok
-%    Cid    = pid()
-%    Socket = socket()
-%
-% @doc Reports a failure on <tt>Socket</tt>.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-fail(Cid, Socket) ->
-    gen_fsm:sync_send_event(Cid, {fail, Socket}, infinity).
-
-
-%%%
-% @spec recv(Cid, Input, Lapse) -> ok
-%    Cid   = pid()
-%    Input = binary()
-%    Lapse = int()
-%
-% @doc Receives binary <tt>Input</tt> on the connection's socket and
-% triggers the <tt>handle_input/4</tt> callback.  <tt>Lapse</tt>
-% indicates the microsends waiting for the input to come.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-recv(Cid, Input, Lapse) ->
-    gen_fsm:sync_send_event(Cid, {recv, Input, Lapse}, infinity).
-
-
+%%% Internal functions
 %%%-------------------------------------------------------------------
-% Internal functions
-%%--------------------------------------------------------------------
-%%%
-% @spec retry_connect_after(Time) -> void()
-%    Time = int()
-%
-% @doc Spawns a process to wait <tt>Time</tt> miliseconds and retry to 
-% wake up the connection.
-% @end
-%
-% %@see
-%
-% %@equiv
+%% @spec wait_accept(Conn, LSocket) -> void()
+%%    Conn     = pid()
+%%    LSocket = socket()
 %%
-retry_connect_after(infinity) ->
-    ok;
-
-retry_connect_after(Time) ->
-    send_event_after(Time, retry_connect).
-
-
-%%%
-% @spec retry_listen_after(Time) -> void()
-%    Time = int()
-%
-% @doc Spawns a process to wait <tt>Time</tt> miliseconds and retry to 
-% wake up the listen socket.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-retry_listen_after(infinity) ->
-    ok;
-
-retry_listen_after(Time) ->
-    send_event_after(Time, retry_listen).
-
-
-%%%
-% @spec send_event_after(Time, Event) -> Ref
-%    Time  = int()
-%    Event = term()
-%    Ref   = pid()
-%
-% @doc This funcion is superceded by gen_fsm:send_event_after/2 on stdlib
-% version 1.12.  Is is provided for forward compatibility.
-% @end
-%
-% %@see
-%
-% %@equiv
-%
-% %@TODO Replace by gen_fsm:send_event_after/2 if using stdlib 1.12 or greater.
-%%
-send_event_after(Time, Event) ->
-    WaitSend = fun(C, T, E) ->
-                       receive after T -> gen_fsm:send_event(C, E) end
-               end,
-    Cid = self(),
-    spawn(fun() -> WaitSend(Cid, Time, Event) end).
-
-
-%%%
-% @spec wait_accept(Cid, LSocket) -> void()
-%    Cid     = pid()
-%    LSocket = socket()
-%
-% @doc Waits until a connection is requested on <tt>LSocket</tt> or an
-% error occurs.  If successful the event <i>accept</i> is triggered, on
-% error a failure on the listen socket is reported.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-wait_accept(Cid, LSocket) ->
+%% @doc Waits until a connection is requested on <tt>LSocket</tt> or an
+%% error occurs.  If successful the event <i>accept</i> is triggered, on
+%% error a failure on the listen socket is reported.
+%% @end
+wait_accept(Conn, LSocket, Count) ->
     case gen_tcp:accept(LSocket) of
-        {ok, Socket} ->
-            inet:setopts(Socket, ?CONNECT_OPTIONS),  % Needed?
-            gen_tcp:controlling_process(Socket, Cid),
-            accept(Cid, Socket);
-        {error, Reason} ->
-            fail(Cid, LSocket)
+        {ok, Socket} when Count == 1 -> % Handle last Socket in this connection
+            inet:setopts(Socket, ?CONNECT_OPTIONS),
+            case gen_server:call(Conn, {accept, Socket}, ?ACCEPT_TIME) of
+                {ok, Pid} ->
+                    gen_tcp:controlling_process(Socket, Pid),
+                    gen_tcp:close(LSocket),
+                    wait_recv(Pid, Socket);  % Receive data
+                {error, reject} ->
+                    gen_tcp:close(Socket),
+                    wait_accept(Conn, LSocket, Count)
+            end;
+        {ok, Socket} ->                 % Spawn a new connection to handle it
+            inet:setopts(Socket, ?CONNECT_OPTIONS),
+            case gen_server:call(Conn, {spawn_accept, Socket}, ?ACCEPT_TIME) of
+                {ok, Pid} ->
+                    gen_tcp:controlling_process(Socket, Pid),
+                    wait_accept(Conn, LSocket, ?DECR(Count));
+                {error, reject} ->
+                    gen_tcp:close(Socket),
+                    wait_accept(Conn, LSocket, Count);
+                SpawnError ->
+                    gen_tcp:close(Socket),
+                    gen_tcp:close(LSocket),
+                    exit({accept_error, SpawnError})
+            end;
+        Error ->
+            exit({accept_error, Error})
     end.
 
 
-%%%
-% @spec wait_recv(Cid, Socket) -> void()
-%    Cid    = pid()
-%    Socket = socket()
-%
-% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
-% receive loop to get bulk input.  All data received on the same loop 
-% triggers the event <i>recv</i> with the same timestamp (with a 0 time lapse).
-%
-% <p>If the <tt>Socket</tt> is closed a failure is reported.</p>
-% @end
-%
-% %@see
-%
-% %@equiv
+%% @spec wait_recv(Conn, Socket) -> void()
+%%    Conn   = pid()
+%%    Socket = socket()
 %%
-wait_recv(Cid, Socket) ->
+%% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
+%% receive loop to get bulk input.  All data received on the same loop triggers
+%% the event <i>recv</i> with the same timestamp (with a 0 time lapse).
+%%
+%% <p>If the <tt>Socket</tt> is closed a failure is reported.</p>
+%% @end
+wait_recv(Conn, Socket) ->
     Timestamp = now(),
     case gen_tcp:recv(Socket, 0) of
         {ok, Input} ->
-            recv(Cid, Input, my_calendar:time_since(Timestamp)),
-            recv_loop(Cid, Socket);
-        {error, Reason} ->
-            fail(Cid, Socket)
+            Lapse = my_calendar:time_since(Timestamp),
+            gen_server:cast(Conn, {recv, Socket, Input, Lapse}),
+            recv_loop(Conn, Socket);
+        Error ->
+            exit({recv_error, Error})
     end.
 
-%%%
-% @doc Auxiliary function for wait_recv/2
-%
-% @see wait_recv/2
-% @end
+%% @doc Auxiliary function for wait_recv/2
 %%
-recv_loop(Cid, Socket) ->
+%% @see wait_recv/2
+%% @end
+recv_loop(Conn, Socket) ->
     case gen_tcp:recv(Socket, 0, 0) of
         {ok, Input} ->                    % Some input waiting already 
-            recv(Cid, Input, 0),
-            recv_loop(Cid, Socket);
+            gen_server:cast(Conn, {recv, Socket, Input, 0}),
+            recv_loop(Conn, Socket);
         {error, timeout} ->               % No data inmediately available
-            wait_recv(Cid, Socket);
-        {error, Reason} ->
-            fail(Cid, Socket)
-    end.
-
-%%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% Callback wrappers
-%% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-%%%
-% @spec callback_handle_accept(StateData) -> ok
-%    StateData = state()
-%
-% @doc Wrapper for CallbackModule:handle_accept/2.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_accept(StateData) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    case catch Mod:handle_accept(Pid, Cid) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_handle_input(StateData, Input, Lapse) -> RestBuffer
-%    StateData = state()
-%    Input = binary()
-%    RestBuffer = binary()
-%    Lapse = int()
-%
-% @doc Wrapper for CallbackModule:handle_input/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_input(StateData, Input, Lapse) ->
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    Buf = concat_binary([StateData#state.buffer, Input]),
-    case catch Mod:handle_input(Pid, Cid, Buf, Lapse) of
-        {ok, RestBuffer} when binary(RestBuffer) ->
-            RestBuffer;
-        _Otherwise ->
-            <<>>
-    end.
-
-
-%%%
-% @spec callback_handle_listen_error(StateData) -> ok
-%    StateData = state()
-%
-% @doc Wrapper for CallbackModule:handle_listen_error/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_listen_error(StateData) ->
-    Port = StateData#state.port,
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    case catch Mod:handle_listen_error(Pid, Cid, Port) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_handle_connect_error(StateData) -> ok
-%    StateData = state() 
-%
-% @doc Wrapper for CallbackModule:handle_connect_error/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_connect_error(StateData) ->
-    Address = StateData#state.address,
-    Port = StateData#state.port,
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    case catch Mod:handle_connect_error(Pid, Cid, Address, Port) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_handle_listen_recovery(StateData) -> ok
-%    StateData = state()
-%
-% @doc Wrapper for CallbackModule:handle_listen_recovery/3.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_listen_recovery(StateData) ->
-    Port = StateData#state.port,
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    case catch Mod:handle_listen_recovery(Pid, Cid, Port) of
-        _Whatever ->
-            ok
-    end.
-
-
-%%%
-% @spec callback_handle_connect_recovery(StateData) -> ok
-%    StateData = state()
-%
-% @doc Wrapper for CallbackModule:handle_connect_recovery/4.
-% @end
-%
-% %@see
-%
-% %@equiv
-%%
-callback_handle_connect_recovery(StateData) ->
-    Address = StateData#state.address,
-    Port = StateData#state.port,
-    Mod = StateData#state.callback_module,
-    Pid = StateData#state.parent,
-    Cid = StateData#state.self,
-    case catch Mod:handle_connect_recovery(Pid, Cid, Address, Port) of
-        _Whatever ->
-            ok
+            wait_recv(Conn, Socket);
+        Error ->
+            exit({recv_error, Error})
     end.

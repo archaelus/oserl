@@ -19,7 +19,6 @@ EDOC_MODULES = \
 	operation \
 	sm \
 	gen_connection \
-	gen_tcp_connection \
 	gen_esme_session \
 	gen_smsc_session \
 	gen_esme \

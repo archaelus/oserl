@@ -213,7 +213,7 @@
 -module(gen_smsc_session).
 
 -behaviour(gen_fsm).
--behaviour(gen_tcp_connection).
+-behaviour(gen_connection).
 
 %%%-------------------------------------------------------------------
 %%% Include files
@@ -473,8 +473,8 @@ start_link(Name, Mod, Conn, Timers) ->
     gen_fsm:start_link(Name, ?MODULE, [self(), Mod, Conn, Timers],[]).
 
 
-%% @spec alert_notification(Sid, ParamList) -> Result
-%%    Sid        = atom()
+%% @spec alert_notification(FsmRef, ParamList) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -482,16 +482,16 @@ start_link(Name, Mod, Conn, Timers) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues an alert notification operation on the session identified by 
-%% <tt>Sid</tt>.
+%% @doc Issues an <i>alert_notification</i> operation on the session identified
+%% by <tt>FsmRef</tt>.
 %% @end
-alert_notification(Sid, ParamList) ->
+alert_notification(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_ALERT_NOTIFICATION,
-    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
+    gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
 
-%% @spec outbind(Sid, ParamList) -> Result
-%%    Sid        = atom()
+%% @spec outbind(FsmRef, ParamList) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -499,15 +499,16 @@ alert_notification(Sid, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues an outbind operation on the session identified by <tt>Sid</tt>.
+%% @doc Issues an <i>outbind</i> operation on the session identified by 
+%% <tt>FsmRef</tt>.
 %% @end
-outbind(Sid, ParamList) ->
+outbind(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_OUTBIND,
-    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
+    gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
 
-%% @spec data_sm(Sid, ParamList) -> Result
-%%    Sid        = pid()
+%% @spec data_sm(FsmRef, ParamList) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -515,16 +516,16 @@ outbind(Sid, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a data_sm operation on the session identified by <tt>Sid
-%% </tt>.
+%% @doc Issues a <i>data_sm</i> operation on the session identified by 
+%% <tt>FsmRef</tt>.
 %% @end
-data_sm(Sid, ParamList) ->
+data_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_DATA_SM,
-    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
+    gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
 
-%% @spec deliver_sm(Sid, ParamList) -> Result
-%%    Sid        = pid()
+%% @spec deliver_sm(FsmRef, ParamList) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -532,38 +533,39 @@ data_sm(Sid, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a deliver_sm operation on the session identified by <tt>Sid
-%% </tt>.
+%% @doc Issues a <i>deliver_sm</i> operation on the session identified by
+%% <tt>FsmRef</tt>.
 %% @end
-deliver_sm(Sid, ParamList) ->
+deliver_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_DELIVER_SM,
-    gen_fsm:sync_send_event(Sid, {CmdId, ParamList}, infinity).
+    gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
 
-%% @spec unbind(Sid) -> Result
-%%    Sid     = atom()
+%% @spec unbind(FsmRef) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Result  = {ok, PduResp} | {error, Error}
 %%    PduResp = pdu()
 %%    Error   = int()
 %%
-%% @doc Issues an unbind operation on the session identified by <tt>Sid
-%% </tt>.
+%% @doc Issues an <i>unbind</i> operation on the session identified by 
+%% <tt>FsmRef</tt>.
 %% @end
-unbind(Sid) ->
-    gen_fsm:sync_send_event(Sid, ?COMMAND_ID_UNBIND, infinity).
+unbind(FsmRef) ->
+    gen_fsm:sync_send_event(FsmRef, ?COMMAND_ID_UNBIND, infinity).
 
 
-%% @spec stop(Sid) -> ok
+%% @spec stop(FsmRef) -> ok
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%
 %% @doc Stops the fsm.  This function does *NOT* issue an unbind operation.
 %% The unbind must have been previously sent using the unbind/1 function.
 %%
 %% @see gen_fsm:send_all_state_event/2
 %%
-%% @equiv gen_fsm:send_all_state_event(Sid, die)
+%% @equiv gen_fsm:send_all_state_event(FsmRef, die)
 %% @end
-stop(Sid) ->
-    gen_fsm:send_all_state_event(Sid, die).
+stop(FsmRef) ->
+    gen_fsm:send_all_state_event(FsmRef, die).
 
 
 %%%===================================================================
@@ -634,7 +636,7 @@ open({timeout, _Ref, enquire_link_timer}, S) ->
     {next_state, open, NewS#state{enquire_link_timer = T}};
 open({timeout, _Ref, session_init_timer}, S) ->
     process_flag(trap_exit, false),
-    gen_tcp_connection:stop(S#state.conn),
+    gen_connection:stop(S#state.conn),
     {stop, {timeout, session_init_timer}, S};
 open({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
@@ -683,7 +685,7 @@ outbound({timeout, _Ref, enquire_link_timer}, S) ->
     {next_state, outbound, NewS#state{enquire_link_timer = T}};
 outbound({timeout, _Ref, session_init_timer}, S) ->
     process_flag(trap_exit, false),
-    gen_tcp_connection:stop(S#state.conn),
+    gen_connection:stop(S#state.conn),
     {stop, {timeout, session_init_timer}, S};
 outbound({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
@@ -1022,7 +1024,7 @@ outbound(_Event, _From, S) ->
 %% @end
 bound_rx({CmdId, _}, _From, S) 
   when is_integer(S#state.peer_congestion_state) and
-	   (S#state.peer_congestion_state > 90) and
+       (S#state.peer_congestion_state > 90) and
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
@@ -1035,7 +1037,7 @@ bound_rx({CmdId, _}, _From, S)
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_rx, S#state{peer_congestion_state = 90}};
 bound_rx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
-										   CmdId == ?COMMAND_ID_DELIVER_SM ->
+                                           CmdId == ?COMMAND_ID_DELIVER_SM ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -1119,7 +1121,7 @@ bound_tx(_Event, _From, S) ->
 %% @end
 bound_trx({CmdId, _}, _From, S) 
   when is_integer(S#state.peer_congestion_state) and 
-	   (S#state.peer_congestion_state > 90) and 
+       (S#state.peer_congestion_state > 90) and 
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
@@ -1132,7 +1134,7 @@ bound_trx({CmdId, _}, _From, S)
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_trx, S#state{peer_congestion_state = 90}};
 bound_trx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
-											CmdId == ?COMMAND_ID_DELIVER_SM ->
+                                            CmdId == ?COMMAND_ID_DELIVER_SM ->
     case send_request(CmdId, ParamList, From, S) of
         {ok, NewS} ->
             reset_timer(S#state.inactivity_timer),
@@ -1240,7 +1242,7 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             {next_state, StateName, StateData}
     end;
 handle_event(die, StateName, StateData) ->
-    gen_tcp_connection:stop(StateData#state.conn),
+    gen_connection:stop(StateData#state.conn),
     {next_state, StateName, StateData}.
 
 
@@ -1257,8 +1259,8 @@ handle_input_correct_pdu(Pdu, StateData) ->
         CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
             RqstId = ?REQUEST(CmdId),
-			case ets:match(StateData#state.requests, {SeqNum,RqstId,'$1'},1) of
-				{[[Broker]], _Continuation} ->  % Expected response
+            case ets:match(StateData#state.requests, {SeqNum,RqstId,'$1'},1) of
+                {[[Broker]], _Continuation} ->  % Expected response
                     Broker ! {self(), {response, CmdId, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
                 _Otherwise ->                   % Unexpected response
@@ -1268,8 +1270,8 @@ handle_input_correct_pdu(Pdu, StateData) ->
             end;
         CmdId when CmdId == ?COMMAND_ID_GENERIC_NACK ->
             SeqNum = operation:get_param(sequence_number, Pdu),
-			case ets:match(StateData#state.requests, {SeqNum, '_', '$1'}, 1) of
-				{[[Broker]], _Continuation} ->  % Expected response
+            case ets:match(StateData#state.requests, {SeqNum, '_', '$1'}, 1) of
+                {[[Broker]], _Continuation} ->  % Expected response
                     Broker ! {self(), {response, CmdId, Pdu}},
                     ets:delete(StateData#state.requests, SeqNum);
                 _Otherwise ->                   % Unexpected response
@@ -1279,7 +1281,7 @@ handle_input_correct_pdu(Pdu, StateData) ->
         CmdId when CmdId == ?COMMAND_ID_ENQUIRE_LINK ->
             reset_timer(StateData#state.enquire_link_timer),
             SeqNum = operation:get_param(sequence_number, Pdu),
-			RespId = ?RESPONSE(CmdId),
+            RespId = ?RESPONSE(CmdId),
             send_response(RespId, ?ESME_ROK, SeqNum, [], StateData#state.conn);
         CmdId ->
             gen_fsm:send_event(self(), {CmdId, Pdu})
@@ -1392,7 +1394,7 @@ handle_info(_Info, StateName, StateData) ->
 %% <p>Return value is ignored by the server.</p>
 %% @end
 terminate(Reason, StateName, S) when S#state.conn == closed; Reason == kill ->
-	io:format("*** gen_smsc_session terminating: ~p - ~p ***~n", [self(), Reason]),
+    io:format("*** gen_smsc_session terminating: ~p - ~p ***~n", [self(), Reason]),
     process_flag(trap_exit, false),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
@@ -1473,9 +1475,8 @@ handle_input(_Pid, _Conn, Buffer, _Lapse, _N) ->
 %%% Internal functions
 %%%-------------------------------------------------------------------
 %% @spec handle_peer_bind(Bind, Self, State) -> bool()
-%%    Bind  = {bind_receiver, Pdu}    |
-%%            {bind_transmitter, Pdu} |
-%%            {bind_transceiver, Pdu}
+%%    Bind  = {CmdId, Pdu}
+%%    CmdId = int()
 %%    Self  = pid()
 %%    State = #state()
 %%
@@ -1503,8 +1504,8 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
 
 
 %% @spec handle_peer_operation(Operation, Self, State) -> bool()
-%%    Operation = {CmdName, Pdu}
-%%    CmdName   = atom()
+%%    Operation = {CmdId, Pdu}
+%%    CmdId     = int()
 %%    Self      = pid()
 %%    State     = #state()
 %%
@@ -1535,9 +1536,8 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 
 
 %% @spec handle_peer_unbind(Unbind, Self, State) -> bool()
-%%    Unbind = {bind_receiver, Pdu}    |
-%%             {bind_transmitter, Pdu} |
-%%             {bind_transceiver, Pdu}
+%%    Unbind = {CmdId, Pdu}
+%%    CmdId  = int()
 %%    Self   = pid()
 %%    State  = #state()
 %%
@@ -1656,7 +1656,7 @@ send_pdu(Conn, Pdu) ->
 %     io:format("Sending PDU: ~p~n", [Pdu]),
     case catch operation:smsc_pack(Pdu) of
         {ok, BinaryPdu} ->
-            case gen_tcp_connection:send(Conn, BinaryPdu) of
+            case gen_connection:send(Conn, BinaryPdu) of
                 ok ->
 %                     io:format("OK~n", []),
                     ok;
@@ -1671,25 +1671,26 @@ send_pdu(Conn, Pdu) ->
     end.
 
 
-%% @spec request_broker(Caller, TimeoutError, Time) -> true
-%%    Caller       = {pid(), Tag}
-%%    TimeoutError = int()
-%%    Time         = int()
+%% @spec request_broker(Caller, CmdId, Time) -> true
+%%    Caller = {pid(), Tag}
+%%    CmdId  = int()
+%%    Time   = int()
 %%
 %% @doc The request broker waits for <tt>Time</tt> milliseconds until a
 %% response for the request arrives.  The response is forwarded to the 
 %% <tt>Caller</tt> of the request, if the <tt>Time</tt> expires
-%% before any response is received, the term <tt>{error, TimeoutError}</tt> 
-%% is reported to the <tt>Caller</tt>.
+%% before any response is received, the term <tt>{error, Error}</tt> 
+%% is reported to the <tt>Caller</tt>, where <tt>Error</tt> is
+%% <tt>operation:request_failure_code(CmdId)</tt>.
 %% @end
 request_broker(undefined, CmdId, Time) ->
     receive 
-        {Sid, {response, RespId, Pdu}} ->
+        {FsmRef, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
                 ?ESME_ROK when RespId == ?COMMAND_ID_UNBIND_RESP ->
-					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
+                    gen_fsm:send_event(FsmRef, RespId);
                 ?ESME_ROK ->
-					ok;
+                    ok;
                 Error ->
                     {error, Error}
             end
@@ -1699,15 +1700,15 @@ request_broker(undefined, CmdId, Time) ->
     end;
 request_broker(Caller, CmdId, Time) ->
     receive
-        {Sid, {response, RespId, Pdu}} ->
+        {FsmRef, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
                 ?ESME_ROK when RespId == ?COMMAND_ID_UNBIND_RESP ->
-					gen_fsm:reply(Caller, {ok, Pdu}),
-					gen_fsm:send_event(Sid, ?COMMAND_ID_UNBIND_RESP);
-				?ESME_ROK when RespId == ?COMMAND_ID_GENERIC_NACK ->
-					gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
+                    gen_fsm:reply(Caller, {ok, Pdu}),
+                    gen_fsm:send_event(FsmRef, RespId);
+                ?ESME_ROK when RespId == ?COMMAND_ID_GENERIC_NACK ->
+                    gen_fsm:reply(Caller, {error, ?ESME_RUNKNOWNERR});
                 ?ESME_ROK ->
-					gen_fsm:reply(Caller, {ok, Pdu});
+                    gen_fsm:reply(Caller, {ok, Pdu});
                 Error ->
                     gen_fsm:reply(Caller, {error, Error})
             end

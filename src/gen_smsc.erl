@@ -21,42 +21,137 @@
 %%%
 %%% <h2>Callback Function Index</h2>
 %%%
-%%%
-%%% <p>A module implementing this behaviour must export these functions.</p>
+%%% <p>A module implementing this behaviour must export these functions.  
+%%% Leaving a callback undefined crashes the entire SMSC whenever that
+%%% particular function is called.</p>
 %%%
 %%% <table width="100%" border="1">
 %%%   <tr>
-%%%     <td valign="top">
-%%%       <a href="#bind_receiver_resp-3">bind_receiver_resp/3</a>
+%%%     <td valign="top"><a href="#handle_bind-3">handle_bind/3</a></td>
+%%%     <td>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
+%%%       <i>bind_transceiver</i> operations (from the peer ESMEs) to the 
+%%%       callback SMSC.
 %%%     </td>
-%%%     <td>Forwards bind_receiver responses.</td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_operation-3">handle_operation/3</a>
+%%%     </td>
+%%%     <td>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
+%%%       <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
+%%%       <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
+%%%       <i>data_sm</i> operations (from the peer ESMEs) to the callback 
+%%%       SMSC.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
+%%%     <td>This callback forwards an unbind request (issued by peer ESMEs) 
+%%%       to the SMSC.
+%%%     </td>
 %%%   </tr>
 %%% </table>
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
+%%% 
+%%% <h3><a name="handle_bind-3">handle_bind/3</a></h3>
 %%%
-%%% <h3><a name="bind_receiver_resp-3">bind_receiver_resp/3</a></h3>
-%%%
-%%% <tt>bind_receiver_resp(Pid, Sid, Resp) -> ok</tt>
+%%% <tt>handle_bind(Bind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Pid = Eid = pid()</tt></li>
-%%%   <li><tt>Resp = {ok, PduResp} | {error, Error}</tt></li>
-%%%   <li><tt>PduResp = pdu()</tt></li>
+%%%   <li><tt>Bind = {bind_receiver, Pdu}    |
+%%%                  {bind_transmitter, Pdu} |
+%%%                  {bind_transceiver, Pdu}</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>From = term()</tt></li>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {reply, Reply, NewState}          |
+%%%                    {reply, Reply, NewState, Timeout} |
+%%%                    {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, Reply, NewState}   |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>Reply = {ok, ParamList} | {error, Error, ParamList}</tt></li>
+%%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
+%%% <i>bind_transceiver</i> operations (from the peer ESMEs) to the 
+%%% callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the bind response PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% 
+%%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
+%%%
+%%% <tt>handle_operation(Operation, From, State) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>Operation = {broadcast_sm, Pdu} |
+%%%                       {cancel_broadcast_sm, Pdu} |
+%%%                       {cancel_sm, Pdu} |
+%%%                       {query_broadcast_sm, Pdu} |
+%%%                       {query_sm, Pdu} |
+%%%                       {replace_sm, Pdu} |
+%%%                       {submit_multi, Pdu} |
+%%%                       {submit_sm, Pdu} |
+%%%                       {data_sm, Pdu}</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>From = term()</tt></li>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {reply, Reply, NewState}          |
+%%%                    {reply, Reply, NewState, Timeout} |
+%%%                    {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, Reply, NewState}   |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>Reply = {ok, ParamList} | {error, Error, ParamList}</tt></li>
+%%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
+%%% <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
+%%% <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
+%%% <i>data_sm</i> operations (from the peer ESMEs) to the callback SMSC.</p>
+%%%
+%%% <p>The <tt>ParamList</tt> included in the response is used to construct
+%%% the response PDU.  If a command_status other than ESME_ROK is to
+%%% be returned by the ESME in the response PDU, the callback should return the
+%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
+%%% desired command_status error code.</p>
+%%%
+%%% 
+%%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
+%%%
+%%% <tt>handle_unbind(Unbind, From, State) -> Result</tt>
+%%% <ul>
+%%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>Result = {reply, Reply, NewState}          |
+%%%                    {reply, Reply, NewState, Timeout} |
+%%%                    {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, Reply, NewState}   |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>Reply = ok | {error, Error}</tt></li>
 %%%   <li><tt>Error = int()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards bind_receiver responses.</p>
+%%% <p>This callback forwards an unbind request (issued by peer ESMEs) to the 
+%%% SMSC.</p>
 %%%
-%%% <p>Returning value is ignored by the ESME. The callback module may start
-%%% some initialization on response to this callback.</p>
-%%% 
-%%% <p><tt>Error</tt> is the SMPP error returned by the bind operation.</p>
-%%%
-%%% <p><tt>PduResp</tt> is the PDU response sent by the MC. <tt>Pid</tt> is the
-%%% ESME parent id, <tt>Eid</tt> as the ESME process id.</p>
-%%%
-%%% <p><b>See also:</b> <tt>callback_bind_receiver_resp/2</tt></p>
+%%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
+%%% command_status is sent to the MC and the session moves into the unbound
+%%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
+%%% response PDU sent by the session to the MC will have an <tt>Error</tt>
+%%% command_status and the session will remain on it's current bound state
+%%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
@@ -94,8 +189,7 @@
          call/2, 
          call/3, 
          cast/2, 
-         reply/2,
-         stop/1]).
+         reply/2]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -121,6 +215,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 %-define(SERVER, ?MODULE).
+-define(SESSION_MODULE, gen_smsc_session).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -159,7 +254,7 @@ behaviour_info(callbacks) ->
     [{init, 1},
      {handle_bind, 3}, 
      {handle_operation, 3}, 
-     {handle_ubind, 3}, 
+     {handle_unbind, 3}, 
      {handle_session_failure, 2},
      {handle_listen_error, 1},
      {handle_call, 3},
@@ -387,17 +482,6 @@ cast(ServerRef, Request) ->
 reply(Client, Reply) ->
     gen_server:reply(Client, Reply).
 
-    
-%% @spec stop() -> ok
-%%
-%% @doc Stops the server.
-%%
-%% @see handle_call/3
-%%
-%% @equiv gen_server:call(ServerRef, die, 10000).
-%% @end
-stop(ServerRef) ->
-    gen_server:call(ServerRef, die, 10000).
 
 %%%===================================================================
 %%% Server functions
@@ -445,10 +529,10 @@ handle_call({bind, Session, {BoundAs, Pdu} = R}, From, S) ->
     ets:delete(S#state.sessions, {undefined, Session}),
     ets:insert(S#state.sessions, {{SystemId, Session}, BoundAs}),
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({operation, Session, {Operation, Pdu}}, From, S) ->
+handle_call({operation, Session, Operation}, From, S) ->
     case ets:match(S#state.sessions, {{'$1', Session}, '$2'}, 1) of
         [[SystemId, _BoundAs]] ->
-            R = {Operation, SystemId, Pdu},
+            R = {SystemId, Operation},
             pack((S#state.mod):handle_operation(R, From, S#state.mod_state),S);
         _Otherwise ->
             {reply, {error, ?ESME_RUNKNOWNERR, []}, S}
@@ -471,7 +555,7 @@ handle_call({accept, Conn, _Socket}, From, S) ->
             {reply, error, S}
     end;
 handle_call({listen, Port, Count}, From, S) ->
-    case gen_tcp_connection:start_link(?MODULE, Port, Count) of
+    case gen_tcp_connection:start_listen(?MODULE,?SESSION_MODULE,Port,Count) of
         {ok, Listener} ->
             {reply, ok, S#state{listener = Listener}};
         Error ->
@@ -539,8 +623,8 @@ handle_info({'EXIT', Child, Reason} = Info, S) when Reason /= normal ->
             {noreply, S};
         [[SystemId, BoundAs]] ->              % Child is a bound session
             ets:delete(S#state.sessions, {SystemId, Child}),
-            MS = S#state.mod_state,
-            pack((S#state.mod):handle_session_failure(SystemId,BoundAs,MS), S);
+			R = {SystemId, BoundAs},
+            pack((S#state.mod):handle_session_failure(R, S#state.mod_state),S);
         [] when Child == S#state.listener ->  % Child is the listener
             NewS = S#state{listener = closed},
             pack((S#state.mod):handle_listen_error(S#state.mod_state), NewS);

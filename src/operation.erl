@@ -78,9 +78,13 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([get_param/2, 
+-export([command_id/1,
+         command_name/1,
+         get_param/2, 
          set_param/3, 
          merge_params/2,
+         new/3,
+         new/4,
          new_bind_transmitter/2,
          new_bind_transmitter_resp/3,
          new_bind_receiver/2,
@@ -120,9 +124,12 @@
          unpack/1,
          esme_unpack/1,
          smsc_unpack/1,
-         response_command_id/1,
          request_command_id/1,
+         request_command_name/1,
+         response_command_id/1,
+         response_command_name/1,
          request_failure_code/1]).
+
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -140,6 +147,124 @@
 %%%===================================================================
 %%% External functions
 %%%===================================================================
+%% @spec command_id(CommandName) -> CommandId
+%%    CommandName = bind_transmitter |
+%%                  bind_transmitter |
+%%                  bind_transmitter_resp |
+%%                  bind_receiver |
+%%                  bind_receiver_resp |
+%%                  bind_transceiver |
+%%                  bind_transceiver_resp |
+%%                  outbind |
+%%                  unbind |
+%%                  unbind_resp |
+%%                  enquire_link |
+%%                  enquire_link_resp |
+%%                  alert_notification |
+%%                  generic_nack |
+%%                  submit_sm |
+%%                  submit_sm_resp |
+%%                  data_sm |
+%%                  data_sm_resp |
+%%                  submit_multi |
+%%                  submit_multi_resp |
+%%                  deliver_sm |
+%%                  deliver_sm_resp |
+%%                  broadcast_sm |
+%%                  broadcast_sm_resp |
+%%                  cancel_sm |
+%%                  cancel_sm_resp |
+%%                  query_sm |
+%%                  query_sm_resp |
+%%                  replace_sm |
+%%                  replace_sm_resp |
+%%                  query_broadcast_sm |
+%%                  query_broadcast_sm_resp |
+%%                  cancel_broadcast_sm |
+%%                  cancel_broadcast_sm_resp |
+%%    CommandId   = int()
+%%
+%% @doc Returns the <tt>CommandId</tt> for a given <tt>CommandName</tt>.
+%% @end 
+command_id(bind_transmitter)         -> ?COMMAND_ID_BIND_TRANSMITTER;
+command_id(bind_transmitter_resp)    -> ?COMMAND_ID_BIND_TRANSMITTER_RESP;
+command_id(bind_receiver)            -> ?COMMAND_ID_BIND_RECEIVER;
+command_id(bind_receiver_resp)       -> ?COMMAND_ID_BIND_RECEIVER_RESP;
+command_id(bind_transceiver)         -> ?COMMAND_ID_BIND_TRANSCEIVER;
+command_id(bind_transceiver_resp)    -> ?COMMAND_ID_BIND_TRANSCEIVER_RESP;
+command_id(outbind)                  -> ?COMMAND_ID_OUTBIND;
+command_id(unbind)                   -> ?COMMAND_ID_UNBIND;
+command_id(unbind_resp)              -> ?COMMAND_ID_UNBIND_RESP;
+command_id(enquire_link)             -> ?COMMAND_ID_ENQUIRE_LINK;
+command_id(enquire_link_resp)        -> ?COMMAND_ID_ENQUIRE_LINK_RESP;
+command_id(alert_notification)       -> ?COMMAND_ID_ALERT_NOTIFICATION;
+command_id(generic_nack)             -> ?COMMAND_ID_GENERIC_NACK;
+command_id(submit_sm)                -> ?COMMAND_ID_SUBMIT_SM;
+command_id(submit_sm_resp)           -> ?COMMAND_ID_SUBMIT_SM_RESP;
+command_id(data_sm)                  -> ?COMMAND_ID_DATA_SM;
+command_id(data_sm_resp)             -> ?COMMAND_ID_DATA_SM_RESP;
+command_id(submit_multi)             -> ?COMMAND_ID_SUBMIT_MULTI;
+command_id(submit_multi_resp)        -> ?COMMAND_ID_SUBMIT_MULTI_RESP;
+command_id(deliver_sm)               -> ?COMMAND_ID_DELIVER_SM;
+command_id(deliver_sm_resp)          -> ?COMMAND_ID_DELIVER_SM_RESP;
+command_id(broadcast_sm)             -> ?COMMAND_ID_BROADCAST_SM;
+command_id(broadcast_sm_resp)        -> ?COMMAND_ID_BROADCAST_SM_RESP;
+command_id(cancel_sm)                -> ?COMMAND_ID_CANCEL_SM;
+command_id(cancel_sm_resp)           -> ?COMMAND_ID_CANCEL_SM_RESP;
+command_id(query_sm)                 -> ?COMMAND_ID_QUERY_SM;
+command_id(query_sm_resp)            -> ?COMMAND_ID_QUERY_SM_RESP;
+command_id(replace_sm)               -> ?COMMAND_ID_REPLACE_SM;
+command_id(replace_sm_resp)          -> ?COMMAND_ID_REPLACE_SM_RESP;
+command_id(query_broadcast_sm)       -> ?COMMAND_ID_QUERY_BROADCAST_SM;
+command_id(query_broadcast_sm_resp)  -> ?COMMAND_ID_QUERY_BROADCAST_SM_RESP;
+command_id(cancel_broadcast_sm)      -> ?COMMAND_ID_CANCEL_BROADCAST_SM;
+command_id(cancel_broadcast_sm_resp) -> ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP.
+
+
+%% @spec command_name(CommandId) -> CommandName
+%%    CommandId   = int()
+%%    CommandName = atom()
+%%
+%% @doc Returns the <tt>CommandName</tt> for a given <tt>CommandId</tt>.
+%%
+%% <p>Refer to <a href="#command_id-1">command_id/1</a> for a complete list
+%% of command names.</p>
+%% @end 
+command_name(?COMMAND_ID_BIND_TRANSMITTER)         -> bind_transmitter;
+command_name(?COMMAND_ID_BIND_TRANSMITTER_RESP)    -> bind_transmitter_resp;
+command_name(?COMMAND_ID_BIND_RECEIVER)            -> bind_receiver;
+command_name(?COMMAND_ID_BIND_RECEIVER_RESP)       -> bind_receiver_resp;
+command_name(?COMMAND_ID_BIND_TRANSCEIVER)         -> bind_transceiver;
+command_name(?COMMAND_ID_BIND_TRANSCEIVER_RESP)    -> bind_transceiver_resp;
+command_name(?COMMAND_ID_OUTBIND)                  -> outbind;
+command_name(?COMMAND_ID_UNBIND)                   -> unbind;
+command_name(?COMMAND_ID_UNBIND_RESP)              -> unbind_resp;
+command_name(?COMMAND_ID_ENQUIRE_LINK)             -> enquire_link;
+command_name(?COMMAND_ID_ENQUIRE_LINK_RESP)        -> enquire_link_resp;
+command_name(?COMMAND_ID_ALERT_NOTIFICATION)       -> alert_notification;
+command_name(?COMMAND_ID_GENERIC_NACK)             -> generic_nack;
+command_name(?COMMAND_ID_SUBMIT_SM)                -> submit_sm;
+command_name(?COMMAND_ID_SUBMIT_SM_RESP)           -> submit_sm_resp;
+command_name(?COMMAND_ID_DATA_SM)                  -> data_sm;
+command_name(?COMMAND_ID_DATA_SM_RESP)             -> data_sm_resp;
+command_name(?COMMAND_ID_SUBMIT_MULTI)             -> submit_multi;
+command_name(?COMMAND_ID_SUBMIT_MULTI_RESP)        -> submit_multi_resp;
+command_name(?COMMAND_ID_DELIVER_SM)               -> deliver_sm;
+command_name(?COMMAND_ID_DELIVER_SM_RESP)          -> deliver_sm_resp;
+command_name(?COMMAND_ID_BROADCAST_SM)             -> broadcast_sm;
+command_name(?COMMAND_ID_BROADCAST_SM_RESP)        -> broadcast_sm_resp;
+command_name(?COMMAND_ID_CANCEL_SM)                -> cancel_sm;
+command_name(?COMMAND_ID_CANCEL_SM_RESP)           -> cancel_sm_resp;
+command_name(?COMMAND_ID_QUERY_SM)                 -> query_sm;
+command_name(?COMMAND_ID_QUERY_SM_RESP)            -> query_sm_resp;
+command_name(?COMMAND_ID_REPLACE_SM)               -> replace_sm;
+command_name(?COMMAND_ID_REPLACE_SM_RESP)          -> replace_sm_resp;
+command_name(?COMMAND_ID_QUERY_BROADCAST_SM)       -> query_broadcast_sm;
+command_name(?COMMAND_ID_QUERY_BROADCAST_SM_RESP)  -> query_broadcast_sm_resp;
+command_name(?COMMAND_ID_CANCEL_BROADCAST_SM)      -> cancel_broadcast_sm;
+command_name(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP) -> cancel_broadcast_sm_resp.
+
+
 %% @spec get_param(ParamName, PduDict) -> ParamValue
 %%    ParamName  = atom()
 %%    PduDict    = dictionary()
@@ -198,6 +323,45 @@ merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) when I1 < I2 ->
     merge_params(T1, [{I2,V2}|T2], [{I1, V1}|MergedParamList]);
 merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
     merge_params([{I1,V1}|T1], T2, [{I2, V2}|MergedParamList]).
+
+
+%% @spec new(CommandId, SequenceNumber, InitParams) -> PduDict
+%%    CommandId      = int()
+%%    SequenceNumber = int()
+%%    InitParams     = [{ParamName, ParamValue}]
+%%    ParamName      = atom()
+%%    ParamValue     = term()
+%%    PduDict        = dictionary()
+%%
+%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
+%% <tt>InitParams</tt> and the default values defined for this PDU.
+%%
+%% <p>The <i>command_status</i> is set to <tt>ESME_ROK</tt>.</p>
+%%
+%% @see new/4
+%% @end
+new(CommandId, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(CommandId, ?ESME_ROK, SequenceNumber, InitParams).
+
+
+%% @spec new(CommandId, SequenceNumber, InitParams) -> PduDict
+%%    CommandId      = int()
+%%    CommandStatus  = int()
+%%    SequenceNumber = int()
+%%    InitParams     = [{ParamName, ParamValue}]
+%%    ParamName      = atom()
+%%    ParamValue     = term()
+%%    PduDict        = dictionary()
+%%
+%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
+%% <tt>InitParams</tt> and the default values defined for this PDU.
+%%
+%% <p>The <i>command_status</i> is set to <tt>CommandStatus</tt>.</p>
+%%
+%% @see new/3
+%% @end
+new(CommandId, CommandStatus, SequenceNumber, InitParams) ->
+    pdu_syntax:new_pdu(CommandId, CommandStatus, SequenceNumber, InitParams).
 
 
 %% @spec new_bind_transmitter(SequenceNumber, InitParams) -> PduDict
@@ -1302,24 +1466,219 @@ smsc_unpack(BinaryPdu) ->
     end.
 
 
-%% @spec response_command_id(RequestCommandId) -> ResponseCommandId
-%%    RequestCommandId  = int()
-%%    ResponseCommandId = int()
-%%
-%% @doc Computes the response command id related to a given request command id.
-%% @end
-response_command_id(RequestCommandId) ->
-    RequestCommandId + 16#80000000.
-
-
 %% @spec request_command_id(ResponseCommandId) -> RequestCommandId
 %%     ResponseCommandId = int()
 %%     RequestCommandId  = int()
 %%
 %% @doc Computes the request command id related to a given response command id.
 %% @end
-request_command_id(ResponseCommandId) ->
-    ResponseCommandId - 16#80000000.
+request_command_id(ResponseCommandId) when integer(ResponseCommandId) ->
+    ResponseCommandId - 16#80000000;
+request_command_id(bind_transmitter_resp) -> 
+	?COMMAND_ID_BIND_TRANSMITTER;
+request_command_id(bind_receiver_resp) -> 
+	?COMMAND_ID_BIND_RECEIVER;
+request_command_id(bind_transceiver_resp) ->
+	?COMMAND_ID_BIND_TRANSCEIVER;
+request_command_id(unbind_resp) -> 
+	?COMMAND_ID_UNBIND;
+request_command_id(enquire_link_resp) ->
+	?COMMAND_ID_ENQUIRE_LINK;
+request_command_id(submit_sm_resp) ->
+	?COMMAND_ID_SUBMIT_SM;
+request_command_id(data_sm_resp) ->
+	?COMMAND_ID_DATA_SM;
+request_command_id(submit_multi_resp) -> 
+	?COMMAND_ID_SUBMIT_MULTI;
+request_command_id(deliver_sm_resp) ->
+	?COMMAND_ID_DELIVER_SM;
+request_command_id(broadcast_sm_resp) -> 
+	?COMMAND_ID_BROADCAST_SM;
+request_command_id(cancel_sm_resp) ->
+	?COMMAND_ID_CANCEL_SM;
+request_command_id(query_sm_resp) ->
+	?COMMAND_ID_QUERY_SM;
+request_command_id(replace_sm_resp) ->
+	?COMMAND_ID_REPLACE_SM;
+request_command_id(query_broadcast_sm_resp) ->
+	?COMMAND_ID_QUERY_BROADCAST_SM;
+request_command_id(cancel_broadcast_sm_resp) ->
+	?COMMAND_ID_CANCEL_BROADCAST_SM.
+
+
+%% @spec request_command_name(ResponseCommandName) -> RequestCommandName
+%%    ResponseCommandName = bind_transmitter_resp   |
+%%                          bind_receiver_resp      |
+%%                          bind_transceiver_resp   |
+%%                          unbind_resp             |
+%%                          enquire_link_resp       |
+%%                          submit_sm_resp          |
+%%                          data_sm_resp            |
+%%                          submit_multi_resp       |
+%%                          deliver_sm_resp         |
+%%                          broadcast_sm_resp       |
+%%                          cancel_sm_resp          |
+%%                          query_sm_resp           |
+%%                          replace_sm_resp         |
+%%                          query_broadcast_sm_resp |
+%%                          cancel_broadcast_sm_resp
+%%    RequestCommandName  = bind_transmitter   |
+%%                          bind_receiver      |
+%%                          bind_transceiver   |
+%%                          unbind             |
+%%                          enquire_link       |
+%%                          submit_sm          |
+%%                          data_sm            |
+%%                          submit_multi       |
+%%                          deliver_sm         |
+%%                          broadcast_sm       |
+%%                          cancel_sm          |
+%%                          query_sm           |
+%%                          replace_sm         |
+%%                          query_broadcast_sm |
+%%                          cancel_broadcast_sm
+%%
+%% @doc Returns the request command name related to a given response command
+%% name.
+%% @end
+request_command_name(bind_transmitter_resp)    -> bind_transmitter;
+request_command_name(bind_receiver_resp)       -> bind_receiver;
+request_command_name(bind_transceiver_resp)    -> bind_transceiver;
+request_command_name(unbind_resp)              -> unbind;
+request_command_name(enquire_link_resp)        -> enquire_link;
+request_command_name(submit_sm_resp)           -> submit_sm;
+request_command_name(data_sm_resp)             -> data_sm;
+request_command_name(submit_multi_resp)        -> submit_multi;
+request_command_name(deliver_sm_resp)          -> deliver_sm;
+request_command_name(broadcast_sm_resp)        -> broadcast_sm;
+request_command_name(cancel_sm_resp)           -> cancel_sm;
+request_command_name(query_sm_resp)            -> query_sm;
+request_command_name(replace_sm_resp)          -> replace_sm;
+request_command_name(query_broadcast_sm_resp)  -> query_broadcast_sm;
+request_command_name(cancel_broadcast_sm_resp) -> cancel_broadcast_sm.
+
+
+%% @spec response_command_id(RequestCommandId) -> ResponseCommandId
+%%    RequestCommandId  = int()
+%%    ResponseCommandId = int()
+%%
+%% @doc Computes the response command id related to a given request command id.
+%% @end
+response_command_id(RequestCommandId) when integer(RequestCommandId) ->
+    RequestCommandId + 16#80000000;
+response_command_id(bind_transmitter) -> 
+	?COMMAND_ID_BIND_TRANSMITTER_RESP;
+response_command_id(bind_receiver) -> 
+	?COMMAND_ID_BIND_RECEIVER_RESP;
+response_command_id(bind_transceiver) ->
+	?COMMAND_ID_BIND_TRANSCEIVER_RESP;
+response_command_id(unbind) -> 
+	?COMMAND_ID_UNBIND_RESP;
+response_command_id(enquire_link) ->
+	?COMMAND_ID_ENQUIRE_LINK_RESP;
+response_command_id(submit_sm) ->
+	?COMMAND_ID_SUBMIT_SM_RESP;
+response_command_id(data_sm) ->
+	?COMMAND_ID_DATA_SM_RESP;
+response_command_id(submit_multi) -> 
+	?COMMAND_ID_SUBMIT_MULTI_RESP;
+response_command_id(deliver_sm) ->
+	?COMMAND_ID_DELIVER_SM_RESP;
+response_command_id(broadcast_sm) -> 
+	?COMMAND_ID_BROADCAST_SM_RESP;
+response_command_id(cancel_sm) ->
+	?COMMAND_ID_CANCEL_SM_RESP;
+response_command_id(query_sm) ->
+	?COMMAND_ID_QUERY_SM_RESP;
+response_command_id(replace_sm) ->
+	?COMMAND_ID_REPLACE_SM_RESP;
+response_command_id(query_broadcast_sm) ->
+	?COMMAND_ID_QUERY_BROADCAST_SM_RESP;
+response_command_id(cancel_broadcast_sm) ->
+	?COMMAND_ID_CANCEL_BROADCAST_SM_RESP.
+
+
+%% @spec response_command_name(RequestCommand) -> ResponseCommandName
+%%    RequestCommand      = int() |
+%%                          bind_transmitter   |
+%%                          bind_receiver      |
+%%                          bind_transceiver   |
+%%                          unbind             |
+%%                          enquire_link       |
+%%                          submit_sm          |
+%%                          data_sm            |
+%%                          submit_multi       |
+%%                          deliver_sm         |
+%%                          broadcast_sm       |
+%%                          cancel_sm          |
+%%                          query_sm           |
+%%                          replace_sm         |
+%%                          query_broadcast_sm |
+%%                          cancel_broadcast_sm
+%%    ResponseCommandName = bind_transmitter_resp   |
+%%                          bind_receiver_resp      |
+%%                          bind_transceiver_resp   |
+%%                          unbind_resp             |
+%%                          enquire_link_resp       |
+%%                          submit_sm_resp          |
+%%                          data_sm_resp            |
+%%                          submit_multi_resp       |
+%%                          deliver_sm_resp         |
+%%                          broadcast_sm_resp       |
+%%                          cancel_sm_resp          |
+%%                          query_sm_resp           |
+%%                          replace_sm_resp         |
+%%                          query_broadcast_sm_resp |
+%%                          cancel_broadcast_sm_resp
+%%
+%% @doc Computes the response command id related to a given request command 
+%% name or id.
+%% @end
+response_command_name(Cmd) when Cmd == bind_transmitter;
+							    Cmd == ?COMMAND_ID_BIND_TRANSMITTER -> 
+	bind_transmitter_resp;
+response_command_name(Cmd) when Cmd == bind_receiver;
+							    Cmd == ?COMMAND_ID_BIND_RECEIVER -> 
+	bind_receiver_resp;
+response_command_name(Cmd) when Cmd == bind_transceiver;
+							    Cmd == ?COMMAND_ID_BIND_TRANSCEIVER -> 
+	bind_transceiver_resp;
+response_command_name(Cmd) when Cmd == unbind;
+								Cmd == ?COMMAND_ID_UNBIND -> 
+	unbind_resp;
+response_command_name(Cmd) when Cmd == enquire_link;
+								Cmd == ?COMMAND_ID_ENQUIRE_LINK -> 
+	enquire_link_resp;
+response_command_name(Cmd) when Cmd == submit_sm;
+								Cmd == ?COMMAND_ID_SUBMIT_SM -> 
+	submit_sm_resp;
+response_command_name(Cmd) when Cmd == data_sm;
+							    Cmd == ?COMMAND_ID_DATA_SM ->
+	data_sm_resp;
+response_command_name(Cmd) when Cmd == submit_multi;
+								Cmd == ?COMMAND_ID_SUBMIT_MULTI -> 
+	submit_multi_resp;
+response_command_name(Cmd) when Cmd == deliver_sm;
+							    Cmd == ?COMMAND_ID_DELIVER_SM -> 
+	deliver_sm_resp;
+response_command_name(Cmd) when Cmd == broadcast_sm;
+							    Cmd == ?COMMAND_ID_BROADCAST_SM -> 
+	broadcast_sm_resp;
+response_command_name(Cmd) when Cmd == cancel_sm;
+							    Cmd == ?COMMAND_ID_CANCEL_SM -> 
+	cancel_sm_resp;
+response_command_name(Cmd) when Cmd == query_sm;
+								Cmd == ?COMMAND_ID_QUERY_SM -> 
+	query_sm_resp;
+response_command_name(Cmd) when Cmd == replace_sm;
+								Cmd == ?COMMAND_ID_REPLACE_SM -> 
+	replace_sm_resp;
+response_command_name(Cmd) when Cmd == query_broadcast_sm;
+								Cmd == ?COMMAND_ID_QUERY_BROACAST_SM -> 
+	query_broadcast_sm_resp;
+response_command_name(Cmd) when Cmd == cancel_broadcast_sm;
+							    Cmd == ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+	cancel_broadcast_sm_resp.
 
 
 %% @spec request_failure_code(CommandId) -> CommandStatus
@@ -1330,9 +1689,9 @@ request_command_id(ResponseCommandId) ->
 %% of the requests have a generic failure code, otherwise ?ESME_RUNKNOWNERR is
 %% returned).
 %% @end
+request_failure_code(?COMMAND_ID_BIND_TRANSMITTER)   -> ?ESME_RBINDFAIL;
 request_failure_code(?COMMAND_ID_BIND_RECEIVER)      -> ?ESME_RBINDFAIL;
 request_failure_code(?COMMAND_ID_BIND_TRANSCEIVER)   -> ?ESME_RBINDFAIL;
-request_failure_code(?COMMAND_ID_BIND_TRANSMITTER)   -> ?ESME_RBINDFAIL;
 request_failure_code(?COMMAND_ID_BROADCAST_SM)       -> ?ESME_RBCASTFAIL;
 request_failure_code(?COMMAND_ID_CANCEL_BROADCAST_SM)-> ?ESME_RBCASTCANCELFAIL;
 request_failure_code(?COMMAND_ID_CANCEL_SM)          -> ?ESME_RCANCELFAIL;

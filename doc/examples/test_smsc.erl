@@ -36,7 +36,7 @@
 %%% External exports
 %%%-------------------------------------------------------------------
 %%-compile(export_all).
--export([start/0, start_link/0, stop/0]).
+-export([start_link/0, deliver_sm/0, stop/0]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -45,7 +45,6 @@
 		 handle_bind/3, 
 		 handle_operation/3, 
 		 handle_unbind/3, 
-		 handle_session_failure/2,
 		 handle_listen_error/1,
 		 handle_call/3,
 		 handle_cast/2,
@@ -70,14 +69,11 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, {}).
+-record(state, {rx = [], tx = []}).
 
 %%%===================================================================
 %%% External functions
 %%%===================================================================
-start() ->
-	start_link().
-
 %% @spec start_link() -> Result
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
@@ -89,8 +85,19 @@ start() ->
 %% @see start/0
 %% @end
 start_link() ->
-	gen_smsc:start_link({local,?SERVER}, ?MODULE, ?DEFAULT_SMPP_TIMERS, [],[]),
-	gen_smsc:listen(?SERVER).
+	gen_smsc:start_link({local,?SERVER}, ?MODULE, ?DEFAULT_TIMERS, [],[]),
+	gen_smsc:listen_start(?SERVER).
+
+
+deliver_sm() ->
+    SourceAddress = read_string("Source Address> "),
+    DestinationAddress = read_string("Destination Address> "),
+    ShortMessage = read_string("Short Message> "),
+    ParamList = [{source_addr, SourceAddress},
+                 {destination_addr, DestinationAddress},
+                 {short_message, ShortMessage}],                 
+	gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
+
 
 %% @spec stop() -> ok
 %%
@@ -164,8 +171,9 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast(Request, State) ->
-	{noreply, State}.
+handle_cast({deliver_sm, ParamList}, S) ->
+	deliver_sm_iter(ParamList, S#state.rx),
+	{noreply, S}.
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -235,9 +243,16 @@ code_change(OldVsn, State, Extra) ->
 %% @doc <a href="gen_smsc.html#handle_bind-3">gen_smsc - 
 %% handle_bind/3</a> callback implementation.
 %% @end
-handle_bind({Bind, Pdu}, From, State) ->
-	io:format("*** bind - ~p *** ~n", [operation:to_list(Pdu)]),
-	{reply, {ok, [{system_id, "test_smsc"}]}, State}.
+handle_bind({bind_receiver, Rx, Pdu}, From, S) ->
+	io:format("bound_rx ~n"),
+	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{rx = [Rx|S#state.rx]}};
+handle_bind({bind_transmitter, Tx, Pdu}, From, S) ->
+	io:format("bound_tx ~n"),
+	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{tx = [Tx|S#state.tx]}};
+handle_bind({bind_transceiver, Trx, Pdu}, From, S) ->
+	io:format("bound_trx ~n"),
+	{reply, {ok, [{system_id, "test_smsc"}]}, S#state{rx = [Trx|S#state.rx],
+													  tx = [Trx|S#state.tx]}}.
 
 
 %% @spec handle_operation(Operation, From, State) -> Result</tt>
@@ -268,7 +283,7 @@ handle_bind({Bind, Pdu}, From, State) ->
 %% @doc <a href="gen_smsc.html#handle_operation-3">gen_smsc - 
 %% handle_operation/3</a> callback implementation.
 %% @end
-handle_operation({Operation, SystemId, Pdu}, From, State) ->
+handle_operation({Operation, Session, Pdu}, From, State) ->
 	io:format("*** operation - ~p ***~n", [operation:to_list(Pdu)]),
 	{reply, {error, ?ESME_RINVCMDID, []}, State}.
 
@@ -289,27 +304,10 @@ handle_operation({Operation, SystemId, Pdu}, From, State) ->
 %% @doc <a href="gen_smsc.html#handle_unbind-3">gen_smsc - 
 %% handle_unbind/3</a> callback implementation.
 %% @end
-handle_unbind(Unbind, From, State) ->
-	io:format("*** unbind - ~p ***~n", [Unbind]),
-	{reply, ok, State}.
-
-
-%% @spec handle_session_failure(Session, State) -> Result
-%%    Session = {SystemId, BoundAs}
-%%    SystemId = term()
-%%    BoundAs = bind_receiver | bind_transmitter | bind_transceiver
-%%    Result = {noreply, NewState}               |
-%%             {noreply, NewState, Timeout}      |
-%%             {stop, Reason, NewState}
-%%    Reply = ok | {error, Error}
-%%    Error = int()
-%%
-%% @doc <a href="gen_smsc.html#handle_session_failure-2">gen_smsc - 
-%% handle_session_failure/2</a> callback implementation.
-%% @end
-handle_session_failure(Session, State) ->
-	io:format("*** session failure - ~p ***~n", [Session]),
-	{noreply, State}.
+handle_unbind({unbind, Session, Pdu}, _From, S) ->
+    io:format("*** unbind - ~p ***~n", [operation:to_list(Pdu)]),
+    {reply, ok, S#state{rx = lists:delete(Session, S#state.rx),
+                        tx = lists:delete(Session, S#state.tx)}}.
 
 
 %% @spec handle_listen_error(State) -> Result
@@ -329,3 +327,23 @@ handle_listen_error(State) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+deliver_sm_iter(ParamList, []) ->
+	ok;
+deliver_sm_iter(ParamList, [H|T]) ->
+	gen_smsc:deliver_sm(?SERVER, H, ParamList),
+	deliver_sm_iter(ParamList, T).
+
+%% @spec read_string(Prompt) -> Result
+%%     Prompt = string()
+%%     Result = string | {error, What} | eof
+%%     What   = term()
+%%
+%% @doc Reads a string from the standard input.
+%% @end 
+read_string(Prompt) ->
+    case io:fread(Prompt, "~s") of
+        {ok, InputList} ->
+            hd(InputList);
+        Error ->
+            Error
+    end.

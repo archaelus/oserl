@@ -27,10 +27,16 @@
 %%%
 %%% <table width="100%" border="1">
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_bind-3">handle_bind/3</a></td>
-%%%     <td>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
-%%%       <i>bind_transceiver</i> operations (from the peer ESMEs) to the 
-%%%       callback SMSC.
+%%%     <td valign="top"><a href="#handle_outbind-3">handle_outbind/3</a></td>
+%%%     <td>Forwards <i>outbind</i> operations (from the peer SMSCs) to the 
+%%%       callback ESME.
+%%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_alert_notification-3">
+%%%       handle_alert_notification/3</a></td>
+%%%     <td>Forwards <i>alert_notification</i> operations (from the peer SMSCs)
+%%%       to the callback ESME.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
@@ -39,14 +45,14 @@
 %%%     <td>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
 %%%       <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
 %%%       <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
-%%%       <i>data_sm</i> operations (from the peer ESMEs) to the callback 
-%%%       SMSC.
+%%%       <i>data_sm</i> operations (from the peer SMSC) to the callback 
+%%%       ESME.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
-%%%     <td>This callback forwards an unbind request (issued by peer ESMEs) 
-%%%       to the SMSC.
+%%%     <td>This callback forwards an unbind request (issued by peer SMSCs) 
+%%%       to the callback ESME.
 %%%     </td>
 %%%   </tr>
 %%% </table>
@@ -54,52 +60,57 @@
 %%%
 %%% <h2>Callback Function Details</h2>
 %%% 
-%%% <h3><a name="handle_bind-3">handle_bind/3</a></h3>
+%%% <h3><a name="handle_outbind-3">handle_outbind/3</a></h3>
 %%%
-%%% <tt>handle_bind(Bind, From, State) -> Result</tt>
+%%% <tt>handle_outbind(Outbind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Bind = {bind_receiver, Pdu}    |
-%%%                  {bind_transmitter, Pdu} |
-%%%                  {bind_transceiver, Pdu}</tt></li>
+%%%   <li><tt>OutBind = {outbind, Session, Pdu}</tt></li>
+%%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
-%%%   <li><tt>Result = {reply, Reply, NewState}          |
-%%%                    {reply, Reply, NewState, Timeout} |
-%%%                    {noreply, NewState}               |
+%%%   <li><tt>Result = {noreply, NewState}               |
 %%%                    {noreply, NewState, Timeout}      |
-%%%                    {stop, Reason, Reply, NewState}   |
 %%%                    {stop, Reason, NewState}</tt></li>
-%%%   <li><tt>Reply = {ok, ParamList} | {error, Error, ParamList}</tt></li>
 %%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
 %%%   <li><tt>ParamName = atom()</tt></li>
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
-%%% <i>bind_transceiver</i> operations (from the peer ESMEs) to the 
-%%% callback SMSC.</p>
+%%% <p>Forwards <i>outbind</i>, operations (from the peer SMSCs) to the 
+%%% callback ESME.</p>
 %%%
-%%% <p>The <tt>ParamList</tt> included in the response is used to construct
-%%% the bind response PDU.  If a command_status other than ESME_ROK is to
-%%% be returned by the ESME in the response PDU, the callback should return the
-%%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
-%%% desired command_status error code.</p>
+%%%
+%%% <h3><a name="handle_alert_notification-3">handle_alert_notification/3</a>
+%%% </h3>
+%%%
+%%% <tt>handle_alert_notification(AlertNotification, From, State) -> Result
+%%% </tt>
+%%% <ul>
+%%%   <li><tt>AlertNotification = {alert_notification, Session, Pdu}</tt></li>
+%%%   <li><tt>Session = pid()</tt></li>
+%%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>From = term()</tt></li>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
+%%%   <li><tt>ParamName = atom()</tt></li>
+%%%   <li><tt>ParamValue = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Forwards <i>alert_notification</i>, operations (from the peer SMSCs) 
+%%% to the callback ESME.</p>
 %%%
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
 %%% <tt>handle_operation(Operation, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Operation = {broadcast_sm, Pdu} |
-%%%                       {cancel_broadcast_sm, Pdu} |
-%%%                       {cancel_sm, Pdu} |
-%%%                       {query_broadcast_sm, Pdu} |
-%%%                       {query_sm, Pdu} |
-%%%                       {replace_sm, Pdu} |
-%%%                       {submit_multi, Pdu} |
-%%%                       {submit_sm, Pdu} |
-%%%                       {data_sm, Pdu}</tt></li>
+%%%   <li><tt>Operation = {deliver_sm, Session, Pdu} |
+%%%                       {data_sm, Session, Pdu}</tt></li>
+%%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
@@ -115,10 +126,8 @@
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
-%%% <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
-%%% <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
-%%% <i>data_sm</i> operations (from the peer ESMEs) to the callback SMSC.</p>
+%%% <p>Forwards <i>deliver_sm</i> and <i>data_sm</i> operations (from the peer
+%%% SMSCs) to the callback ESME.</p>
 %%%
 %%% <p>The <tt>ParamList</tt> included in the response is used to construct
 %%% the response PDU.  If a command_status other than ESME_ROK is to
@@ -131,7 +140,8 @@
 %%%
 %%% <tt>handle_unbind(Unbind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Unbind = {unbind, Pdu}</tt></li>
+%%%   <li><tt>Unbind = {unbind, Session, Pdu}</tt></li>
+%%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {reply, Reply, NewState}          |
 %%%                    {reply, Reply, NewState, Timeout} |
@@ -185,17 +195,22 @@
          start_link/5, 
          listen/1,
          listen/3,
-         bind/3,
-         broadcast_sm/2,
-         cancel_broadcast_sm/2,
-         cancel_sm/2,
-         data_sm/2,
-         query_broadcast_sm/2,
-         query_sm/2,
-         replace_sm/2,
-         submit_multi/2,
-         submit_sm/2,
-         unbind/3,
+         close_listen/1,
+         session/3,
+         close_session/2,
+         bind_receiver/3,
+         bind_transmitter/3,
+         bind_transceiver/3,
+         broadcast_sm/3,
+         cancel_broadcast_sm/3,
+         cancel_sm/3,
+         data_sm/3,
+         query_broadcast_sm/3,
+         query_sm/3,
+         replace_sm/3,
+         submit_multi/3,
+         submit_sm/3,
+         unbind/2,
          call/2, 
          call/3, 
          cast/2, 
@@ -215,9 +230,9 @@
 %%% Internal gen_esme_session exports
 %%%-------------------------------------------------------------------
 -export([handle_outbind/3, 
-		 handle_alert_notification/3, 
-		 handle_operation/3, 
-		 handle_unbind/3]).
+         handle_alert_notification/3, 
+         handle_operation/3, 
+         handle_unbind/3]).
 
 %%%-------------------------------------------------------------------
 %%% Internal gen_connection exports
@@ -232,11 +247,12 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, Timers, Sessions}
-%%    Mod           = atom()
-%%    ModState      = atom()
-%%    Timers        = #timers()
-%%    Sessions      = ets()
+%% %@spec {state, Mod, ModState, Timers, Listener, Sessions}
+%%    Mod      = atom()
+%%    ModState = atom()
+%%    Timers   = #timers()
+%%    Listener = pid()
+%%    Sessions = ets()
 %%
 %% %@doc Representation of the server's state.
 %%
@@ -244,17 +260,12 @@
 %%   <dt>Mod: </dt><dd>Callback module.</dd>
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
 %%   <dt>Timers: </dt><dd>SMPP timers.</dd>
+%%   <dt>Listener: </dt><dd>Pid of the listener process.</dd>
 %%   <dt>Sessions: </dt><dd>ETS table with the active sessions.</dd>
 %% </dl>
 %% %@end
--record(state, 
-		{mod, 
-		 mod_state, 
-		 timers, 
-		 listener, 
-		 rx_session, 
-		 tx_session, 
-		 sessions}).
+-record(state, {mod, mod_state, timers, listener, sessions}).
+
 
 %%%===================================================================
 %%% External functions
@@ -292,14 +303,14 @@ behaviour_info(_Other) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the SMSC server.
+%% @doc Starts the ESME server.
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
 %% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
 %% timers are OK for you.</p>
 %%
 %% @see gen_server:start/3
@@ -319,14 +330,14 @@ start(Module, Timers, Args, Options) ->
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
 %%
-%% @doc Starts the SMSC server.
+%% @doc Starts the ESME server.
 %%
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
 %% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
 %% timers are OK for you.</p>
 %%
 %% @see gen_server:start/4
@@ -344,14 +355,14 @@ start(ServerName, Module, Timers, Args, Options) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the SMSC server.
+%% @doc Starts the ESME server.
 %%
 %% <p><tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt> have the exact same
 %% meaning as in gen_server behavior.</p>
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
 %% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
 %% timers are OK for you.</p>
 %%
 %% @see gen_server:start_link/3
@@ -371,14 +382,14 @@ start_link(Module, Timers, Args, Options) ->
 %%    Pid        = pid()
 %%    Error      = {already_started, Pid} | term()
 %%
-%% @doc Starts the SMSC server.
+%% @doc Starts the ESME server.
 %%
 %% <p><tt>ServerName</tt>, <tt>Module</tt>, <tt>Args</tt> and <tt>Options</tt>
 %% have the exact same meaning as in gen_server behavior.</p>
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
 %% <a href="oserl.html">oserl.hrl</a>.  You may use the macro
-%% <tt>DEFAULT_SMPP_TIMERS()</tt> to define this parameter if default SMPP 
+%% <tt>DEFAULT_TIMERS()</tt> to define this parameter if default SMPP 
 %% timers are OK for you.</p>
 %%
 %% @see gen_server:start_link/4
@@ -395,10 +406,11 @@ start_link(ServerName, Module, Timers, Args, Options) ->
 %%    Node = atom()
 %%    Reason = term()
 %%
-%% @doc Puts the SMSC Server <tt>ServerRef</tt> to listen on 
+%% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on 
 %% <tt>DEFAULT_SMPP_PORT</tt>.
 %%
-%% <p>Returns <tt>true</tt> if success, <tt>false</tt> otherwise.</p>
+%% <p>By default only one connection is accepted, then the listen socket
+%% will be closed.</p>
 %%
 %% @see listen/2
 %% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, 1)
@@ -415,17 +427,61 @@ listen(ServerRef) ->
 %%    Count = int() | infinity
 %%    Reason = term()
 %%
-%% @doc Puts the SMSC Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
+%% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
 %%
-%% <p>Returns <tt>true</tt> if success, <tt>false</tt> otherwise.</p>
+%% <p><tt>Count</tt> connections are accepted.</p>
 %% @end 
 listen(ServerRef, Port, Count) ->
     gen_server:call(ServerRef, {listen, Port, Count}).
 
 
-%% @spec bind(ServerRef, Mode, ParamList) -> Result
+%% @spec close_listen(ServerRef) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%
+%% @doc Stops listening.
+%% @end 
+close_listen(ServerRef) ->
+    gen_server:cast(ServerRef, close_listen).
+
+
+%% @spec session(ServerRef, Address, Port) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%% @end 
+session(ServerRef, Address, Port) ->
+    gen_server:call(ServerRef, {session, Address, Port}, infinity).
+
+
+%% @spec close_session(ServerRef, Session) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
+%%
+%% @doc Closes the <tt>Session</tt>.
+%% @end 
+close_session(ServerRef, Session) ->
+    gen_server:cast(ServerRef, {close_session, Session}).
+
+
+%% @spec bind_receiver(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
-%%    Mode       = receiver | transmitter | transceiver
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -433,14 +489,18 @@ listen(ServerRef, Port, Count) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>bind_receiver</i> operation.
+%% @doc Issues a <i>bind_receiver</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-bind(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {bind, Mode, ParamList}).
+bind_receiver(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {bind_receiver, Session, ParamList}, infinity).
 
 
-%% @spec broadcast_sm(ServerRef, ParamList) -> Result
+%% @spec bind_transmitter(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -448,14 +508,18 @@ bind(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>broadcast_sm</i> operation.
+%% @doc Issues a <i>bind_transmitter</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-broadcast_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {broadcast_sm, ParamList}).
+bind_transmitter(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {bind_transmitter,Session,ParamList}, infinity).
 
 
-%% @spec cancel_broadcast_sm(ServerRef, ParamList) -> Result
+%% @spec bind_transceiver(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -463,14 +527,18 @@ broadcast_sm(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i></i> operation.
+%% @doc Issues a <i>bind_transceiver</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-cancel_broadcast_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {cancel_broadcast_sm, ParamList}).
+bind_transceiver(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {bind_transceiver,Session,ParamList}, infinity).
 
 
-%% @spec cancel_sm(ServerRef, ParamList) -> Result
+%% @spec broadcast_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -478,29 +546,18 @@ cancel_broadcast_sm(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i></i> operation.
+%% @doc Issues a <i>broadcast_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-cancel_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {cancel_sm, ParamList}).
+broadcast_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {broadcast_sm, Session, ParamList}, infinity).
 
 
-%% @spec data_sm(ServerRef, SystemId, ParamList) -> Result
-%%    Sid        = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
-%%
-%% @doc Issues a <i>data_sm</i> operation.
-%% @end
-data_sm(ServerRef, SystemId, ParamList) ->
-    gen_server:call(ServerRef, {data_sm, SystemId, ParamList}, infinity).
-
-
-%% @spec query_broadcast_sm(ServerRef, ParamList) -> Result
+%% @spec cancel_broadcast_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -508,14 +565,19 @@ data_sm(ServerRef, SystemId, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>query_broadcast_sm</i> operation.
+%% @doc Issues a <i>cancel_broadcast_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-query_broadcast_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {query_broadcast_sm, ParamList}).
+cancel_broadcast_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(
+      ServerRef, {cancel_broadcast_sm, Session, ParamList}, infinity).
 
 
-%% @spec query_sm(ServerRef, ParamList) -> Result
+%% @spec cancel_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -523,14 +585,37 @@ query_broadcast_sm(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>query_sm</i> operation.
+%% @doc Issues a <i>cancel_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-query_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {query_sm, ParamList}).
+cancel_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {cancel_sm, Session, ParamList}, infinity).
 
 
-%% @spec replace_sm(ServerRef, ParamList) -> Result
+%% @spec data_sm(ServerRef, Session, ParamList) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>data_sm</i> operation on the session identified by 
+%% <tt>Session</tt>.
+%% @end
+data_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {data_sm, Session, ParamList}, infinity).
+
+
+%% @spec query_broadcast_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -538,14 +623,19 @@ query_sm(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>replace_sm</i> operation.
+%% @doc Issues a <i>query_broadcast_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-replace_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {replace_sm, ParamList}).
+query_broadcast_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(
+      ServerRef, {query_broadcast_sm, Session, ParamList}, infinity).
 
 
-%% @spec submit_multi(ServerRef, ParamList) -> Result
+%% @spec query_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -553,14 +643,18 @@ replace_sm(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>submit_multi</i> operation.
+%% @doc Issues a <i>query_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-submit_multi(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {submit_multi, ParamList}).
+query_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {query_sm, Session, ParamList}, infinity).
 
 
-%% @spec submit_sm(ServerRef, ParamList) -> Result
+%% @spec replace_sm(ServerRef, Session, ParamList) -> Result
 %%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
@@ -568,23 +662,65 @@ submit_multi(ServerRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>submit_sm</i> operation.
+%% @doc Issues a <i>replace_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
 %% @end
-submit_sm(ServerRef, ParamList) ->
-    gen_server:cast(ServerRef, {submit_sm, ParamList}).
+replace_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {replace_sm, Session, ParamList}, infinity).
 
 
-%% @spec unbind(ServerRef, SystemId, BoundAs) -> Result
-%%    Sid     = atom()
+%% @spec submit_multi(ServerRef, Session, ParamList) -> Result
+%%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>submit_multi</i> operation on the session 
+%% identified by <tt>Session</tt>.
+%% @end
+submit_multi(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {submit_multi, Session, ParamList}, infinity).
+
+
+%% @spec submit_sm(ServerRef, Session, ParamList) -> Result
+%%    ServerRef  = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>submit_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
+%% @end
+submit_sm(ServerRef, Session, ParamList) ->
+    gen_server:call(ServerRef, {submit_sm, Session, ParamList}, infinity).
+
+
+%% @spec unbind(ServerRef, Session) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Session = pid()
 %%    Result  = {ok, PduResp} | {error, Error}
 %%    PduResp = pdu()
 %%    Error   = int()
 %%
-%% @doc Issues an unbind operation on the session identified by <tt>Sid
-%% </tt>.
+%% @doc Issues an <i>unbind</i> operation on the session identified by 
+%% <tt>Session</tt>.
 %% @end
-unbind(ServerRef, Mode) ->
-    gen_server:call(ServerRef, {unbind, Mode}, infinity).
+unbind(ServerRef, Session) ->
+    gen_server:call(ServerRef, {unbind_session, Session}, infinity).
 
 
 %% @spec call(ServerRef, Request) -> Reply
@@ -660,12 +796,16 @@ reply(Client, Reply) ->
 %%    Timeout = int() | infinity
 %%    Reason  = term()
 %%
-%% @doc Initiates the server
+%% @doc <a href="gen_server.html#init-1">gen_server - 
+%% init/1</a> callback implementation.
+%%
+%% <p>Initiates the server.</p>
+%% @end
 init({Mod, Timers, Args}) ->
-	S = #state{mod = Mod, 
-			   timers = Timers, 
-			   listener = closed, 
-			   sessions = ets:new(sessions,[])},},
+    S = #state{mod      = Mod, 
+               timers   = Timers, 
+               listener = closed,
+               sessions = ets:new(sessions,[])},
     process_flag(trap_exit, true),
     pack(Mod:init(Args), S).
 
@@ -685,7 +825,10 @@ init({Mod, Timers, Args}) ->
 %%    Timeout   = int() | infinity
 %%    Reason    = term()
 %%
-%% @doc Handling call messages.
+%% @doc <a href="gen_server.html#handle_call-3">gen_server - 
+%% handle_call/3</a> callback implementation.
+%% 
+%% <p>Handling call messages.</p>
 %%
 %% <ul>
 %%   <li>On <tt>{stop, Reason, Reply, NewState}</tt>
@@ -698,100 +841,47 @@ init({Mod, Timers, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({accept, Conn, _Socket}, _From, S) ->
+handle_call({accept, Conn, _Socket}, From, S) ->
     case gen_esme_session:start_link(?MODULE, Conn, S#state.timers) of
         {ok, Session} ->
-            % The SMSC system_id is still undefined
-            ets:insert(S#state.sessions, {Session, undefined}),
+            ets:insert(S#state.sessions, {Session}),
             {reply, {ok, Session}, S};
         _Error ->
             {reply, error, S}
     end;
-handle_call({listen, Port, Count}, _From, S) ->
+handle_call({listen, Port, Count}, From, S) ->
     case gen_connection:start_listen(?MODULE, ?SESSION_MODULE, Port, Count) of
         {ok, Listener} ->
             {reply, ok, S#state{listener = Listener}};
         Error ->
             {reply, Error, S}
     end;
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% Peer requests
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-handle_call({outbind, Pdu} = R, {Session, _Tag} = From, S) ->
-    SystemId = operation:get_param(system_id, Pdu),
-	Request  = {outbind, SystemId, Pdu},
-    ets:delete(S#state.sessions, Session),
-    ets:insert(S#state.sessions, {Session, SystemId}),
-    pack((S#state.mod):handle_outbind(Request, From, S#state.mod_state), S);
-handle_call({alert_notification, Pdu} = R, From, S) ->
-    pack((S#state.mod):handle_alert_notification(R,From,S#state.mod_state), S);
-handle_call({unbind, Pdu}, {Trx,_} = From, S) when Trx == S#state.rx_session, 
-												   Trx == S#state.tx_session ->
-	pack((S#state.mod):handle_unbind({trx, Pdu}, From, S#state.mod_state), S);
-handle_call({unbind, Pdu}, {Rx, _} = From, S) when Rx == S#state.rx_session ->
-	pack((S#state.mod):handle_unbind({rx, Pdu}, From, S#state.mod_state), S);
-handle_call({unbind, Pdu}, {Tx, _} = From, S) when Tx == S#state.tx_session ->
-	pack((S#state.mod):handle_unbind({tx, Pdu}, From, S#state.mod_state), S);
-handle_call({CmdName, Pdu} = R, From, S) ->
-	pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S);
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-% Self requests
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-         bind/3,
-         broadcast_sm/2,
-         cancel_broadcast_sm/2,
-         cancel_sm/2,
-         data_sm/2,
-         query_broadcast_sm/2,
-         query_sm/2,
-         replace_sm/2,
-         submit_multi/2,
-         submit_sm/2,
-         unbind/3,
-
-
-
-handle_call({bind, BoundAs, ParamList}, From, S) ->
-	case ets:match(S#state.sessions, {'$1', BoundAs}, 1) of
-		{[[Session]], _Continuation} ->
-			Reply = gen_smsc_session:alert_notification(Session, ParamList),
-			{reply, Reply, S};
-		_Otherwise ->  
-			{reply, {error, system_id}, S}
-	end;
-handle_call({outbind, Addr, Port, ParamList}, _From, S) ->
-	% This shoud be asynchronous.
-	case gen_connection:start_connect(?SESSION_MODULE, Addr, Port) of
-		{ok, Conn} ->
-			case gen_smsc_session:start_link(?MODULE, Conn, S#state.timers) of
-				{ok, Session} ->
-                    % The system_id and bound state of the session are 
-					% still undefined
-					ets:insert(S#state.sessions,{Session,undefined,undefined}),
-					Reply = gen_smsc_session:outbind(Session, ParamList),
-					{reply, Reply, S};
-				SessionError ->
-					{reply, SessionError, S}
-			end;
-		ConnectError ->
-			{reply, ConnectError, S}
-	end;
-handle_call({unbind, SystemId, BoundAs}, From, S) ->
-	case ets:match(S#state.sessions, {'$1', SystemId, BoundAs}, 1) of
-		{[[Session]], _Continuation} ->
-			unbind(Session, From),
-			{noreply, S};
-		_Otherwise ->
-			{reply, {error, system_id}, S}
-	end;
-handle_call({CmdName, SystemId, ParamList}, From, S) ->
-	case ets:match(S#state.sessions, {'$1', SystemId, '_'}, 1) of
-		{[[Session]], _Continuation} ->
-			operation(CmdName, Session, ParamList, From),
-			{noreply, S};
-		_Otherwise ->
-			{reply, {error, system_id}, S}
-	end.
+handle_call({session, Address, Port}, From, S) ->
+    case gen_connection:start_connect(?SESSION_MODULE, Address, Port) of
+        {ok, Conn} ->
+            % If the connection fails in the meanwhile and undesired exit
+            % is received by handle_info
+            case gen_esme_session:start_link(?MODULE, Conn, S#state.timers) of
+                {ok, Session} ->
+                    gen_connection:controlling_process(Conn, Session),
+                    ets:insert(S#state.sessions, {Session}),
+                    {reply, {ok, Session}, S};
+                SessionError ->
+                    {reply, SessionError, S}
+            end;
+        ConnectError ->
+            {reply, ConnectError, S}
+    end;
+handle_call({unbind_session, Session}, From, S) ->
+    spawn_link(fun() -> unbind_session(Session, From) end),
+    {noreply, S};
+handle_call({CmdName, Session, ParamList}, From, S) when list(ParamList) ->
+    spawn_link(fun() -> operation(CmdName, Session, ParamList, From) end),
+    {noreply, S};
+handle_call({unbind, Session, Pdu} = R, From, S) ->
+    pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
+handle_call({CmdName, Session, Pdu} = R, From, S) ->
+    pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
 
 
 %% @spec handle_cast(Request, State) -> Result
@@ -803,7 +893,10 @@ handle_call({CmdName, SystemId, ParamList}, From, S) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc Handling cast messages.
+%% @doc <a href="gen_server.html#handle_cast-2">gen_server - 
+%% handle_cast/2</a> callback implementation.
+%%
+%% <p>Handling cast messages.</p>
 %%
 %% <ul>
 %%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
@@ -812,7 +905,19 @@ handle_call({CmdName, SystemId, ParamList}, From, S) ->
 %% @see terminate/2
 %% @end
 handle_cast({cast, Request}, S) ->
-    pack((S#state.mod):handle_cast(Request, S#state.mod_state), S).
+    pack((S#state.mod):handle_cast(Request, S#state.mod_state), S);
+handle_cast({outbind, Session, Pdu} = R, S) ->
+    pack((S#state.mod):handle_outbind(R, S#state.mod_state), S);
+handle_cast({alert_notification, Session, Pdu} = R, S) ->
+    pack((S#state.mod):handle_alert_notification(R, S#state.mod_state), S);
+handle_cast(close_listen, S) ->
+    % Cleaning is done in handle_info upon trap exit
+    gen_connection:stop(S#state.listener),
+    {noreply, S};
+handle_cast({close_session, Session}, S) ->
+    % Cleaning is done by handle_info upon trap exit
+    gen_esme_session:stop(Session),
+    {noreply, S}.
 
 
 %% @spec handle_info(Info, State) -> Result
@@ -825,7 +930,10 @@ handle_cast({cast, Request}, S) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc Handling all non call/cast messages
+%% @doc <a href="gen_server.html#handle_info-2">gen_server - 
+%% handle_info/2</a> callback implementation.
+%%
+%% <p>Handling all non call/cast messages.</p>
 %%
 %% <ul>
 %%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
@@ -833,39 +941,31 @@ handle_cast({cast, Request}, S) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info({'EXIT', Child, normal}, S) when Child == S#state.listener ->
+handle_info({'EXIT', P, normal}, S) when P == S#state.listener ->
     % The listener terminates with normal status.
-	{noreply, S#state{listener = closed}};
-handle_info({'EXIT', Child, Reason}, S) when Child == S#state.listener ->
+    {noreply, S#state{listener = closed}};
+handle_info({'EXIT', P, Reason}, S) when P == S#state.listener ->
     % The listener terminates on error.
-	NewS = S#state{listener = closed},
-	pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
-handle_info({'EXIT', Child, normal}, S) when Child == S#state.rx_session,
-											 Child == S#state.tx_session ->
-    % The trx_session process terminates with normal status.
-	{noreply, S#state{rx_session = undefined, tx_session = undefined}};
-handle_info({'EXIT', Child, Reason}, S) when Child == S#state.rx_session,
-											 Child == S#state.tx_session ->
-    % The trx_session process terminates on error.
-	NewS = S#state{rx_session = undefined, tx_session = undefined},
-    pack((NewS#state.mod):handle_session_failure(
-		   transceiver, NewS#state.mod_state), NewS);
-handle_info({'EXIT', Child, normal}, S) when Child == S#state.rx_session ->
-    % The rx_session process terminates with normal status.
-	{noreply, S#state{rx_session = undefined}};
-handle_info({'EXIT', Child, Reason}, S) when Child == S#state.rx_session ->
-    % The rx_session process terminates on error.
-	NewS = S#state{rx_session = undefined},
-    pack((NewS#state.mod):handle_session_failure(
-		   receiver, NewS#state.mod_state), NewS);
-handle_info({'EXIT', Child, normal}, S) when Child == S#state.tx_session ->
-    % The tx_session process terminates with normal status.
-	{noreply, S#state{tx_session = undefined}};
-handle_info({'EXIT', Child, Reason}, S) when Child == S#state.tx_session ->
-    % The tx_session process terminates on error.
-	NewS = S#state{tx_session = undefined},
-    pack((NewS#state.mod):handle_session_failure(
-		   transmitter, NewS#state.mod_state), NewS);
+    NewS = S#state{listener = closed},
+    pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
+handle_info({'EXIT', P, normal} = Info, S) ->
+    % Child process P terminates with normal status.
+    case ets:member(S#state.sessions, P) of
+        true ->
+            ets:delete(S#state.sessions, P),
+            {noreply, S};
+        false ->
+            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
+    end;
+handle_info({'EXIT', P, Reason} = Info, S) ->
+    % Child process P terminates on error.
+    case ets:member(S#state.sessions, P) of
+        true ->
+            ets:delete(S#state.sessions, P),
+            pack((S#state.mod):handle_session_failure(P,S#state.mod_state), S);
+        false ->
+            pack((S#state.mod):handle_info(Info, S#state.mod_state), S)
+    end;
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
@@ -874,12 +974,15 @@ handle_info(Info, S) ->
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
 %%
-%% @doc Shutdown the server.
+%% @doc <a href="gen_server.html#terminate-2">gen_server - 
+%% terminate/2</a> callback implementation.
+%%
+%% <p>Shutdown the server.</p>
 %%
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(Reason, S) ->
-	io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), Reason]),
+    io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), Reason]),
     pack((S#state.mod):terminate(Reason, S#state.mod_state), S).
 
 
@@ -898,62 +1001,58 @@ code_change(OldVsn, S, Extra) ->
 %%%===================================================================
 %%% ESME Session functions
 %%%===================================================================
-%% @spec handle_outbind(ESME, Pdu) -> ok
+%% @spec handle_outbind(ESME, Session, Pdu) -> ok
 %%    ESME = pid()
-%%    Pdu  = pdu()
+%%    Session = pid()
+%%    Pdu = pdu()
 %%
-%% @doc <a href="gen_esme_session.html#handle_outbind-2">gen_esme_session - 
-%% handle_outbind/2</a> callback implementation.
+%% @doc <a href="gen_esme_session.html#handle_outbind-3">gen_esme_session - 
+%% handle_outbind/3</a> callback implementation.
 %% @end
-handle_outbind(ESME, Pdu) ->
-    gen_server:call(ESME, {outbind, Pdu}, infinity).
+handle_outbind(ESME, Session, Pdu) ->
+    gen_server:cast(ESME, {outbind, Session, Pdu}).
 
 
-%% @spec handle_alert_notification(ESME, Pdu) -> ok
+%% @spec handle_alert_notification(ESME, Session, Pdu) -> ok
 %%    ESME = pid()
-%%    Pdu  = pdu()
+%%    Session = pid()
+%%    Pdu = pdu()
 %%
-%% @doc <a href="gen_esme_session.html#handle_alert_notification-2">
-%% gen_esme_session - handle_alert_notification/2</a> callback implementation.
+%% @doc <a href="gen_esme_session.html#handle_alert_notification-3">
+%% gen_esme_session - handle_alert_notification/3</a> callback implementation.
 %% @end
-handle_alert_notification(ESME, Pdu) ->
-    gen_server:call(ESME, {alert_notification, Pdu}, infinity).
+handle_alert_notification(ESME, Session, Pdu) ->
+    gen_server:cast(ESME, {alert_notification, Session, Pdu}).
 
 
-%% @spec handle_operation(ESME, CmdName, Pdu) -> Result
+%% @spec handle_operation(ESME, Session, {CmdName, Pdu}) -> Result
 %%    ESME = pid()
-%%    CmdName = broadcast_sm |
-%%              cancel_broadcast_sm |
-%%              cancel_sm |
-%%              query_broadcast_sm |
-%%              query_sm |
-%%              replace_sm |
-%%              submit_multi |
-%%              submit_sm |
-%%              data_sm
+%%    Session = pid()
+%%    CmdName = data_sm | deliver_sm
 %%    Pdu = pdu()
 %%    Result = {ok, ParamList} | {error, Error, ParamList}
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
 %%    ParamValue = term()
 %%
-%% @doc <a href="gen_smsc_session.html#handle_operation-3">gen_smsc_session - 
+%% @doc <a href="gen_esme_session.html#handle_operation-3">gen_esme_session - 
 %% handle_operation/3</a> callback implementation.
 %% @end
-handle_operation(ESME, CmdName, Pdu) ->
-    gen_server:call(ESME, {CmdName, Pdu}, infinity).
+handle_operation(ESME, Session, {CmdName, Pdu}) ->
+    gen_server:call(ESME, {CmdName, Session, Pdu}, infinity).
 
 
-%% @spec handle_unbind(ESME, Pdu) -> ok | {error, Error}
+%% @spec handle_unbind(ESME, Session, Pdu) -> ok | {error, Error}
 %%    ESME = pid()
+%%    Session = pid()
 %%    Pdu = pdu()
 %%    Error = int()
 %%
-%% @doc <a href="gen_smsc_session.html#handle_unbind-2">gen_smsc_session - 
-%% handle_unbind/2</a> callback implementation.
+%% @doc <a href="gen_esme_session.html#handle_unbind-3">gen_esme_session - 
+%% handle_unbind/3</a> callback implementation.
 %% @end
-handle_unbind(ESME, Pdu) ->
-    gen_server:call(ESME, {unbind, Pdu}, infinity).
+handle_unbind(ESME, Session, Pdu) ->
+    gen_server:call(ESME, {unbind, Session, Pdu}, infinity).
 
 
 %%%===================================================================
@@ -992,25 +1091,17 @@ handle_input(_Owner, _Conn, _Input, _Lapse) ->
 %% @doc Issues a SMPP operation on the given <tt>Session</tt>.
 %% @end 
 operation(CmdName, Session, ParamList, From) ->
-	F = fun() ->
-				Reply = gen_smsc_session:CmdName(Session, ParamList),
-				gen_server:reply(From, Reply)
-		end,
-	spawn_link(fun() -> F() end),
-	true.
+    Reply = gen_esme_session:CmdName(Session, ParamList),
+    gen_server:reply(From, Reply).
 
 
 %% @spec unbind(CmdName, Session, ParamList, From) -> true
 %%
 %% @doc Issues an <i>unbind</i> on the given <tt>Session</tt>.
 %% @end 
-unbind(Session, From) ->
-	F = fun() ->
-				Reply = gen_smsc_session:unbind(Session),
-				gen_server:reply(From, Reply)
-		end,
-	spawn_link(fun() -> F() end),
-	true.
+unbind_session(Session, From) ->
+    Reply = gen_esme_session:unbind(Session),
+    gen_server:reply(From, Reply).
 
 
 %% @spec pack(CallbackReply, State) -> Reply

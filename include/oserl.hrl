@@ -37,7 +37,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 %% Timers
--define(DEFAULT_SMPP_TIMERS, #timers{}).
+-define(DEFAULT_TIMERS, #timers{}).
 
 -define(TIMERS(STime, ETime, ITime, RTime, RetryT),
         #timers{session_init_time = STime,

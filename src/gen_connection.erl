@@ -414,7 +414,7 @@ handle_call({spawn_accept, Socket}, From, S) ->
             case (S#state.mod):handle_accept(S#state.owner, Pid, Socket) of
                 {ok, NewOwner} ->
                     % Transfer the control of the new connection to NewOwner. 
-                    controlling_process(Pid, NewOwner),
+                    gen_connection:controlling_process(Pid, NewOwner),
                     {reply, {ok, Pid}, S};
                 _Reject ->
                     % The socket will be closed, but don't need (want) to get
@@ -429,6 +429,7 @@ handle_call({spawn_accept, Socket}, From, S) ->
     end;
 handle_call({owner, NewOwner}, {Owner, _Tag}, #state{owner = Owner} = S) ->
     % %@see TODOs
+	io:format("Changing the owner ~p -> ~p~n", [Owner, NewOwner]),
     link(NewOwner),
     unlink(Owner),
     {reply, ok, S#state{owner = NewOwner}};

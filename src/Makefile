@@ -114,7 +114,7 @@ $(EBIN)/operation.beam:../include/smpp_base.hrl
 $(EBIN)/operation.beam:../include/smpp_param.hrl
 $(EBIN)/operation.beam:../include/smpp_pdu.hrl
 $(EBIN)/gen_esme_session.beam:../include/smpp_globals.hrl
-$(EBIN)/gen_esme_session.beam:../include/gen_esme_session.hrl
+$(EBIN)/gen_esme_session.beam:../include/oserl.hrl
 $(EBIN)/gen_esme.beam:../include/smpp_globals.hrl
 $(EBIN)/gen_esme.beam:../include/smpp_base.hrl
-$(EBIN)/gen_esme.beam:../include/gen_esme.hrl
+$(EBIN)/gen_esme.beam:../include/oserl.hrl

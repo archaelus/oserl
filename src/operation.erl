@@ -49,6 +49,9 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%%
+%%% <h2>Changes 0.2 -&gt; 1.0</h2>
+%%%
 %%% [10 Jun 2004]
 %%%
 %%% <ul>
@@ -76,8 +79,8 @@
 %%%
 %%% @copyright 2003 - 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 0.2 alpha, {24 May 2003} {@time}.
+%%%         [http://oserl.sourceforge.net/]
+%%% @version 1.0, {24 May 2003} {@time}.
 %%% @end
 -module(operation).
 

@@ -171,20 +171,9 @@
 %%% process id.</p>
 %%%
 %%%
-%%% <h2>Used modules</h2>
-%%%
-%%% <ul>
-%%%   <li>gen_fsm</li>
-%%%   <li>ets</li>
-%%%   <li>gen_connection</li>
-%%%   <li>my_calendar</li>
-%%%   <li>operation</li>
-%%% <ul>
-%%%
-%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
+%%%         [http://oserl.sourceforge.net/]
 %%% @version 1.1, {07 June 2004} {@time}.
 %%% @end
 %%%
@@ -197,6 +186,7 @@
 %%% undefined)
 %%%
 %%% %@TODO Review timers.  What if the enquire_link doesn't receive a response?
+%%% Crash the session?
 -module(gen_esme_session).
 
 -behaviour(gen_fsm).
@@ -261,7 +251,6 @@
 -define(SERVER, ?MODULE).
 
 % Bound state for a given command_id
-% ***COMMENT OUT*** this line to regerate edocs. Don't know why ???
 -define(BOUND(B), if 
                       B == ?COMMAND_ID_BIND_RECEIVER_RESP    -> bound_rx;
                       B == ?COMMAND_ID_BIND_TRANSMITTER_RESP -> bound_tx;
@@ -415,7 +404,7 @@ behaviour_info(_Other) ->
 %% @spec start(Mod, Socket, Timers) -> Result
 %%    Mod    = atom()
 %%    Socket = socket()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -469,7 +458,7 @@ start(Name, Mod, Socket, Timers) ->
 %% @spec start_link(Mod, Socket, Timers) -> Result
 %%    Mod    = atom()
 %%    Socket   = socket()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
@@ -1050,7 +1039,12 @@ unbound(R, S) ->
 %% <p>Sends the corresponding response with a <tt>?ESME_RINVBNDSTS</tt>
 %% status.</p>
 %%
-%% @see open/2, outbound/2, bound_rx/2, bound_tx/2, bound_trx/2 and unbound/2
+%% @see open/2
+%% @see outbound/2
+%% @see bound_rx/2
+%% @see bound_tx/2
+%% @see bound_trx/2
+%% @see unbound/2
 %% @end 
 esme_rinvbndsts_resp({CmdId, Pdu}, Socket) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
@@ -1364,10 +1358,10 @@ handle_event({input, BinaryPdu, Lapse, Index} = E, StateName, StateData) ->
             {next_state, StateName, StateData}
     end;
 handle_event({recv_error, _Error}, unbound, StateData) ->
-    io:format("Underlying connection closed while ~p~n", [unbound]),
+%    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
 handle_event({recv_error, _Error} = R, StateName, StateData) ->
-    io:format("Underlying connection closed while ~p~n", [StateName]),
+%    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};
 handle_event(die, StateName, StateData) ->
     {stop, normal, StateData}.
@@ -1509,7 +1503,7 @@ handle_info(Info, StateName, StateData) ->
 %% <p>Return value is ignored by the server.</p>
 %% @end
 terminate(R, _N, S) when S#state.socket == closed; R == kill ->
-    io:format("*** gen_esme_session terminating: ~p - ~p ***~n", [self(), R]),
+%    io:format("*** gen_esme_session terminating: ~p - ~p ***~n", [self(), R]),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
             unregister(Name);
@@ -1544,7 +1538,7 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %%    CmdId = int()
 %%    Pdu   = pdu()
 %%    Self  = pid()
-%%    State = #state()
+%%    State = state()
 %%
 %% @doc Handles <i>outbind</i> requests from the peer SMSC.
 %%
@@ -1562,7 +1556,7 @@ handle_peer_outbind({?COMMAND_ID_OUTBIND, Pdu}, Self, S) ->
 %%    CmdId = int()
 %%    Pdu   = pdu()
 %%    Self  = pid()
-%%    State = #state()
+%%    State = state()
 %%
 %% @doc Handles <i>alert_notification</i> requests from the peer SMSC.  
 %%
@@ -1580,7 +1574,7 @@ handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
 %%    CmdId = atom()
 %%    Pdu   = pdu()
 %%    Self  = pid()
-%%    State = #state()
+%%    State = state()
 %%
 %% @doc Handles SMPP operations from the peer SMSC.
 %%
@@ -1611,7 +1605,7 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 %%    CmdId = int()
 %%    Pdu   = pdu()
 %%    Self  = pid()
-%%    State = #state()
+%%    State = state()
 %%
 %%
 %% @doc Handles <i>unbind</i> requests from the peer SMSC.
@@ -1649,7 +1643,6 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
 %%
 %% @doc Send a SMPP request given the command PDU.  <tt>From</tt> represents
 %% the caller issuing the request (might be the atom <tt>undefined</tt>).
-%% </p>
 %%
 %% <p>This function spawns a request broker that waits for the response.</p>
 %%
@@ -1762,9 +1755,10 @@ request_broker(Caller, CmdId, Time) ->
     end.
 
 
-%% @spec wait_recv(FsmRef, Socket) -> void()
-%%    FsmRef   = pid()
+%% @spec wait_recv(FsmRef, Socket, Buffer) -> void()
+%%    FsmRef = pid()
 %%    Socket = socket()
+%%    Buffer = binary()
 %%
 %% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
 %% receive loop to get bulk input.  All data received on the same loop triggers

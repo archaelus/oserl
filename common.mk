@@ -2,7 +2,7 @@
 # Common Macros
 # ----------------------------------------------------
 APPNAME = oserl
-VSN = 1.0
+VSN = 1.1
 
 # FIXME These variables should be automatically set when compiling
 ERL = erl

@@ -1,4 +1,4 @@
-changes.txt - OSERL Version 1.0                              May 17, 2004
+changes.txt - OSERL Version 1.1                              Jul 10, 2004
 
                     http://sourceforge.net/projects/oserl/
 
@@ -33,6 +33,8 @@ Contents
 2.1  smpp_globals.hrl
 2.2  gen_esme_session.erl
 2.3  operation.erl
+
+3.   Changes 1.0 -> 1.1
 
 ---
 
@@ -201,6 +203,11 @@ How these changes affected individual files is described below.
 
 - Now shipped under the GNU Lesser General Public License.
 - gen_esme.hrl and gen_esme_session.hrl replaced by oserl.hrl
+- gen_smsc and gen_smsc_session behaviors implemented.
+- gen_connection completely redesigned.
+- gen_esme_session and changed to adopt the new design of gen_connection.
+- gen_esme acts now as an extended gen_server. There's no need to implement 
+  several behaviors separately.
 
 How these changes affected individual files is described below.
 
@@ -233,3 +240,10 @@ How these changes affected individual files is described below.
   new/4.
 - request_command_id/1 and response_command_id/1 redefined as macros in 
   smpp_globals.hrl.
+
+
+3.   Changes 1.0 -> 1.1
+
+- gen_connection removed.
+- gen_esme and gen_smsc redesigned.
+- gen_esme_session and gen_smsc_session redesigned.

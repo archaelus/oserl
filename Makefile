@@ -37,31 +37,6 @@ debug:
 	  	(cd $$d; $(MAKE) DEBUG=-Ddebug=1); \
 	done
 
-#all: $(addsuffix /all,$(SUB_DIRECTORIES));
-
-
-#$(SUB_DIRECTORIES):
-#	$(MAKE) -C $@
-
-
-#docs: $(addsuffix /doc,$(SUB_DIRECTORIES));
-
-
-#clean: $(addsuffix /clean,$(SUB_DIRECTORIES));
-
-
-#realclean: $(addsuffix /realclean,$(SUB_DIRECTORIES));
-
-
-#debug: PASS=DEBUG=-Ddebug=1
-
-#debug: $(addsuffix /debug,$(SUB_DIRECTORIES));
-
-
-#$(addsuffix /%,$(SUB_DIRECTORIES)):
-#	$(MAKE) -C $(@D) $(@F) $(PASS)
-
-
 release:
 	mkdir $(BASE_REL)
 	cp -p $(OTHER_FILES) $(BASE_REL)

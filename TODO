@@ -1,4 +1,4 @@
-TODO - OSERL Version 0.2                                     March 01, 2004
+TODO - OSERL Version 1.1                                     Jul 10, 2004
 
                     http://sourceforge.net/projects/oserl/
 
@@ -7,22 +7,21 @@ TODO - OSERL Version 0.2                                     March 01, 2004
 
 Contents
 
-1. Version 1.0
-2. Version 2.0
+1. Version 1.2
 
 
 ---
 
-1. Version 1.0
+1. Version 1.2
 
-- Implement a gen_mc_session behavior.
+- gen_esme_session and gen_smsc_session are almost identical.
 
-- Implement a gen_mc behavior.
+  Implement a gen_session to hold code common to gen_esme_session and
+  gen_smsc_session
 
+- gen_esme and gen_smsc are almost identical.
 
-2. Version 2.0
+  Implement a gen_peer to hold code common to gen_esme and 
+  gen_smsc
 
-- Implement a gen_re behavior.
-
-
-
+- Review timers.

@@ -54,6 +54,16 @@
 %%% </ul>
 %%%
 %%%
+%%% <h2>Changes 1.0 -&gt; 1.1</h2>
+%%%
+%%% [5 Jul 2004]
+%%% 
+%%% <ul>
+%%%   <li>DEFAULT_SMPP_PORT macro moved to <tt>oserl.hrl</tt>.</li>
+%%%   <li>Timers moved to <tt>oserl.hrl</tt>.</li>
+%%% </ul>
+%%%
+%%%
 %%% <h2>References</h2>
 %%% <dl>
 %%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
@@ -64,8 +74,8 @@
 %%%
 %%% @copyright 2003 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 0.1 alpha, {27 Apr 2003} {@time}.
+%%%         [http://oserl.sourceforge.net/]
+%%% @version 1.1, {27 Apr 2003} {@time}.
 %%% @end
 
 -ifndef(smpp_globals).

@@ -57,6 +57,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
+-define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
 
 %%%-------------------------------------------------------------------
@@ -96,7 +97,7 @@ start_link() ->
 %%
 %% @see handle_call/3
 %%
-%% @equiv gen_esme:call(?SERVER, die, 10000).
+%% @equiv gen_esme:call(SERVER, die, 10000)
 %% @end
 stop() ->
     gen_esme:call(?SERVER, die, 10000).
@@ -302,7 +303,7 @@ handle_call(die, _From, State) ->
 %% <p>Handling cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2
@@ -326,7 +327,7 @@ handle_cast(Request, State) ->
 %% <p>Handling all non call/cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2

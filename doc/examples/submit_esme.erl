@@ -101,7 +101,7 @@ start_link() ->
 %% <tt>MobileNumber</tt>.
 %% @end
 submit_sm(MobileNumber, UserMessage) ->
-    gen_esme:call(?SERVER, {submit_sm, MobileNumber, UserMessage}).
+    gen_esme:call(?SERVER, {submit_sm, MobileNumber, UserMessage}, infinity).
 
 
 %% @spec stop() -> ok
@@ -110,7 +110,7 @@ submit_sm(MobileNumber, UserMessage) ->
 %%
 %% @see handle_call/3
 %%
-%% @equiv gen_esme:call(?SERVER, die, 10000).
+%% @equiv gen_esme:call(SERVER, die, 10000)
 %% @end
 stop() ->
     gen_esme:call(?SERVER, die, 10000).
@@ -446,7 +446,7 @@ handle_call(die, _From, State) ->
 %% <p>Handling cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2
@@ -470,7 +470,7 @@ handle_cast(Request, State) ->
 %% <p>Handling all non call/cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2
@@ -490,9 +490,11 @@ handle_info(Info, State) ->
 %%
 %% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
 %% @end
-terminate(Reason, State) ->
-    % You may stop sessions and issue unbind requests here.
-    ok.
+terminate(kill, S) ->
+    ok;
+terminate(Reason, S) ->
+    catch gen_smsc:unbind(S#state.tx_session),
+    catch gen_smsc:session_stop(S#state.tx_session).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}

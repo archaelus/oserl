@@ -41,6 +41,7 @@
       <li><a href="#changes0_2-1_0-operation-erl">operation.erl</a></li>
     </ol>
   </li>
+  <li><a href="#changes0_2-1_0">Changes 1.0 -> 1.1</a></li>
 </ol>
 
 <h2><a name="changes0_1-0_2">Changes 0.1 -> 0.2</a></h2>
@@ -310,6 +311,18 @@
   <li><i>gen_esme.hrl</i> and <i>gen_esme_session.hrl</i> replaced by 
     <i>oserl.hrl</i>.
   </li>
+  <li><a href="gen_smsc.html">gen_smsc</a> and <a href="gen_smsc_session.html">
+    gen_smsc_session</a> behaviors implemented.
+  </li>
+  <li><a href="gen_connection.html">gen_connection</a> completely redesigned.
+  </li>
+  <li><a href="gen_esme_session.html">gen_esme_session</a> and 
+    changed to adopt the new design of 
+    <a href="gen_connection.html">gen_connection</a>.
+  </li>
+  <li><a href="gen_esme.html">gen_esme</a> acts now as an <i>extended 
+    gen_server</i>. There's no need to implement several behaviors separately.
+  </li>
 </ul>
 
 <p>How these changes affected individual files is described below.</p>
@@ -344,6 +357,7 @@
     with an <i>unbind_resp</i> (due to a bug, a <i>generic_nack</i> was
     issued on previous versions.
   </li>
+  <li>Uses the new <a href="gen_connection.html">gen_connection</a>.</li>
 </ul>
 
 
@@ -355,14 +369,28 @@
   <li><tt>unpack_mc/1</tt> is now called 
     <a href="#unpack_smsc-1">unpack_smsc/1</a>.
   </li>
-  <li><tt>new_xxx/2</tt> and <tt>new_xxx/3</tt> functions removed.  See
-    generic functions <a href="#new-3">new/3</a> and <a href="#new-4">new/4</a>
-    below.
+  <li><tt>new_xxx/2</tt> and <tt>new_xxx/3</tt> functions removed.  Refer to
+    generic functions <a href="#new-3">new/3</a> and <a href="#new-4">new/4
+    </a>.
   </li>
   <li><tt>request_command_id/1</tt> and <tt>response_command_id/1</tt> 
     redefined as macros in <a href="smpp_globals.html">smpp_globals.hrl</a>.
   </li>
 </ul>
+
+
+<h2><a name="changes1_0-1_1">Changes 1.0 -> 1.1</a></h2>
+
+<ul>
+  <li><a href="gen_connection.html">gen_connection</a> removed.</li>
+  <li><a href="gen_esme.html">gen_esme</a> and <a href="gen_smsc.html">gen_smsc
+    </a> redesigned.
+  </li>
+  <li><a href="gen_esme_session.html">gen_esme_session</a> and 
+    <a href="gen_smsc_session.html">gen_smsc_session</a> redesigned.
+  </li>
+</ul>
+
 
 </body>
 </html>

@@ -185,20 +185,9 @@
 %%% session id.</p>
 %%%
 %%%
-%%% <h2>Used modules</h2>
-%%%
-%%% <ul>
-%%%   <li>gen_fsm</li>
-%%%   <li>ets</li>
-%%%   <li>gen_connection</li>
-%%%   <li>my_calendar</li>
-%%%   <li>operation</li>
-%%% </ul>
-%%%
-%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
+%%%         [http://oserl.sourceforge.net/]
 %%% @version 1.1, {07 June 2004} {@time}.
 %%% @end
 %%%
@@ -267,7 +256,6 @@
 -define(SERVER, ?MODULE).
 
 % Bound state for a given command_id
-% ***COMMENT OUT*** this line to regerate edocs. Don't know why ???
 -define(BOUND(B), if 
                       B == ?COMMAND_ID_BIND_RECEIVER    -> bound_rx;
                       B == ?COMMAND_ID_BIND_TRANSMITTER -> bound_tx;
@@ -1212,10 +1200,10 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
             {next_state, StateName, StateData}
     end;
 handle_event({recv_error, _Error}, unbound, StateData) ->
-    io:format("Underlying connection closed while ~p~n", [unbound]),
+%    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
 handle_event({recv_error, _Error} = R, StateName, StateData) ->
-    io:format("Underlying connection closed while ~p~n", [StateName]),
+%    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};
 handle_event(die, StateName, StateData) ->
     {stop, normal, StateData}.
@@ -1358,7 +1346,7 @@ handle_info(Info, StateName, StateData) ->
 %% <p>Return value is ignored by the server.</p>
 %% @end
 terminate(R, _N, S) when S#state.socket == closed; R == kill ->
-    io:format("*** gen_smsc_session terminating: ~p - ~p ***~n", [self(), R]),
+%    io:format("*** gen_smsc_session terminating: ~p - ~p ***~n", [self(), R]),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
             unregister(Name);

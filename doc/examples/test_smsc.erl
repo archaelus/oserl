@@ -114,10 +114,10 @@ deliver_sm(SourceAddr, ShortMessage) ->
 %%
 %% @see handle_call/3
 %%
-%% @equiv gen_server:call(?SERVER, die, 10000).
+%% @equiv gen_server:call(SERVER, die, 10000)
 %% @end
 stop() ->
-    gen_server:call(?SERVER, die, 10000).
+    gen_smsc:call(?SERVER, die, 10000).
 
 %%%===================================================================
 %%% Server functions
@@ -337,7 +337,7 @@ handle_call(die, _From, State) ->
 %% <p>Handling cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called</li>
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2
@@ -364,7 +364,7 @@ handle_cast({deliver_sm, ParamList}, #state{rx = Rx} = S) ->
 %% <p>Handling all non call/cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2

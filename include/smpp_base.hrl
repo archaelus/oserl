@@ -75,8 +75,8 @@
 %%%
 %%% @copyright 2003 - 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
-%%% @version 0.2 alpha, {14 Mar 2003} {@time}.
+%%%         [http://oserl.sourceforge.net/]
+%%% @version 0.2, {14 Mar 2003} {@time}.
 %%% @end
 -ifndef(smpp_base).
 -define(smpp_base, true).

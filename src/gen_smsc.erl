@@ -317,7 +317,7 @@
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
-%%%         [http://www.des.udc.es/~mpquique/]
+%%%         [http://oserl.sourceforge.net/]
 %%% @version 1.1, {13 May 2004} {@time}.
 %%% @end
 -module(gen_smsc).
@@ -543,7 +543,7 @@ listen_start(ServerRef) ->
 %%    Name = atom()
 %%    Node = atom()
 %%    Port = int()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Count = int() | infinity
 %%    Reason = term()
 %%
@@ -562,7 +562,7 @@ listen_start(ServerRef, Port, Count, Timers) ->
     gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
 
-%% @spec stop_listen(ServerRef) -> ok
+%% @spec listen_stop(ServerRef) -> ok
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
 %%    Node = atom()
@@ -580,11 +580,12 @@ listen_stop(ServerRef) ->
 %%    Request = term()
 %%    Reply = term()
 %%
-%% @doc Equivalent to gen_server:call/2.  <tt>Request</tt> is an arbitrary
-%% term which is passed as one of the arguments to <tt>Module:handle_call/3
-%% </tt>.
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-2">gen_server:call/2</a>.
 %%
-%% <p>Please refer to the gen_server man page for greater details.</p>
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% arguments to <tt>Module:handle_call/3</tt>.</p>
+%%
+%% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
 %% @end 
 call(ServerRef, Request) ->
     gen_server:call(ServerRef, {call, Request}).
@@ -595,14 +596,15 @@ call(ServerRef, Request) ->
 %%    Name = atom()
 %%    Node = atom()
 %%    Request = term()
-%%    Timeout = int() > 0 | infinity
+%%    Timeout = int() | infinity
 %%    Reply = term()
 %%
-%% @doc Equivalent to gen_server:call/3.  <tt>Request</tt> is an arbitrary
-%% term which is passed as one of the arguments to <tt>Module:handle_call/3
-%% </tt>.
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-3">gen_server:call/3</a>.  
 %%
-%% <p>Please refer to the gen_server man page for greater details.</p>
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% arguments to <tt>Module:handle_call/3</tt>.</p>
+%%
+%% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
 %% @end 
 call(ServerRef, Request, Timeout) ->
     gen_server:call(ServerRef, {call, Request}, Timeout).
@@ -615,11 +617,12 @@ call(ServerRef, Request, Timeout) ->
 %%    Request = term()
 %%    Reply = term()
 %%
-%% @doc Equivalent to gen_server:cast/2.  <tt>Request</tt> is an arbitrary
-%% term which is passed as one of the arguments to <tt>Module:handle_cast/2
-%% </tt>.
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#cast-2">gen_server:cast/2</a>.  
 %%
-%% <p>Please refer to the gen_server man page for greater details.</p>
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% arguments to <tt>Module:handle_cast/2</tt>.</p>
+%%
+%% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
 %% @end 
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
@@ -629,8 +632,9 @@ cast(ServerRef, Request) ->
 %%    Client = term()
 %%    Reply  = term()
 %%
-%% @doc Equivalent to gen_server:reply/2.  Please refer to the gen_server man
-%% page for greater details.
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#reply-2">gen_server:reply/2</a>.
+%%
+%% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
 %% @end 
 reply(Client, Reply) ->
     gen_server:reply(Client, Reply).
@@ -660,7 +664,7 @@ session_start(Address, Port) ->
 %% @spec session_start(Address, Port, Timers) -> Result
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
-%%    Timers = #timers()
+%%    Timers = timers()
 %%    Result = {ok, Session} | {error, Reason}
 %%    Session = pid()
 %%    Reason = term()
@@ -668,7 +672,7 @@ session_start(Address, Port) ->
 %% @doc Opens a new session.  By default Sessions are NOT linked to the SMSC.
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
-%% <a href="oserl.html">oserl.hrl</a>.
+%% <a href="oserl.html">oserl.hrl</a>.</p>
 %%
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
@@ -781,8 +785,7 @@ unbind(Session) ->
 %%    Timeout = int() | infinity
 %%    Reason  = term()
 %%
-%% @doc <a href="gen_server.html#init-1">gen_server - 
-%% init/1</a> callback implementation.
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#init-1">gen_server - init/1</a> callback implementation.
 %%
 %% <p>Initiates the server.</p>
 %% @end
@@ -805,8 +808,7 @@ init({Mod, Args}) ->
 %%    Timeout   = int() | infinity
 %%    Reason    = term()
 %%
-%% @doc <a href="gen_server.html#handle_call-3">gen_server - 
-%% handle_call/3</a> callback implementation.
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#handle_call-3">gen_server - handle_call/3</a> callback implementation.
 %% 
 %% <p>Handling call messages.</p>
 %%
@@ -851,8 +853,7 @@ handle_call({CmdName, Session, Pdu} = R, From, S) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc <a href="gen_server.html#handle_cast-2">gen_server - 
-%% handle_cast/2</a> callback implementation.
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#handle_cast-2">gen_server - handle_cast/2</a> callback implementation.
 %%
 %% <p>Handling cast messages.</p>
 %%
@@ -885,13 +886,12 @@ handle_cast(listen_stop, S) ->
 %%    Timeout  = int() | infinity
 %%    Reason   = normal | term()
 %%
-%% @doc <a href="gen_server.html#handle_info-2">gen_server - 
-%% handle_info/2</a> callback implementation.
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#handle_info-2">gen_server - handle_info/2</a> callback implementation.
 %%
 %% <p>Handling all non call/cast messages.</p>
 %%
 %% <ul>
-%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called
+%%   <li>On <tt>{stop, Reason, State}</tt> terminate/2 is called.</li>
 %% </ul>
 %%
 %% @see terminate/2
@@ -904,8 +904,7 @@ handle_info(Info, S) ->
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
 %%
-%% @doc <a href="gen_server.html#terminate-2">gen_server - 
-%% terminate/2</a> callback implementation.
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#terminate-2">gen_server - terminate/2</a> callback implementation.
 %%
 %% <p>Shutdown the server.</p>
 %%
@@ -922,7 +921,9 @@ terminate(R, S) ->
 %%    Extra    = term
 %%    NewState = term()
 %%
-%% @doc Convert process state when code is changed
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#code_change-3">gen_server - code_change/3</a> callback implementation.
+%%
+%% <p>Convert process state when code is changed.</p>
 %% @end
 code_change(OldVsn, S, Extra) ->
     pack((S#state.mod):code_change(OldVsn, S#state.mod_state, Extra), S).

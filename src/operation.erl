@@ -30,7 +30,14 @@
 %   <li>Implemented <tt>get_param/2</tt> and <tt>set_param/3</tt>, replacements
 %     for <tt>pdu_syntax:get_value/2</tt> and <tt>pdu_syntax:set_value/3</tt> 
 %     respectively.
-%    </li>
+%   </li>
+% </ul>
+%
+% [17 Feb 2004]
+%
+% <ul>
+%   <li>new_pdu/5 function removed.  PDU defaults MACROS do no longer exist.
+%   </li>
 % </ul>
 %
 %
@@ -325,17 +332,16 @@ merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
 % @doc Creates a new bind_transmitter PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_transmitter(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_TRANSMITTER, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?BIND_TRANSMITTER_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -351,17 +357,16 @@ new_bind_transmitter(SequenceNumber, InitParams) ->
 % @doc Creates a new bind_transmitter_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_transmitter_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_TRANSMITTER_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?BIND_TRANSMITTER_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSMITTER_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -375,17 +380,16 @@ new_bind_transmitter_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new bind_receiver PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_receiver(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_RECEIVER, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?BIND_RECEIVER_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -401,17 +405,16 @@ new_bind_receiver(SequenceNumber, InitParams) ->
 % @doc Creates a new bind_receiver_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_receiver_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_RECEIVER_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?BIND_RECEIVER_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_RECEIVER_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -425,17 +428,16 @@ new_bind_receiver_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new bind_transceiver PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_transceiver(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_TRANSCEIVER, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?BIND_TRANSCEIVER_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -451,17 +453,16 @@ new_bind_transceiver(SequenceNumber, InitParams) ->
 % @doc Creates a new bind_transceiver_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_bind_transceiver_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BIND_TRANSCEIVER_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?BIND_TRANSCEIVER_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BIND_TRANSCEIVER_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -475,17 +476,16 @@ new_bind_transceiver_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new outbind PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_outbind(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_OUTBIND, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?OUTBIND_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_OUTBIND, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -499,17 +499,16 @@ new_outbind(SequenceNumber, InitParams) ->
 % @doc Creates a new unbind PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_unbind(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_UNBIND, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?UNBIND_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_UNBIND, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -524,17 +523,16 @@ new_unbind(SequenceNumber, InitParams) ->
 % @doc Creates a new unbind_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_unbind_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_UNBIND_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?UNBIND_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_UNBIND_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -548,17 +546,16 @@ new_unbind_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new enquire_link PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_enquire_link(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_ENQUIRE_LINK, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?ENQUIRE_LINK_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -574,17 +571,16 @@ new_enquire_link(SequenceNumber, InitParams) ->
 % @doc Creates a new enquire_link_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_enquire_link_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_ENQUIRE_LINK_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?ENQUIRE_LINK_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_ENQUIRE_LINK_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -598,17 +594,16 @@ new_enquire_link_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new alert_notification PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_alert_notification(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_ALERT_NOTIFICATION, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?ALERT_NOTIFICATION_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_ALERT_NOTIFICATION, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -623,17 +618,16 @@ new_alert_notification(SequenceNumber, InitParams) ->
 % @doc Creates a new generic_nack PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_generic_nack(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_GENERIC_NACK, 
-            CommandStatus, 
-            SequenceNumber,
-            ?GENERIC_NACK_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_GENERIC_NACK, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -647,17 +641,16 @@ new_generic_nack(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new submit_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_submit_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_SUBMIT_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?SUBMIT_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -673,17 +666,16 @@ new_submit_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new submit_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_submit_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_SUBMIT_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?SUBMIT_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -697,17 +689,16 @@ new_submit_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new data_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_data_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_DATA_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?DATA_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -722,17 +713,16 @@ new_data_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new data_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_DATA_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?DATA_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_DATA_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -746,17 +736,16 @@ new_data_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new submit_multi PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_submit_multi(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_SUBMIT_MULTI, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?SUBMIT_MULTI_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -772,17 +761,16 @@ new_submit_multi(SequenceNumber, InitParams) ->
 % @doc Creates a new submit_multi_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_submit_multi_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_SUBMIT_MULTI_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?SUBMIT_MULTI_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_SUBMIT_MULTI_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -796,17 +784,16 @@ new_submit_multi_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new deliver_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_deliver_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_DELIVER_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?DELIVER_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -822,17 +809,16 @@ new_deliver_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new deliver_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_deliver_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_DELIVER_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?DELIVER_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_DELIVER_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -846,17 +832,16 @@ new_deliver_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new broadcast_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_broadcast_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BROADCAST_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?BROADCAST_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -872,17 +857,16 @@ new_broadcast_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new broadcast_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_BROADCAST_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?BROADCAST_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_BROADCAST_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -896,17 +880,16 @@ new_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new cancel_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_cancel_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_CANCEL_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?CANCEL_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -922,17 +905,16 @@ new_cancel_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new cancel_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_cancel_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_CANCEL_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?CANCEL_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -946,17 +928,16 @@ new_cancel_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new query_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_query_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_QUERY_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?QUERY_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -971,17 +952,16 @@ new_query_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new query_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_QUERY_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?QUERY_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -995,17 +975,16 @@ new_query_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new replace_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_replace_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_REPLACE_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?REPLACE_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1021,17 +1000,16 @@ new_replace_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new replace_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_replace_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_REPLACE_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?REPLACE_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_REPLACE_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1045,17 +1023,16 @@ new_replace_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new query_broadcast_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_query_broadcast_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?QUERY_BROADCAST_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1071,17 +1048,16 @@ new_query_broadcast_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new query_broadcast_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_query_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?QUERY_BROADCAST_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_QUERY_BROADCAST_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1095,17 +1071,16 @@ new_query_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
 % @doc Creates a new cancel_broadcast_sm PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_cancel_broadcast_sm(SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM, 
-            ?ESME_ROK, 
-            SequenceNumber,
-            ?CANCEL_BROADCAST_SM_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM, 
+					   ?ESME_ROK, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1121,17 +1096,16 @@ new_cancel_broadcast_sm(SequenceNumber, InitParams) ->
 % @doc Creates a new cancel_broadcast_sm_resp PDU dictionary with the given 
 % <tt>InitParams</tt> and the default values defined for this PDU.
 %
-% @see new_pdu/5
+% @see pdu_syntax:new_pdu/4
 % @end
 %
 % %@equiv
 %%
 new_cancel_broadcast_sm_resp(CommandStatus, SequenceNumber, InitParams) ->
-    new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP, 
-            CommandStatus, 
-            SequenceNumber,
-            ?CANCEL_BROADCAST_SM_RESP_DEFAULTS,
-            InitParams).
+    pdu_syntax:new_pdu(?COMMAND_ID_CANCEL_BROADCAST_SM_RESP, 
+					   CommandStatus, 
+					   SequenceNumber,
+					   InitParams).
 
 
 %%%
@@ -1357,31 +1331,6 @@ request_failure_code(CommandId)                      -> ?ESME_RUNKNOWNERR.
 %%%===================================================================
 % Internal functions
 %%====================================================================
-%%%
-% @spec new_pdu(CmdId, Status, SeqNum, DefaultParams, InitParams) -> PduDict
-%    CmdId         = int()
-%    Status        = int()
-%    SeqNum        = int()
-%    DefaultParams = [{ParamName, ParamValue}]
-%    InitParams    = [{ParamName, ParamValue}]
-%    ParamName     = atom()
-%    ParamValue    = term()
-%    PduDict       = dictionary()
-%
-% @doc Creates a new PDU dictionary.  Whenever a parameter is defined in both,
-% the <tt>InitParams</tt> list and <tt>DefaultParams</tt> list, the
-% initial <tt>ParamValue</tt> is taken and the default value discarded.
-%
-% @see pdu_syntax:new_pdu/4
-% @end
-%
-% %@equiv
-%%
-new_pdu(CmdId, Status, SeqNum, DefaultParams, InitParams) ->
-    Params = merge_params(InitParams, DefaultParams),
-    pdu_syntax:new_pdu(CmdId, Status, SeqNum, Params).
-
-
 %%%
 % @spec pdu_type(CommandId) -> pdu()
 %    CommandId = int()

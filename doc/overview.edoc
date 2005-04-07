@@ -52,6 +52,8 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#pics">PICS Proforma</a></li>
   <li><a href="#changes">Changes</a></li>
   <li><a href="#todo">TODO</a></li>
+  <li><a href="#contributors">Contributors</a></li>
+  <li><a href="#thanks">Special Thanks</a></li>
   <li><a href="#references">References</a></li>
 </ol>
 
@@ -2214,6 +2216,23 @@ Find OSERL's PICS proforma in openoffice format
 <h2><a name="changes">Changes</a></h2>
 
 <p>See changes log <a href="changes.html">here</a>.</p>
+
+
+<h2><a name="contributors">Contributors</a></h2>
+
+<ul>
+  <li>Miguel Rodríguez Rubinos</li>
+  <li>Heinrich Venter</li>
+</ul>
+
+
+<h2><a name="thanks">Special Thanks</a></h2>
+
+<p>Thanks to all who have helped me out with their feedback, very specially to 
+those who have even <a href="#contributors">contributed</a> with code.</p>
+
+<p>Thanks also to those who reported bugs and suggested improvements, in
+this term, I'd like to also explicitly thank Anders Nygren.</p>
 
 
 <h2><a name="todo">TODO</a></h2>

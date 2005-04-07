@@ -39,6 +39,8 @@ Contents
 4.   Changes 1.1 -> 1.2
 4.1  smpp_base.hrl
 4.2  sm.erl
+4.3  gen_esme_session.erl
+4.4  gen_esme.erl
 
 ---
 
@@ -268,3 +270,24 @@ How these changes affected individual files is described below.
 
   reply_address/1 will be removed in future releases, please use 
   reply_destination_address/1 instead.
+
+4.3  gen_esme_session.erl
+
+- New callback  handle_enquire_link_failure/3 added.
+  
+  See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
+
+- Use proc_lib:spawn_link/1 instead of spawn_link.
+
+4.4  gen_esme_session.erl
+
+- New callback handle_enquire_link_failure/2 added.
+
+  See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
+
+- handle_alert_notification/2 must have only 2 parameters and not 3, as 
+  previously declared in behaviour_info/1.
+
+- Functions session_start_link/2 and session_start_link/3 added.
+
+- Use proc_lib:spawn_link/1 instead of spawn_link.

@@ -66,12 +66,14 @@
 %%% [02 Nov 2004]
 %%% 
 %%% <ul>
-%%%   <li><tt>ESM_CLASS_DOMAIN</tt> fixed.  Thanks to hfventer for this fix.
+%%%   <li><tt>ESM_CLASS_DOMAIN</tt> fixed.
 %%%     <br/>
 %%%     The max values were less than the min values!
 %%%     <br/>
 %%%     Without this it would be impossible to send binary content messages 
 %%%     (like ring tones or WAP push).
+%%%     <br/>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1171708&forum_id=350015">More</a>.
 %%%   </li>
 %%% </ul>
 %%%

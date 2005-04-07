@@ -171,6 +171,20 @@
 %%% process id.</p>
 %%%
 %%%
+%%% <h2>Changes 1.1 -&gt; 1.2</h2>
+%%%
+%%% [7 Abr 2005]
+%%%
+%%% <ul>
+%%%   <li>New callback <a href="#handle_enquire_link_failure-3">
+%%%     handle_enquire_link_failure/3</a> added.
+%%%     <br/>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015">More</a>
+%%%   </li>
+%%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
+%%%   </li>
+%%% </ul>
+%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -184,9 +198,6 @@
 %%% reset_active_timers and cancel_active_timers, both take StateData as an 
 %%% argument and return {ok, NewStateData} | error.  Put canceled timers to
 %%% undefined)
-%%%
-%%% %@TODO Review timers.  What if the enquire_link doesn't receive a response?
-%%% Crash the session?
 -module(gen_esme_session).
 
 -behaviour(gen_fsm).
@@ -206,7 +217,7 @@
 %%%-------------------------------------------------------------------
 -export([start/3, 
          start/4, 
-		 start_link/3, 
+         start_link/3, 
          start_link/4, 
          bind_receiver/2,
          bind_transmitter/2,
@@ -395,6 +406,7 @@
 behaviour_info(callbacks) ->
     [{handle_outbind, 3}, 
      {handle_alert_notification, 3}, 
+     {handle_enquire_link_failure, 3},
      {handle_operation, 3}, 
      {handle_unbind, 3}];
 behaviour_info(_Other) ->
@@ -758,19 +770,19 @@ stop(FsmRef) ->
 %% @end
 init([Pid, Mod, Socket, Timers]) ->
     Self = self(),
-    spawn_link(fun() -> wait_recv(Self, Socket, <<>>) end),
+    proc_lib:spawn_link(fun() -> wait_recv(Self, Socket, <<>>) end),
     TE = start_timer(Timers#timers.enquire_link_time, enquire_link_timer),
     TS = start_timer(Timers#timers.session_init_time, session_init_timer),
     {ok, open, #state{esme               = Pid,
-					  mod                = Mod,
-					  socket             = Socket,
-					  requests           = ets:new(esme_requests, []),
-					  session_init_time  = Timers#timers.session_init_time,
-					  session_init_timer = TS,
-					  enquire_link_time  = Timers#timers.enquire_link_time,
-					  enquire_link_timer = TE,
-					  inactivity_time    = Timers#timers.inactivity_time,
-					  response_time      = Timers#timers.response_time}}.
+                      mod                = Mod,
+                      socket             = Socket,
+                      requests           = ets:new(esme_requests, []),
+                      session_init_time  = Timers#timers.session_init_time,
+                      session_init_timer = TS,
+                      enquire_link_time  = Timers#timers.enquire_link_time,
+                      enquire_link_timer = TE,
+                      inactivity_time    = Timers#timers.inactivity_time,
+                      response_time      = Timers#timers.response_time}}.
 
 
 %% @spec open(Event, StateData) -> Result
@@ -793,7 +805,7 @@ open({?COMMAND_ID_OUTBIND, _Pdu} = R, S) ->
     reset_timer(S#state.session_init_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
-    spawn_link(fun() -> handle_peer_outbind(R, Self, S) end),
+    proc_lib:spawn_link(fun() -> handle_peer_outbind(R, Self, S) end),
     {next_state, outbound, S};
 open(CmdId, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER_RESP;
                     CmdId == ?COMMAND_ID_BIND_TRANSMITTER_RESP;
@@ -801,7 +813,7 @@ open(CmdId, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER_RESP;
     cancel_timer(S#state.session_init_timer),
     {next_state, ?BOUND(CmdId), S};
 open({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, open, NewS#state{enquire_link_timer = T}};
 open({timeout, _Ref, session_init_timer}, S) ->
@@ -831,7 +843,7 @@ open(R, S) ->
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
 outbound({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, outbound, NewS#state{enquire_link_timer = T}};
 outbound({timeout, _Ref, session_init_timer}, S) ->
@@ -864,14 +876,14 @@ bound_rx({?COMMAND_ID_ALERT_NOTIFICATION, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
-    spawn_link(fun() -> handle_peer_alert_notification(R, Self, S) end),
+    proc_lib:spawn_link(fun() -> handle_peer_alert_notification(R,Self,S) end),
     {next_state, bound_rx, S};
 bound_rx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                     CmdId == ?COMMAND_ID_DELIVER_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),
+    proc_lib:spawn_link(fun() -> handle_peer_operation(R, Self, S) end),
     {next_state, bound_rx, S};
 bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
@@ -888,11 +900,11 @@ bound_rx(?COMMAND_ID_UNBIND_RESP, S) ->
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
 bound_rx({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_rx, NewS#state{enquire_link_timer = T}};
 bound_rx({timeout, _Ref, inactivity_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], undefined, S),
+    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], {undefined,self()}, S),
     reset_timer(NewS#state.enquire_link_timer),
     T = start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_rx, NewS#state{inactivity_timer = T}};
@@ -935,11 +947,11 @@ bound_tx(?COMMAND_ID_UNBIND_RESP, S) ->
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
 bound_tx({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_tx, NewS#state{enquire_link_timer = T}};
 bound_tx({timeout, _Ref, inactivity_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], undefined, S),
+    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], {undefined,self()}, S),
     reset_timer(NewS#state.enquire_link_timer),
     T = start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_tx, NewS#state{inactivity_timer = T}};
@@ -971,14 +983,14 @@ bound_trx({?COMMAND_ID_ALERT_NOTIFICATION, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
-    spawn_link(fun() -> handle_peer_alert_notification(R, Self, S) end),
+    proc_lib:spawn_link(fun() -> handle_peer_alert_notification(R,Self,S) end),
     {next_state, bound_trx, S};
 bound_trx({CmdId, _Pdu} = R, S) when CmdId == ?COMMAND_ID_DATA_SM;
                                      CmdId == ?COMMAND_ID_DELIVER_SM ->
     reset_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
-    spawn_link(fun() -> handle_peer_operation(R, Self, S) end),  % Asynchronous
+    proc_lib:spawn_link(fun() -> handle_peer_operation(R, Self, S) end), %Async
     {next_state, bound_trx, S};
 bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     reset_timer(S#state.inactivity_timer),
@@ -995,11 +1007,11 @@ bound_trx(?COMMAND_ID_UNBIND_RESP, S) ->
     reset_timer(S#state.enquire_link_timer),
     {next_state, unbound, S};
 bound_trx({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, bound_trx, NewS#state{enquire_link_timer = T}};
 bound_trx({timeout, _Ref, inactivity_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], undefined, S),
+    {ok, NewS} = send_request(?COMMAND_ID_UNBIND, [], {undefined, self()}, S),
     reset_timer(NewS#state.enquire_link_timer),
     T = start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_trx, NewS#state{inactivity_timer = T}};
@@ -1028,7 +1040,7 @@ bound_trx(R, S) ->
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
 unbound({timeout, _Ref, enquire_link_timer}, S) ->
-    {ok, NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK, [], undefined, S),
+    {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, unbound, NewS#state{enquire_link_timer = T}};
 unbound({timeout, _Ref, _Timer}, S) ->
@@ -1177,7 +1189,7 @@ bound_tx({CmdId, _}, _From, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
                                     CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
                                     CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     {reply, {error, ?ESME_RALYBND}, bound_tx, S};
-bound_tx({CmdId, ParamList}, From, S) 
+bound_tx({CmdId, _ParamList}, _From, S) 
   when is_integer(S#state.peer_congestion_state) and 
        (S#state.peer_congestion_state > 90) and 
        ((CmdId == ?COMMAND_ID_DATA_SM) or
@@ -1243,7 +1255,7 @@ bound_trx({CmdId, _}, _From, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER;
                                      CmdId == ?COMMAND_ID_BIND_TRANSMITTER;
                                      CmdId == ?COMMAND_ID_BIND_TRANSCEIVER ->
     {reply, {error, ?ESME_RALYBND}, bound_trx, S};
-bound_trx({CmdId, ParamList}, From, S) 
+bound_trx({CmdId, _ParamList}, _From, S) 
   when is_integer(S#state.peer_congestion_state) and 
        (S#state.peer_congestion_state > 90) and 
        ((CmdId == ?COMMAND_ID_DATA_SM) or
@@ -1324,7 +1336,7 @@ unbound(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_event/3</a> callback implementation.  Handles
 %% events received by <tt>gen_fsm:send_all_state_event/2</tt>.
 %% @end
-handle_event({input, BinaryPdu, Lapse, Index} = E, StateName, StateData) ->
+handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
     Timestamp = now(),
     case catch operation:esme_unpack(BinaryPdu) of
         {ok, Pdu} ->
@@ -1364,10 +1376,15 @@ handle_event({input, BinaryPdu, Lapse, Index} = E, StateName, StateData) ->
 handle_event({recv_error, _Error}, unbound, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
-handle_event({recv_error, _Error} = R, StateName, StateData) ->
+handle_event({recv_error, _Error} = R, _StateName, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};
-handle_event(die, StateName, StateData) ->
+handle_event({enquire_link_failure, Status}, StateName, StateData) ->
+    Self = self(),
+    proc_lib:spawn_link(
+      fun() -> handle_peer_enquire_link_failure(Status, Self, StateData) end),
+    {next_state, StateName, StateData};
+handle_event(die, _StateName, StateData) ->
     {stop, normal, StateData}.
 
 
@@ -1493,7 +1510,7 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
-handle_info(Info, StateName, StateData) -> 
+handle_info(_Info, StateName, StateData) -> 
     {next_state, StateName, StateData}.
 
 
@@ -1564,14 +1581,29 @@ handle_peer_outbind({?COMMAND_ID_OUTBIND, Pdu}, Self, S) ->
 %%
 %% @doc Handles <i>alert_notification</i> requests from the peer SMSC.  
 %%
-%% <p>This function issues the <a href="#handle_bind-3">handle_bind/3</a>
-%% callback to the callback module.</p>
+%% <p>This function issues the <a href="#handle_alert_notification-3">
+%% handle_alert_notification/3</a> callback to the callback module.</p>
 %%
-%% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
-%% <tt>false</tt> otherwise.</p>
+%% <p>Returns <tt>ok</tt>.</p>
 %% @end 
 handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
     (S#state.mod):handle_alert_notification(S#state.esme, Self, Pdu).
+
+
+%% @spec handle_peer_enquire_link_failure(Status, Self, State) -> true
+%%    Status = int()
+%%    Self  = pid()
+%%    State = state()
+%%
+%% @doc Handles <i>enquire_link</i> failures from the peer SMSC.  
+%%
+%% <p>This function issues the <a href="#handle_enquire_link_failure-3">
+%% handle_enquire_link_failure/3</a> callback to the callback module.</p>
+%%
+%% <p>Returns <tt>ok</tt>.</p>
+%% @end 
+handle_peer_enquire_link_failure(Status, Self, S) ->
+    (S#state.mod):handle_enquire_link_failure(S#state.esme, Self, Status).
 
 
 %% @spec handle_peer_operation({CmdId, Pdu}, Self, State) -> bool()
@@ -1658,7 +1690,7 @@ send_request(CmdId, ParamList, From, StateData) ->
     SeqNum = StateData#state.sequence_number + 1,
     send_pdu(StateData#state.socket, operation:new(CmdId, SeqNum, ParamList)),
     Time   = StateData#state.response_time,
-    Broker = spawn_link(fun() -> request_broker(From, CmdId, Time) end),
+    Broker = proc_lib:spawn_link(fun() -> request_broker(From,CmdId,Time) end),
     ets:insert(StateData#state.requests, {SeqNum, CmdId, Broker}),
     {ok, StateData#state{sequence_number = SeqNum}}.
 
@@ -1718,7 +1750,7 @@ send_pdu(Socket, Pdu) ->
 %% is reported to the <tt>Caller</tt>, where <tt>Error</tt> is
 %% <tt>operation:request_failure_code(CmdId)</tt>.
 %% @end
-request_broker(undefined, CmdId, Time) ->
+request_broker({undefined, FsmRef}, CmdId, Time) ->
     receive 
         {FsmRef, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
@@ -1734,7 +1766,13 @@ request_broker(undefined, CmdId, Time) ->
             end
     after Time ->
             Error = operation:request_failure_code(CmdId),
-            {error, Error}
+            if
+                CmdId == ?COMMAND_ID_ENQUIRE_LINK ->
+                    Event = {enquire_link_failure, Error},
+                    gen_fsm:send_all_state_event(FsmRef, Event);
+                true ->
+                    {error, Error}
+            end
     end;
 request_broker(Caller, CmdId, Time) ->
     receive
@@ -1778,7 +1816,7 @@ wait_recv(FsmRef, Socket, Buffer) ->
             B = handle_input(FsmRef, concat_binary([Buffer, Input]), L, 1),
             recv_loop(FsmRef, Socket, B);
         Error ->
-			gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
+            gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
 
 %% @doc Auxiliary function for wait_recv/2
@@ -1793,7 +1831,7 @@ recv_loop(FsmRef, Socket, Buffer) ->
         {error, timeout} ->               % No data inmediately available
             wait_recv(FsmRef, Socket, Buffer);
         Error ->
-			gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
+            gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
 
 %% @doc Auxiliary function for wait_recv/3 and recv_loop/3.  Splits input
@@ -1847,7 +1885,7 @@ timer_loop(FsmRef, Time, Event) ->
     receive 
         {FsmRef, cancel_timer} ->
             ok;
-        Reset ->
+        _Reset ->
             timer_loop(FsmRef, Time, Event)
     after Time ->
             gen_fsm:send_event(FsmRef, {timeout, self(), Event})

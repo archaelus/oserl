@@ -70,11 +70,16 @@
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
-%%%     <td valign="top"><a href="#handle_alert_notification-3">
-%%%       handle_alert_notification/3</a></td>
+%%%     <td valign="top"><a href="#handle_alert_notification-2">
+%%%       handle_alert_notification/2</a></td>
 %%%     <td>Forwards <i>alert_notification</i> operations (from the peer SMSCs)
 %%%       to the callback ESME.
 %%%     </td>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top"><a href="#handle_enquire_link_failure-2">
+%%%       handle_enquire_link_failure/2</a></td>
+%%%     <td>Notifies <i>enquire_link</i> failures.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_operation-3">handle_operation/3</a>
@@ -167,10 +172,10 @@
 %%% callback ESME.</p>
 %%%
 %%%
-%%% <h3><a name="handle_alert_notification-3">handle_alert_notification/3</a>
+%%% <h3><a name="handle_alert_notification-2">handle_alert_notification/2</a>
 %%% </h3>
 %%%
-%%% <tt>handle_alert_notification(AlertNotification, From, State) -> Result
+%%% <tt>handle_alert_notification(AlertNotification, State) -> Result
 %%% </tt>
 %%% <ul>
 %%%   <li><tt>AlertNotification = {alert_notification, Session, Pdu}</tt></li>
@@ -181,9 +186,6 @@
 %%%   <li><tt>Result = {noreply, NewState}               |
 %%%                    {noreply, NewState, Timeout}      |
 %%%                    {stop, Reason, NewState}</tt></li>
-%%%   <li><tt>ParamList = [{ParamName, ParamValue}]</tt></li>
-%%%   <li><tt>ParamName = atom()</tt></li>
-%%%   <li><tt>ParamValue = term()</tt></li>
 %%%   <li><tt>Timeout = int()</tt></li>
 %%%   <li><tt>NewState = term()</tt></li>
 %%%   <li><tt>Reason = term()</tt></li>
@@ -191,6 +193,29 @@
 %%%
 %%% <p>Forwards <i>alert_notification</i>, operations (from the peer SMSCs) 
 %%% to the callback ESME.</p>
+%%%
+%%%
+%%% <h3><a name="handle_enquire_link_failure-2">handle_enquire_link_failure/2
+%%% </a></h3>
+%%%
+%%% <tt>handle_enquire_link_failure(EnquireLinkFailure, State) -> Result
+%%% </tt>
+%%% <ul>
+%%%   <li><tt>EnquireLinkFailure = {enquire_link_faiure, Session, CommandStatus}</tt>
+%%%   </li>
+%%%   <li><tt>Session = pid()</tt></li>
+%%%   <li><tt>CommandStatus = int()</tt></li>
+%%%   <li><tt>State = term()</tt></li>
+%%%   <li><tt>Result = {noreply, NewState}               |
+%%%                    {noreply, NewState, Timeout}      |
+%%%                    {stop, Reason, NewState}</tt></li>
+%%%   <li><tt>Timeout = int()</tt></li>
+%%%   <li><tt>NewState = term()</tt></li>
+%%%   <li><tt>Reason = term()</tt></li>
+%%% </ul>
+%%%
+%%% <p>Notifies when an <i>enquire_link</i> failure occurs (i.e. the SMSC did
+%%% not respond to our <i>enquire_link</i> operation).</p>
 %%%
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
@@ -331,10 +356,31 @@
 %%% details on this callback.</p>
 %%%
 %%%
-%%% @copyright 2004 Enrique Marcote Peña
+%%% <h2>Changes 1.1 -&gt; 1.2</h2>
+%%%
+%%% [7 Abr 2005]
+%%%
+%%% <ul>
+%%%   <li>New callback <a href="#handle_enquire_link_failure-2">
+%%%     handle_enquire_link_failure/2</a> added.
+%%%     <br/>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015">More</a>
+%%%   </li>
+%%%   <li><a href="#handle_alert_notification-2">handle_alert_notification/2
+%%%     </a> must have only 2 parameters and not 3, as previously declared
+%%%     in behaviour_info/1.
+%%%   </li>
+%%%   <li>Functions <a href="#session_start_link-2">session_start_link/2</a>
+%%%     and <a href="#session_start_link-3">session_start_link/3</a> added.
+%%%   </li>
+%%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
+%%%   </li>
+%%% </ul>
+%%%
+%%% @copyright 2004-2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 1.1, {13 May 2004} {@time}.
+%%% @version 1.2, {13 May 2004} {@time}.
 %%% @end
 -module(gen_esme).
 
@@ -371,6 +417,8 @@
 %%%-------------------------------------------------------------------
 -export([session_start/2,
          session_start/3,
+		 session_start_link/2,
+         session_start_link/3,
          session_stop/1,
          bind_receiver/2,
          bind_transmitter/2,
@@ -384,6 +432,7 @@
          replace_sm/2,
          submit_multi/2,
          submit_sm/2,
+         submit_sm/3,
          unbind/1]).
 
 %%%-------------------------------------------------------------------
@@ -401,6 +450,7 @@
 %%%-------------------------------------------------------------------
 -export([handle_outbind/3, 
          handle_alert_notification/3, 
+         handle_enquire_link_failure/3,
          handle_operation/3, 
          handle_unbind/3]).
 
@@ -451,7 +501,8 @@
 behaviour_info(callbacks) ->
     [{init, 1},
      {handle_outbind, 3}, 
-     {handle_alert_notification, 3}, 
+     {handle_alert_notification, 2}, 
+     {handle_enquire_link_failure, 2}, 
      {handle_operation, 3}, 
      {handle_unbind, 3}, 
      {handle_listen_error, 1},
@@ -683,7 +734,7 @@ reply(Client, Reply) ->
 %% @equiv session_start(Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
 session_start(Address, Port) ->
-	session_start(Address, Port, ?DEFAULT_SMPP_TIMERS).
+    session_start(Address, Port, ?DEFAULT_SMPP_TIMERS).
 
 
 %% @spec session_start(Address, Port, Timers) -> Result
@@ -708,6 +759,57 @@ session_start(Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
             case gen_esme_session:start(?MODULE, Socket, Timers) of
+                {ok, Session} ->
+                    gen_tcp:controlling_process(Socket, Session),
+                    {ok, Session};
+                SessionError ->
+                    SessionError
+            end;
+        ConnectError ->
+            ConnectError
+    end.
+
+
+%% @spec session_start_link(Address, Port) -> Result
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session linked to the ESME.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @equiv session_start_link(Address, Port, DEFAULT_SMPP_TIMERS)
+%% @end 
+session_start_link(Address, Port) ->
+    session_start_link(Address, Port, ?DEFAULT_SMPP_TIMERS).
+
+
+%% @spec session_start_link(Address, Port, Timers) -> Result
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session linked to the ESME.
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.</p>
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @see session_start_link/2
+%% @see gen_esme_session:start_link/3
+%% @end 
+session_start_link(Address, Port, Timers) ->
+    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
+        {ok, Socket} ->
+            case gen_esme_session:start_link(?MODULE, Socket, Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -920,6 +1022,58 @@ submit_sm(Session, ParamList) ->
     gen_esme_session:submit_sm(Session, ParamList).
 
 
+%% @spec submit_sm(Session, ParamList, ConcatenationMethod) -> Result
+%%    Session = pid()
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    ConcatenationMethod = udh | tlv
+%%    Result     = {ok, PduResp} | {error, Error}
+%%    PduResp    = pdu()
+%%    Error      = int()
+%%
+%% @doc Issues a <i>submit_sm</i> operation on the session 
+%% identified by <tt>Session</tt>.
+%%
+%% <p>This submission function automatically accomplishes long messages 
+%% fragmentation and concatenation using the <tt>Concatenationmethod</tt>
+%% indicated.</p>
+%%
+%% <dl>
+%%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
+%%     this method, since is more portable and widely available in most
+%%     of the SMSCs.</dd>
+%%   <dt>tlv</dt><dd>Concatenates the messages using <tt>sar_msg_ref_num</tt>,
+%%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
+%%     your SMSC supports these TLVs (not all of them do) this method is
+%%     recommended, unless <tt>message_payload</tt> TLV is supported of course,
+%%     read below.
+%% </dl>
+%%
+%% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
+%% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
+%% called and the message is send as is.  Resulting fragments are 
+%% SM_FRAGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
+%% to allow room for the UDH.  You may want to redefine these macros to fit 
+%% your particular needs, find them in <tt>oserl.hrl</tt>
+%% </p>
+%%
+%% <p>If you are lucky and your SMSC permits the <tt>message_payload</tt>
+%% TLV, use it with the <a href="#data_sm-2">data_sm/2</a> and
+%% <a href="#submit_sm-2"> submit_sm/2</a> functions instead.</p>
+%%
+%% @see submit_sm/2
+%% @see data_sm/2
+%% @end
+submit_sm(Session, ParamList, udh) ->
+% 	case lists:keysearch(short_message, 1, ParamsList) of
+% 		{value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
+			
+    gen_esme_session:submit_sm(Session, ParamList);
+submit_sm(Session, ParamList, tlv) ->
+    gen_esme_session:submit_sm(Session, ParamList).
+
+
 %% @spec unbind(Session) -> Result
 %%    Session = pid()
 %%    Result  = {ok, PduResp} | {error, Error}
@@ -981,24 +1135,24 @@ init({Mod, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({listen_start, Port, Count, Timers}, From, S) ->
+handle_call({listen_start, Port, Count, Timers}, _From, S) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
-            spawn_link(fun() -> listener(Self, LSocket, Count) end),
+            proc_lib:spawn_link(fun() -> listener(Self, LSocket, Count) end),
             {reply, true, S#state{lsocket = LSocket, timers = Timers}};
         _Error ->
             {reply, false, S}
     end;
-handle_call({accept, Socket}, From, S) ->
-	{reply, gen_esme_session:start(?MODULE, Socket, S#state.timers), S};
-handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
-                                                    Bind == bind_transmitter;
-                                                    Bind == bind_receiver ->
+handle_call({accept, Socket}, _From, S) ->
+    {reply, gen_esme_session:start(?MODULE, Socket, S#state.timers), S};
+handle_call({Bind, _Session, _Pdu} = R, From, S) when Bind == bind_transceiver;
+                                                      Bind == bind_transmitter;
+                                                      Bind == bind_receiver ->
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({unbind, Session, Pdu} = R, From, S) ->
+handle_call({unbind, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
-handle_call({CmdName, Session, Pdu} = R, From, S) ->
+handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
 
 
@@ -1023,10 +1177,12 @@ handle_call({CmdName, Session, Pdu} = R, From, S) ->
 %% @end
 handle_cast({cast, Request}, S) ->
     pack((S#state.mod):handle_cast(Request, S#state.mod_state), S);
-handle_cast({outbind, Session, Pdu} = R, S) ->
+handle_cast({outbind, _Session, _Pdu} = R, S) ->
     pack((S#state.mod):handle_outbind(R, S#state.mod_state), S);
-handle_cast({alert_notification, Session, Pdu} = R, S) ->
+handle_cast({alert_notification, _Session, _Pdu} = R, S) ->
     pack((S#state.mod):handle_alert_notification(R, S#state.mod_state), S);
+handle_cast({enquire_link_failure, _Session, _CommandStatus} = R, S) ->
+    pack((S#state.mod):handle_enquire_link_failure(R, S#state.mod_state), S);
 handle_cast(listen_error, S) when S#state.lsocket == closed ->
     {noreply, S};
 handle_cast(listen_error, S) ->
@@ -1116,6 +1272,19 @@ handle_outbind(ServerRef, Session, Pdu) ->
 %% @end
 handle_alert_notification(ServerRef, Session, Pdu) ->
     gen_server:cast(ServerRef, {alert_notification, Session, Pdu}).
+
+
+%% @spec handle_enquire_link_failure(ServerRef, Session, CommandStatus) -> ok
+%%    ServerRef = pid()
+%%    Session = pid()
+%%    CommandStatus = int()
+%%
+%% @doc <a href="gen_esme_session.html#handle_enquire_link_failure-3">
+%% gen_esme_session - handle_enquire_link_failure/3</a> callback 
+%% implementation.
+%% @end
+handle_enquire_link_failure(ServerRef, Session, CommandStatus) ->
+    gen_server:cast(ServerRef, {enquire_link_failure, Session, CommandStatus}).
 
 
 %% @spec handle_operation(ServerRef, Session, {CmdName, Pdu}) -> Result

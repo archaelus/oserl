@@ -48,6 +48,7 @@
       <li><a href="#changes1_1-1_2-sm-erl">sm.erl</a></li>
       <li><a href="#changes1_1-1_2-gen_esme_session-erl">gen_esme_session.erl</a></li>
       <li><a href="#changes1_1-1_2-gen_esme-erl">gen_esme.erl</a></li>
+      <li><a href="#changes1_1-1_2-smpp_globals-hrl">smpp_globals.hrl</a></li>
     </ol>
   </li>
 </ol>
@@ -404,12 +405,14 @@
 <h3><a name="changes1_1-1_2-smpp_base-hrl">smpp_base.hrl</a></h3>
 
 <ul>
-  <li><tt>ESM_CLASS_DOMAIN</tt> fixed.  Thanks to hfventer for this fix.
+  <li><tt>ESM_CLASS_DOMAIN</tt> fixed.
     <br/>
     The max values were less than the min values!
     <br/>
     Without this it would be impossible to send binary content messages 
     (like ring tones or WAP push).
+    <br/>
+    <a href="http://sourceforge.net/forum/forum.php?thread_id=1171708&forum_id=350015">More</a>.
   </li>
 </ul>
 
@@ -424,6 +427,9 @@
     <a href="#reply_address-1">reply_address/1</a> will be removed in future
     releases, please use <a href="#reply_destination_address-1">
     reply_destination_address/1</a> instead.
+  </li>
+  <li>Functions <a href="#set_udhi-1">set_udhi/1</a> and 
+    <a href="#split_user_data-2">split_user_data/2</a> added.
   </li>
 </ul>
 
@@ -457,6 +463,14 @@
     and <a href="#session_start_link-3">session_start_link/3</a> added.
   </li>
   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
+  </li>
+  <li>Function <a href="#submit_sm-3">submit_sm/3</a> added.</li>
+</ul>
+
+<h3><a name="changes1_1-1_2-smpp_globals-hrl">smpp_globals.hrl</a></h3>
+
+<ul>
+  <li><tt>SM_MAX_SIZE</tt> and <tt>SM_SEGMENT_MAX_SIZE</tt> macros defined.
   </li>
 </ul>
 

@@ -278,6 +278,7 @@ How these changes affected individual files is described below.
 - New callback  handle_enquire_link_failure/3 added.
   See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
 - Use proc_lib:spawn_link/1 instead of spawn_link.
+- New function reference_number/1 implemented.
 
 
 4.4  gen_esme.erl

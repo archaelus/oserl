@@ -59,8 +59,17 @@
 %%% [5 Jul 2004]
 %%% 
 %%% <ul>
-%%%   <li>DEFAULT_SMPP_PORT macro moved to <tt>oserl.hrl</tt>.</li>
+%%%   <li><tt>DEFAULT_SMPP_PORT</tt> macro moved to <tt>oserl.hrl</tt>.</li>
 %%%   <li>Timers moved to <tt>oserl.hrl</tt>.</li>
+%%% </ul>
+%%%
+%%% <h2>Changes 1.1 -&gt; 1.2</h2>
+%%%
+%%% [7 Jul 2005]
+%%% 
+%%% <ul>
+%%%   <li><tt>SM_MAX_SIZE</tt> and <tt>SM_SEGMENT_MAX_SIZE</tt> macros defined.
+%%%   </li>
 %%% </ul>
 %%%
 %%%
@@ -422,6 +431,10 @@
 -define(NULL_INTEGER,   0).
 -define(NULL_C_OCTET_STRING, "").
 -define(NULL_OCTET_STRING,   "").
+
+%% SM sizes
+-define(SM_MAX_SIZE, 160).
+-define(SM_SEGMENT_MAX_SIZE, 150).
 
 %%%-------------------------------------------------------------------
 %%% Records

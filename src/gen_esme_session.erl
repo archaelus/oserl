@@ -183,6 +183,9 @@
 %%%   </li>
 %%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
 %%%   </li>
+%%%   <li>New function <a href="#reference_number-1">reference_number/1</a>
+%%%     implemented.
+%%%   </li>
 %%% </ul>
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
@@ -228,6 +231,7 @@
          data_sm/2,
          query_broadcast_sm/2,
          query_sm/2,
+         reference_number/1,
          replace_sm/2,
          submit_multi/2,
          submit_sm/2,
@@ -309,6 +313,7 @@
 %%   </dd>
 %%   <dt>Mod: </dt><dd>Callback Module.</dd>
 %%   <dt>SequenceNumber: </dt><dd>PDU sequence number.</dd>
+%%   <dt>ReferenceNumber: </dt><dd>Concatenation reference number.</dd>
 %%   <dt>Socket: </dt><dd>The <tt>socket()</tt> of the underlying connection
 %%   </dd>
 %%   <dt>Requests: </dt><dd>An ets table with the requests which responses are
@@ -378,6 +383,7 @@
         {esme,
          mod,
          sequence_number = 0,
+         reference_number = 0,
          socket,
          requests,
          self_congestion_state = 0,
@@ -672,6 +678,16 @@ query_broadcast_sm(FsmRef, ParamList) ->
 query_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_QUERY_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
+
+%% @spec reference_number(FsmRef) -> RefNum
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
+%%    RefNum = int()
+%%
+%% @doc Gets the value of the reference number counter.  This counter is
+%% intended for messages concatenation.
+%% @end
+reference_number(FsmRef) ->
+    gen_fsm:sync_send_all_state_event(FsmRef, reference_number, infinity).
 
 
 %% @spec replace_sm(FsmRef, ParamList) -> Result
@@ -1491,6 +1507,9 @@ congestion_state(Lapse, Index, Time) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_sync_event/4</a> callback implementation.  Handles
 %% events received via <tt>gen_fsm:sync_send_all_state_event/2,3</tt>.
 %% @end
+handle_sync_event(reference_number, _From, StateName, StateData) ->
+    RefNum = StateData#state.reference_number,
+    {reply, RefNum, StateName, StateData#state{reference_number = RefNum + 1}};
 handle_sync_event(_Event, _From, StateName, StateData) ->
     {reply, ok, StateName, StateData}.
 

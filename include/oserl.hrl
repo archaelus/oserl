@@ -77,10 +77,6 @@
                 inactivity_time   = ITime,
                 response_time     = RTime}).
 
-%% SM sizes
--define(SM_MAX_SIZE, 160).
--define(SM_FRAGMENT_MAX_SIZE, 150).
-
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------

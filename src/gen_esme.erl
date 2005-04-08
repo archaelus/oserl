@@ -375,6 +375,7 @@
 %%%   </li>
 %%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
 %%%   </li>
+%%%   <li>Function <a href="#submit_sm-3">submit_sm/3</a> added.</li>
 %%% </ul>
 %%%
 %%% @copyright 2004-2005 Enrique Marcote Peña
@@ -1036,42 +1037,39 @@ submit_sm(Session, ParamList) ->
 %% identified by <tt>Session</tt>.
 %%
 %% <p>This submission function automatically accomplishes long messages 
-%% fragmentation and concatenation using the <tt>Concatenationmethod</tt>
+%% segmentation and concatenation using the <tt>Concatenationmethod</tt>
 %% indicated.</p>
 %%
 %% <dl>
 %%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
-%%     this method, since is more portable and widely available in most
-%%     of the SMSCs.</dd>
+%%     this method, since is more portable and widely available in most SMSCs.
+%%   </dd>
 %%   <dt>tlv</dt><dd>Concatenates the messages using <tt>sar_msg_ref_num</tt>,
 %%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
 %%     your SMSC supports these TLVs (not all of them do) this method is
-%%     recommended, unless <tt>message_payload</tt> TLV is supported of course,
-%%     read below.
+%%     recommended, unless <tt>message_payload</tt> TLV is also supported of
+%%     course, read below comments on this subject.
 %% </dl>
 %%
 %% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
 %% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
-%% called and the message is send as is.  Resulting fragments are 
-%% SM_FRAGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
+%% called and the message is send as is.  Resulting segments are 
+%% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
 %% to allow room for the UDH.  You may want to redefine these macros to fit 
 %% your particular needs, find them in <tt>oserl.hrl</tt>
 %% </p>
 %%
 %% <p>If you are lucky and your SMSC permits the <tt>message_payload</tt>
 %% TLV, use it with the <a href="#data_sm-2">data_sm/2</a> and
-%% <a href="#submit_sm-2"> submit_sm/2</a> functions instead.</p>
+%% <a href="#submit_sm-2">submit_sm/2</a> functions instead.</p>
 %%
 %% @see submit_sm/2
 %% @see data_sm/2
+%% @see gen_esme_session:submit_sm/3
+%% @see sm:split/2
 %% @end
-submit_sm(Session, ParamList, udh) ->
-% 	case lists:keysearch(short_message, 1, ParamsList) of
-% 		{value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
-			
-    gen_esme_session:submit_sm(Session, ParamList);
-submit_sm(Session, ParamList, tlv) ->
-    gen_esme_session:submit_sm(Session, ParamList).
+submit_sm(Session, ParamList, ConcatenationMethod) ->
+    gen_esme_session:submit_sm(Session, ParamList, ConcatenationMethod).
 
 
 %% @spec unbind(Session) -> Result

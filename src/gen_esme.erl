@@ -141,7 +141,7 @@
 %%% 
 %%% <h3><a name="init-1">init/1</a></h3>
 %%%
-%%% <tt>init(Args) -> Result</tt>
+%%% <tt>init(Args) -&gt; Result</tt>
 %%%
 %%% <p>Forwards <i>gen_server:init/1</i> callbacks to the SMSC server.</p>
 %%%
@@ -150,7 +150,7 @@
 %%%
 %%% <h3><a name="handle_outbind-3">handle_outbind/3</a></h3>
 %%%
-%%% <tt>handle_outbind(Outbind, From, State) -> Result</tt>
+%%% <tt>handle_outbind(Outbind, From, State) -&gt; Result</tt>
 %%% <ul>
 %%%   <li><tt>OutBind = {outbind, Session, Pdu}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -175,7 +175,7 @@
 %%% <h3><a name="handle_alert_notification-2">handle_alert_notification/2</a>
 %%% </h3>
 %%%
-%%% <tt>handle_alert_notification(AlertNotification, State) -> Result
+%%% <tt>handle_alert_notification(AlertNotification, State) -&gt; Result
 %%% </tt>
 %%% <ul>
 %%%   <li><tt>AlertNotification = {alert_notification, Session, Pdu}</tt></li>
@@ -198,10 +198,10 @@
 %%% <h3><a name="handle_enquire_link_failure-2">handle_enquire_link_failure/2
 %%% </a></h3>
 %%%
-%%% <tt>handle_enquire_link_failure(EnquireLinkFailure, State) -> Result
+%%% <tt>handle_enquire_link_failure(EnquireLinkFailure, State) -&gt; Result
 %%% </tt>
 %%% <ul>
-%%%   <li><tt>EnquireLinkFailure = {enquire_link_faiure, Session, CommandStatus}</tt>
+%%%   <li><tt>EnquireLinkFailure = {enquire_link_failure, Session, CommandStatus}</tt>
 %%%   </li>
 %%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>CommandStatus = int()</tt></li>
@@ -220,7 +220,7 @@
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
-%%% <tt>handle_operation(Operation, From, State) -> Result</tt>
+%%% <tt>handle_operation(Operation, From, State) -&gt; Result</tt>
 %%% <ul>
 %%%   <li><tt>Operation = {deliver_sm, Session, Pdu} |
 %%%                       {data_sm, Session, Pdu}</tt></li>
@@ -255,7 +255,7 @@
 %%% 
 %%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
 %%%
-%%% <tt>handle_unbind(Unbind, From, State) -> Result</tt>
+%%% <tt>handle_unbind(Unbind, From, State) -&gt; Result</tt>
 %%% <ul>
 %%%   <li><tt>Unbind = {unbind, Session, Pdu}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -286,7 +286,7 @@
 %%% 
 %%% <h3><a name="handle_listen_error-1">handle_listen_error/1</a></h3>
 %%%
-%%% <tt>handle_listen_error(State) -> Result</tt>
+%%% <tt>handle_listen_error(State) -&gt; Result</tt>
 %%% <ul>
 %%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {noreply, NewState}               |
@@ -304,7 +304,7 @@
 %%%
 %%% <h3><a name="handle_call-3">handle_call/3</a></h3>
 %%%
-%%% <tt>handle_call(Request, From, State) -> Result</tt>
+%%% <tt>handle_call(Request, From, State) -&gt; Result</tt>
 %%%
 %%% <p>Forwards <i>gen_server:handle_call/3</i> callbacks to the SMSC server.
 %%% </p>
@@ -315,7 +315,7 @@
 %%%
 %%% <h3><a name="handle_cast-2">handle_cast/2</a></h3>
 %%%
-%%% <tt>handle_cast(Request, State) -> Result</tt>
+%%% <tt>handle_cast(Request, State) -&gt; Result</tt>
 %%%
 %%% <p>Forwards <i>gen_server:handle_cast/2</i> callback to the SMSC server.
 %%% </p>
@@ -326,7 +326,7 @@
 %%%
 %%% <h3><a name="handle_info-2">handle_info/2</a></h3>
 %%%
-%%% <tt>handle_info(Info, State) -> Result</tt>
+%%% <tt>handle_info(Info, State) -&gt; Result</tt>
 %%%
 %%% <p>Forwards <i>gen_server:handle_info/2</i> callback to the SMSC server.
 %%% </p>
@@ -347,7 +347,7 @@
 %%%
 %%% <h3><a name="code_change-3">code_change/3</a></h3>
 %%%
-%%% <tt>code_change(OldVsn, State, Extra) -> {ok, NewState}</tt>
+%%% <tt>code_change(OldVsn, State, Extra) -&gt; {ok, NewState}</tt>
 %%%
 %%% <p>Forwards <i>gen_server:code_change/3</i> callback to the SMSC server.
 %%% </p>
@@ -364,7 +364,7 @@
 %%%   <li>New callback <a href="#handle_enquire_link_failure-2">
 %%%     handle_enquire_link_failure/2</a> added.
 %%%     <br/>
-%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015">More</a>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
 %%%   </li>
 %%%   <li><a href="#handle_alert_notification-2">handle_alert_notification/2
 %%%     </a> must have only 2 parameters and not 3, as previously declared
@@ -375,7 +375,8 @@
 %%%   </li>
 %%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
 %%%   </li>
-%%%   <li>Function <a href="#submit_sm-3">submit_sm/3</a> added.</li>
+%%%   <li>Functions <a href="#submit_sm-3">submit_sm/3</a> and
+%%%     <a href="#submit_multi-3">submit_multi/3</a> implemented.</li>
 %%% </ul>
 %%%
 %%% @copyright 2004-2005 Enrique Marcote Peña
@@ -418,7 +419,7 @@
 %%%-------------------------------------------------------------------
 -export([session_start/2,
          session_start/3,
-		 session_start_link/2,
+         session_start_link/2,
          session_start_link/3,
          session_stop/1,
          bind_receiver/2,
@@ -1008,15 +1009,16 @@ submit_multi(Session, ParamList) ->
     gen_esme_session:submit_multi(Session, ParamList).
 
 
-%% @spec submit_multi(Session, ParamList, ConcatenationMethod) -> Result
+%% @spec submit_multi(Session, ParamList, ConcatenationMethod) -> Results
 %%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
 %%    ParamValue = term()
 %%    ConcatenationMethod = udh | tlv
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
+%%    Results = [Result]
+%%    Result = {ok, PduResp} | {error, Error}
+%%    PduResp = pdu()
+%%    Error = int()
 %%
 %% @doc Issues a <i>submit_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
@@ -1024,6 +1026,8 @@ submit_multi(Session, ParamList) ->
 %% <p>This submission function automatically accomplishes long messages 
 %% segmentation and concatenation using the <tt>Concatenationmethod</tt>
 %% indicated.</p>
+%%
+%% <p><b>IMPORTANT:</b> Currently only <tt>udh</tt> method is supported.</p>
 %%
 %% <dl>
 %%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
@@ -1033,7 +1037,7 @@ submit_multi(Session, ParamList) ->
 %%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
 %%     your SMSC supports these TLVs (not all of them do) this method is
 %%     recommended, unless <tt>message_payload</tt> TLV is also supported of
-%%     course, read below comments on this subject.
+%%     course, read below comments on this subject.</dd>
 %% </dl>
 %%
 %% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
@@ -1053,18 +1057,30 @@ submit_multi(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
-submit_multi(Session, ParamList, ConcatenationMethod) ->
-    gen_esme_session:submit_multi(Session, ParamList).
+submit_multi(Session, ParamList, udh) ->
+    case lists:keysearch(short_message, 1, ParamList) of
+        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
+            RefNum = gen_esme_session:reference_number(Session),
+            Params = sm:udhi(ParamList, true),
+            F = fun(Segment) ->
+                        S = {short_message, Segment},
+                        L = lists:keyreplace(short_message, 1, Params, S),
+                        gen_esme_session:submit_multi(Session, L)
+                end,
+            lists:map(F, sm:split_user_data(SM, RefNum));
+        _Otherwise ->
+            [gen_esme_session:submit_multi(Session, ParamList)]
+    end.
 
 
 %% @spec submit_sm(Session, ParamList) -> Result
 %%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
 %%    ParamValue = term()
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
+%%    Result = {ok, PduResp} | {error, Error}
+%%    PduResp = pdu()
+%%    Error = int()
 %%
 %% @doc Issues a <i>submit_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
@@ -1073,15 +1089,16 @@ submit_sm(Session, ParamList) ->
     gen_esme_session:submit_sm(Session, ParamList).
 
 
-%% @spec submit_sm(Session, ParamList, ConcatenationMethod) -> Result
+%% @spec submit_sm(Session, ParamList, ConcatenationMethod) -> Results
 %%    Session = pid()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
 %%    ParamValue = term()
 %%    ConcatenationMethod = udh | tlv
-%%    Result     = {ok, PduResp} | {error, Error}
-%%    PduResp    = pdu()
-%%    Error      = int()
+%%    Results = [Result]
+%%    Result = {ok, PduResp} | {error, Error}
+%%    PduResp = pdu()
+%%    Error = int()
 %%
 %% @doc Issues a <i>submit_sm</i> operation on the session 
 %% identified by <tt>Session</tt>.
@@ -1089,6 +1106,8 @@ submit_sm(Session, ParamList) ->
 %% <p>This submission function automatically accomplishes long messages 
 %% segmentation and concatenation using the <tt>Concatenationmethod</tt>
 %% indicated.</p>
+%%
+%% <p><b>IMPORTANT:</b> Currently only <tt>udh</tt> method is supported.</p>
 %%
 %% <dl>
 %%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
@@ -1098,7 +1117,7 @@ submit_sm(Session, ParamList) ->
 %%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
 %%     your SMSC supports these TLVs (not all of them do) this method is
 %%     recommended, unless <tt>message_payload</tt> TLV is also supported of
-%%     course, read below comments on this subject.
+%%     course, read below comments on this subject.</dd>
 %% </dl>
 %%
 %% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
@@ -1118,8 +1137,20 @@ submit_sm(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
-submit_sm(Session, ParamList, ConcatenationMethod) ->
-    gen_esme_session:submit_sm(Session, ParamList).
+submit_sm(Session, ParamList, udh) ->
+    case lists:keysearch(short_message, 1, ParamList) of
+        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
+            RefNum = gen_esme_session:reference_number(Session),
+            Params = sm:udhi(ParamList, true),
+            F = fun(Segment) ->
+                        S = {short_message, Segment},
+                        L = lists:keyreplace(short_message, 1, Params, S),
+                        gen_esme_session:submit_sm(Session, L)
+                end,
+            lists:map(F, sm:split_user_data(SM, RefNum));
+        _Otherwise ->
+            [gen_esme_session:submit_sm(Session, ParamList)]
+    end.
 
 
 %% @spec unbind(Session) -> Result

@@ -1206,10 +1206,10 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
 handle_event({recv_error, _Error}, unbound, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
-handle_event({recv_error, _Error} = R, StateName, StateData) ->
+handle_event({recv_error, _Error} = R, _StateName, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};
-handle_event(die, StateName, StateData) ->
+handle_event(die, _StateName, StateData) ->
     {stop, normal, StateData}.
 
 
@@ -1336,7 +1336,7 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
-handle_info(Info, StateName, StateData) -> 
+handle_info(_Info, StateName, StateData) -> 
     {next_state, StateName, StateData}.
     
 
@@ -1696,7 +1696,7 @@ timer_loop(FsmRef, Time, Event) ->
     receive 
         {FsmRef, cancel_timer} ->
             ok;
-        Reset ->
+        _Reset ->
             timer_loop(FsmRef, Time, Event)
     after Time ->
             gen_fsm:send_event(FsmRef, {timeout, self(), Event})

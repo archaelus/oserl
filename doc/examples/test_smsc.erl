@@ -35,7 +35,7 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start_link/0, deliver_sm/2, stop/0]).
+-export([start_link/0, start_link/1, deliver_sm/2, deliver_sm/3, stop/0]).
 
 %%%-------------------------------------------------------------------
 %%% Internal SMSC exports
@@ -56,8 +56,7 @@
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
--define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
--define(DESTINATION_ADDR, "*").
+-define(DESTINATION_ADDR, "1234").
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -80,17 +79,30 @@
 %%%===================================================================
 %% @spec start_link() -> Result
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
 %% @doc Starts the SMSC server.
 %%
-%% @see gen_server
-%% @see start/0
+%% @equiv start_link(DEFAULT_SMPP_PORT)
 %% @end
 start_link() ->
+	start_link(?DEFAULT_SMPP_PORT).
+
+
+%% @spec start_link(Port) -> Result
+%%    Port = int()
+%%    Result = {ok, Pid} | ignore | {error, Error}
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
+%%
+%% @doc Starts the SMSC server on port <tt>Port</tt>.
+%%
+%% @see start_link/0
+%% @end
+start_link(Port) ->
     gen_smsc:start_link({local, ?SERVER}, ?MODULE, [], []),
-    gen_smsc:listen_start(?SERVER, ?SMPP_PORT, infinity, ?DEFAULT_SMPP_TIMERS).
+    gen_smsc:listen_start(?SERVER, Port, infinity, ?DEFAULT_SMPP_TIMERS).
 
 
 %% @spec deliver_sm(SourceAddr, ShortMessage) -> ok
@@ -102,8 +114,11 @@ start_link() ->
 %% @see handle_cast/2
 %% @end
 deliver_sm(SourceAddr, ShortMessage) ->
+	deliver_sm(SourceAddr, ShortMessage, ?DESTINATION_ADDR).
+
+deliver_sm(SourceAddr, ShortMessage, DestinationAddr) ->
     ParamList = [{source_addr, SourceAddr}, 
-                 {destination_addr, ?DESTINATION_ADDR}, 
+                 {destination_addr, DestinationAddr}, 
                  {short_message, ShortMessage}],
     gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
 

@@ -85,7 +85,7 @@
 %%% 
 %%% <h3><a name="handle_outbind-3">handle_outbind/3</a></h3>
 %%%
-%%% <tt>handle_outbind(ESME, Session, Pdu) -> ok</tt>
+%%% <tt>handle_outbind(ESME, Session, Pdu) -&gt; ok</tt>
 %%% <ul>
 %%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -104,7 +104,7 @@
 %%% <h3><a name="handle_alert_notification-3">handle_alert_notification/3</a>
 %%% </h3>
 %%%
-%%% <tt>handle_alert_notification(ESME, Session, Pdu) -> ok</tt>
+%%% <tt>handle_alert_notification(ESME, Session, Pdu) -&gt; ok</tt>
 %%% <ul>
 %%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -122,7 +122,7 @@
 %%% 
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
-%%% <tt>handle_operation(ESME, {CmdName, Pdu}) -> Result</tt>
+%%% <tt>handle_operation(ESME, {CmdName, Pdu}) -&gt; Result</tt>
 %%% <ul>
 %%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -149,7 +149,7 @@
 %%% 
 %%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
 %%%
-%%% <tt>handle_unbind(ESME, Session, Pdu) -> ok | {error, Error}</tt>
+%%% <tt>handle_unbind(ESME, Session, Pdu) -&gt; ok | {error, Error}</tt>
 %%% <ul>
 %%%   <li><tt>ESME = pid()</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
@@ -179,7 +179,7 @@
 %%%   <li>New callback <a href="#handle_enquire_link_failure-3">
 %%%     handle_enquire_link_failure/3</a> added.
 %%%     <br/>
-%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015">More</a>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
 %%%   </li>
 %%%   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
 %%%   </li>

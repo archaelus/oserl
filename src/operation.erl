@@ -176,7 +176,7 @@ merge_params([], ParamList2, MergedParamList) ->
     MergedParamList ++ ParamList2;
 merge_params(ParamList1, [], MergedParamList) ->
     MergedParamList ++ ParamList1;
-merge_params([{Id,V1}|T1], [{Id,V2}|T2], MergedParamList) ->
+merge_params([{Id,V1}|T1], [{Id,_V2}|T2], MergedParamList) ->
     merge_params(T1, T2, [{Id, V1}|MergedParamList]);
 merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) when I1 < I2 ->
     merge_params(T1, [{I2,V2}|T2], [{I1, V1}|MergedParamList]);
@@ -724,7 +724,7 @@ request_failure_code(?COMMAND_ID_SUBMIT_MULTI)       -> ?ESME_RSUBMITFAIL;
 request_failure_code(?COMMAND_ID_QUERY_BROADCAST_SM) -> ?ESME_RBCASTQUERYFAIL;
 request_failure_code(?COMMAND_ID_QUERY_SM)           -> ?ESME_RQUERYFAIL;
 request_failure_code(?COMMAND_ID_REPLACE_SM)         -> ?ESME_RREPLACEFAIL;
-request_failure_code(CommandId)                      -> ?ESME_RUNKNOWNERR.
+request_failure_code(_CommandId)                     -> ?ESME_RUNKNOWNERR.
 
 %%%===================================================================
 %%% Internal functions

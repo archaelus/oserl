@@ -1,4 +1,4 @@
-%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% Copyright (C) 2003 - 2005 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
 %%% This library is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU Lesser General Public
@@ -385,7 +385,7 @@ decode_iter(Binary, Type, until_error, Acc) ->
     case decode(Binary, Type) of
         {ok, Value, Rest} ->
             decode_iter(Rest, Type, until_error, [Value|Acc]);
-        Error ->
+        _Error ->
             {ok, lists:reverse(Acc), Binary}
     end;
 decode_iter(Binary, Type, Times, Acc) when length(Acc) < Times ->
@@ -623,7 +623,7 @@ encode(Value, #octet_string{format = F} = Type) when F /= undefined ->
 encode(Value, #octet_string{fixed = true, size = Size}) 
   when list(Value), (length(Value) == Size) or (length(Value) == 0) ->
     {ok, list_to_binary(Value)};
-encode(Value, #octet_string{size = Size} = Type) 
+encode(Value, #octet_string{size = Size})
   when list(Value), length(Value) =< Size ->
     {ok, list_to_binary(Value)};
 encode(Values, #list{type = InnerType, size = Size} = Type) 
@@ -798,7 +798,7 @@ fit(#octet_string{size = Size} = Type, NewSize) when NewSize =< Size ->
     Type#octet_string{size = NewSize, fixed = true};
 fit(#list{size = Size} = Type, NewSize) when NewSize < Size ->
     Type#list{size = Size};
-fit(Type, Size) ->
+fit(Type, _Size) ->
     Type.
 
 
@@ -829,7 +829,7 @@ fit(Type, Size) ->
 %% @end
 error_priority({error, {type_mismatch, _Type, Reason}}) ->
     error_priority(Reason, 1);
-error_priority(Error) ->
+error_priority(_Error) ->
     0.
 
 %% @doc Auxiliary function for error_priority/1

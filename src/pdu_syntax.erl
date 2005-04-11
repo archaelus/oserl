@@ -99,9 +99,9 @@
 %% function crashes.</p>
 %% @end 
 command_id(<<_Len:32, CmdId:32, _Status:32, _SeqNum:32, _Body/binary>>) ->
-	CmdId;
+    CmdId;
 command_id(PduDict) -> 
-	dict:fetch(command_id,  PduDict).
+    dict:fetch(command_id,  PduDict).
 
 
 %% @spec sequence_number(Pdu) -> int()
@@ -113,9 +113,9 @@ command_id(PduDict) ->
 %% the function crashes.</p>
 %% @end 
 sequence_number(<<_Len:32, _CmdId:32, _Status:32, SeqNum:32, _Body/binary>>) ->
-	SeqNum;
+    SeqNum;
 sequence_number(PduDict) -> 
-	dict:fetch(sequence_number,  PduDict).
+    dict:fetch(sequence_number,  PduDict).
 
 
 %% @spec new_pdu(CommandId, CommandStatus, SequenceNumber, Body) -> PduDict
@@ -186,9 +186,9 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %% @end
 pack(PduDict, Type) ->
     PackBody = 
-        fun (CommandId, CommandStatus, Dict) when CommandStatus == 0 ->
+        fun (CommandStatus, Dict) when CommandStatus == 0 ->
                 pack_body(Dict, Type#pdu.stds_types, Type#pdu.tlvs_types);
-            (_CommandId, _CommandStatus, _Dict) ->   
+            (_CommandStatus, _Dict) ->   
                 % Do NOT pack the body if CommandStatus != 0
                 {ok, <<>>}
         end,
@@ -196,7 +196,7 @@ pack(PduDict, Type) ->
     SeqNum = dict:fetch(sequence_number, PduDict),
     case dict:fetch(command_id, PduDict) of
         CmdId when CmdId == Type#pdu.command_id ->
-            case PackBody(CmdId, Status, PduDict) of
+            case PackBody(Status, PduDict) of
                 {ok, Body} ->
                     Len = size(Body) + 16,
                     {ok, <<Len:32,CmdId:32,Status:32,SeqNum:32,Body/binary>>};
@@ -250,16 +250,16 @@ pack(PduDict, Type) ->
 %% @end
 unpack(<<Len:32, Rest/binary>>, Type) when Len == size(Rest) + 4, Len >= 16 ->
     UnpackBody = 
-        fun (CommandId, CommandStatus, Bin) when CommandStatus == 0 ->
+        fun (CommandStatus, Bin) when CommandStatus == 0 ->
                 unpack_body(Bin, Type#pdu.stds_types, Type#pdu.tlvs_types);
-            (_CommandId, _CommandStatus, _Bin) ->   
+            (_CommandStatus, _Bin) ->   
                 % Do NOT unpack the body if CommandStatus != 0
                 {ok, []}
         end,
     case Rest of
         <<CmdId:32, Status:32, SeqNum:32, Body/binary>> 
           when CmdId == Type#pdu.command_id ->
-            case UnpackBody(CmdId, Status, Body) of
+            case UnpackBody(Status, Body) of
                 {ok, BodyPairs} ->
                     {ok, new_pdu(CmdId, Status, SeqNum, BodyPairs)};
                 {error, Error} ->

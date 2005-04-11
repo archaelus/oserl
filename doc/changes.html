@@ -402,6 +402,13 @@
 
 <h2><a name="changes1_1-1_2">Changes 1.1 -> 1.2</a></h2>
 
+<ul>
+  <li>Unused vars warnings removed.</li>
+</ul>
+
+<p>See other changes on individual files below.</p>
+
+
 <h3><a name="changes1_1-1_2-smpp_base-hrl">smpp_base.hrl</a></h3>
 
 <ul>
@@ -428,8 +435,17 @@
     releases, please use <a href="#reply_destination_address-1">
     reply_destination_address/1</a> instead.
   </li>
-  <li>Functions <a href="#set_udhi-1">set_udhi/1</a> and 
-    <a href="#split_user_data-2">split_user_data/2</a> added.
+  <li>Functions <a href="#udhi-1">udhi/1</a> and <a href="#udhi-2">udhi/2</a> 
+    added.
+  </li>
+  <li>Function <a href="#split_user_data-2">split_user_data/2</a> implemented.
+  </li>
+  <li>Function <a href="#chop_udh-1">chop_udh/1</a> implemented.</li>
+  <li>Function <a href="#reference_number-1">reference_number/1</a> 
+    implemented.
+  </li>
+  <li>Function <a href="#join_user_data-1">join_user_data/1</a> added.</li>
+  <li>Function <a href="#total_segments-1">total_segments/1</a> implemented.
   </li>
 </ul>
 
@@ -467,7 +483,8 @@
   </li>
   <li>Use <tt>proc_lib:spawn_link/1</tt> instead of <tt>spawn_link</tt>.
   </li>
-  <li>Function <a href="#submit_sm-3">submit_sm/3</a> added.</li>
+  <li>Functions <a href="#submit_sm-3">submit_sm/3</a> and
+    <a href="#submit_multi-3">submit_multi/3</a> added.</li>
 </ul>
 
 <h3><a name="changes1_1-1_2-smpp_globals-hrl">smpp_globals.hrl</a></h3>

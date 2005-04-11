@@ -53,8 +53,24 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [11 Abr 2005]
 %%%
-%%% @copyright 2003 - 2004 Enrique Marcote Peña
+%%% <ul>
+%%%   <li>Function set_udhi/1 replaced by <a href="#udhi-2">udhi/2</a>.</li>
+%%%   <li>Function <a href="#udhi-1">udhi/1</a> implemented.</li>
+%%%   <li>Function <a href="#chop_udh-1">chop_udh/1</a> implemented.</li>
+%%%   <li>Function <a href="#reference_number-1">reference_number/1</a> 
+%%%     implemented.
+%%%   </li>
+%%%   <li>Function <a href="#join_user_data-1">join_user_data/1</a> added.
+%%%   </li>
+%%%   <li>Function <a href="#total_segments-1">total_segments/1</a> 
+%%%     implemented.
+%%%   </li>
+%%% </ul>
+%%%
+%%%
+%%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
 %%% @version 0.2, {24 Jul 2003} {@time}.
@@ -69,12 +85,17 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([message_user_data/1, 
+-export([chop_udh/1,
+         join_user_data/1,
+         message_user_data/1, 
+         reference_number/1,
          reply_addresses/1,
          reply_destination_address/1,
          reply_source_address/1,
-         set_udhi/1,
-         split_user_data/2]).
+         split_user_data/2,
+		 total_segments/1,
+         udhi/1,
+         udhi/2]).
 
 %%%-------------------------------------------------------------------
 %%% Undocumented exports
@@ -101,6 +122,34 @@
 %%%===================================================================
 %%% External functions
 %%%===================================================================
+%% @spec chop_udh(Data) -> {Udh, Rest}
+%%     Data = string()
+%%     Rest = string()
+%%     Udh = string()
+%%
+%% @doc Chops the User Data Header from the User Data of a short message.
+%% @end 
+chop_udh([Udhl|_] = Data) ->
+    lists:split(Udhl + 1, Data).
+
+
+%% @spec join_user_data(Segments) -> {Data, RefNum}
+%%    Segments = [Segment]
+%%    Segment = string()
+%%    Data = string()
+%%    RefNum = int()
+%%
+%% @doc Joins the <tt>Segments</tt> of a concatenated message.
+%%
+%% @see split_user_data/2
+%% @end 
+join_user_data(Segments) ->
+    Choped = lists:map(fun(S) -> chop_udh(S) end, Segments), % UDH + Data
+    P = fun({[_,_,_,Ref,_,X],_}, {[_,_,_,Ref,_,Y],_}) -> X < Y end,
+    [{[_,_,_,Ref,_,_], Data}|T] = lists:sort(P, Choped),     % Get Ref from UDH
+    lists:foldl(fun({_,D}, {Acc, R}) -> {Acc ++ D, R} end, {Data, Ref}, T).
+
+
 %% @spec message_user_data(Pdu) -> UserData
 %%    Pdu        = pdu()
 %%    UserData   = {ParamName, ParamValue}
@@ -117,6 +166,21 @@ message_user_data(Pdu) ->
         ShortMessage ->
             {short_message, ShortMessage}
     end.
+
+
+%% @spec reference_number(Pdu) -> ReferenceNumber
+%%    Pdu = pdu()
+%%    ReferenceNumber = int()
+%%
+%% @doc Returns the <tt>ReferenceNumber</tt> of a concatenated message.
+%%
+%% <p>The function will fail if <tt>Pdu</tt> does not correspond with a valid
+%% concatenated message.</p>
+%% @end 
+reference_number(Pdu) ->
+    ShortMessage = operation:get_param(short_message, Pdu),
+    {[?UDHL, ?IEI, ?IEIDL, RefNum|_], _Rest} = chop_udh(ShortMessage),
+    RefNum.
 
 
 %% @spec reply_addresses(Pdu) -> ParamList
@@ -168,25 +232,6 @@ reply_source_address(Pdu) ->
      {source_addr, operation:get_param(destination_addr, Pdu)}].
 
 
-%% @spec set_udhi(ParamList) -> NewParamList
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
-%%    ParamValue = term()
-%%
-%% @doc Sets UDHI in the <i>esm_class</i> parameter of given list.  If
-%% <i>esm_class</i> was not defined, returned list includes it with a
-%% value of <tt>ESM_CLASS_GSM_UDHI</tt>.
-%% @end 
-set_udhi(ParamList) ->
-    case lists:keysearch(esm_class, 1, ParamList) of
-        {value, {esm_class, EsmClass}} ->
-            NewEsmClass = EsmClass bor ?ESM_CLASS_GSM_UDHI,
-            lists:keyreplace(esm_class, 1, ParamList, {esm_class,NewEsmClass});
-        false ->
-            [{esm_class, ?ESM_CLASS_GSM_UDHI}|ParamList]
-    end.
-
-
 %% @spec split_user_data(Data, RefNum) -> Segments
 %%    Data = string()
 %%    RefNum = int()
@@ -195,19 +240,16 @@ set_udhi(ParamList) ->
 %%
 %% @doc Splits the user data into several segments for message concatenation.
 %%
-%% <p><tt>Data</tt> is only splited if longer than SM_MAX_SIZE macro
-%% (defaults to 160), otherwise the list <tt>[Data]</tt> is returned.</p>
-%%
 %% <p>Resulting <tt>Segments</tt> contain the appropriated UDH for message
-%% concatenation, thus they are at most SM_SEGMENT_MAX_SIZE + UDH length (6).
-%% </p>
+%% concatenation, thus they are at most SM_SEGMENT_MAX_SIZE + UDH length (6)
+%% long.</p>
 %%
 %% <p><tt>Segments</tt> are returned in the right order.</p>
+%%
+%% @see join_user_data/1
 %% @end 
-split_user_data(Data, RefNum) when length(Data) > ?SM_MAX_SIZE ->
-    split_user_data(Data, ?REF_NUM(RefNum), []);
-split_user_data(Data, _RefNum) ->
-    [Data].
+split_user_data(Data, RefNum) ->
+    split_user_data(Data, ?REF_NUM(RefNum), []).
 
 %% @doc Auxiliary function for split_user_data/2
 %%
@@ -218,6 +260,66 @@ split_user_data(Data, RefNum, Acc) when length(Data) > ?SM_SEGMENT_MAX_SIZE ->
     split_user_data(Rest, RefNum, [Segment|Acc]);
 split_user_data(Data, RefNum, Acc) ->
     append_udh([Data|Acc], RefNum).
+
+
+%% @spec total_segments(Pdu) -> TotalSegments
+%%    Pdu = pdu()
+%%    TotalSegments = int()
+%%
+%% @doc Returns the total number of segments on a concatenated message.
+%%
+%% <p>The function will fail if <tt>Pdu</tt> does not correspond with a valid
+%% concatenated message.</p>
+%% @end 
+total_segments(Pdu) ->
+    ShortMessage = operation:get_param(short_message, Pdu),
+    {[?UDHL,?IEI,?IEIDL, _, TotalSegments|_], _Rest} = chop_udh(ShortMessage),
+    TotalSegments.
+
+
+%% @spec udhi(Pdu) -> bool()
+%%    Pdu = pdu()
+%%
+%% @doc Returns <tt>true</tt> if UDHI is set, <tt>false</tt> otherwise.
+%% @end 
+udhi(Pdu) ->
+    case operation:get_param(esm_class, Pdu) of
+        EsmClass when (EsmClass band ?ESM_CLASS_GSM_UDHI)==?ESM_CLASS_GSM_UDHI,
+                      EsmClass /= undefined ->
+            true;
+        _Otherwise ->
+            false
+    end.
+
+
+%% @spec udhi(ParamList, Udhi) -> NewParamList
+%%    ParamList  = [{ParamName, ParamValue}]
+%%    ParamName  = atom()
+%%    ParamValue = term()
+%%    Udhi = bool()
+%%
+%% @doc Sets <tt>Udhi</tt> in the <i>esm_class</i> parameter of given list.  
+%% If <tt>Udhi</tt> is <tt>true</tt> UDHI is set to 1, when <tt>false</tt> sets
+%% the UDHI to 0.  
+%%
+%% If <i>esm_class</i> parameter was not defined, returned list includes this
+%% parameter with a value of <tt>ESM_CLASS_GSM_UDHI</tt> if and only
+%% <tt>Udhi</tt> is <tt>true</tt>, if <tt>Udhi</tt> is <tt>false</tt>
+%% <i>esm_class</i> will be left undefined.
+%% @end 
+udhi(ParamList, Udhi) ->
+    case lists:keysearch(esm_class, 1, ParamList) of
+        {value, {esm_class, EsmClass}} when Udhi == true ->
+            NewEsmClass = EsmClass bor ?ESM_CLASS_GSM_UDHI,
+            lists:keyreplace(esm_class, 1, ParamList, {esm_class,NewEsmClass});
+        {value, {esm_class, EsmClass}} ->
+            NewEsmClass = EsmClass band (?ESM_CLASS_GSM_UDHI bxor 2#11111111),
+            lists:keyreplace(esm_class, 1, ParamList, {esm_class,NewEsmClass});
+        false when Udhi == true ->
+            [{esm_class, ?ESM_CLASS_GSM_UDHI}|ParamList];
+        false ->
+            ParamList
+    end.
 
 
 %%%===================================================================
@@ -251,8 +353,10 @@ append_udh(Segments, RefNum) ->
 append_udh([], _RefNum, _TotalSegments, _SeqNum, Acc) ->
     Acc;
 append_udh([H|T], RefNum, TotalSegments, SeqNum, Acc) ->
-    % UDH: UDHL, IEI, IEIDL, RefNum, TotalSegments, SeqNum
+    % UDH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum]
     NewH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum | H],
     append_udh(T, RefNum, TotalSegments, SeqNum - 1, [NewH|Acc]).
+
+
 
 

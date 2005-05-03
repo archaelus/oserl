@@ -18,6 +18,7 @@ EDOC_MODULES = \
 	pdu_syntax \
 	operation \
 	sm \
+	smpp_log \
 	gen_esme_session \
 	gen_smsc_session \
 	gen_esme \

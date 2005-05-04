@@ -37,10 +37,13 @@
 %%-compile(export_all).
 -export([start/0, 
          start_link/0, 
-         add_handler/0, 
-         add_handler/1,
+         add_disk_log_handler/1, 
+         add_error_logger_handler/1,
+         delete_disk_log_handler/0, 
+         delete_error_logger_handler/0,
          notify_peer_operation/1,
-         notify_self_operation/1]).
+         notify_self_operation/1,
+         stop/0]).
 %          swap_handler/0,
 %          swap_handler/1]).
 
@@ -72,7 +75,7 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, {pred}).
+-record(state, {pred, type}).
 
 %%%===================================================================
 %%% External functions
@@ -103,29 +106,58 @@ start_link() ->
     gen_event:start_link({local, ?SERVER}). 
 
 
-%% @spec add_handler() -> Result
+%% @spec add_disk_log_handler(Args) -> Result
+%%    Args = [Arg]
+%%    Arg = {file, File} | {type, Type} | {pred, Pred}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
-%% @doc Adds an event handler
+%% @doc Adds the disk log event handler
 %%
-%% @equiv add_handler(fun(_) -> true end).
+%% @see gen_event:add_handler/3
 %% @end
-add_handler() ->
-    add_handler(fun(_) -> true end).
+add_disk_log_handler(Args) ->
+    NewArgs = [{type, disk_log}|Args],
+    gen_event:add_handler(?SERVER, {?MODULE, disk_log}, NewArgs).
 
 
-%% @spec add_handler(Pred) -> Result
+%% @spec add_error_logger_handler(Args) -> Result
+%%    Args = [Arg]
+%%    Arg = {file, File} | {type, Type} | {pred, Pred}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
-%%    Pred = fun(Event) -> boolean()
 %%
-%% @doc Adds an event handler
+%% @doc Adds the error logger event handler
 %%
-%% @equiv gen_event:add_handler(?SERVER, ?MODULE, [Pred]).
+%% @see gen_event:add_handler/3
 %% @end
-add_handler(Pred) ->
-    gen_event:add_handler(?SERVER, ?MODULE, [Pred]).
+add_error_logger_handler(Args) ->
+    NewArgs = [{type, error_logger}|Args],
+    gen_event:add_handler(?SERVER, {?MODULE, error_logger}, NewArgs).
+
+
+%% @spec delete_disk_log_handler() -> Result
+%%    Result = ok | {'EXIT', Reason} | term()
+%%    Reason = term()
+%%
+%% @doc Deletes the disk log event handler
+%%
+%% @see delete_handler/1
+%% @end
+delete_disk_log_handler() ->
+    gen_event:delete_handler(?SERVER, {?MODULE, disk_log}, stop).
+
+
+%% @spec delete_error_logger_handler() -> Result
+%%    Result = ok | {'EXIT', Reason} | term()
+%%    Reason = term()
+%%
+%% @doc Deletes the disk log event handler
+%%
+%% @see add_handler/2
+%% @end
+delete_error_logger_handler() ->
+    gen_event:delete_handler(?SERVER, {?MODULE, error_logger}, stop).
 
 
 %% @spec notify_peer_operation(Pdu) -> ok
@@ -136,7 +168,7 @@ add_handler(Pred) ->
 %% @equiv gen_event:notify(?LOG, {peer, Pdu}).
 %% @end
 notify_peer_operation(Pdu) ->
-    gen_event:notify(?LOG, {peer, Pdu}).
+    gen_event:notify(?SERVER, {peer, Pdu}).
 
 
 %% @spec notify_self_operation(Pdu) -> ok
@@ -147,8 +179,20 @@ notify_peer_operation(Pdu) ->
 %% @equiv gen_event:notify(?LOG, {self, Pdu}).
 %% @end
 notify_self_operation(Pdu) ->
-    gen_event:notify(?LOG, {self, Pdu}).
+    gen_event:notify(?SERVER, {self, Pdu}).
 
+
+%% @spec stop() -> Result
+%%    Result = {ok, Pid} | {error, Error}
+%%    Pid    = pid()
+%%    Error  = {already_started, Pid}
+%%
+%% @doc Starts the server.
+%%
+%% @see gen_event:start/1
+%% @end
+stop() ->
+    gen_event:stop(?SERVER). 
 
 %% @spec swap_handler() -> Result
 %%    Result = ok | {'EXIT', Reason} | term()
@@ -183,9 +227,18 @@ notify_self_operation(Pdu) ->
 %%
 %% @doc Initialize the event handler
 %% @end
-init([Pred]) ->
-    {ok, ?LOG} = dets:open_file(?LOG, []),
-    {ok, #state{pred = Pred}}.
+init(Args) ->
+    Pred = get_arg(pred, Args, fun(_) -> true end),
+    Type = get_arg(type, Args, disk_log),
+    Result = if
+                 Type == disk_log ->
+                     File = get_arg(file, Args, atom_to_list(?LOG)),
+                     disk_log:open([{name, ?LOG}, {file, File}, {type, wrap}]);
+                 true ->
+                     ok
+             end,
+    report:info(smpp_log, add_handler, [{result, Result}|Args]),
+    {ok, #state{pred = Pred, type = Type}}.
 
 
 %% @spec handle_event(Event, State) -> Result
@@ -202,10 +255,19 @@ init([Pred]) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_event({Who, Pdu}, #state{pred = Pred} = State) ->
-    case catch Pred(Pdu) of
-        true ->
-            dets:insert(?LOG, {now(), Pdu, Who});
+handle_event({From, BinaryPdu}, #state{pred = Pred, type = Type} = State) ->
+    case catch Pred(BinaryPdu) of
+        true when Type == disk_log ->
+            disk_log:alog(?LOG, {now(), BinaryPdu, From});
+        true when Type == error_logger ->
+            Params = case operation:unpack(BinaryPdu) of
+                         {ok, PduDict} ->
+                             operation:to_list(PduDict);
+                         Error ->
+                             Error
+                     end,
+            Pdu = binary:to_hexlist(BinaryPdu),
+            report:info(smpp_log, operation, [{from,From},{pdu,Pdu}|Params]);
         _Otherwise ->
             ok
     end,
@@ -258,8 +320,16 @@ handle_info(_Info, State) ->
 %%
 %% <p>Return value is ignored by the server.</p>
 %% @end
-terminate(_Reason, _State) ->
-    dets:close(?LOG).
+terminate(Reason, #state{type = Type}) ->
+    Result = if
+                 Type == disk_log ->
+                     disk_log:close(?LOG);
+                 true ->
+                     ok
+             end,
+    Details = [{reason, Reason}, {type, Type}, {result, Result}],
+    report:info(smpp_log, terminate, Details).
+
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
@@ -275,3 +345,19 @@ code_change(_OldVsn, State, _Extra) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+%% @spec get_arg(Key, List, Default) -> Value
+%%    Key = term()
+%%    List = [{Key, Value}]
+%%    Value = term()
+%%    Default = term()
+%%
+%% @doc Gets the <tt>Value</tt> for a given <tt>Key</tt>, if not found
+%% <tt>Default</tt> is returned.
+%% @end 
+get_arg(Key, List, Default) ->
+    case lists:keysearch(Key, 1, List) of
+        {value, {_Key, Val}} -> 
+            Val;
+        _ -> 
+            Default
+    end.

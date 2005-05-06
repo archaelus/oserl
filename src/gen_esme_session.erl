@@ -188,6 +188,16 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [6 May 2005]
+%%%
+%%% <ul>
+%%%   <li>PDUs are logged using the new <a href="smpp_log.hmtl">smpp_log</a>
+%%%     event manager.
+%%%   </li>
+%%%   <li>Errors reported using the <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/error_logger.html">error_logger</a>.
+%%%   </li>
+%%% </ul>
+%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -263,14 +273,6 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
--define(SERVER, ?MODULE).
-
-% Bound state for a given command_id
--define(BOUND(B), if 
-                      B == ?COMMAND_ID_BIND_RECEIVER_RESP    -> bound_rx;
-                      B == ?COMMAND_ID_BIND_TRANSMITTER_RESP -> bound_tx;
-                      B == ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> bound_trx
-                  end).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -822,12 +824,20 @@ open({?COMMAND_ID_OUTBIND, _Pdu} = R, S) ->
     reset_timer(S#state.enquire_link_timer),
     Self = self(),
     proc_lib:spawn_link(fun() -> handle_peer_outbind(R, Self, S) end),
+    report:info(?MODULE, outbound, [{pid, Self}]),
     {next_state, outbound, S};
-open(CmdId, S) when CmdId == ?COMMAND_ID_BIND_RECEIVER_RESP;
-                    CmdId == ?COMMAND_ID_BIND_TRANSMITTER_RESP;
-                    CmdId == ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
+open(?COMMAND_ID_BIND_TRANSCEIVER_RESP, S) ->
     cancel_timer(S#state.session_init_timer),
-    {next_state, ?BOUND(CmdId), S};
+    report:info(?MODULE, bound_trx, [{pid, self()}]),
+    {next_state, bound_trx, S};
+open(?COMMAND_ID_BIND_TRANSMITTER_RESP, S) ->
+    cancel_timer(S#state.session_init_timer),
+    report:info(?MODULE, bound_tx, [{pid, self()}]),
+    {next_state, bound_tx, S};
+open(?COMMAND_ID_BIND_RECEIVER_RESP, S) ->
+    cancel_timer(S#state.session_init_timer),
+    report:info(?MODULE, bound_rx, [{pid, self()}]),
+    {next_state, bound_rx, S};
 open({timeout, _Ref, enquire_link_timer}, S) ->
     {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
@@ -838,7 +848,7 @@ open({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, open, S};
 open(R, S) ->    
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, open, S#state.socket),
     {next_state, open, S}.
 
 
@@ -868,7 +878,7 @@ outbound({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, outbound, S};
 outbound(R, S) ->
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, outbound, S#state.socket),
     {next_state, outbound, S}.
     
 
@@ -907,6 +917,7 @@ bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     case handle_peer_unbind(R, self(), S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
+            report:info(?MODULE, unbound, [{pid, self()}]),
             {next_state, unbound, S};
         false ->
             {next_state, bound_rx, S}
@@ -914,6 +925,7 @@ bound_rx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
 bound_rx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
+    report:info(?MODULE, unbound, [{pid, self()}]),
     {next_state, unbound, S};
 bound_rx({timeout, _Ref, enquire_link_timer}, S) ->
     {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
@@ -928,7 +940,7 @@ bound_rx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_rx, S};
 bound_rx(R, S) ->    
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_rx, S#state.socket),
     {next_state, bound_rx, S}.
 
 
@@ -954,6 +966,7 @@ bound_tx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     case handle_peer_unbind(R, self(), S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
+            report:info(?MODULE, unbound, [{pid, self()}]),
             {next_state, unbound, S};
         false ->
             {next_state, bound_tx, S}
@@ -961,6 +974,7 @@ bound_tx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
 bound_tx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
+    report:info(?MODULE, unbound, [{pid, self()}]),
     {next_state, unbound, S};
 bound_tx({timeout, _Ref, enquire_link_timer}, S) ->
     {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
@@ -975,7 +989,7 @@ bound_tx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_tx, S};
 bound_tx(R, S) ->    
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_tx, S#state.socket),
     {next_state, bound_tx, S}.
 
 
@@ -1014,6 +1028,7 @@ bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
     case handle_peer_unbind(R, self(), S) of  % Synchronous
         true ->
             cancel_timer(S#state.inactivity_timer),
+            report:info(?MODULE, unbound, [{pid, self()}]),
             {next_state, unbound, S};
         false ->
             {next_state, bound_trx, S}
@@ -1021,6 +1036,7 @@ bound_trx({?COMMAND_ID_UNBIND, _Pdu} = R, S) ->
 bound_trx(?COMMAND_ID_UNBIND_RESP, S) ->
     cancel_timer(S#state.inactivity_timer),
     reset_timer(S#state.enquire_link_timer),
+    report:info(?MODULE, unbound, [{pid, self()}]),
     {next_state, unbound, S};
 bound_trx({timeout, _Ref, enquire_link_timer}, S) ->
     {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
@@ -1035,7 +1051,7 @@ bound_trx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_trx, S};
 bound_trx(R, S) ->    
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_trx, S#state.socket),
     {next_state, bound_trx, S}.
 
 
@@ -1063,7 +1079,7 @@ unbound({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, unbound, S};
 unbound(R, S) ->    
-    esme_rinvbndsts_resp(R, S#state.socket),
+    esme_rinvbndsts_resp(R, unbound, S#state.socket),
     {next_state, unbound, S}.
 
 %% @doc Auxiliary function for Event/2 functions.
@@ -1078,7 +1094,9 @@ unbound(R, S) ->
 %% @see bound_trx/2
 %% @see unbound/2
 %% @end 
-esme_rinvbndsts_resp({CmdId, Pdu}, Socket) ->
+esme_rinvbndsts_resp({CmdId, Pdu}, StateName, Socket) ->
+    Details = [{state, StateName}, {command_id, CmdId}, {pdu, Pdu}],
+    report:info(?MODULE, esme_rinvbndsts, Details),
     SeqNum = operation:get_param(sequence_number, Pdu),
     case ?VALID_COMMAND_ID(CmdId) of
         true ->
@@ -1356,6 +1374,7 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
     Timestamp = now(),
     case catch operation:esme_unpack(BinaryPdu) of
         {ok, Pdu} ->
+            smpp_log:notify_peer_operation(BinaryPdu),
             handle_input_correct_pdu(Pdu, StateData),
             NewStateData = 
                 case StateName of
@@ -1382,18 +1401,21 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
                 end,
             {next_state, StateName, NewStateData};
         {error, CmdId, Status, SeqNum} ->
+            Details = [{pdu, BinaryPdu},
+                       {command_id, CmdId},
+                       {command_status, Status},
+                       {sequence_number, SeqNum}],
+            report:info(?MODULE, unpack_error, Details),
             handle_input_corrupt_pdu(CmdId, Status, SeqNum, StateData),
             {next_state, StateName, StateData};
-        {'EXIT', _What} ->
-%             io:format("What's going on? ~p~n", [What]),
+        {'EXIT', What} ->
+            report:error(?MODULE, unpack_error, What, [{pdu, BinaryPdu}]),
             handle_input_corrupt_pdu(undefined,?ESME_RUNKNOWNERR,0,StateData),
             {next_state, StateName, StateData}
     end;
 handle_event({recv_error, _Error}, unbound, StateData) ->
-%    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
 handle_event({recv_error, _Error} = R, _StateName, StateData) ->
-%    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};
 handle_event({enquire_link_failure, Status}, StateName, StateData) ->
     Self = self(),
@@ -1412,7 +1434,6 @@ handle_event(die, _StateName, StateData) ->
 %% @see handle_input_corrupt_pdu/3
 %% @end
 handle_input_correct_pdu(Pdu, StateData) ->
-%    io:format("Correct input. PDU = ~p~n", [Pdu]),
     case operation:get_param(command_id, Pdu) of
         CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
@@ -1456,7 +1477,6 @@ handle_input_corrupt_pdu(?COMMAND_ID_GENERIC_NACK, _Status, _SeqNum, _S) ->
     % Do not send anything, might enter a request/response loop
     true;
 handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
-%    io:format("Corrupt input.~nCmdId = ~p~nStatus = ~p~nSeqNum = ~p~n", [CmdId, Status, SeqNum]),
     case ?VALID_COMMAND_ID(CmdId) of
         true ->
             RespId = ?RESPONSE(CmdId),
@@ -1510,7 +1530,9 @@ congestion_state(Lapse, Index, Time) ->
 handle_sync_event(reference_number, _From, StateName, StateData) ->
     RefNum = StateData#state.reference_number,
     {reply, RefNum, StateName, StateData#state{reference_number = RefNum + 1}};
-handle_sync_event(_Event, _From, StateName, StateData) ->
+handle_sync_event(Event, _From, StateName, StateData) ->
+    Details = [{event, Event}, {state, StateName}],
+    report:info(?MODULE, unexpected_sync_event, Details),
     {reply, ok, StateName, StateData}.
 
 
@@ -1529,7 +1551,8 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
-handle_info(_Info, StateName, StateData) -> 
+handle_info(Info, StateName, StateData) -> 
+    report:info(?MODULE, unexpected_info, [{info, Info}, {state, StateName}]),
     {next_state, StateName, StateData}.
 
 
@@ -1542,8 +1565,8 @@ handle_info(_Info, StateName, StateData) ->
 %%
 %% <p>Return value is ignored by the server.</p>
 %% @end
-terminate(R, _N, S) when S#state.socket == closed; R == kill ->
-%    io:format("*** gen_esme_session terminating: ~p - ~p ***~n", [self(), R]),
+terminate(R, N, S) when S#state.socket == closed; R == kill ->
+    report:info(?MODULE, terminate, [{state, N}, {reason, R}]),
     case process_info(self(), registered_name) of
         {registered_name, Name} ->
             unregister(Name);
@@ -1740,19 +1763,18 @@ send_response(CmdId, Status, SeqNum, ParamList, Socket) ->
 %% @doc Send the PDU <tt>Pdu</tt> over a <tt>Socket</tt>.
 %% @end
 send_pdu(Socket, Pdu) ->
-%    io:format("Sending PDU: ", []),
     case operation:esme_pack(Pdu) of
         {ok, BinaryPdu} ->
-%            io:format("~p~n", [BinaryPdu]),
             case gen_tcp:send(Socket, BinaryPdu) of
                 ok ->
-%                    io:format("OK~n", []),
-                    ok;
+                    smpp_log:notify_self_operation(BinaryPdu);
                 SendError ->
-%                    io:format("Error ~p~n", [SendError]),
+                    Details = [{socket, Socket}, {pdu, BinaryPdu}],
+                    report:error(?MODULE, send_error, SendError, Details),
                     exit(SendError)
             end;
         {error, _CmdId, Status, _SeqNum} ->
+            report:error(?MODULE, pack_error, Status, operation:to_list(Pdu)),
             exit({error, Status})
     end.
 

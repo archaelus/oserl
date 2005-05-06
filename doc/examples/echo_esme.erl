@@ -42,7 +42,8 @@
 %%%-------------------------------------------------------------------
 -export([init/1,
          handle_outbind/3,
-         handle_alert_notification/3,
+         handle_alert_notification/2,
+         handle_enquire_link_failure/2,
          handle_operation/3,
          handle_unbind/3,
          handle_listen_error/1,
@@ -56,8 +57,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(SMSC_ADDRESS, {192, 168, 1, 4}).
--define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
+-define(SMSC_ADDRESS, {127, 0, 0, 1}).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
 -define(PASSWORD, "secret").
 -define(SOURCE_ADDR, "1948").
@@ -120,7 +120,9 @@ stop() ->
 %% <p>Initiates the server.</p>
 %% @end
 init([]) ->
-    case gen_esme:session_start(?SMSC_ADDRESS, ?SMPP_PORT) of
+    gen_esme:open_disk_log([]),
+    gen_esme:open_error_logger([]),
+    case gen_esme:session_start(?SMSC_ADDRESS, ?DEFAULT_SMPP_PORT) of
         {ok, Trx} ->
             erlang:monitor(process, Trx),
             ParamList = [{system_id, ?SYSTEM_ID},
@@ -157,15 +159,14 @@ init([]) ->
 %%
 %% <p>Handle <i>oubind</i> requests from the peer SMSC.</p>
 %% @end
-handle_outbind({outbind, Session, Pdu}, From, State) ->
+handle_outbind({outbind, _Session, _Pdu}, _From, State) ->
     {noreply, State}.
 
 
-%% @spec handle_alert_notification(AlertNotification, From, State) -> Result
+%% @spec handle_alert_notification(AlertNotification, State) -> Result
 %%    AlertNotification = {alert_notification, Session, Pdu}
 %%    Session = pid()
 %%    Pdu = pdu()
-%%    From = term()
 %%    State = term()
 %%    Result = {noreply, NewState}               |
 %%             {noreply, NewState, Timeout}      |
@@ -177,12 +178,30 @@ handle_outbind({outbind, Session, Pdu}, From, State) ->
 %%    Timeout = int()
 %%    Reason = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-3">gen_esme - handle_alert_notification/3</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-2">gen_esme - handle_alert_notification/2</a> callback implementation.
 %%
 %% <p>Handle <i>alert_notification</i> requests from the peer SMSC.</p>
 %% @end
-handle_alert_notification({alert_notification, Session, Pdu}, From, State) -> 
+handle_alert_notification({alert_notification, _Session, _Pdu}, State) -> 
     {noreply, State}.
+
+%% @spec handle_enquire_link_failure(EnquireLinkFailure, State) -> Result
+%%    EnquireLinkFailure = {enquire_link_failure, Session, CommandStatus}
+%%    Session = pid()
+%%    CommandStatus = int()
+%%    State = term()
+%%    Result = {noreply, NewState}               |
+%%             {noreply, NewState, Timeout}      |
+%%             {stop, Reason, NewState}
+%%    Timeout = int()
+%%    NewState = term()
+%%    Reason = term()
+%%
+%% @doc Notifies when an <i>enquire_link</i> failure occurs (i.e. the SMSC did
+%% not respond to our <i>enquire_link</i> operation).
+%% @end
+handle_enquire_link_failure({enquire_link_failure,_Session,_Status}, State) ->
+    {stop, enquire_link_failure, State}.
 
 
 %% @spec handle_operation(Operation, From, State) -> Result
@@ -216,21 +235,21 @@ handle_alert_notification({alert_notification, Session, Pdu}, From, State) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({deliver_sm, _Session, Pdu}, From, S) ->
+handle_operation({deliver_sm, _Session, Pdu}, _From, S) ->
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
+    report:info(?MODULE, echo_deliver_sm, [Mesg|Dest]),
     spawn(fun() -> gen_esme:submit_sm(S#state.trx_session, [Mesg|Dest]) end),
     {reply, {ok, []}, S};
-handle_operation({data_sm, Session, Pdu}, From, S) ->
+handle_operation({data_sm, _Session, Pdu}, _From, S) ->
     Mesg = sm:message_user_data(Pdu),   % gets incoming short message
     Dest = sm:reply_address(Pdu),       % source address as response address
-    io:format("Echoing SM: ~p~n", [Mesg]),
+    report:info(?MODULE, echo_data_sm, [Mesg|Dest]),
     spawn(fun() -> gen_esme:data_sm(S#state.trx_session, [Mesg|Dest]) end),
     {reply, {ok, []}, S};
-handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
+handle_operation({_CmdName, _Session, Pdu}, _From, S) ->
     % Don't know how to handle CmdName
-    io:format("Don't know how to handle ~p~n", [CmdName]),
+    report:info(?MODULE, cannot_handle_operation, operation:to_list(Pdu)),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
 
@@ -261,8 +280,7 @@ handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Trx, Pdu}, From, #state{trx_session = Trx} = S) -> 
-    io:format("unbind: ~p~n", [Trx]),
+handle_unbind({unbind, Trx, _Pdu}, _From, #state{trx_session = Trx} = S) -> 
     {stop, normal, S#state{trx_session = undefined}}.
 
 
@@ -334,7 +352,7 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast(Request, State) ->
+handle_cast(_Request, State) ->
     {noreply, State}.
 
 
@@ -360,7 +378,7 @@ handle_cast(Request, State) ->
 %% @end
 handle_info({'DOWN', _, process, Trx, Info}, #state{trx_session = Trx} = S) ->
     {stop, Info, S};
-handle_info(Info, S) ->
+handle_info(_Info, S) ->
     {noreply, S}.
 
 
@@ -375,9 +393,9 @@ handle_info(Info, S) ->
 %%
 %% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
 %% @end
-terminate(kill, S) ->
+terminate(kill, _S) ->
     ok;
-terminate(Reason, S) ->
+terminate(_Reason, S) ->
     catch gen_smsc:unbind(S#state.trx_session),
     catch gen_smsc:session_stop(S#state.trx_session).
 
@@ -392,7 +410,7 @@ terminate(Reason, S) ->
 %%
 %% <p>Convert process state when code is changed.</p>
 %% @end
-code_change(OldVsn, State, Extra) ->
+code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %%%===================================================================

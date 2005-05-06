@@ -87,7 +87,7 @@
 %% @equiv start_link(DEFAULT_SMPP_PORT)
 %% @end
 start_link() ->
-	start_link(?DEFAULT_SMPP_PORT).
+    start_link(?DEFAULT_SMPP_PORT).
 
 
 %% @spec start_link(Port) -> Result
@@ -114,7 +114,7 @@ start_link(Port) ->
 %% @see handle_cast/2
 %% @end
 deliver_sm(SourceAddr, ShortMessage) ->
-	deliver_sm(SourceAddr, ShortMessage, ?DESTINATION_ADDR).
+    deliver_sm(SourceAddr, ShortMessage, ?DESTINATION_ADDR).
 
 deliver_sm(SourceAddr, ShortMessage, DestinationAddr) ->
     ParamList = [{source_addr, SourceAddr}, 
@@ -244,14 +244,14 @@ handle_bind({bind_transceiver, Trx, _Pdu}, _From, S) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({CmdName, Session, Pdu}, From, S) when CmdName == submit_sm;
-                                                        CmdName == data_sm ->
+handle_operation({CmdName, _Session, Pdu}, _From, S) when CmdName == submit_sm;
+                                                          CmdName == data_sm ->
     N = operation:get_param(destination_addr, Pdu),
     T = element(2, sm:message_user_data(Pdu)),
     I = S#state.message_id,
     io:format("~p: ~p - ~p~n", [CmdName, N, T]),
     {reply, {ok, [{message_id, integer_to_list(I)}]}, S#state{message_id=I+1}};
-handle_operation({CmdName, Session, Pdu}, From, S) ->
+handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
     % Don't know how to handle CmdName
     io:format("Don't know how to handle ~p~n", [CmdName]),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
@@ -284,7 +284,7 @@ handle_operation({CmdName, Session, Pdu}, From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Session, Pdu}, _From, S) ->
+handle_unbind({unbind, Session, _Pdu}, _From, S) ->
     io:format("unbind: ~p~n", [Session]),
     {reply, ok, S}.
 
@@ -414,7 +414,7 @@ handle_info({'DOWN', _MonitorReference, process, Object, Info}, S) ->
         _NotASession ->
             {stop, Info, S}
     end;
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 
@@ -429,9 +429,9 @@ handle_info(Info, State) ->
 %%
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
-terminate(kill, S) ->
+terminate(kill, _S) ->
     ok;
-terminate(Reason, S) ->
+terminate(_Reason, S) ->
     L = lists:usort(S#state.rx ++ S#state.tx),
     lists:foreach(fun(X) -> catch gen_smsc:unbind(X) end, L),
     lists:foreach(fun(X) -> catch gen_smsc:session_stop(X) end, L).
@@ -447,7 +447,7 @@ terminate(Reason, S) ->
 %%
 %% <p>Convert process state when code is changed.</p>
 %% @end
-code_change(OldVsn, State, Extra) ->
+code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %%%===================================================================

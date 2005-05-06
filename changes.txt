@@ -259,6 +259,7 @@ How these changes affected individual files is described below.
 4.   Changes 1.1 -> 1.2
 
 - Removed unused vars warnings.
+- PDU logs added.  See smpp_log module for further details.
 
 See other changes on individual files below.
 
@@ -290,6 +291,8 @@ See other changes on individual files below.
   See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
 - Use proc_lib:spawn_link/1 instead of spawn_link.
 - New function reference_number/1 implemented.
+- PDUs are logged using the new smpp_log event manager.
+- Errors reported using the error_logger.
 
 
 4.4  gen_esme.erl
@@ -301,7 +304,14 @@ See other changes on individual files below.
 - Functions session_start_link/2 and session_start_link/3 added.
 - Use proc_lib:spawn_link/1 instead of spawn_link.
 - Functions submit_sm/3 and	submit_multi/3 added.
+- Log utility added.  Functions open_disk_log/1, close_disk_log</a>,
+  open_error_logger/1 and close_error_logger/0 implemented.
 
+  By default neither the disk_log nor the error_logger handler are
+  added to the smpp_log event manager, thus no logging is done until
+  open_disk_log/1 and/or open_error_logger/1 are called.
+
+  Please refer to smpp_log for further information about OSERL logs.
 
 4.5  smpp_globals.hrl
 

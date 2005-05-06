@@ -404,6 +404,9 @@
 
 <ul>
   <li>Unused vars warnings removed.</li>
+  <li>PDU logs added.  See <a href="smpp_log.html">smpp_log</a> module for
+    further details.
+  </li>
 </ul>
 
 <p>See other changes on individual files below.</p>
@@ -463,6 +466,11 @@
   <li>New function <a href="#reference_numbe-1">reference_number/1</a>
     implemented.
   </li>
+  <li>PDUs are logged using the new <a href="smpp_log.hmtl">smpp_log</a>
+    event manager.
+  </li>
+  <li>Errors reported using the <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/error_logger.html">error_logger</a>.
+  </li>
 </ul>
 
 
@@ -485,6 +493,20 @@
   </li>
   <li>Functions <a href="#submit_sm-3">submit_sm/3</a> and
     <a href="#submit_multi-3">submit_multi/3</a> added.</li>
+  <li>Log utility added.  Functions <a href="#open_disk_log-1">
+    open_disk_log/1</a>, <a href="#close_disk_log-0">close_disk_log</a>,
+    <a href="#open_error_logger-1">open_error_logger/1</a> and
+    <a href="#close_error_logger-0">close_error_logger</a> implemented.
+    <br/>
+    By default neither the disk_log nor the error_logger handler are
+    added to the <a href="smpp_log.html">smpp_log</a> event manager, thus 
+    no logging is done until <a href="#open_disk_log-1">open_disk_log/1</a>
+    and/or <a href="#open_error_logger-1">open_error_logger/1</a> are 
+    called.
+    <br/>
+    Please refer to <a href="smpp_log.html">smpp_log</a> for further 
+    information about OSERL logs.
+   </li>
 </ul>
 
 <h3><a name="changes1_1-1_2-smpp_globals-hrl">smpp_globals.hrl</a></h3>
@@ -496,3 +518,4 @@
 
 </body>
 </html>
+

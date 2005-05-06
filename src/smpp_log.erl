@@ -30,6 +30,7 @@
 %%%-------------------------------------------------------------------
 %%% Include files
 %%%-------------------------------------------------------------------
+-include("oserl.hrl").
 
 %%%-------------------------------------------------------------------
 %%% External exports
@@ -41,11 +42,11 @@
          add_error_logger_handler/1,
          delete_disk_log_handler/0, 
          delete_error_logger_handler/0,
+         match/3,
+         match/4,
          notify_peer_operation/1,
          notify_self_operation/1,
          stop/0]).
-%          swap_handler/0,
-%          swap_handler/1]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -61,7 +62,28 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(LOG, ?MODULE).
+-define(NAME, ?MODULE).    % Default disk_log name.
+
+% Default logging predicate.
+%
+% Logs every operation PDU other than an enquire_link or an enquire_link_resp.
+-define(PRED, fun(BinaryPdu) ->
+                      case pdu_syntax:command_id(BinaryPdu) of
+                          ?COMMAND_ID_ENQUIRE_LINK ->
+                              false;
+                          ?COMMAND_ID_ENQUIRE_LINK_RESP ->
+                              false;
+                          _CommandId ->
+                              true
+                      end
+              end).
+
+% Default log size.
+%
+% Assuming 256 bytes for each PDU.  Individual log files of the wrap disk log
+% can store up to 40960 PDUs.  Having 20 files on the wrap log, the total
+% PDU capacity, before wrapping to the first log, is about 819200.
+-define(SIZE, {10485760, 20}). % 10M x 20 = 200M
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -75,7 +97,7 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, {pred, type}).
+-record(state, {type, pred, file}).
 
 %%%===================================================================
 %%% External functions
@@ -108,11 +130,24 @@ start_link() ->
 
 %% @spec add_disk_log_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {type, Type} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
-%% @doc Adds the disk log event handler
+%% @doc Adds the disk log event handler.
+%%
+%% <ul>
+%%   <li><b>File:</b> disk log file name.  Default is <i>smpp_log</i>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the 
+%%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>.  The default size is
+%%     <tt>{10485760, 20}</tt> (10M x 20).  Assuming 256 bytes for each PDU.  
+%%     Individual log files of the wrap disk log can store up to 40960 PDUs 
+%%     for the default value.  Having 20 files on the wrap log, the total PDU 
+%%     capacity, before wrapping to the first log, is about 819200.
+%%   </li>
+%% </ul>
 %%
 %% @see gen_event:add_handler/3
 %% @end
@@ -123,11 +158,18 @@ add_disk_log_handler(Args) ->
 
 %% @spec add_error_logger_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {type, Type} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
-%% @doc Adds the error logger event handler
+%% @doc Adds the error logger event handler.
+%%
+%% <ul>
+%%   <li><b>File:</b> error_logger logfile.  If not defined no logfile is 
+%%     used</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
 %%
 %% @see gen_event:add_handler/3
 %% @end
@@ -159,13 +201,123 @@ delete_disk_log_handler() ->
 delete_error_logger_handler() ->
     gen_event:delete_handler(?SERVER, {?MODULE, error_logger}, stop).
 
+%% @spec match(Date, From, Pred, Continuation) -> Result
+%%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
+%%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
+%%    FromTime = Time
+%%    ToTime = Time
+%%    From = any | self | peer
+%%    Pred = fun(BinaryPdu) -> boolean()
+%%    Continuation = start | cont()
+%%    Result = {Continuation2, List} |
+%%             {Continuation2, List, Badbytes} |
+%%             eof |
+%%             {error, Reason}
+%%    List = [{Now, BinaryPdu, From}]
+%%    Now = {MegaSecs, Secs, Microsecs}
+%%    BinaryPdu = binary()
+%%
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
+%% terms.  This function gets the list of logged PDUs matching the given 
+%% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
+%%
+%% <ul>
+%%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
+%%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or </tt>both</tt>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be matched.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
+%% 
+%% <p>This function internally calls <a href="#match-4">match/4</a> with 
+%% <tt>start</tt> as the <tt>Continuation</tt> parameters.</p>
+%%
+%% @see match/4
+%%
+%% @equiv match(Date, From, Pred, start)
+%% @end 
+match(Date, From, Pred) ->
+    match(Date, From, Pred, start).
+
+
+%% @spec match(Date, From, Pred, Continuation) -> Result
+%%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
+%%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
+%%    FromTime = Time
+%%    ToTime = Time
+%%    From = any | self | peer
+%%    Pred = fun(BinaryPdu) -> boolean()
+%%    Continuation = start | cont()
+%%    Result = {Continuation2, List} |
+%%             {Continuation2, List, Badbytes} |
+%%             eof |
+%%             {error, Reason}
+%%    List = [{Now, BinaryPdu, From}]
+%%    Now = {MegaSecs, Secs, Microsecs}
+%%    BinaryPdu = binary()
+%%
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
+%% terms.  This function gets the list of logged PDUs matching the given 
+%% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
+%%
+%% <ul>
+%%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
+%%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or </tt>both</tt>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be matched.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
+%% 
+%% <p>This function uses <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:chunk/2</a> to read the terms 
+%% appended to the disk log.  <tt>Continuation</tt> parameter and result
+%% meanings are those documented in that function.</p>
+%%
+%% @see disk_log:chunk/2
+%% @end 
+match(Date, From, Pred, Continuation) ->
+    F = fun(X) ->
+                DatePred = fun({_Now, _Pdu, _From}) when Date == any ->
+                                   true;
+                              ({Now, _Pdu, _From}) ->
+                                   case{Date,calendar:now_to_local_time(Now)}of
+                                       {{from, T}, N} when N >= T ->
+                                           true;
+                                       {{until, T}, N} when N =< T ->
+                                           true;
+                                       {{lapse, T1, T2}, N} when N >= T1, 
+                                                                 N =< T2 ->
+                                           true;
+                                       _Otherwise ->
+                                           false
+                                   end
+                           end,
+                FromPred = fun({_Now, _Pdu, _From}) when From == any ->
+                                   true;
+                              ({_Now, _Pdu, self}) when From == self ->
+                                   true;
+                              ({_Now, _Pdu, peer}) when From == peer ->
+                                   true;
+                              (_) ->
+                                   false
+                           end,
+                DatePred(X) and FromPred(X) and Pred(X)
+        end,
+    case disk_log:chunk(?NAME, Continuation) of
+        {Continuation2, List} ->
+            {Continuation2, lists:filter(F, List)};
+        {Continuation2, List, Badbytes} ->
+            {Continuation2, lists:filter(F, List), Badbytes};
+        Error ->
+            Error
+    end.
+
 
 %% @spec notify_peer_operation(Pdu) -> ok
 %%    Pdu = binary()
 %%
 %% @doc Notifies peer SMPP operations to the log.
 %%
-%% @equiv gen_event:notify(?LOG, {peer, Pdu}).
+%% @equiv gen_event:notify(SERVER, {peer, Pdu}).
 %% @end
 notify_peer_operation(Pdu) ->
     gen_event:notify(?SERVER, {peer, Pdu}).
@@ -194,30 +346,6 @@ notify_self_operation(Pdu) ->
 stop() ->
     gen_event:stop(?SERVER). 
 
-%% @spec swap_handler() -> Result
-%%    Result = ok | {'EXIT', Reason} | term()
-%%    Reason = term()
-%%
-%% @doc Adds an event handler
-%%
-%% @equiv add_handler(fun(_) -> true end).
-%% @end
-% swap_handler() ->
-%     swap_handler(fun(_) -> true end).
-
-
-%% @spec swap_handler(Pred) -> Result
-%%    Result = ok | {'EXIT', Reason} | term()
-%%    Reason = term()
-%%    Pred = fun(Event) -> boolean()
-%%
-%% @doc Adds an event handler
-%%
-%% @equiv gen_event:add_handler(?SERVER, ?MODULE, [Pred]).
-%% @end
-% swap_handler(Pred) ->
-%     gen_event:add_handler(?SERVER, ?MODULE, [Pred]).
-
 %%%===================================================================
 %%% Server functions
 %%%===================================================================
@@ -228,17 +356,24 @@ stop() ->
 %% @doc Initialize the event handler
 %% @end
 init(Args) ->
-    Pred = get_arg(pred, Args, fun(_) -> true end),
     Type = get_arg(type, Args, disk_log),
+    Pred = get_arg(pred, Args, ?PRED),
+    File = get_arg(file, Args, atom_to_list(?NAME)),
     Result = if
                  Type == disk_log ->
-                     File = get_arg(file, Args, atom_to_list(?LOG)),
-                     disk_log:open([{name, ?LOG}, {file, File}, {type, wrap}]);
+                     Size = get_arg(size, Args, ?SIZE),
+                     Opts = [{name,?NAME},{file,File},{type,wrap},{size,Size}],
+                     disk_log:open(Opts);
                  true ->
-                     ok
+                     case lists:keymember(file, 1, Args) of
+                         true ->
+                             error_logger:logfile({open, File});
+                         false ->
+                             ok
+                     end
              end,
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
-    {ok, #state{pred = Pred, type = Type}}.
+    {ok, #state{type = Type, pred = Pred, file = File}}.
 
 
 %% @spec handle_event(Event, State) -> Result
@@ -255,10 +390,10 @@ init(Args) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_event({From, BinaryPdu}, #state{pred = Pred, type = Type} = State) ->
+handle_event({From, BinaryPdu}, #state{type = Type, pred = Pred} = State) ->
     case catch Pred(BinaryPdu) of
         true when Type == disk_log ->
-            disk_log:alog(?LOG, {now(), BinaryPdu, From});
+            disk_log:alog(?NAME, {now(), BinaryPdu, From});
         true when Type == error_logger ->
             Params = case operation:unpack(BinaryPdu) of
                          {ok, PduDict} ->
@@ -320,14 +455,19 @@ handle_info(_Info, State) ->
 %%
 %% <p>Return value is ignored by the server.</p>
 %% @end
-terminate(Reason, #state{type = Type}) ->
+terminate(Reason, #state{type = Type, file = File}) ->
     Result = if
                  Type == disk_log ->
-                     disk_log:close(?LOG);
+                     disk_log:close(?NAME);
                  true ->
-                     ok
+                     case error_logger:logfile(filename) of
+                         File ->
+                             error_logger:logfile(close);
+                         _Otherwise ->
+                             ok
+                     end
              end,
-    Details = [{reason, Reason}, {type, Type}, {result, Result}],
+    Details = [{reason, Reason}, {type, Type}, {file, File}, {result, Result}],
     report:info(smpp_log, terminate, Details).
 
 

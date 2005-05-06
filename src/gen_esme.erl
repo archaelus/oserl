@@ -379,6 +379,25 @@
 %%%     <a href="#submit_multi-3">submit_multi/3</a> implemented.</li>
 %%% </ul>
 %%%
+%%% [6 May 2005]
+%%%
+%%% <ul>
+%%%   <li>Log utility added.  Functions <a href="#open_disk_log-1">
+%%%     open_disk_log/1</a>, <a href="#close_disk_log-0">close_disk_log</a>,
+%%%     <a href="#open_error_logger-1">open_error_logger/1</a> and
+%%%     <a href="#close_error_logger-0">close_error_logger</a> implemented.
+%%%     <br/>
+%%%     By default neither the disk_log nor the error_logger handler are
+%%%     added to the <a href="smpp_log.html">smpp_log</a> event manager, thus 
+%%%     no logging is done until <a href="#open_disk_log-1">open_disk_log/1</a>
+%%%     and/or <a href="#open_error_logger-1">open_error_logger/1</a> are 
+%%%     called.
+%%%     <br/>
+%%%     Please refer to <a href="smpp_log.html">smpp_log</a> for further 
+%%%     information about OSERL logs.
+%%%   </li>
+%%% </ul>
+%%%
 %%% @copyright 2004-2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -412,6 +431,10 @@
          call/2, 
          call/3, 
          cast/2, 
+         close_disk_log/0,
+         close_error_logger/0,
+         open_disk_log/1,
+         open_error_logger/1,
          reply/2]).
 
 %%%-------------------------------------------------------------------
@@ -707,6 +730,53 @@ call(ServerRef, Request, Timeout) ->
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
+
+%% @spec close_disk_log() -> ok
+%%
+%% @doc Closes the ESME disk log.
+%%
+%% @see smpp_log:delete_disk_log_handler/0
+%% @end 
+close_disk_log() ->
+    smpp_log:delete_disk_log_handler().
+
+
+%% @spec close_error_logger() -> ok
+%%
+%% @doc Closes the ESME error logger.
+%%
+%% @see smpp_log:delete_error_logger_handler/0
+%% @end 
+close_error_logger() ->
+    smpp_log:delete_error_logger_handler().
+
+
+%% @spec open_disk_log(Args) -> ok
+%%    Args = term()
+%%    File = string()
+%%    Pred = fun(BinaryPdu) -> bool()
+%%    BinaryPdu = binary()
+%%
+%% @doc Opens the ESME disk log.  Refer to <a href="smpp_log.html#add_disk_log_handler-1">smpp_log:add_disk_log_handler/1</a> to see permitted <tt>Args</tt>.
+%%
+%% @see smpp_log:add_disk_log_handler/1
+%% @end 
+open_disk_log(Args) ->
+    smpp_log:add_disk_log_handler(Args).
+
+
+%% @spec open_error_logger(Args) -> ok
+%%    Args = term()
+%%    Pred = fun(BinaryPdu) -> bool()
+%%    BinaryPdu = binary()
+%%
+%% @doc Opens the ESME error logger.  Refer to <a href="smpp_log.html#add_error_logger_handler-1">smpp_log:add_error_logger_handler/1</a> to see permitted <tt>Args</tt>.
+%%
+%% @see smpp_log:add_error_logger_handler/1
+%% @end 
+open_error_logger(Args) ->
+    smpp_log:add_error_logger_handler(Args).
+    
 
 %% @spec reply(Client, Reply) -> true
 %%    Client = term()
@@ -1181,6 +1251,7 @@ unbind(Session) ->
 %% <p>Initiates the server.</p>
 %% @end
 init({Mod, Args}) ->
+    smpp_log:start_link(),
     pack(Mod:init(Args), #state{mod = Mod}).
 
 
@@ -1308,7 +1379,8 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(R, S) ->
-%    io:format("*** gen_esme terminating: ~p - ~p ***~n", [self(), R]),
+    report:info(?MODULE, terminate, [{reason, R}, {pid, self()}]),
+    smpp_log:stop(),
     pack((S#state.mod):terminate(R, S#state.mod_state), S).
 
 

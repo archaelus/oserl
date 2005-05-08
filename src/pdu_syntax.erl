@@ -56,7 +56,13 @@
 %%%    </li>
 %%% </ul>
 %%%
-%%% @copyright 2003 - 2004 Enrique Marcote Peña
+%%% [7 May 2005]
+%%%
+%%% <ul>
+%%%   <li>Function <a href="#command_status-1">command_status/1</a> added.</li>
+%%% </ul>
+%%%
+%%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
 %%% @version 1.2, {19 Mar 2003} {@time}.
@@ -72,12 +78,17 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([command_id/1, sequence_number/1, new_pdu/4, pack/2, unpack/2]).
+-export([command_id/1, 
+         command_status/1, 
+         sequence_number/1, 
+         new_pdu/4, 
+         pack/2, 
+         unpack/2]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
 %%%-------------------------------------------------------------------
--export([]).
+%-export([]).
 
 %%%-------------------------------------------------------------------
 %%% Macros
@@ -102,6 +113,20 @@ command_id(<<_Len:32, CmdId:32, _Status:32, _SeqNum:32, _Body/binary>>) ->
     CmdId;
 command_id(PduDict) -> 
     dict:fetch(command_id,  PduDict).
+
+
+%% @spec command_status(Pdu) -> int()
+%%    Pdu = bin() | dictionary()
+%%
+%% @doc Gets the <i>command_status</i> of a PDU (binary or dictionary).
+%%
+%% <p>If the PDU is malformed and the <i>command_status</i> can not be found, 
+%% the function exits.</p>
+%% @end 
+command_status(<<_Len:32, _CmdId:32, Status:32, _SeqNum:32, _Body/binary>>) ->
+    Status;
+command_status(PduDict) -> 
+    dict:fetch(command_status,  PduDict).
 
 
 %% @spec sequence_number(Pdu) -> int()

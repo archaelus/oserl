@@ -754,10 +754,12 @@ close_error_logger() ->
 %% @spec open_disk_log(Args) -> ok
 %%    Args = term()
 %%    File = string()
-%%    Pred = fun(BinaryPdu) -> bool()
+%%    Pred = fun()
 %%    BinaryPdu = binary()
 %%
 %% @doc Opens the ESME disk log.  Refer to <a href="smpp_log.html#add_disk_log_handler-1">smpp_log:add_disk_log_handler/1</a> to see permitted <tt>Args</tt>.
+%%
+%% <p><tt>Pred</tt> is a fun <tt>fun(BinaryPdu) -&gt; bool()</tt></p>
 %%
 %% @see smpp_log:add_disk_log_handler/1
 %% @end 
@@ -767,10 +769,12 @@ open_disk_log(Args) ->
 
 %% @spec open_error_logger(Args) -> ok
 %%    Args = term()
-%%    Pred = fun(BinaryPdu) -> bool()
+%%    Pred = fun()
 %%    BinaryPdu = binary()
 %%
 %% @doc Opens the ESME error logger.  Refer to <a href="smpp_log.html#add_error_logger_handler-1">smpp_log:add_error_logger_handler/1</a> to see permitted <tt>Args</tt>.
+%%
+%% <p><tt>Pred</tt> is a fun <tt>fun(BinaryPdu) -&gt; bool()</tt></p>
 %%
 %% @see smpp_log:add_error_logger_handler/1
 %% @end 

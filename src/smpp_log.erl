@@ -14,7 +14,7 @@
 %%% License along with this library; if not, write to the Free Software
 %%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-%%% @doc SMPP Log
+%%% @doc SMPP Log.
 %%%
 %%% <p>A SMPP <tt>gen_event</tt> manager for SMPP PDU operation logging.</p>
 %%%
@@ -22,9 +22,9 @@
 %%% logging:</p>
 %%%
 %%% <ul>
-%%%   <li>A "http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log</a> based handler.
+%%%   <li>A <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log</a> based handler.
 %%%   </li>
-%%%   <li>An "http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/error_logger.html">error_logger</a> handler.
+%%%   <li>An <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/error_logger.html">error_logger</a> handler.
 %%%   </li>
 %%% </ul>
 %%%
@@ -43,7 +43,7 @@
 %%%
 %%% <p>The format of the output dumped by the error_logger handler can be 
 %%% defined by the user.  By default the complete parameters list of the 
-%%% selected SMPP PDUs are sent.</p>
+%%% selected SMPP PDUs is sent.</p>
 %%%
 %%% <p>This module provides also a set of functions for inspecting the
 %%% <i>disk_log</i>:  <a href="#count-3">count/3</a>, <a href="#match-3">
@@ -66,7 +66,7 @@
 %%% called.  The same applies before unpacking for the
 %%% <a href="#notify_peer_operation-1">notify_peer_operation/1</a> function.
 %%% If no log handler was added to the <i>smpp_log</i> manager, these calls
-%%% would have no effect.</p>
+%%% have no effect.</p>
 %%%
 %%% <p>The error_logger handler is very useful for debugging purposes.  The
 %%% logging predicate can be set accordingly to filter the type of information 
@@ -74,6 +74,7 @@
 %%% can also be formatted at your own wish.</p>
 %%%
 %%% <p>The disk_log handler is suitable for PDU storage.</p>
+%%%
 %%%
 %%% <h4>Disk log example</h4>
 %%%
@@ -97,12 +98,16 @@
 %%% smpp_log:add_disk_log_handler([{file, File}, {pred, Pred}]),
 %%% </pre>
 %%%
+%%% <p>By default every PDU operation other than <i>enquire_link</i> and
+%%% <i>enquire_link_resp</i> are logged.</p>
+%%%
+%%%
 %%% <h4>Error logger example</h4>
 %%%
 %%% <p>During runtime you may need to inspect <i>deliver_sm</i> operations
 %%% originated by a given <i>source_addr</i>.  You can dump this information
 %%% to the error_logger by adding or swapping the error_logger handler at any
-%%% time:</i>
+%%% time:</p>
 %%%
 %%% <pre>
 %%% SourceAddr = "1234",
@@ -137,7 +142,9 @@
 %%% </pre>
 %%%
 %%% <p>Once finished with the debugging you can delete or swap the 
-%%% error_logger handler.</p>
+%%% error_logger handler back to the defaults.  Default logging predicate sends
+%%% to the error_logger only those PDU responses with an error code other than 
+%%% 0.</p>
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
@@ -282,7 +289,7 @@ start_link() ->
 
 %% @spec add_disk_log_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred} | {size, Size}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -291,7 +298,7 @@ start_link() ->
 %% <ul>
 %%   <li><b>File:</b> disk log file name.  Default is <i>smpp_log</i>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
+%%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
 %%     logs every PDU operation other than <i>enquire_link</i> and
 %%     <i>enquire_link_resp</i>.
 %%   </li>
@@ -313,7 +320,7 @@ add_disk_log_handler(Args) ->
 
 %% @spec add_error_logger_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred} | {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -324,12 +331,12 @@ add_disk_log_handler(Args) ->
 %%     atom <tt>undefined</tt>, then no logfile is used.
 %%   </li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
+%%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
 %%     logs only response PDUs with a <i>command_status</i> other than 0x0.
 %%   </li>
-%%   <li><b>Format:</b> a function that gets the binary PDU as input and
-%%     returns the term sent to the error_logger.  Default format
-%%     function shows the complete parameters list of the PDU.
+%%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
+%%     the binary PDU as input and returns the term sent to the error_logger.  
+%%     Default format function shows the complete parameters list of the PDU.
 %%   </li>
 %% </ul>
 %%
@@ -346,7 +353,7 @@ add_error_logger_handler(Args) ->
 %%    FromTime = Time
 %%    ToTime = Time
 %%    From = any | self | peer
-%%    Pred = fun(BinaryPdu) -> boolean()
+%%    Pred = fun()
 %%    Continuation = start | cont()
 %%    Result = {Continuation2, List} |
 %%             {Continuation2, List, Badbytes} |
@@ -363,9 +370,9 @@ add_error_logger_handler(Args) ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or </tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be matched.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
 %%
 %% @see match/3
@@ -421,7 +428,7 @@ delete_error_logger_handler() ->
 %%    FromTime = Time
 %%    ToTime = Time
 %%    From = any | self | peer
-%%    Pred = fun(BinaryPdu) -> boolean()
+%%    Pred = fun()
 %%    Continuation = start | cont()
 %%    Result = {Continuation2, List} |
 %%             {Continuation2, List, Badbytes} |
@@ -438,9 +445,9 @@ delete_error_logger_handler() ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or </tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be matched.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
 %% 
 %% <p>This function internally calls <a href="#match-4">match/4</a> with 
@@ -460,7 +467,7 @@ match(Date, From, Pred) ->
 %%    FromTime = Time
 %%    ToTime = Time
 %%    From = any | self | peer
-%%    Pred = fun(BinaryPdu) -> boolean()
+%%    Pred = fun()
 %%    Continuation = start | cont()
 %%    Result = {Continuation2, List} |
 %%             {Continuation2, List, Badbytes} |
@@ -477,9 +484,9 @@ match(Date, From, Pred) ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or </tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be matched.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
 %% 
 %% <p>This function uses <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:chunk/2</a> to read the terms 
@@ -531,7 +538,7 @@ match(Date, From, Pred, Continuation) ->
 %%
 %% @doc Notifies peer SMPP operations to the log.
 %%
-%% @equiv gen_event:notify(SERVER, {peer, Pdu}).
+%% @equiv gen_event:notify(SERVER, {peer, Pdu})
 %% @end
 notify_peer_operation(Pdu) ->
     gen_event:notify(?SERVER, {peer, Pdu}).
@@ -542,7 +549,7 @@ notify_peer_operation(Pdu) ->
 %%
 %% @doc Notifies self SMPP operations to the log.
 %%
-%% @equiv gen_event:notify(?LOG, {self, Pdu}).
+%% @equiv gen_event:notify(SERVER, {self, Pdu})
 %% @end
 notify_self_operation(Pdu) ->
     gen_event:notify(?SERVER, {self, Pdu}).
@@ -559,7 +566,7 @@ notify_self_operation(Pdu) ->
 %% <ul>
 %%   <li><b>File:</b> disk log file name.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.
+%%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.
 %%   </li>
 %%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the 
 %%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>. 
@@ -590,12 +597,12 @@ swap_disk_log_handler(Args) ->
 %%     atom <tt>undefined</tt>, then no logfile is used.
 %%   </li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
-%%     be logged.  </tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
+%%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
 %%     logs only response PDUs with a <i>command_status</i> other than 0x0.
 %%   </li>
-%%   <li><b>Format:</b> a function that gets the binary PDU as input and
-%%     returns the term sent to the error_logger.  Default format
-%%     function shows the complete parameters list of the PDU.
+%%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
+%%     the binary PDU as input and returns the term sent to the error_logger.  
+%%     Default format function shows the complete parameters list of the PDU.
 %%   </li>
 %% </ul>
 %%

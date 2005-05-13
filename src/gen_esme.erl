@@ -1384,8 +1384,8 @@ handle_info(Info, S) ->
 %% @end
 terminate(R, S) ->
     report:info(?MODULE, terminate, [{reason, R}, {pid, self()}]),
-    smpp_log:stop(),
-    pack((S#state.mod):terminate(R, S#state.mod_state), S).
+    pack((S#state.mod):terminate(R, S#state.mod_state), S),
+    smpp_log:stop().
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}

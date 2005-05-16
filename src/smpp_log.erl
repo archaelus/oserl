@@ -370,7 +370,7 @@ add_error_logger_handler(Args) ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
@@ -445,7 +445,7 @@ delete_error_logger_handler() ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
@@ -484,7 +484,7 @@ match(Date, From, Pred) ->
 %% <ul>
 %%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
 %%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
-%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>both</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
@@ -496,32 +496,22 @@ match(Date, From, Pred) ->
 %% @see disk_log:chunk/2
 %% @end 
 match(Date, From, Pred, Continuation) ->
-    F = fun(X) ->
-                DatePred = fun({_Now, _Pdu, _From}) when Date == any ->
-                                   true;
-                              ({Now, _Pdu, _From}) ->
-                                   case{Date,calendar:now_to_local_time(Now)}of
-                                       {{from, T}, N} when N >= T ->
-                                           true;
-                                       {{until, T}, N} when N =< T ->
-                                           true;
-                                       {{lapse, T1, T2}, N} when N >= T1, 
-                                                                 N =< T2 ->
-                                           true;
-                                       _Otherwise ->
-                                           false
-                                   end
-                           end,
-                FromPred = fun({_Now, _Pdu, _From}) when From == any ->
-                                   true;
-                              ({_Now, _Pdu, self}) when From == self ->
-                                   true;
-                              ({_Now, _Pdu, peer}) when From == peer ->
-                                   true;
-                              (_) ->
-                                   false
-                           end,
-                DatePred(X) and FromPred(X) and Pred(X)
+    F = fun({_, _, F}) when From /= any, From /= F ->
+                false;
+           ({_, P, _}) when Date == any ->
+                Pred(P);
+           ({N, P, _}) ->
+                T = calendar:now_to_local_time(N),
+                case Date of
+                    {from, T1} when T >= T1 ->
+                        Pred(P);
+                    {until, T1} when T =< T1 ->
+                        Pred(P);
+                    {lapse, T1, T2} when T >= T1, T =< T2 ->
+                        Pred(P);
+                    _Otherwise ->
+                        false
+                end
         end,
     case disk_log:chunk(?NAME, Continuation) of
         {Continuation2, List} ->

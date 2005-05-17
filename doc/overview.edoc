@@ -2,8 +2,8 @@
 	OSERL overview page
 
 @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net> [http://oserl.sourceforge.net/]
-@copyright 2003 - 2004 Enrique Marcote Peña
-@version 1.1
+@copyright 2003 - 2005 Enrique Marcote Peña
+@version 1.2
 
 @doc OSERL is an Erlang implementation of the Short Message Peer to Peer 
 Protocol version 5.0.
@@ -17,6 +17,7 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#intro">Introduction</a></li>
   <li><a href="#install">Install OSERL</a></li>
   <li><a href="#overview">SMPP protocol implementation overview</a></li>
+  <li><a href="#behaviours">SMPP Behaviours</a></li>
   <li><a href="#howto">Developing SMS based applications with OSERL</a>
     <ol>
       <li><a href="#howto_esme">How to implement an ESME</a>
@@ -48,7 +49,6 @@ numbers on [SMPP 5.0].</p>
   <li><a href="#parammacros">Param Syntax Macros</a></li>
   <li><a href="#pdu">PDU Syntax</a></li>
   <li><a href="#pdumacros">PDU Syntax Macros</a></li>
-  <li><a href="#behaviours">Behaviours</a></li>
   <li><a href="#pics">PICS Proforma</a></li>
   <li><a href="#changes">Changes</a></li>
   <li><a href="#todo">TODO</a></li>
@@ -228,6 +228,76 @@ mechanism.</p>
 <p>On this table we find the SMPP <a href="operation.html">operation</a> 
 module on top of the PDU syntax.  This module hides the type descriptors of 
 the SMPP specification to higher layers.</p>
+
+
+<h2><a name="behaviours">SMPP Behaviours</a></h2>
+
+<p>Generic ESME (External Short Message Entity) and SMSC (Short Message Service
+Center) behaviours are implemented in OSERL.  Behaviours are formalizations of 
+"design patters" which can be used to program certain common problems, an ESME 
+or SMSC in this particular case.  The generic ESME behaviour was built on top 
+of a generic ESME session behaviour, while generic SMSC behaviour has 
+an underlying generic SMSC session behaviour.  Both (ESME and SMSC behaviours) 
+are a sort of an extended <i>gen_server</i> behaviour.</p>
+
+<img src="img/behaviours.png" 
+     alt="behaviours" 
+     border="0" 
+     width="601" 
+     height="132"/>
+
+<p>The schema depicted on the previous figure shows how the ESME/SMSC 
+behaviours act as the callback modules for their corresponding session 
+behaviours.</p>
+
+<p>The session receives binary data from a TCP/IP connection and unpacks 
+SMPP PDUs therein included.  Some operation PDUs are automatically responded 
+and managed by session behaviours but others, like an <i>outbind</i> or 
+<i>submit_sm</i> PDU, must be forwarded to the upper ESME/SMSC behaviour to 
+let it decide what to do.</p>
+
+<p>SMS Developers don't need to care about sessions or connections, they will 
+just need to implement the logic of their applications using the set of 
+callbacks exported by the ESME/SMSC behaviours.</p> 
+
+<p>Leaving a callback unimplemented <b>crashes</b> the entire 
+ESME/SMSC server whenever that particular function gets called.</p>  
+
+<p><i>Every callback is guaranteed to be correct, never a malformed or 
+unexpected PDU could trigger a callback.</i></p>
+
+<p>Due to these behaviours, OSERL handles transparently many aspects of the 
+SMPP protocol, saving lots of work to developers by</p>
+
+<ul>
+  <li>Automatically handling PDU sequencing. Assigns monotonically 
+    increasing sequence numbers and matches requests with their corresponding 
+    responses in an asynchronous manner.
+  </li>
+  <li>OSERL handles automatically all timers defined by the SMPP protocol 
+    specification version 5.0: session init timer, enquire link timer, 
+    inactivity timer and response timer.  On a timer expiration, the action 
+    recommended on the protocol specification is triggered.
+  </li>
+  <li>Handles every operation failure, including when the PDU is unrecognized 
+	or malformed, invalid field length, PDU data is unexpected and deemed 
+	invalid, and the PDU is not allowed in the current state.
+
+ 	<p>Upon failure the appropriate response is automatically issued.  Even 
+	errors associated to individual parameters of the PDUs are detected, and
+	reported using the corresponding error code.</p>
+
+    <p>Every error code in the protocol specification was implemented.</p>
+  </li>
+  <li>Detects connection failures and provides automatic recovery mechanisms,
+	restoring dropped sessions.
+  </li>
+  <li>Controls congestion using the <tt>congestion_state</tt> field.</li>
+  <li>Every forward and backwards compatibility guidelines were adopted.</li>
+  <li>Supports every operation and every field of the SMPP protocol 
+	version 5.0.
+  </li>
+</ul>
 
 
 <h2><a name="howto">Developing SMS based applications with OSERL</a></h2>
@@ -2135,76 +2205,6 @@ defintions.</p>
     </td>
   </tr>
 </table>
-
-
-<h2><a name="behaviours">Behaviours</a></h2>
-
-<p>Generic ESME (External Short Message Entity) and SMSC (Short Message Service
-Center) behaviours are implemented in OSERL.  Behaviours are formalizations of 
-"design patters" which can be used to program certain common problems, an ESME 
-or SMSC in this particular case.  The generic ESME behaviour was built on top 
-of a generic ESME session behaviour, while generic SMSC behaviour has 
-an underlying generic SMSC session behaviour.  Both (ESME and SMSC behaviours) 
-are a sort of an extended <i>gen_server</i> behaviour.</p>
-
-<img src="img/behaviours.png" 
-     alt="behaviours" 
-     border="0" 
-     width="601" 
-     height="132"/>
-
-<p>The schema depicted on the previous figure shows how the ESME/SMSC 
-behaviours act as the callback modules for their corresponding session 
-behaviours.</p>
-
-<p>The session receives binary data from a TCP/IP connection and unpacks 
-SMPP PDUs therein included.  Some operation PDUs are automatically responded 
-and managed by session behaviours but others, like an <i>outbind</i> or 
-<i>submit_sm</i> PDU, must be forwarded to the upper ESME/SMSC behaviour to 
-let it decide what to do.</p>
-
-<p>SMS Developers don't need to care about sessions or connections, they will 
-just need to implement the logic of their applications using the set of 
-callbacks exported by the ESME/SMSC behaviours.</p> 
-
-<p>Leaving a callback unimplemented <b>crashes</b> the entire 
-ESME/SMSC server whenever that particular function gets called.</p>  
-
-<p><i>Every callback is guaranteed to be correct, never a malformed or 
-unexpected PDU could trigger a callback.</i></p>
-
-<p>Due to these behaviours, OSERL handles transparently many aspects of the 
-SMPP protocol, saving lots of work to developers by</p>
-
-<ul>
-  <li>Automatically handling PDU sequencing. Assigns monotonically 
-    increasing sequence numbers and matches requests with their corresponding 
-    responses in an asynchronous manner.
-  </li>
-  <li>OSERL handles automatically all timers defined by the SMPP protocol 
-    specification version 5.0: session init timer, enquire link timer, 
-    inactivity timer and response timer.  On a timer expiration, the action 
-    recommended on the protocol specification is triggered.
-  </li>
-  <li>Handles every operation failure, including when the PDU is unrecognized 
-	or malformed, invalid field length, PDU data is unexpected and deemed 
-	invalid, and the PDU is not allowed in the current state.
-
- 	<p>Upon failure the appropriate response is automatically issued.  Even 
-	errors associated to individual parameters of the PDUs are detected, and
-	reported using the corresponding error code.</p>
-
-    <p>Every error code in the protocol specification was implemented.</p>
-  </li>
-  <li>Detects connection failures and provides automatic recovery mechanisms,
-	restoring dropped sessions.
-  </li>
-  <li>Controls congestion using the <tt>congestion_state</tt> field.</li>
-  <li>Every forward and backwards compatibility guidelines were adopted.</li>
-  <li>Supports every operation and every field of the SMPP protocol 
-	version 5.0.
-  </li>
-</ul>
 
 
 <h2><a name="pics">PICS Proforma</a></h2>

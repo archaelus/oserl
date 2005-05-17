@@ -259,6 +259,7 @@ How these changes affected individual files is described below.
 4.   Changes 1.1 -> 1.2
 
 - Removed unused vars warnings.
+- Add some functions for message concatenation support.  Refer to sm module.
 - PDU logs added.  See smpp_log module for further details.
 
 See other changes on individual files below.

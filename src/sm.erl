@@ -47,6 +47,8 @@
 %%%
 %%% [7 Abr 2005]
 %%%
+%%% <p>Add support for message concatenation.</p>
+%%%
 %%% <ul>
 %%%   <li>Functions <a href="#set_udhi-1">set_udhi/1</a> and 
 %%%     <a href="#split_user_data-2">split_user_data/2</a> added.
@@ -54,6 +56,8 @@
 %%% </ul>
 %%%
 %%% [11 Abr 2005]
+%%%
+%%% <p>Add support for message concatenation.</p>
 %%%
 %%% <ul>
 %%%   <li>Function set_udhi/1 replaced by <a href="#udhi-2">udhi/2</a>.</li>
@@ -93,7 +97,7 @@
          reply_destination_address/1,
          reply_source_address/1,
          split_user_data/2,
-		 total_segments/1,
+         total_segments/1,
          udhi/1,
          udhi/2]).
 

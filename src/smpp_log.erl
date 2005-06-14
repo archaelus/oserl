@@ -147,7 +147,7 @@
 %%% 0.</p>
 %%%
 %%%
-%%% @copyright 2004 Enrique Marcote Peña
+%%% @copyright 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net]
 %%% @version 1.2, { 3 May 2005} {@time}.
@@ -172,6 +172,8 @@
          count/3,
          delete_disk_log_handler/0, 
          delete_error_logger_handler/0,
+%         disk_log_handler_setup/0,
+%         error_logger_handler_setup/0,
          match/3,
          match/4,
          notify_peer_operation/1,
@@ -404,7 +406,7 @@ count(Date, From, Pred, Continuation, Count) ->
 %%
 %% @doc Deletes the disk log event handler
 %%
-%% @see delete_handler/1
+%% @see gen_event:delete_handler/3
 %% @end
 delete_disk_log_handler() ->
     gen_event:delete_handler(?SERVER, {?MODULE, disk_log}, stop).
@@ -416,10 +418,36 @@ delete_disk_log_handler() ->
 %%
 %% @doc Deletes the disk log event handler
 %%
-%% @see add_handler/2
+%% @see gen_event:delete_handler/3
 %% @end
 delete_error_logger_handler() ->
     gen_event:delete_handler(?SERVER, {?MODULE, error_logger}, stop).
+
+
+% %% @spec disk_log_handler_setup() -> Result
+% %%    Result = {ok, Setup} | {error, Reason} | term()
+% %%    Reason = bad_module | {'EXIT', Reason} | term()
+% %%
+% %% @doc Returns current settings for the <i>disk_log</i> handler.  If not
+% %% installed the function returns <tt>{error, bad_module}</tt>.
+% %%
+% %% @see gen_event:call/4
+% %% @end
+% disk_log_handler_setup() ->
+%     gen_event:call(?SERVER, {?MODULE, disk_log}, setup, infinity).
+
+
+% %% @spec error_logger_handler_setup() -> Result
+% %%    Result = {ok, Setup} | {error, Reason} | term()
+% %%    Reason = bad_module | {'EXIT', Reason} | term()
+% %%
+% %% @doc Returns current settings for the <i>error_logger</i> handler.  If not
+% %% installed the function returns <tt>{error, bad_module}</tt>.
+% %%
+% %% @see gen_event:call/4
+% %% @end
+% error_logger_handler_setup() ->
+%     gen_event:call(?SERVER, {?MODULE, error_logger}, setup, infinity).
 
 
 %% @spec match(Date, From, Pred) -> Result
@@ -547,7 +575,7 @@ notify_self_operation(Pdu) ->
 
 %% @spec swap_disk_log_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred} | {size, Size}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -576,7 +604,7 @@ swap_disk_log_handler(Args) ->
 
 %% @spec swap_error_logger_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred}
+%%    Arg = {file, File} | {pred, Pred} | {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -595,6 +623,9 @@ swap_disk_log_handler(Args) ->
 %%     Default format function shows the complete parameters list of the PDU.
 %%   </li>
 %% </ul>
+%%
+%% <p>If a parameter is unspecified, the value of the old disk_log handler 
+%% is used.</p>
 %%
 %% @see gen_event:swap_handler/3
 %% @end
@@ -683,6 +714,9 @@ handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
 %%    Id       = term()
 %% @doc
 %% @end
+% handle_call(setup, #state{pred=P, file=L, format=F} = State) ->
+%     Setup = [{pred, P}, {file, L}, {format, F}],
+%     {ok, {ok, Setup}, State};
 handle_call(Request, State) ->
     report:error(?MODULE, unexpected_call, Request, State),
     {ok, ok, State}.

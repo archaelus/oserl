@@ -34,16 +34,20 @@
 %%% for further details and default predicates) you can control which PDUs 
 %%% should be logged by each handler.</p>
 %%%
-%%% <p>The disk_log stores PDUs in binary format within tuples 
-%%% <tt>{Now,BinaryPdu,From}</tt>.  <tt>Now</tt> is the timestamp in the 
+%%% <p>The <i>disk_log</i> stores by default PDUs in binary format within 
+%%% tuples <tt>{Now,BinaryPdu,From}</tt>.  <tt>Now</tt> is the timestamp in the
 %%% format returned by the BIF <tt>now()</tt>.  <tt>BinaryPdu</tt> is the SMPP 
 %%% PDU in binary format and <tt>From</tt> indicates who issued the operation, 
 %%% <tt>self</tt> if the operation was issued by our SMPP entity, <tt>peer</tt>
 %%% in case the peer SMPP entity was the originator.</p>
 %%%
-%%% <p>The format of the output dumped by the error_logger handler can be 
-%%% defined by the user.  By default the complete parameters list of the 
-%%% selected SMPP PDUs is sent.</p>
+%%% <p>The format of the term stored by the <i>disk_log</i> can be redefined 
+%%% using a custom <tt>Format</tt> predicated.  In such a case, PDUs are 
+%%% stored as <tt>{Now, Format(BinaryPdu), From}</tt>.</p>
+%%%
+%%% <p>In the same way, the format of the output dumped by the
+%%% <i>error_logger</i> handler can be redefined by the user.  By default the
+%%% complete parameters list of the selected SMPP PDUs is sent.</p>
 %%%
 %%% <p>This module provides also a set of functions for inspecting the
 %%% <i>disk_log</i>:  <a href="#count-3">count/3</a>, <a href="#match-3">
@@ -68,20 +72,21 @@
 %%% If no log handler was added to the <i>smpp_log</i> manager, these calls
 %%% have no effect.</p>
 %%%
-%%% <p>The error_logger handler is very useful for debugging purposes.  The
-%%% logging predicate can be set accordingly to filter the type of information 
-%%% you need to inspect at runtime. The information sent to the error_logger
-%%% can also be formatted at your own wish.</p>
+%%% <p>The <i>error_logger</i> handler is very useful for debugging purposes.  
+%%% The logging predicate can be set accordingly to filter the type of 
+%%% information you need to inspect at runtime. The information sent to the 
+%%% <i>error_logger</i> can also be formatted at your own wish.</p>
 %%%
-%%% <p>The disk_log handler is suitable for PDU storage.</p>
+%%% <p>The <i>disk_log</i> handler is suitable for PDU storage.</p>
 %%%
 %%%
 %%% <h4>Disk log example</h4>
 %%%
-%%% <p>The disk_log is suitable for storing SMPP operations on disk.  PDUs
-%%% are efficiently stored in binary format.  It is possible to define
-%%% which set of PDUs should be stored.  For example, to store <i>submit_sm</i>
-%%% and <i>deliver_sm</i> PDUs on disk do:</p>
+%%% <p>The <i>disk_log</i> was designed to store SMPP operations on disk.  By
+%%% default PDUs are efficiently stored in binary format.  Storage format can
+%%% be easily customizable.  It is also possible to define which set of PDUs
+%%% should be stored.  For example, to store only <i>submit_sm</i> and 
+%%% <i>deliver_sm</i> PDUs on disk do:</p>
 %%%
 %%% <pre>
 %%% File = "/home/otpuser/otp/log/smpp_log",
@@ -142,9 +147,9 @@
 %%% </pre>
 %%%
 %%% <p>Once finished with the debugging you can delete or swap the 
-%%% error_logger handler back to the defaults.  Default logging predicate sends
-%%% to the error_logger only those PDU responses with an error code other than 
-%%% 0.</p>
+%%% <i>error_logger</i> handler back to the defaults.  Default logging
+%%% predicate sends to the <i>error_logger</i> only those PDU responses with 
+%%% an error code other than 0.</p>
 %%%
 %%%
 %%% @copyright 2005 Enrique Marcote Peña
@@ -172,8 +177,6 @@
          count/3,
          delete_disk_log_handler/0, 
          delete_error_logger_handler/0,
-%         disk_log_handler_setup/0,
-%         error_logger_handler_setup/0,
          match/3,
          match/4,
          notify_peer_operation/1,
@@ -223,8 +226,11 @@
                 end
         end).
 
+% Default disk_log format function
+-define(DISK_LOG_FORMAT, fun(BinaryPdu) -> BinaryPdu end).
+
 % Default error_logger format function
--define(FORMAT, 
+-define(ERROR_LOGGER_FORMAT, 
         fun(BinaryPdu) ->
                 case operation:unpack(BinaryPdu) of
                     {ok, PduDict} ->
@@ -254,11 +260,13 @@
 %%     be logged.
 %%   </dd>
 %%   <dt>File: </dt><dd>File name of the disk_log or the error_logger.</dd>
-%%   <dt>Format: </dt><dd>function to format PDUs sent to the error_logger.
+%%   <dt>Size: </dt><dd>Size of the disk_log.  Only relevant for disk_log
+%%     handlers.
 %%   </dd>
+%%   <dt>Format: </dt><dd>function to format PDUs sent to the logs.</dd>
 %% </dl>
 %% %@end
--record(state, {type, pred, file, format}).
+-record(state, {type, pred, file, size, format}).
 
 %%%===================================================================
 %%% External functions
@@ -291,7 +299,7 @@ start_link() ->
 
 %% @spec add_disk_log_handler(Args) -> Result
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred} | {size, Size}
+%%    Arg = {file, File} | {pred, Pred} | {size, Size} | {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -310,6 +318,10 @@ start_link() ->
 %%     Individual log files of the wrap disk log can store up to 40960 PDUs 
 %%     for the default value.  Having 20 files on the wrap log, the total PDU 
 %%     capacity, before wrapping to the first log, is about 819200.
+%%   </li>
+%%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
+%%     the binary PDU as input and returns the term sent to the disk_log.  
+%%     Default format function stores the binary PDU as is.
 %%   </li>
 %% </ul>
 %%
@@ -422,32 +434,6 @@ delete_disk_log_handler() ->
 %% @end
 delete_error_logger_handler() ->
     gen_event:delete_handler(?SERVER, {?MODULE, error_logger}, stop).
-
-
-% %% @spec disk_log_handler_setup() -> Result
-% %%    Result = {ok, Setup} | {error, Reason} | term()
-% %%    Reason = bad_module | {'EXIT', Reason} | term()
-% %%
-% %% @doc Returns current settings for the <i>disk_log</i> handler.  If not
-% %% installed the function returns <tt>{error, bad_module}</tt>.
-% %%
-% %% @see gen_event:call/4
-% %% @end
-% disk_log_handler_setup() ->
-%     gen_event:call(?SERVER, {?MODULE, disk_log}, setup, infinity).
-
-
-% %% @spec error_logger_handler_setup() -> Result
-% %%    Result = {ok, Setup} | {error, Reason} | term()
-% %%    Reason = bad_module | {'EXIT', Reason} | term()
-% %%
-% %% @doc Returns current settings for the <i>error_logger</i> handler.  If not
-% %% installed the function returns <tt>{error, bad_module}</tt>.
-% %%
-% %% @see gen_event:call/4
-% %% @end
-% error_logger_handler_setup() ->
-%     gen_event:call(?SERVER, {?MODULE, error_logger}, setup, infinity).
 
 
 %% @spec match(Date, From, Pred) -> Result
@@ -589,6 +575,10 @@ notify_self_operation(Pdu) ->
 %%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the 
 %%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>. 
 %%   </li>
+%%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
+%%     the binary PDU as input and returns the term sent to the disk_log.  
+%%     Default format function stores the binary PDU as is.
+%%   </li>
 %% </ul>
 %%
 %% <p>If a parameter is unspecified, the value of the old disk_log handler 
@@ -657,7 +647,7 @@ stop() ->
 %% @doc Initialize the event handler
 %% @end
 init({NewArgs, OldArgs}) ->
-    init(lists:keymerge(1,lists:keysort(1,NewArgs),lists:keysort(1,OldArgs)));
+    init(merge_args(NewArgs, OldArgs));
 init(Args) ->
     case get_arg(type, Args, disk_log) of
         disk_log ->
@@ -684,15 +674,9 @@ init(Args) ->
 handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
     case catch P(BinaryPdu) of
         true when T == disk_log ->
-            disk_log:alog(?NAME, {now(), BinaryPdu, From});
+            disk_log:alog(?NAME, {now(), F(BinaryPdu), From});
         true when T == error_logger ->
-            Info = if 
-                       From == peer -> 
-                           peer_operation; 
-                       true -> 
-                           self_operation 
-                   end,
-            report:info(?MODULE, Info, F(BinaryPdu));
+            report:info(?MODULE, {smpp_operation, From}, F(BinaryPdu));
         _Otherwise ->
             ok
     end,
@@ -714,9 +698,6 @@ handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
 %%    Id       = term()
 %% @doc
 %% @end
-% handle_call(setup, #state{pred=P, file=L, format=F} = State) ->
-%     Setup = [{pred, P}, {file, L}, {format, F}],
-%     {ok, {ok, Setup}, State};
 handle_call(Request, State) ->
     report:error(?MODULE, unexpected_call, Request, State),
     {ok, ok, State}.
@@ -749,19 +730,19 @@ handle_info(Info, State) ->
 %%
 %% <p>Return value is ignored by the server.</p>
 %% @end
-terminate(Reason, #state{type = Type, pred = Pred, file = File}) ->
-    Result = if
-                 Type == disk_log ->
-                     disk_log:close(?NAME);
-                 true ->
-                     case error_logger:logfile(filename) of
-                         File ->
-                             error_logger:logfile(close);
-                         _Otherwise ->
-                             ok
-                     end
+terminate(Reason, #state{type = disk_log} = S) ->
+    Result = disk_log:close(?NAME),
+    Args = setup_args(S),
+    report:info(smpp_log, terminate, [{reason,Reason}, {result,Result}|Args]),
+    Args;
+terminate(Reason, #state{type = error_logger, file = File} = S) ->
+    Result = case error_logger:logfile(filename) of
+                 File when Reason /= swap_handler ->
+                     error_logger:logfile(close);
+                 _Otherwise ->
+                     ok
              end,
-    Args = [{type, Type}, {pred, Pred}, {file, File}],
+    Args = setup_args(S),
     report:info(smpp_log, terminate, [{reason,Reason}, {result,Result}|Args]),
     Args.
 
@@ -793,9 +774,10 @@ init_disk_log(Args) ->
     Pred = get_arg(pred, Args, ?DISK_LOG_PRED),
     File = get_arg(file, Args, atom_to_list(?NAME)),
     Size = get_arg(size, Args, ?SIZE),
+    Format = get_arg(format, Args, ?DISK_LOG_FORMAT),
     Result = disk_log:open([{name,?NAME},{file,File},{type,wrap},{size,Size}]),
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
-    {ok, #state{type = disk_log, pred = Pred, file = File}}.
+    {ok,#state{type=disk_log, pred=Pred, file=File, size=Size, format=Format}}.
 
 
 %% @spec init_error_logger(Args) -> {ok, State}
@@ -810,12 +792,19 @@ init_disk_log(Args) ->
 init_error_logger(Args) ->
     Pred = get_arg(pred, Args, ?ERROR_LOGGER_PRED),
     File = get_arg(file, Args, undefined),
-    Format = get_arg(format, Args, ?FORMAT),
-    Result = if
-                 File /= undefined ->
+    Format = get_arg(format, Args, ?ERROR_LOGGER_FORMAT),
+    Result = case error_logger:logfile(filename) of
+                 {error, _What} when File /= undefined ->
                      error_logger:logfile({open, File});
-                 true ->
-                     ok
+                 {error, _What} -> % File undefined
+                     ok;
+                 File ->           % File already open
+                     ok;
+                 _Otherwise when File /= undefined ->
+                     error_logger:logfile(close),
+                     error_logger:logfile({open, File});
+                 _Otherwise ->     % File undefined
+                     error_logger:logfile(close)
              end,
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
     {ok, #state{type=error_logger, pred=Pred, file=File, format=Format}}.
@@ -837,3 +826,37 @@ get_arg(Key, List, Default) ->
         _ -> 
             Default
     end.
+
+
+%% @spec setup_args(State) -> Args
+%%    State = state()
+%%    Args = [Arg]
+%%    Arg = {type, Type} | 
+%%          {pred, Pred} | 
+%%          {file, File} | 
+%%          {size, Size} | 
+%%          {format, Format}
+%%    Type = error_logger | disk_log
+%%    Pred = fun()
+%%    File = string() | atom()
+%%    Size = int()
+%%    Format = fun()
+%%
+%% @doc Gets the setup <tt>Args</tt> given the <tt>State</tt> record.
+%% @end 
+setup_args(#state{type = T, pred = P, file = N, size = S, format = F}) ->
+    [{type, T}, {pred, P}, {file, N}, {size, S}, {format, F}].
+
+
+%% @spec merge_args(ArgsList1, ParamList2) -> NewParamList
+%%    ParamList1 = [{ParamName, ParamValue}]
+%%    ParamList2 = [{ParamName, ParamValue}]
+%%    NewParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%
+%% @doc Merge two parameter lists.  If an parameter appears on both lists,
+%% the value from the first list will be taken.
+%% @end
+merge_args(Args1, Args2) ->
+    my_lists:ukeymerge(1, lists:keysort(1, Args1), lists:keysort(1, Args2)).

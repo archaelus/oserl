@@ -49,6 +49,7 @@
       <li><a href="#changes1_1-1_2-gen_esme_session-erl">gen_esme_session.erl</a></li>
       <li><a href="#changes1_1-1_2-gen_esme-erl">gen_esme.erl</a></li>
       <li><a href="#changes1_1-1_2-smpp_globals-hrl">smpp_globals.hrl</a></li>
+      <li><a href="#changes1_1-1_2-operation-erl">operation.hrl</a></li>
     </ol>
   </li>
 </ol>
@@ -410,6 +411,10 @@
   <li>PDU logs added.  See <a href="smpp_log.html">smpp_log</a> module for
     further details.
   </li>
+  <li>Enquire link operation reviewed.</li>
+  <li>SMPP errors description.  Refer to <a href="smpp_error.html">smpp_error
+    </a> module.
+  </li>
 </ul>
 
 <p>See other changes on individual files below.</p>
@@ -474,6 +479,12 @@
   </li>
   <li>Errors reported using the <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/error_logger.html">error_logger</a>.
   </li>
+  <li>New callback <a href="#handle_enquire_link-3">
+    handle_enquire_link/3</a> added.
+    <br/>
+    <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
+  </li>
+  <li>Use built in <i>gen_fsm</i> timers.</li>
 </ul>
 
 
@@ -518,6 +529,15 @@
   <li><tt>SM_MAX_SIZE</tt> and <tt>SM_SEGMENT_MAX_SIZE</tt> macros defined.
   </li>
 </ul>
+
+<h3><a name="changes1_1-1_2-operation-erl">operation.erl</a></h3>
+
+<ul>
+  <li>Use <a href="my_lists.html#ukeymerge-3">my_lists:ukeymerge/3</a>
+    in <a href="#merge_params-2">merge_params/2</a>.
+  </li>
+</ul>
+
 
 </body>
 </html>

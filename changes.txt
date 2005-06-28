@@ -1,4 +1,4 @@
-changes.txt - OSERL Version 1.2                              Feb 13, 2005
+changes.txt - OSERL Version 1.2                              Jun 28, 2005
 
                     http://sourceforge.net/projects/oserl/
 
@@ -42,6 +42,7 @@ Contents
 4.3  gen_esme_session.erl
 4.4  gen_esme.erl
 4.5  smpp_globals.hrl
+4.6  operation.erl
 
 ---
 
@@ -261,6 +262,8 @@ How these changes affected individual files is described below.
 - Removed unused vars warnings.
 - Add some functions for message concatenation support.  Refer to sm module.
 - PDU logs added.  See smpp_log module for further details.
+- Enquire link operation reviewed.
+- SMPP errors description.  Refer to smpp_error module.
 
 See other changes on individual files below.
 
@@ -294,6 +297,9 @@ See other changes on individual files below.
 - New function reference_number/1 implemented.
 - PDUs are logged using the new smpp_log event manager.
 - Errors reported using the error_logger.
+- New callback handle_enquire_link/3 added.
+  See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
+- Use built in gen_fsm timers.
 
 
 4.4  gen_esme.erl
@@ -318,3 +324,7 @@ See other changes on individual files below.
 
 - SM_MAX_SIZE and SM_SEGMENT_MAX_SIZE macros defined.
 
+
+4.6  operation.erl
+
+- Use my_lists:ukeymerge/3 in merge_params/2.

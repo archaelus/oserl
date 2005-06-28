@@ -1,4 +1,4 @@
-%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% Copyright (C) 2003 - 2005 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
 %%% This library is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU Lesser General Public
@@ -77,10 +77,21 @@
 %%% </ul>
 %%%
 %%%
-%%% @copyright 2003 - 2004 Enrique Marcote Peña
+%%% <h2>Changes 1.1 -&gt; 1.2</h2>
+%%%
+%%% [28 Jun 2005]
+%%%
+%%% <ul>
+%%%   <li>Use <a href="my_lists.html#ukeymerge-3">my_lists:ukeymerge/3</a>
+%%%     in <a href="#merge_params-2">merge_params/2</a>.
+%%%   </li>
+%%% </ul>
+%%%
+%%%
+%%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 1.0, {24 May 2003} {@time}.
+%%% @version 1.2, {24 May 2003} {@time}.
 %%% @end
 -module(operation).
 
@@ -165,23 +176,8 @@ set_param(ParamName, ParamValue, Pdu) ->
 %% @doc Merge two parameter lists.  If an parameter appears on both lists,
 %% the value from the first list will be taken.
 %% @end
-merge_params(ParamList1, ParamList2) ->
-    merge_params(lists:keysort(1,ParamList1), lists:keysort(1,ParamList2), []).
-
-%% @doc Auxiliary function for merge_params/2
-%%
-%% @see merge_params/2
-%% @end
-merge_params([], ParamList2, MergedParamList) ->
-    MergedParamList ++ ParamList2;
-merge_params(ParamList1, [], MergedParamList) ->
-    MergedParamList ++ ParamList1;
-merge_params([{Id,V1}|T1], [{Id,_V2}|T2], MergedParamList) ->
-    merge_params(T1, T2, [{Id, V1}|MergedParamList]);
-merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) when I1 < I2 ->
-    merge_params(T1, [{I2,V2}|T2], [{I1, V1}|MergedParamList]);
-merge_params([{I1,V1}|T1], [{I2,V2}|T2], MergedParamList) ->
-    merge_params([{I1,V1}|T1], T2, [{I2, V2}|MergedParamList]).
+merge_params(Params1, Params2) ->
+    my_lists:ukeymerge(1,lists:keysort(1,Params1),lists:keysort(1,Params2)).
 
 
 %% @spec from_list(List) -> Pdu

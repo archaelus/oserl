@@ -19,6 +19,7 @@ EDOC_MODULES = \
 	operation \
 	sm \
 	smpp_log \
+	smpp_error \
 	gen_esme_session \
 	gen_smsc_session \
 	gen_esme \

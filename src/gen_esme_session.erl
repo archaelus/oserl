@@ -294,6 +294,7 @@
          cancel_broadcast_sm/2,
          cancel_sm/2,
          data_sm/2,
+		 enquire_link/1,
          query_broadcast_sm/2,
          query_sm/2,
          reference_number/1,
@@ -698,6 +699,20 @@ data_sm(FsmRef, ParamList) ->
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
 
+%% @spec enquire_link(FsmRef) -> Result
+%%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Result = ok | {error, Error}
+%%    PduResp = pdu()
+%%    Error = int()
+%%
+%% @doc Issues an <i>enquire_link</i> operation on the session identified by
+%% <tt>FsmRef</tt>.
+%% @end
+enquire_link(FsmRef) ->
+    CmdId = ?COMMAND_ID_ENQUIRE_LINK,
+    gen_fsm:sync_send_all_state_event(FsmRef, CmdId, infinity).
+
+
 %% @spec query_broadcast_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -897,8 +912,8 @@ open({timeout, _Ref, enquire_link_timer}, S) ->
     {next_state, open, NewS#state{enquire_link_timer = T}};
 open({timeout, _Ref, session_init_timer}, S) ->
     {stop, {timeout, session_init_timer}, S};
-open({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+open({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, open}]),
     {next_state, open, S};
 open(R, S) ->    
     esme_rinvbndsts_resp(R, open, S#state.socket),
@@ -927,8 +942,8 @@ outbound({timeout, _Ref, enquire_link_timer}, S) ->
     {next_state, outbound, NewS#state{enquire_link_timer = T}};
 outbound({timeout, _Ref, session_init_timer}, S) ->
     {stop, {timeout, session_init_timer}, S};
-outbound({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+outbound({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, outbound}]),
     {next_state, outbound, S};
 outbound(R, S) ->
     esme_rinvbndsts_resp(R, outbound, S#state.socket),
@@ -998,8 +1013,8 @@ bound_rx({timeout, _Ref, inactivity_timer}, S) ->
     TI = gen_fsm:start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_rx, NewS#state{enquire_link_timer = TE,
                                       inactivity_timer = TI}};
-bound_rx({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+bound_rx({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, bound_rx}]),
     {next_state, bound_rx, S};
 bound_rx(R, S) ->    
     esme_rinvbndsts_resp(R, bound_rx, S#state.socket),
@@ -1052,8 +1067,8 @@ bound_tx({timeout, _Ref, inactivity_timer}, S) ->
     TI = gen_fsm:start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_tx, NewS#state{enquire_link_timer = TE,
                                       inactivity_timer = TI}};
-bound_tx({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+bound_tx({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, bound_tx}]),
     {next_state, bound_tx, S};
 bound_tx(R, S) ->    
     esme_rinvbndsts_resp(R, bound_tx, S#state.socket),
@@ -1125,8 +1140,8 @@ bound_trx({timeout, _Ref, inactivity_timer}, S) ->
     TI = gen_fsm:start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_trx, NewS#state{enquire_link_timer = TE,
                                        inactivity_timer = TI}};
-bound_trx({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+bound_trx({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, bound_trx}]),
     {next_state, bound_trx, S};
 bound_trx(R, S) ->    
     esme_rinvbndsts_resp(R, bound_trx, S#state.socket),
@@ -1153,8 +1168,8 @@ unbound({timeout, _Ref, enquire_link_timer}, S) ->
     {ok,NewS} = send_request(?COMMAND_ID_ENQUIRE_LINK,[],{undefined,self()},S),
     T = gen_fsm:start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     {next_state, unbound, NewS#state{enquire_link_timer = T}};
-unbound({timeout, _Ref, _Timer}, S) ->
-    % Ignore false timeouts
+unbound({timeout, _Ref, Timer}, S) ->
+    report:error(?MODULE, false_timeout, Timer, [{state, unbound}]),
     {next_state, unbound, S};
 unbound(R, S) ->    
     esme_rinvbndsts_resp(R, unbound, S#state.socket),
@@ -1635,6 +1650,11 @@ congestion_state(Lapse, Index, Time) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_sync_event/4</a> callback implementation.  Handles
 %% events received via <tt>gen_fsm:sync_send_all_state_event/2,3</tt>.
 %% @end
+handle_sync_event(enquire_link, _From, SName, SData) ->
+    RefNum = SData#state.reference_number,
+    {reply, RefNum, SName, SData#state{reference_number = RefNum + 1}};
+
+
 handle_sync_event(reference_number, _From, SName, SData) ->
     RefNum = SData#state.reference_number,
     {reply, RefNum, SName, SData#state{reference_number = RefNum + 1}};

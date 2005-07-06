@@ -485,6 +485,9 @@
     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
   </li>
   <li>Use built in <i>gen_fsm</i> timers.</li>
+  <li>Timers (finally :-) redefined.</li>
+  <li>Replace request brokers with timers.  Now instead of spawning a
+    process for each request, a timer is set.</li>
 </ul>
 
 
@@ -520,6 +523,12 @@
     <br/>
     Please refer to <a href="smpp_log.html">smpp_log</a> for further 
     information about OSERL logs.
+   </li>
+   <li>Implement <i>gen_esme_session</i> callback 
+     <a href="gen_esme_session.html#handle_enquire_link-3">
+     handle_enquire_link/3</a>.
+     <br/>
+     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
    </li>
 </ul>
 

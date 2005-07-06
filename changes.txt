@@ -300,6 +300,9 @@ See other changes on individual files below.
 - New callback handle_enquire_link/3 added.
   See http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
 - Use built in gen_fsm timers.
+- Timers (finally :-) redefined.
+- Replace request brokers with timers.  Now instead of spawning a
+  process for each request, a timer is set.
 
 
 4.4  gen_esme.erl
@@ -319,6 +322,9 @@ See other changes on individual files below.
   open_disk_log/1 and/or open_error_logger/1 are called.
 
   Please refer to smpp_log for further information about OSERL logs.
+- Implement gen_esme_session callback handle_enquire_link/3.
+
+  http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
 
 4.5  smpp_globals.hrl
 

@@ -2240,9 +2240,6 @@ this term, I'd like to also explicitly thank Anders Nygren.</p>
 <ul>
   <li>Version 1.2
     <ol>
-      <li>Do not spawn a process for each request. Replace request brokers 
-        (processes) by request status (static) information.
-      </li>
       <li><a href="gen_esme_session.html">gen_esme_session</a> and
         <a href="gen_smsc_session.html">gen_smsc_session</a> are almost
         identical.
@@ -2259,7 +2256,6 @@ this term, I'd like to also explicitly thank Anders Nygren.</p>
         <a href="gen_esme.html">gen_esme</a> and 
         <a href="gen_smsc.html">gen_smsc</a>.</p>
       </li>
-      <li>Review timers.</li>
     </ol>
   </li>
 </ul>

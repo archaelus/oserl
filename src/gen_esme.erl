@@ -1,4 +1,4 @@
-%%% Copyright (C) 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% Copyright (C) 2004 - 2005 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
 %%% This library is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU Lesser General Public
@@ -398,7 +398,18 @@
 %%%   </li>
 %%% </ul>
 %%%
-%%% @copyright 2004-2005 Enrique Marcote Peña
+%%% [4 Jul 2005]
+%%%
+%%% <ul>
+%%%   <li>Implement <i>gen_esme_session</i> callback 
+%%%     <a href="gen_esme_session.html#handle_enquire_link-3">
+%%%     handle_enquire_link/3</a>.
+%%%     <br/>
+%%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
+%%%   </li>
+%%% </ul>
+%%%
+%%% @copyright 2004 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
 %%% @version 1.2, {13 May 2004} {@time}.
@@ -476,6 +487,7 @@
 %%%-------------------------------------------------------------------
 -export([handle_outbind/3, 
          handle_alert_notification/3, 
+         handle_enquire_link/3,
          handle_enquire_link_failure/3,
          handle_operation/3, 
          handle_unbind/3]).
@@ -1335,6 +1347,8 @@ handle_cast({outbind, _Session, _Pdu} = R, S) ->
     pack((S#state.mod):handle_outbind(R, S#state.mod_state), S);
 handle_cast({alert_notification, _Session, _Pdu} = R, S) ->
     pack((S#state.mod):handle_alert_notification(R, S#state.mod_state), S);
+handle_cast({enquire_link, _Session, _Pdu}, S) ->
+    {noreply, S};
 handle_cast({enquire_link_failure, _Session, _CommandStatus} = R, S) ->
     pack((S#state.mod):handle_enquire_link_failure(R, S#state.mod_state), S);
 handle_cast(listen_error, S) when S#state.lsocket == closed ->
@@ -1427,6 +1441,18 @@ handle_outbind(ServerRef, Session, Pdu) ->
 %% @end
 handle_alert_notification(ServerRef, Session, Pdu) ->
     gen_server:cast(ServerRef, {alert_notification, Session, Pdu}).
+
+
+%% @spec handle_enquire_link(ServerRef, Session, Pdu) -> ok
+%%    ServerRef = pid()
+%%    Session = pid()
+%%    Pdu = pdu()
+%%
+%% @doc <a href="gen_esme_session.html#handle_enquire_link-3">
+%% gen_esme_session - handle_enquire_link/3</a> callback implementation.
+%% @end
+handle_enquire_link(ServerRef, Session, Pdu) ->
+    gen_server:cast(ServerRef, {enquire_link, Session, Pdu}).
 
 
 %% @spec handle_enquire_link_failure(ServerRef, Session, CommandStatus) -> ok

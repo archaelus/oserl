@@ -269,6 +269,12 @@
 %%%     process for each request, a timer is set.</li>
 %%% </ul>
 %%%
+%%% [6 Jul 2005]
+%%%
+%%% <ul>
+%%%   <li>Congestion control redefined.</li>
+%%% </ul>
+%%%
 %%% @copyright 2004 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -384,11 +390,13 @@
 %%   <dt>Requests: </dt><dd>An ets table with the requests which responses are
 %%     pending.
 %%   </dd>
-%%   <dt>SelfCongestionState: </dt><dd>ESME congestion state (default is 0).
+%%   <dt>SelfCongestionState: </dt><dd>ESME congestion state (default is 0.0).
+%%     This value is internally stored as a float due to the congestion control
+%%     algorithm used.  Default value is 0.0.
 %%   </dd>
 %%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might the atom
 %%     <tt>undefined</tt> if the peer ESME doesn't support the 
-%%     <i>congestion_state</i> parameter.
+%%     <i>congestion_state</i> parameter.  Stored as returned by the peer MC.
 %%   </dd>
 %%   <dt>SessionInitTime: </dt><dd>A value in milliseconds or the atom
 %%     <tt>infinity</tt> (the later disables the timer).
@@ -449,7 +457,7 @@
          reference_number = 0,
          socket,
          requests,
-         self_congestion_state = 0,
+         self_congestion_state = 0.0,
          peer_congestion_state,
          session_init_time,
          session_init_timer,
@@ -1410,7 +1418,7 @@ bound_trx({CmdId, ParamList}, From, S)
     TE = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     TI = start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_trx, NewS#state{enquire_link_timer = TE,
-                                      inactivity_timer = TI}};
+                                       inactivity_timer = TI}};
 bound_trx(?COMMAND_ID_UNBIND, From, S) ->
     cancel_timer(S#state.inactivity_timer),
     cancel_timer(S#state.enquire_link_timer),
@@ -1418,7 +1426,7 @@ bound_trx(?COMMAND_ID_UNBIND, From, S) ->
     TE = start_timer(NewS#state.enquire_link_time, enquire_link_timer),
     TI = start_timer(NewS#state.inactivity_time, inactivity_timer),
     {next_state, bound_trx, NewS#state{enquire_link_timer = TE,
-                                      inactivity_timer = TI}};
+                                       inactivity_timer = TI}};
 bound_trx(_Event, _From, S) ->
     {reply, {error, ?ESME_RINVBNDSTS}, bound_trx, S}.
 
@@ -1461,8 +1469,7 @@ unbound(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_event/3</a> callback implementation.  Handles
 %% events received by <tt>gen_fsm:send_all_state_event/2</tt>.
 %% @end
-handle_event({input, BinaryPdu, Lapse, Index}, SName, SData) ->
-    Timestamp = now(),
+handle_event({input, BinaryPdu, Lapse, Timestamp}, SName, SData) ->
     case catch operation:esme_unpack(BinaryPdu) of
         {ok, Pdu} ->
             smpp_log:notify_peer_operation(BinaryPdu),
@@ -1471,18 +1478,18 @@ handle_event({input, BinaryPdu, Lapse, Index}, SName, SData) ->
                 case SName of
                     bound_rx ->
                         % As a receiver, we care about our own congestion state
-                        Time = 2 * my_calendar:time_since(Timestamp),
-                        Scs  = congestion_state(Lapse, Index, Time),
+                        Ccs = SData#state.self_congestion_state, % Current
+                        Scs = congestion_state(Ccs, Lapse, Timestamp),
                         SData#state{self_congestion_state = Scs};
                     bound_tx ->
                         % As a transmitter, we care about MC's congestion state
-                        Pcs  = operation:get_param(congestion_state, Pdu),
+                        Pcs = operation:get_param(congestion_state, Pdu),
                         SData#state{peer_congestion_state = Pcs};
                     bound_trx ->
-                        % Against transceivers care about both sides congestion
-                        Pcs  = operation:get_param(congestion_state, Pdu),
-                        Time = 2 * my_calendar:time_since(Timestamp),
-                        Scs  = congestion_state(Lapse, Index, Time),
+                        % Transceivers care about both sides
+                        Pcs = operation:get_param(congestion_state, Pdu),
+                        Ccs = SData#state.self_congestion_state, % Current
+                        Scs = congestion_state(Ccs, Lapse, Timestamp),
                         SData#state{self_congestion_state = Scs,
                                     peer_congestion_state = Pcs};
                     _Other ->
@@ -1598,22 +1605,29 @@ handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
 
 %% @doc Auxiliary function for handle_event/3
 %%
-%% <p>Computes the congestion state.  Used only on the <tt>input</tt> event.
-%% <tt>Time</tt> indicates the microseconds to dispatch a PDU.  <tt>Lapse
-%% </tt></p>
+%% <p>Computes the congestion state. Used only on the <tt>input</tt> event.</p>
 %%
 %% <dl>
-%%   <dt>Lapse: </dt><dd>Are the microseconds waiting for the input buffer.</dd>
-%%   <dt>Time: </dt><dd>Microseconds to dispatch a PDU.</dd>
-%%   <dt>Index: </dt><dd>An input buffer may contain more than 1 PDU.</dd>
+%%   <dt>CongestionState: </dt><dd>Current <i>congestion_state</i> value.</dd>
+%%   <dt>WaitTime: </dt><dd>Are the microseconds waiting for the PDU.</dd>
+%%   <dt>Timestamp: </dt><dd>Represents the moment when the PDU was received.
+%%   </dd>
 %% </dl>
+%%
+%% <p>The time since <tt>Timestamp</tt> is the PDU dispatching time.  If
+%% this value equals the <tt>WaitTime</tt> (i.e. DispatchTime/WaitTime = 1), 
+%% then we shall assume optimum load (value 85).  Having this in mind the
+%% instant congestion state value is calculated.  Notice this value cannot be
+%% greater than 99.</p>
 %% @end
-congestion_state(Lapse, Index, Time) ->
-    case catch ((99 * Time) / ((Lapse / Index) + Time)) of 
-        Result when float(Result) -> 
-            trunc(Result);
-        _DivisionByZero -> 
-            0
+congestion_state(CongestionState, WaitTime, Timestamp) ->
+    case (my_calendar:time_since(Timestamp) / (WaitTime + 1)) * 85 of
+        Value when Value < 1 ->
+            0.0;
+        Value when Value > 99 ->  % Out of bounds
+            float(((19 * CongestionState) + 99) / 20);
+        Value ->
+            float(((19 * CongestionState) + Value) / 20)
     end.
 
 
@@ -1785,7 +1799,7 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
     RespId  = ?RESPONSE(CmdId),
-    PList2  = [{congestion_state, S#state.self_congestion_state}],
+    PList2  = [{congestion_state, round(S#state.self_congestion_state)}],
     case (S#state.mod):handle_operation(S#state.esme, Self, {CmdName, Pdu}) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
@@ -1974,11 +1988,12 @@ recv_loop(FsmRef, Socket, Buffer) ->
 %% <p><tt>N</tt> counts the PDUs in Buffer.</p>
 %% @end
 handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
+    Now = now(), % PDU received.  PDU handling starts now!
     Len = CommandLength - 4,
     case Rest of
         <<PduRest:Len/binary-unit:8, NextPdus/binary>> -> 
-            BinaryPdu = <<CommandLength:32, PduRest/binary>>,
-            gen_fsm:send_all_state_event(FsmRef, {input, BinaryPdu, Lapse, N}),
+            Pdu = <<CommandLength:32, PduRest/binary>>,
+            gen_fsm:send_all_state_event(FsmRef, {input, Pdu, Lapse/N, Now}),
             % The buffer may carry more than one SMPP PDU.
             handle_input(FsmRef, NextPdus, Lapse, N + 1);
         _IncompletePdu ->

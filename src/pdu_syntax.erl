@@ -1,4 +1,4 @@
-%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% Copyright (C) 2003 - 2005 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
 %%% This library is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU Lesser General Public
@@ -60,6 +60,16 @@
 %%%
 %%% <ul>
 %%%   <li>Function <a href="#command_status-1">command_status/1</a> added.</li>
+%%% </ul>
+%%%
+%%% [7 Jul 2005]
+%%%
+%%% <ul>
+%%%   <li>Small change in <a href="#unpack_tlvs-2">unpack_tlvs/2</a>.  Now
+%%%     call <a href="#unpack_tlvs-3">unpack_tlvs/3</a> instead of looping
+%%%     back to <a href="#unpack_tlvs-2">unpack_tlvs/2</a> when discarding
+%%%     unsupported TLVs.
+%%%   </li>
 %%% </ul>
 %%%
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
@@ -457,14 +467,14 @@ unpack_stds(BinaryBody, [Type|Types], Acc) ->
 unpack_tlvs(BinaryTlvs, []) ->
     case param_syntax:chop_tlv(BinaryTlvs) of
         {ok, _Tlv, RestUnusedTlvs} ->
-            % Remaining octets seem to be collection of unsupported TLVs.
-            % Forward compatibility guidelines recommend to silently discard
+            % Remaining octets seem to be a collection of unsupported TLVs.
+            % Following compatibility guidelines recommend to silently discard
             % unsupported TLVs (if they are well-formed).
             %
-            % After the first TLV was chopped, we dive into unpack_tlvs/3 
-            % course we'd want to return the ?ESME_RINVTLVSTREAM error instead
-            % of the ?ESME_RINVCMDLEN error returned by this function.
-            unpack_tlvs(RestUnusedTlvs, []);
+            % After the first TLV was chopped, we call unpack_tlvs/3 cause, in
+            % case of an error, we rather return the ?ESME_RINVTLVSTREAM error
+            % instead of the ?ESME_RINVCMDLEN value returned by this function.
+            unpack_tlvs(RestUnusedTlvs, [], []);
         {error, <<>>} ->
             {ok, []};
         _Error ->

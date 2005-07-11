@@ -16,8 +16,7 @@
 
 %%% @doc Generic ESME SMPP Session.
 %%%
-%%% <p>A generic ESME SMPP session modeled as a FSM.  It also implements the
-%%% <a href="gen_connection.html">gen_connection</a> behaviour.</p>
+%%% <p>A generic ESME SMPP session modeled as a FSM.</p>
 %%%
 %%% <p>Every SMPP session works over a single TCP/IP connection.  If the 
 %%% underlying connection exits, the session is also terminated.</p>
@@ -35,6 +34,306 @@
 %%% <p>Operations issued by the other peer (SMSC) are treated asynchronously
 %%% by the ESME session, thus represented by async events.</p>
 %%%
+%%% <p>Empty cells mean that events are not possible for those states.</p>
+%%%
+%%% <table width="100%" border="1" cellpadding="5">
+%%%   <tr> 
+%%%     <th><small>&#160;</small></th>
+%%%     <th><small>open</small></th>
+%%%     <th><small>outbound</small></th>
+%%%     <th><small>bound_rx</small></th>
+%%%     <th><small>bound_tx</small></th>
+%%%     <th><small>bound_trx</small></th>
+%%%     <th><small>unbound</small></th>
+%%%   </tr>
+%%%   <tr> 
+%%%     <th align="left"><small>alert_notification (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_receiver</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_receiver_resp (async)</small></th>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_transmitter</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_transmitter_resp (async)</small></th>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_transceiver</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>bind_transceiver_resp (async)</small></th>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>broadcast_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>cancel_broadcast_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>cancel_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>data_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>deliver_sm (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>die (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>enquire_link (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>input (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>outbind (async)</small></th>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>query_broadcast_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>query_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>replace_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>submit_multi</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>submit_sm</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>unbind issued by MC (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>unbound/bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>unbound/bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>unbound/bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>unbind issued by ESME</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>bound_rx</small></td>
+%%%     <td valign="top" align="center"><small>bound_tx</small></td>
+%%%     <td valign="top" align="center"><small>bound_trx</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%   </tr>
+%%%   <tr>
+%%%     <th align="left"><small>unbind_resp (async)</small></th>
+%%%     <td valign="top" align="center"><small>open</small></td>
+%%%     <td valign="top" align="center"><small>outbound</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%     <td valign="top" align="center"><small>unbound</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%% </table>
+%%%
+%%%
+%%% <h2>Timers</h2>
+%%%
+%%% <p>Timers are implemented as shown in tables below.  There's is a table
+%%% for each timer, indicating the action accomplished on timeout.</p>
+%%%
+%%% <h3>session_init_timer</h3>
+%%%
+%%% <table width="100%" border="1" cellpadding="5">
+%%%   <tr> 
+%%%     <th><small>open</small></th>
+%%%     <th><small>outbound</small></th>
+%%%     <th><small>bound_rx</small></th>
+%%%     <th><small>bound_tx</small></th>
+%%%     <th><small>bound_trx</small></th>
+%%%     <th><small>unbound</small></th>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top" align="center"><small>close session</small></td>
+%%%     <td valign="top" align="center"><small>close session</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%% </table>
+%%%
+%%%
+%%% <h3>inactivity_timer</h3>
+%%%
+%%% <table width="100%" border="1" cellpadding="5">
+%%%   <tr> 
+%%%     <th><small>open</small></th>
+%%%     <th><small>outbound</small></th>
+%%%     <th><small>bound_rx</small></th>
+%%%     <th><small>bound_tx</small></th>
+%%%     <th><small>bound_trx</small></th>
+%%%     <th><small>unbound</small></th>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%     <td valign="top" align="center"><small>unbind</small></td>
+%%%     <td valign="top" align="center"><small>unbind</small></td>
+%%%     <td valign="top" align="center"><small>unbind</small></td>
+%%%     <td valign="top" align="center"><small>&#160;</small></td>
+%%%   </tr>
+%%% </table>
+%%%
+%%%
+%%% <h3>enquire_link_timer</h3>
+%%%
+%%% <table width="100%" border="1" cellpadding="5">
+%%%   <tr> 
+%%%     <th><small>open</small></th>
+%%%     <th><small>outbound</small></th>
+%%%     <th><small>bound_rx</small></th>
+%%%     <th><small>bound_tx</small></th>
+%%%     <th><small>bound_trx</small></th>
+%%%     <th><small>unbound</small></th>
+%%%   </tr>
+%%%   <tr>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%     <td valign="top" align="center"><small>enquire_link</small></td>
+%%%   </tr>
+%%% </table>
 %%%
 %%% <h3>response_timer</h3>
 %%%
@@ -272,7 +571,23 @@
 %%% [6 Jul 2005]
 %%%
 %%% <ul>
-%%%   <li>Congestion control redefined.</li>
+%%%   <li>Congestion control redefined. (Miguel Rodriguez Rubinos).</li>
+%%% </ul>
+%%%
+%%% [11 Jul 2005]
+%%%
+%%% <ul>
+%%%   <li><i>enquire_link</i> behavior redefined.  No false <i>enquire_link</i>
+%%%     failures permitted.
+%%%     <br/>
+%%%     Please see discussions on this subject at the <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">OSERL forum</a> 
+%%%     and the <a href="http://smsforum.net/smf/index.php?topic=1980.0">SMPP 
+%%%     forum.</a>
+%%%   </li>
+%%%   <li>Use <a href="smpp_error.html#format-1">smpp_error:format/1</a> in
+%%%     error reports.
+%%%   </li>
+%%%   <li>Show PDUs in hex format in error reports.</li>
 %%% </ul>
 %%%
 %%% @copyright 2004 - 2005 Enrique Marcote Peña
@@ -1167,7 +1482,7 @@ unbound(R, S) ->
 %% @see unbound/2
 %% @end 
 esme_rinvbndsts_resp({CmdId, Pdu}, SName, Socket) ->
-    Details = [{state, SName}, {command_id, CmdId}, {pdu, Pdu}],
+    Details = [{state,SName},{command_id,CmdId},{pdu,operation:to_list(Pdu)}],
     report:info(?MODULE, esme_rinvbndsts, Details),
     SeqNum = operation:get_param(sequence_number, Pdu),
     case ?VALID_COMMAND_ID(CmdId) of
@@ -1469,76 +1784,32 @@ unbound(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_event/3</a> callback implementation.  Handles
 %% events received by <tt>gen_fsm:send_all_state_event/2</tt>.
 %% @end
-handle_event({input, BinaryPdu, Lapse, Timestamp}, SName, SData) ->
-    case catch operation:esme_unpack(BinaryPdu) of
-        {ok, Pdu} ->
-            smpp_log:notify_peer_operation(BinaryPdu),
-            handle_input_correct_pdu(Pdu, SData),
-            NewSData = 
-                case SName of
-                    bound_rx ->
-                        % As a receiver, we care about our own congestion state
-                        Ccs = SData#state.self_congestion_state, % Current
-                        Scs = congestion_state(Ccs, Lapse, Timestamp),
-                        SData#state{self_congestion_state = Scs};
-                    bound_tx ->
-                        % As a transmitter, we care about MC's congestion state
-                        Pcs = operation:get_param(congestion_state, Pdu),
-                        SData#state{peer_congestion_state = Pcs};
-                    bound_trx ->
-                        % Transceivers care about both sides
-                        Pcs = operation:get_param(congestion_state, Pdu),
-                        Ccs = SData#state.self_congestion_state, % Current
-                        Scs = congestion_state(Ccs, Lapse, Timestamp),
-                        SData#state{self_congestion_state = Scs,
-                                    peer_congestion_state = Pcs};
-                    _Other ->
-                        % Not bound, congestion state and dispatch time
-                        % are meaningfulness for us.
-                        SData
-                end,
-            {next_state, SName, NewSData};
-        {error, CmdId, Status, SeqNum} ->
-            Details = [{pdu, BinaryPdu},
-                       {command_id, CmdId},
-                       {command_status, Status},
-                       {sequence_number, SeqNum}],
-            report:info(?MODULE, unpack_error, Details),
-            handle_input_corrupt_pdu(CmdId, Status, SeqNum, SData),
-            {next_state, SName, SData};
-        {'EXIT', What} ->
-            report:error(?MODULE, unpack_error, What, [{pdu, BinaryPdu}]),
-            handle_input_corrupt_pdu(undefined, ?ESME_RUNKNOWNERR, 0, SData),
-            {next_state, SName, SData}
-    end;
-handle_event({recv_error, _Error}, unbound, SData) ->
-    {stop, normal, SData#state{socket = closed}};
-handle_event({recv_error, _Error} = R, _SName, SData) ->
-    {stop, R, SData#state{socket = closed}};
-handle_event({?COMMAND_ID_ENQUIRE_LINK, _Pdu} = R, SName, SData) ->
-    cancel_timer(SData#state.enquire_link_timer),
-    Self = self(),
-    proc_lib:spawn_link(fun() -> handle_peer_enquire_link(R, Self, SData) end),
-    T = start_timer(SData#state.enquire_link_time, enquire_link_timer),
-    {next_state, SName, SData#state{enquire_link_timer = T}};
-handle_event(die, _SName, SData) ->
-    {stop, normal, SData}.
-
-
-%% @doc Auxiliary function for handle_event/3
-%%
-%% <p>This function handles an input PDU when the unpacking operation was
-%% successful.  Used only on the <tt>input</tt> event.</p>
-%%
-%% @see handle_input_corrupt_pdu/3
-%% @end
-handle_input_correct_pdu(Pdu, SData) ->
+handle_event({input, Pdu, Lapse, Timestamp}, SName, SData) ->
     case operation:get_param(command_id, Pdu) of
+        CmdId when CmdId == ?COMMAND_ID_ENQUIRE_LINK_RESP ->
+            SeqNum = operation:get_param(sequence_number, Pdu),
+            RqstId = ?COMMAND_ID_ENQUIRE_LINK,
+            case ets:match(SData#state.requests,{SeqNum,RqstId,'$1','$2'},1) of
+                {[[RTimer, From]], _Continuation} -> % Expected response
+                    cancel_timer(RTimer),
+                    ets:delete(SData#state.requests, SeqNum),
+                    gen_fsm:reply(From, {ok, Pdu});
+                _Otherwise -> % Unexpected response
+                    % An enquire_link_resp received although not expected,
+                    % probably because it was assumed to be acknowledged by
+                    % other valid SMPP primitive, which was already on the way.
+                    %
+                    % The recommendation of the SMPP forum is to ignore these
+                    % responses.
+                    Details = [{sequence_number, SeqNum}],
+                    report:info(?MODULE, unexpected_enquire_link_resp, Details)
+            end,
+            {next_state, SName, SData#state{enquire = false}};
         CmdId when CmdId > 16#80000000 ->
             SeqNum = operation:get_param(sequence_number, Pdu),
             RqstId = ?REQUEST(CmdId),
             case ets:match(SData#state.requests,{SeqNum,RqstId,'$1','$2'},1) of
-                {[[RTimer, From]], _Continuation} ->      % Expected response
+                {[[RTimer, From]], _Continuation} -> % Expected response
                     cancel_timer(RTimer),
                     ets:delete(SData#state.requests, SeqNum),
                     case operation:get_param(command_status, Pdu) of
@@ -1556,56 +1827,84 @@ handle_input_correct_pdu(Pdu, SData) ->
                         Status ->
                             gen_fsm:reply(From, {error, Status})
                     end;
-                _Otherwise ->                             % Unexpected response
+                _Otherwise -> % Unexpected response
                     Sock = SData#state.socket,
                     Nack = ?COMMAND_ID_GENERIC_NACK,
                     send_response(Nack, ?ESME_RINVCMDID, SeqNum, [], Sock)
-            end;
+            end,
+            Pcs = operation:get_param(congestion_state, Pdu),
+            {next_state, SName, SData#state{peer_congestion_state = Pcs}};
         CmdId when CmdId == ?COMMAND_ID_GENERIC_NACK ->
             SeqNum = operation:get_param(sequence_number, Pdu),
-            case ets:match(SData#state.requests, {SeqNum,'_','$1','$2'}, 1) of
-                {[[RTimer, From]], _Continuation} ->      % Expected response
+            case ets:match(SData#state.requests, {SeqNum,'$1','$2','$3'}, 1) of
+                {[[?COMMAND_ID_ENQUIRE_LINK, RTimer, From]], _Continuation} ->
+                    % The other peer doesn't seem to support the enquire_link
+                    % operation.  Even a generic_nack was issued, the link
+                    % is working OK, thus the enquire_link succeeded
                     cancel_timer(RTimer),
                     ets:delete(SData#state.requests, SeqNum),
-                    case operation:get_param(command_status, Pdu) of
-                        ?ESME_ROK ->
-                            gen_fsm:reply(From, {error, ?ESME_RUNKNOWNERR});
-                        Status ->
-                            gen_fsm:reply(From, {error, Status})
-                    end;
-                _Otherwise ->                             % Unexpected response
+                    gen_fsm:reply(From, {ok, Pdu});
+                {[[_RqstId, RTimer, From]], _Continuation} -> % Expected
+                    cancel_timer(RTimer),
+                    ets:delete(SData#state.requests, SeqNum),
+                    Status = operation:get_param(command_status, Pdu),
+                    gen_fsm:reply(From, {error, Status});
+                _Otherwise -> % Unexpected response
                     % Do not send anything, might enter a request/response loop
                     true
-            end;
+            end,
+            {next_state, SName, SData};
         CmdId when CmdId == ?COMMAND_ID_ENQUIRE_LINK ->
-            gen_fsm:send_all_state_event(self(), {CmdId, Pdu});
+            cancel_timer(SData#state.enquire_link_timer),
+            (SData#state.mod):handle_enquire_link(SData#state.esme,self(),Pdu),
+            SeqNum = operation:get_param(sequence_number, Pdu),
+            RespId = ?COMMAND_ID_ENQUIRE_LINK_RESP,
+            send_response(RespId, ?ESME_ROK, SeqNum, [], SData#state.socket),
+            T = start_timer(SData#state.enquire_link_time, enquire_link_timer),
+            {next_state, SName, SData#state{enquire_link_timer = T}};
+        CmdId when SData#state.enquire == true ->
+            % On response to an enquire_link another valid SMPP primitive was
+            % received.  The SMPP specification permits this, considering the
+            % enquire_link as successful.
+            %
+            % Notice the enquire_link_resp may be received later on (see first
+            % clause of this case).
+            gen_fsm:send_event(self(), {CmdId, Pdu}),
+            RqstId = ?COMMAND_ID_ENQUIRE_LINK,
+            [{SeqNum, RqstId, RTimer, From}] = 
+                ets:match_object(SData#state.requests, {'_', RqstId, '_','_'}),
+            cancel_timer(RTimer),
+            ets:delete(SData#state.requests, SeqNum),
+            gen_fsm:reply(From, {ok, Pdu}),
+            Details = [{sequence_number,SeqNum}, {pdu,binary:to_hexlist(Pdu)}],
+            report:info(?MODULE, no_enquire_link_resp, Details),
+            {next_state, SName, SData#state{self_congestion_state = 0.0, 
+                                            enquire = false}};
         CmdId ->
-            gen_fsm:send_event(self(), {CmdId, Pdu})
-    end.
+            gen_fsm:send_event(self(), {CmdId, Pdu}),
+            Ccs = SData#state.self_congestion_state, % Current
+            Scs = congestion_state(Ccs, Lapse, Timestamp),
+            {next_state, SName, SData#state{self_congestion_state = Scs}}
+    end;
+handle_event({error, CmdId, Status, SeqNum}, SName, SData) ->
+    RespId = case ?VALID_COMMAND_ID(CmdId) of
+                 true when CmdId /= ?COMMAND_ID_GENERIC_NACK ->
+                     ?RESPONSE(CmdId);
+                 _Otherwise ->
+                     ?COMMAND_ID_GENERIC_NACK
+             end,
+    send_response(RespId, Status, SeqNum, [], SData#state.socket),
+    {next_state, SName, SData};
+handle_event({recv_error, _Error}, unbound, SData) ->
+    {stop, normal, SData#state{socket = closed}};
+handle_event({recv_error, _Error} = R, _SName, SData) ->
+    {stop, R, SData#state{socket = closed}};
+handle_event(die, _SName, SData) ->
+    {stop, normal, SData}.
 
 %% @doc Auxiliary function for handle_event/3
 %%
-%% <p>This function handles an input PDU when the unpacking operation was
-%% unsuccessful.  Used only on the <tt>input</tt> event.</p>
-%%
-%% @see handle_input_correct_pdu/2
-%% @end
-handle_input_corrupt_pdu(?COMMAND_ID_GENERIC_NACK, _Status, _SeqNum, _S) ->
-    % Do not send anything, might enter a request/response loop
-    true;
-handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
-    case ?VALID_COMMAND_ID(CmdId) of
-        true ->
-            RespId = ?RESPONSE(CmdId),
-            send_response(RespId, Status, SeqNum, [], S#state.socket);
-        false ->
-            RespId = ?COMMAND_ID_GENERIC_NACK,
-            send_response(RespId, Status, SeqNum, [], S#state.socket)
-    end.
-
-%% @doc Auxiliary function for handle_event/3
-%%
-%% <p>Computes the congestion state. Used only on the <tt>input</tt> event.</p>
+%% <p>Computes self congestion state.</p>
 %%
 %% <dl>
 %%   <dt>CongestionState: </dt><dd>Current <i>congestion_state</i> value.</dd>
@@ -1759,26 +2058,6 @@ handle_peer_outbind({?COMMAND_ID_OUTBIND, Pdu}, Self, S) ->
 %% @end 
 handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
     (S#state.mod):handle_alert_notification(S#state.esme, Self, Pdu).
-
-
-%% @spec handle_peer_enquire_link({CmdId, Pdu}, Self, State) -> bool()
-%%    CmdId = int()
-%%    Pdu   = pdu()
-%%    Self  = pid()
-%%    State = state()
-%%
-%% @doc Handles <i>enquire_link</i> requests from the peer SMSC.  
-%%
-%% <p>This function issues the <a href="#handle_enquire_link-3">
-%% handle_enquire_link/3</a> callback to the callback module.</p>
-%%
-%% <p>Returns <tt>ok</tt>.</p>
-%% @end 
-handle_peer_enquire_link({?COMMAND_ID_ENQUIRE_LINK, Pdu}, Self, S) ->
-    (S#state.mod):handle_enquire_link(S#state.esme, Self, Pdu),
-    SeqNum = operation:get_param(sequence_number, Pdu),
-    RespId = ?COMMAND_ID_ENQUIRE_LINK_RESP,
-    send_response(RespId, ?ESME_ROK, SeqNum, [], S#state.socket).
 
 
 %% @spec handle_peer_operation({CmdId, Pdu}, Self, State) -> bool()
@@ -1935,12 +2214,14 @@ send_pdu(Socket, Pdu) ->
                 ok ->
                     smpp_log:notify_self_operation(BinaryPdu);
                 SendError ->
-                    Details = [{socket, Socket}, {pdu, BinaryPdu}],
+                    Details = [{socket, Socket}, 
+                               {pdu, binary:to_hexlist(BinaryPdu)}],
                     report:error(?MODULE, send_error, SendError, Details),
                     exit(SendError)
             end;
         {error, _CmdId, Status, _SeqNum} ->
-            report:error(?MODULE, pack_error, Status, operation:to_list(Pdu)),
+            Reason = smpp_error:format(Status),
+            report:error(?MODULE, pack_error, Reason, operation:to_list(Pdu)),
             exit({error, Status})
     end.
 
@@ -1992,8 +2273,25 @@ handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
     Len = CommandLength - 4,
     case Rest of
         <<PduRest:Len/binary-unit:8, NextPdus/binary>> -> 
-            Pdu = <<CommandLength:32, PduRest/binary>>,
-            gen_fsm:send_all_state_event(FsmRef, {input, Pdu, Lapse/N, Now}),
+            BinaryPdu = <<CommandLength:32, PduRest/binary>>,
+            case catch operation:esme_unpack(BinaryPdu) of
+                {ok, Pdu} ->
+                    smpp_log:notify_peer_operation(BinaryPdu),
+                    T = Lapse/N,
+                    gen_fsm:send_all_state_event(FsmRef, {input, Pdu, T, Now});
+                {error, CmdId, Status, SeqNum} = Event ->
+                    Details = [{pdu, binary:to_hexlist(BinaryPdu)},
+                               {command_id, CmdId},
+                               {command_status, Status},
+                               {sequence_number, SeqNum}],
+                    report:info(?MODULE, unpack_error, Details),
+                    gen_fsm:send_all_state_event(FsmRef, Event);
+                {'EXIT', What} ->
+                    Details = [{pdu, binary:to_hexlist(BinaryPdu)}],
+                    report:error(?MODULE, unpack_error, What, Details),
+                    Event = {error, 0, ?ESME_RUNKNOWNERR, 0},
+                    gen_fsm:send_all_state_event(FsmRef, Event)
+            end,
             % The buffer may carry more than one SMPP PDU.
             handle_input(FsmRef, NextPdus, Lapse, N + 1);
         _IncompletePdu ->

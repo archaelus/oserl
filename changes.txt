@@ -303,6 +303,13 @@ See other changes on individual files below.
 - Timers (finally :-) redefined.
 - Replace request brokers with timers.  Now instead of spawning a
   process for each request, a timer is set.
+- enquire_link behavior redefined.  No false enquire_link failures permitted.
+
+  Please see discussions on this subject 
+  http://sourceforge.net/forum/forum.php?thread_id=1206343&forum_id=350015
+  and http://smsforum.net/smf/index.php?topic=1980.0
+- Use smpp_error:format/1 in error reports.
+- Show PDUs in hex format in error reports.
 
 
 4.4  gen_esme.erl

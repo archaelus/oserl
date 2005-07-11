@@ -488,6 +488,17 @@
   <li>Timers (finally :-) redefined.</li>
   <li>Replace request brokers with timers.  Now instead of spawning a
     process for each request, a timer is set.</li>
+  <li><i>enquire_link</i> behavior redefined.  No false <i>enquire_link</i>
+    failures permitted.
+    <br/>
+    Please see discussions on this subject at the <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">OSERL forum</a> 
+    and the <a href="http://smsforum.net/smf/index.php?topic=1980.0">SMPP 
+    forum.</a>
+  </li>
+  <li>Use <a href="smpp_error.html#format-1">smpp_error:format/1</a> in
+    error reports.
+  </li>
+  <li>Show PDUs in hex format in error reports.</li>
 </ul>
 
 

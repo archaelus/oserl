@@ -43,6 +43,7 @@ Contents
 4.4  gen_esme.erl
 4.5  smpp_globals.hrl
 4.6  operation.erl
+4.7  pdu_syntax.erl
 
 ---
 
@@ -341,3 +342,16 @@ See other changes on individual files below.
 4.6  operation.erl
 
 - Use my_lists:ukeymerge/3 in merge_params/2.
+
+
+4.7  pdu_syntax.erl
+
+- Condition CommandId of 16#800000000 removed from guards in functions
+  pack/2 and unpack/2.
+
+  There was one 0 too many on that conditions.
+
+  Now the command_status is assumed to be always 0 on request PDUs.
+- Function command_status/1 added.
+- Small change in unpack_tlvs/2.  Now call unpack_tlvs/3 instead of looping
+  back to unpack_tlvs/2 when discarding unsupported TLVs.

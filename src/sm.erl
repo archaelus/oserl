@@ -1,4 +1,4 @@
-%%% Copyright (C) 2003 - 2004 Enrique Marcote Peña <mpquique@users.sourceforge.net>
+%%% Copyright (C) 2003 - 2005 Enrique Marcote Peña <mpquique@users.sourceforge.net>
 %%%
 %%% This library is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU Lesser General Public
@@ -73,11 +73,21 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [11 Jul 2005]
+%%%
+%%% <p>Add support for message concatenation.</p>
+%%%
+%%% <ul>
+%%%   <li>Function <a href="#split_user_data_tlv-1">split_user_data_tlv/1</a>
+%%%     added.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 0.2, {24 Jul 2003} {@time}.
+%%% @version 1.2, {24 Jul 2003} {@time}.
 %%% @end
 -module(sm).
 
@@ -97,6 +107,7 @@
          reply_destination_address/1,
          reply_source_address/1,
          split_user_data/2,
+         split_user_data_tlv/1,
          total_segments/1,
          udhi/1,
          udhi/2]).
@@ -161,7 +172,7 @@ join_user_data(Segments) ->
 %%    ParamValue = undefined | string()
 %%
 %% @doc Gets the message user data from a PDU.  The message user data may came 
-%% in the short_message or in the message_payload parameter.
+%% in the <i>short_message</i> or in the <i>message_payload</i> parameter.
 %% @end
 message_user_data(Pdu) ->
     case operation:get_param(short_message, Pdu) of
@@ -266,6 +277,39 @@ split_user_data(Data, RefNum, Acc) ->
     append_udh([Data|Acc], RefNum).
 
 
+%% @spec split_user_data_tlv(Data) -> Segments
+%%    Data = string()
+%%    RefNum = int()
+%%    Segments = [Segment]
+%%    Segment = string()
+%%
+%% @doc Splits the user data into several segments for message concatenation
+%% with <i>sar</i> TLVs.
+%%
+%% <p>No UDH is appended to the resulting segments.  Use this function with
+%% <i>sar</i> parameters.  Use <a href="#split_user_data-2">split_user_data/2
+%% </a> if you are using UDHI method for concatenation.</p>
+%%
+%% <p><tt>Segments</tt> are returned in the right order.  Resulting segments
+%% are at most SM_SEGMENT_MAX_SIZE long (must leave room for the SMSC to
+%% add the headers).</p>
+%%
+%% @see split_user_data/2
+%% @end 
+split_user_data_tlv(Data) ->
+    split_user_data_tlv(Data, []).
+
+%% @doc Auxiliary function for split_user_data_tlv/2
+%%
+%% @see split_user_data_tlv/2
+%% @end 
+split_user_data_tlv(Data, Acc) when length(Data) > ?SM_SEGMENT_MAX_SIZE ->
+    {Segment, Rest} = lists:split(?SM_SEGMENT_MAX_SIZE, Data),
+    split_user_data_tlv(Rest, [Segment|Acc]);
+split_user_data_tlv(Data, Acc) ->
+    lists:reverse([Data|Acc]).
+
+
 %% @spec total_segments(Pdu) -> TotalSegments
 %%    Pdu = pdu()
 %%    TotalSegments = int()
@@ -360,7 +404,3 @@ append_udh([H|T], RefNum, TotalSegments, SeqNum, Acc) ->
     % UDH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum]
     NewH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum | H],
     append_udh(T, RefNum, TotalSegments, SeqNum - 1, [NewH|Acc]).
-
-
-
-

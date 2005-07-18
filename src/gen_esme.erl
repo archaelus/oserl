@@ -1110,23 +1110,21 @@ submit_multi(Session, ParamList) ->
 %% identified by <tt>Session</tt>.
 %%
 %% <p>This submission function automatically accomplishes long messages 
-%% segmentation and concatenation using the <tt>Concatenationmethod</tt>
+%% segmentation and concatenation using the <tt>ConcatenationMethod</tt>
 %% indicated.</p>
-%%
-%% <p><b>IMPORTANT:</b> Currently only <tt>udh</tt> method is supported.</p>
 %%
 %% <dl>
 %%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
 %%     this method, since is more portable and widely available in most SMSCs.
 %%   </dd>
-%%   <dt>tlv</dt><dd>Concatenates the messages using <tt>sar_msg_ref_num</tt>,
-%%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
+%%   <dt>tlv</dt><dd>Concatenates the messages using <i>sar_msg_ref_num</i>,
+%%     <i>sar_total_segments</i> and <i>sar_segments_seqnum</i> TLVs.  If
 %%     your SMSC supports these TLVs (not all of them do) this method is
-%%     recommended, unless <tt>message_payload</tt> TLV is also supported of
+%%     recommended, unless <i>message_payload</i> TLV is also supported of
 %%     course, read below comments on this subject.</dd>
 %% </dl>
 %%
-%% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
+%% <p>The <i>short_message</i> is splited if longer than SM_MAX_SIZE macro
 %% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
 %% called and the message is send as is.  Resulting segments are 
 %% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
@@ -1134,7 +1132,7 @@ submit_multi(Session, ParamList) ->
 %% your particular needs, find them in <tt>oserl.hrl</tt>
 %% </p>
 %%
-%% <p>If you are lucky and your SMSC permits the <tt>message_payload</tt>
+%% <p>If you are lucky and your SMSC permits the <i>message_payload</i>
 %% TLV, use it with the <a href="#data_sm-2">data_sm/2</a> and
 %% <a href="#submit_sm-2">submit_sm/2</a> functions instead.</p>
 %%
@@ -1143,6 +1141,24 @@ submit_multi(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
+submit_multi(Session, ParamList, tlv) ->
+    case lists:keysearch(short_message, 1, ParamList) of
+        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
+            RefNum = gen_esme_session:reference_number(Session),
+            Params = lists:keydelete(short_message, 1, ParamList),
+            Segments = sm:split_user_data_tlv(SM),
+            TotalSegments = length(Segments),
+            F = fun(Segment, SeqNum) ->
+                        L = [{short_message, Segment},
+                             {sar_msg_ref_num, RefNum},
+                             {sar_segment_seqnum, SeqNum},
+                             {sar_total_segments, TotalSegments}|Params],
+                        {gen_esme_session:submit_multi(Session, L), SeqNum + 1}
+                end,
+            element(1, lists:mapfoldl(F, 1, Segments));
+        _Otherwise ->
+            [gen_esme_session:submit_multi(Session, ParamList)]
+    end;
 submit_multi(Session, ParamList, udh) ->
     case lists:keysearch(short_message, 1, ParamList) of
         {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
@@ -1190,23 +1206,21 @@ submit_sm(Session, ParamList) ->
 %% identified by <tt>Session</tt>.
 %%
 %% <p>This submission function automatically accomplishes long messages 
-%% segmentation and concatenation using the <tt>Concatenationmethod</tt>
+%% segmentation and concatenation using the <tt>ConcatenationMethod</tt>
 %% indicated.</p>
-%%
-%% <p><b>IMPORTANT:</b> Currently only <tt>udh</tt> method is supported.</p>
 %%
 %% <dl>
 %%   <dt>udh</dt><dd>Concatenates the messages using UDH.  If unsure use
 %%     this method, since is more portable and widely available in most SMSCs.
 %%   </dd>
-%%   <dt>tlv</dt><dd>Concatenates the messages using <tt>sar_msg_ref_num</tt>,
-%%     <tt>sar_total_segments</tt> and <tt>sar_segments_seqnum</tt> TLVs.  If
+%%   <dt>tlv</dt><dd>Concatenates the messages using <i>sar_msg_ref_num</i>,
+%%     <i>sar_total_segments</i> and <i>sar_segments_seqnum</i> TLVs.  If
 %%     your SMSC supports these TLVs (not all of them do) this method is
-%%     recommended, unless <tt>message_payload</tt> TLV is also supported of
+%%     recommended, unless <i>message_payload</i> TLV is also supported of
 %%     course, read below comments on this subject.</dd>
 %% </dl>
 %%
-%% <p>The <tt>short_message</tt> is splited if longer than SM_MAX_SIZE macro
+%% <p>The <i>short_message</i> is splited if longer than SM_MAX_SIZE macro
 %% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
 %% called and the message is send as is.  Resulting segments are 
 %% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
@@ -1214,7 +1228,7 @@ submit_sm(Session, ParamList) ->
 %% your particular needs, find them in <tt>oserl.hrl</tt>
 %% </p>
 %%
-%% <p>If you are lucky and your SMSC permits the <tt>message_payload</tt>
+%% <p>If you are lucky and your SMSC permits the <i>message_payload</i>
 %% TLV, use it with the <a href="#data_sm-2">data_sm/2</a> and
 %% <a href="#submit_sm-2">submit_sm/2</a> functions instead.</p>
 %%
@@ -1223,6 +1237,24 @@ submit_sm(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
+submit_sm(Session, ParamList, tlv) ->
+    case lists:keysearch(short_message, 1, ParamList) of
+        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
+            RefNum = gen_esme_session:reference_number(Session),
+            Params = lists:keydelete(short_message, 1, ParamList),
+            Segments = sm:split_user_data_tlv(SM),
+            TotalSegments = length(Segments),
+            F = fun(Segment, SeqNum) ->
+                        L = [{short_message, Segment},
+                             {sar_msg_ref_num, RefNum},
+                             {sar_segment_seqnum, SeqNum},
+                             {sar_total_segments, TotalSegments}|Params],
+                        {gen_esme_session:submit_sm(Session, L), SeqNum + 1}
+                end,
+            element(1, lists:mapfoldl(F, 1, Segments));
+        _Otherwise ->
+            [gen_esme_session:submit_sm(Session, ParamList)]
+    end;
 submit_sm(Session, ParamList, udh) ->
     case lists:keysearch(short_message, 1, ParamList) of
         {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->

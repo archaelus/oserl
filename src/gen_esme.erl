@@ -152,9 +152,10 @@
 %%%
 %%% <tt>handle_outbind(Outbind, From, State) -&gt; Result</tt>
 %%% <ul>
-%%%   <li><tt>OutBind = {outbind, Session, Pdu}</tt></li>
+%%%   <li><tt>OutBind = {outbind, Session, Pdu, IPAddr}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>IPAddr = {int(), int(), int(), int()}</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {noreply, NewState}               |
@@ -406,6 +407,13 @@
 %%%     handle_enquire_link/3</a>.
 %%%     <br/>
 %%%     <a href="http://sourceforge.net/forum/forum.php?thread_id=1206343&amp;forum_id=350015">More</a>
+%%%   </li>
+%%% </ul>
+%%%
+%%% [30 Jul 2005]
+%%%
+%%% <ul>
+%%%   <li>Add IPAddr in outbind callback.
 %%%   </li>
 %%% </ul>
 %%%
@@ -1375,7 +1383,7 @@ handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
 %% @end
 handle_cast({cast, Request}, S) ->
     pack((S#state.mod):handle_cast(Request, S#state.mod_state), S);
-handle_cast({outbind, _Session, _Pdu} = R, S) ->
+handle_cast({outbind, _Session, _Pdu, _IPAddr} = R, S) ->
     pack((S#state.mod):handle_outbind(R, S#state.mod_state), S);
 handle_cast({alert_notification, _Session, _Pdu} = R, S) ->
     pack((S#state.mod):handle_alert_notification(R, S#state.mod_state), S);

@@ -135,11 +135,12 @@
 %%%
 %%% <tt>handle_bind(Bind, From, State) -> Result</tt>
 %%% <ul>
-%%%   <li><tt>Bind = {bind_receiver, Session, Pdu}    |
-%%%                  {bind_transmitter, Session, Pdu} |
-%%%                  {bind_transceiver, Session, Pdu}</tt></li>
+%%%   <li><tt>Bind = {bind_receiver, Session, Pdu, IPAddr}    |
+%%%                  {bind_transmitter, Session, Pdu, IPAddr} |
+%%%                  {bind_transceiver, Session, Pdu, IPAddr}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
+%%%   <li><tt>IPAddr = {int(),int(),int(),int()}
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {reply, Reply, NewState}          |
@@ -834,9 +835,9 @@ handle_call({listen_start, Port, Count, Timers}, From, S) ->
     end;
 handle_call({accept, Socket}, From, S) ->
 	{reply, gen_smsc_session:start(?MODULE, Socket, S#state.timers), S};
-handle_call({Bind, Session, Pdu} = R, From, S) when Bind == bind_transceiver;
-                                                    Bind == bind_transmitter;
-                                                    Bind == bind_receiver ->
+handle_call({Bind, Session, Pdu, IPAddr} = R, From, S) when Bind == bind_transceiver;
+                                                            Bind == bind_transmitter;
+                                                            Bind == bind_receiver ->
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
 handle_call({unbind, Session, Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
@@ -932,11 +933,12 @@ code_change(OldVsn, S, Extra) ->
 %%%===================================================================
 %%% SMSC Session functions
 %%%===================================================================
-%% @spec handle_bind(ServerRef, Session, {CmdName, Pdu}) -> Result
+%% @spec handle_bind(ServerRef, Session, {CmdName, Pdu, IPAddr}) -> Result
 %%    ServerRef = pid()
 %%    Session = pid()
 %%    CmdName = bind_receiver | bind_transmitter | bind_transceiver
 %%    Pdu = pdu()
+%%    IPAddr = {int(),int(),int(),int()}
 %%    Result = {ok, ParamList} | {error, Error, ParamList}
 %%    ParamList  = [{ParamName, ParamValue}]
 %%    ParamName  = atom()
@@ -945,8 +947,8 @@ code_change(OldVsn, S, Extra) ->
 %% @doc <a href="gen_smsc_session.html#handle_bind-3">gen_smsc_session - 
 %% handle_bind/3</a> callback implementation.
 %% @end
-handle_bind(ServerRef, Session, {CmdName, Pdu}) ->
-    gen_server:call(ServerRef, {CmdName, Session, Pdu}, infinity).
+handle_bind(ServerRef, Session, {CmdName, Pdu, IPAddr}) ->
+    gen_server:call(ServerRef, {CmdName, Session, Pdu, IPAddr}, infinity).
 
 
 %% @spec handle_operation(ServerRef, Session, {CmdName, Pdu}) -> Result

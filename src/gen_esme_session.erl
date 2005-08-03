@@ -590,6 +590,16 @@
 %%%   <li>Show PDUs in hex format in error reports.</li>
 %%% </ul>
 %%%
+%%% [30 Jul 2005 Anders Nygren]
+%%%
+%%% <ul>
+%%%   <li>Wrap #state.sequence_number to 1 when it reaches 16#7FFFFFFF.</li>
+%%%   <li>Do not reset timers when a PDU is dropped because the peer is 
+%%%       congested.
+%%%   </li>
+%%% </ul>
+%%%
+%%%
 %%% @copyright 2004 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -657,6 +667,8 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
+
+-define(MAX_SEQUENCE_NUMBER,16#7FFFFFFF).  % PDU sequence number
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -1633,14 +1645,8 @@ bound_tx({CmdId, _ParamList}, _From, S)
     %
     % Notice that only current request is dropped, for the next one we put
     % the peer_congestion_state back to 90.
-    cancel_timer(S#state.inactivity_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    TE = start_timer(S#state.enquire_link_time, enquire_link_timer),
-    TI = start_timer(S#state.inactivity_time, inactivity_timer),
     Reply = {error, ?ESME_RTHROTTLED},
-    {reply, Reply, bound_tx, S#state{enquire_link_timer = TE,
-                                     inactivity_timer = TI,
-                                     peer_congestion_state = 90}};
+    {reply, Reply, bound_tx, S#state{peer_congestion_state = 90}};
 bound_tx({CmdId, ParamList}, From, S) 
   when CmdId == ?COMMAND_ID_DATA_SM;
        CmdId == ?COMMAND_ID_SUBMIT_SM;
@@ -1709,14 +1715,8 @@ bound_trx({CmdId, _ParamList}, _From, S)
     %
     % Notice that only current request is dropped, for the next one we put
     % the peer_congestion_state back to 90.
-    cancel_timer(S#state.inactivity_timer),
-    cancel_timer(S#state.enquire_link_timer),
-    TE = start_timer(S#state.enquire_link_time, enquire_link_timer),
-    TI = start_timer(S#state.inactivity_time, inactivity_timer),
     Reply = {error, ?ESME_RTHROTTLED},
-    {reply, Reply, bound_trx, S#state{enquire_link_timer = TE,
-                                      inactivity_timer = TI,
-                                      peer_congestion_state = 90}};
+    {reply, Reply, bound_trx, S#state{peer_congestion_state = 90}};
 bound_trx({CmdId, ParamList}, From, S) 
   when CmdId == ?COMMAND_ID_DATA_SM;
        CmdId == ?COMMAND_ID_SUBMIT_SM;
@@ -2175,7 +2175,12 @@ handle_timeout(inactivity_timer, Self, _S) ->
 %% @see send_request/3
 %% @end
 send_request(CmdId, ParamList, From, S) ->
-    SeqNum = S#state.sequence_number + 1,
+    SeqNum = case S#state.sequence_number of
+		 ?MAX_SEQUENCE_NUMBER ->
+		     1;
+		 OldSeqNum ->
+		     OldSeqNum +1
+	     end,
     send_pdu(S#state.socket, operation:new(CmdId, SeqNum, ParamList)),
     RTimer = start_timer(S#state.response_time, {response_timer, From, CmdId}),
     ets:insert(S#state.requests, {SeqNum, CmdId, RTimer, From}),

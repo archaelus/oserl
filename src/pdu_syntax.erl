@@ -72,6 +72,19 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [30 Jul 2005 Anders Nygren]
+%%%
+%%% <ul>
+%%%   <li>Do not build a binary in <a href="#pack-2">pack/2</a>, 
+%%%       build an iolist, it is more efficient.
+%%%   </li>
+%%%   <li>pack_tlvs, there is no need to reverse the list of TLVs. According to
+%%%       SMPP 5.0, 3.2.1.6 TLV Parameters they can be in any order.
+%%%   </li>
+%%%   <li>unpack_stds and unpack_tlvs, there is no need to reverse the list 
+%%%       of parameters. The list of parameters will be converted to a dictionary.
+%%%   </li>
+%%% </ul>
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -234,7 +247,7 @@ pack(PduDict, Type) ->
             case PackBody(Status, PduDict) of
                 {ok, Body} ->
                     Len = size(Body) + 16,
-                    {ok, <<Len:32,CmdId:32,Status:32,SeqNum:32,Body/binary>>};
+                    {ok, [<<Len:32,CmdId:32,Status:32,SeqNum:32>>,Body]};
                 {error, Error} ->
                     {error, CmdId, Error, SeqNum}
             end;
@@ -315,7 +328,7 @@ unpack(_BinaryPdu, _PduType) ->
 %%    StdsTypes  = [standard()]
 %%    TlvsTypes  = [tlv()]
 %%    Result     = {ok, BinaryBody} | {error, Error}
-%%    BinaryBody = bin()
+%%    BinaryBody = IOlist()
 %%    Error      = int()
 %% 
 %% @doc Packs the body's parameter dictionary of a PDU according to their
@@ -329,7 +342,7 @@ pack_body(BodyDict, StdsTypes, TlvsTypes) ->
         {ok, BinaryStdsValues} ->
             case pack_tlvs(BodyDict, TlvsTypes) of
                 {ok, BinaryTlvsValues} ->
-                    {ok, concat_binary(BinaryStdsValues ++ BinaryTlvsValues)};
+                    {ok, [BinaryStdsValues, BinaryTlvsValues]};
                 TlvError ->
                     TlvError
             end;
@@ -383,7 +396,7 @@ pack_tlvs(BodyDict, TlvsTypes) ->
 %% @see param_syntax:encode/2
 %% @end
 pack_tlvs(_BodyDict, [], Acc) ->
-    {ok, lists:reverse(Acc)};
+    {ok, Acc};
 pack_tlvs(BodyDict, [Type|Types], Acc) ->
     Value = case dict:find(param_syntax:get_name(Type), BodyDict) of
                 {ok, ParamValue} ->
@@ -449,7 +462,7 @@ unpack_stds(BinaryBody, StdsTypes) ->
 %% @see param_syntax:decode/2
 %% @end
 unpack_stds(BinaryTlvs, [], Acc) ->
-    {ok, lists:reverse(Acc), BinaryTlvs};
+    {ok, Acc, BinaryTlvs};
 unpack_stds(BinaryBody, [Type|Types], Acc) ->
     case param_syntax:decode(BinaryBody, Type) of
         {ok, Value, RestBinaryBody} ->
@@ -493,7 +506,7 @@ unpack_tlvs(BinaryTlvs, TlvsTypes) ->
 %% @see param_syntax:chop_tlv/1
 %% @end
 unpack_tlvs(<<>>, [], Acc) ->
-    {ok, lists:reverse(Acc)};
+    {ok, Acc};
 unpack_tlvs(UnusedTlvs, [], Acc) ->
     case param_syntax:chop_tlv(UnusedTlvs) of
         {ok, _Tlv, RestUnusedTlvs} ->

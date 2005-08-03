@@ -184,6 +184,18 @@
 %%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
 %%% session id.</p>
 %%%
+%%% <h2>Changes 1.1 -&gt; 1.2</h2>
+%%%
+%%% [30 Jul 2005 Anders Nygren]
+%%%
+%%% <ul>
+%%%   <li>Wrap #state.sequence_number to 1 when it reaches 16#7FFFFFFF.</li>
+%%%   <li>Do not reset timers when a PDU is dropped because the peer is 
+%%%       congested.</li>
+%%%   <li>handle_peer_bind/3, add remote peer IP address in handle_bind callback.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -261,6 +273,8 @@
                       B == ?COMMAND_ID_BIND_TRANSMITTER -> bound_tx;
                       B == ?COMMAND_ID_BIND_TRANSCEIVER -> bound_trx
                   end).
+
+-define(MAX_SEQUENCE_NUMBER,16#7FFFFFFF).  % PDU sequence number
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -1023,8 +1037,6 @@ bound_rx({CmdId, _}, _From, S)
     %
     % Notice that only current request is dropped, for the next one, we put
     % the peer_congestion_state back to 90.
-    reset_timer(S#state.inactivity_timer),
-    reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_rx, S#state{peer_congestion_state = 90}};
 bound_rx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
@@ -1104,8 +1116,6 @@ bound_trx({CmdId, _}, _From, S)
     %
     % Notice that only current request is dropped, for the next one we put
     % the peer_congestion_state back to 90.
-    reset_timer(S#state.inactivity_timer),
-    reset_timer(S#state.enquire_link_timer),
     Reply = {error, ?ESME_RTHROTTLED},
     {reply, Reply, bound_trx, S#state{peer_congestion_state = 90}};
 bound_trx({CmdId, ParamList}, From, S) when CmdId == ?COMMAND_ID_DATA_SM;
@@ -1399,7 +1409,8 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
     RespId  = ?RESPONSE(CmdId),
-    case (S#state.mod):handle_bind(S#state.smsc, Self, {CmdName, Pdu}) of
+    {ok,{IPAddr,_Port}}=inet:peername(S#state.socket),
+    case (S#state.mod):handle_bind(S#state.smsc, Self, {CmdName, Pdu, IPAddr}) of
         {ok, ParamList} ->
             send_response(RespId, ?ESME_ROK, SeqNum, ParamList,S#state.socket),
             true;
@@ -1487,7 +1498,12 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
 %% @see send_request/4
 %% @end
 send_request(CmdId, ParamList, StateData) ->
-    SeqNum = StateData#state.sequence_number + 1,
+    SeqNum = case StateData#state.sequence_number of
+		 ?MAX_SEQUENCE_NUMBER ->
+		     1;
+		 OldSeqNum ->
+		     OldSeqNum +1
+	     end,
     send_pdu(StateData#state.socket, operation:new(CmdId, SeqNum, ParamList)),
     {ok, StateData#state{sequence_number = SeqNum}}.
 

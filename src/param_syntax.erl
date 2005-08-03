@@ -34,6 +34,14 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [30 Jul 2005 Anders Nygren]
+%%%
+%%% <ul>
+%%%   <li>Do not build one binary in encode, build an iolist instead, it is 
+%%%       more efficient.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% <h2>References</h2>
 %%% <dl>
@@ -500,7 +508,7 @@ encode_multiple_tlv(Values, TlvType) ->
 %% @see encode_single_tlv/2
 %% @end
 encode_multiple_tlv([], _TlvType, Acc) ->
-    {ok, concat_binary(Acc)};
+    {ok, Acc};
 encode_multiple_tlv([Value|Values], TlvType, Acc) ->
     case encode_single_tlv(Value, TlvType) of
         {ok, Binary} ->
@@ -517,7 +525,7 @@ encode_multiple_tlv([Value|Values], TlvType, Acc) ->
 encode_single_tlv(Value, #tlv{tag = Tag, domain = Domain, error = Error}) ->
     case base_syntax:encode(Value, Domain) of
         {ok, Binary} ->
-            {ok, <<Tag:16/integer, (size(Binary)):16/integer, Binary/binary>>};
+            {ok, [<<Tag:16/integer, (size(Binary)):16/integer>>, Binary]};
         {error, _Reason} ->
             if
                 Error == undefined ->

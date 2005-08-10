@@ -1280,6 +1280,18 @@ open(R, S) ->
 %%
 %% <p>PDUs comming from the other peer (ESME) are received asynchronously.</p>
 %% @end
+outbound(?COMMAND_ID_BIND_TRANSCEIVER_RESP, S) ->
+    cancel_timer(S#state.session_init_timer),
+    report:info(?MODULE, bound_trx, [{pid, self()}]),
+    {next_state, bound_trx, S};
+outbound(?COMMAND_ID_BIND_TRANSMITTER_RESP, S) ->
+    cancel_timer(S#state.session_init_timer),
+    report:info(?MODULE, bound_tx, [{pid, self()}]),
+    {next_state, bound_tx, S};
+outbound(?COMMAND_ID_BIND_RECEIVER_RESP, S) ->
+    cancel_timer(S#state.session_init_timer),
+    report:info(?MODULE, bound_rx, [{pid, self()}]),
+    {next_state, bound_rx, S};
 outbound({timeout, _Ref, Timer}, S) ->
     Self = self(),
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
@@ -2176,11 +2188,11 @@ handle_timeout(inactivity_timer, Self, _S) ->
 %% @end
 send_request(CmdId, ParamList, From, S) ->
     SeqNum = case S#state.sequence_number of
-		 ?MAX_SEQUENCE_NUMBER ->
-		     1;
-		 OldSeqNum ->
-		     OldSeqNum +1
-	     end,
+				 ?MAX_SEQUENCE_NUMBER ->
+					 1;
+				 OldSeqNum ->
+					 OldSeqNum + 1
+			 end,
     send_pdu(S#state.socket, operation:new(CmdId, SeqNum, ParamList)),
     RTimer = start_timer(S#state.response_time, {response_timer, From, CmdId}),
     ets:insert(S#state.requests, {SeqNum, CmdId, RTimer, From}),

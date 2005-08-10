@@ -84,6 +84,14 @@
 %%%   <li>unpack_stds and unpack_tlvs, there is no need to reverse the list 
 %%%       of parameters. The list of parameters will be converted to a dictionary.
 %%%   </li>
+%%%
+%%% [5 Aug 2005 Anders Nygren]
+%%%
+%%% <ul>
+%%%   <li>Fix bug in pack/2, there is no BIF to find the length of 
+%%%       an io_list, so it is still necessary to convert the message
+%%%       body to a binary in order to calculate the PDU length.
+%%%   </li>
 %%% </ul>
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -238,14 +246,15 @@ pack(PduDict, Type) ->
                 pack_body(Dict, Type#pdu.stds_types, Type#pdu.tlvs_types);
             (_CommandStatus, _Dict) ->   
                 % Do NOT pack the body if CommandStatus != 0
-                {ok, <<>>}
+                {ok, []}
         end,
     Status = dict:fetch(command_status,  PduDict),
     SeqNum = dict:fetch(sequence_number, PduDict),
     case dict:fetch(command_id, PduDict) of
         CmdId when CmdId == Type#pdu.command_id ->
             case PackBody(Status, PduDict) of
-                {ok, Body} ->
+                {ok, BodyL} ->
+		    Body=list_to_binary(BodyL), 
                     Len = size(Body) + 16,
                     {ok, [<<Len:32,CmdId:32,Status:32,SeqNum:32>>,Body]};
                 {error, Error} ->

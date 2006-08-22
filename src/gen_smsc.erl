@@ -824,7 +824,7 @@ init({Mod, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({listen_start, Port, Count, Timers}, From, S) ->
+handle_call({listen_start, Port, Count, Timers}, _From, S) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
@@ -833,15 +833,14 @@ handle_call({listen_start, Port, Count, Timers}, From, S) ->
         _Error ->
             {reply, false, S}
     end;
-handle_call({accept, Socket}, From, S) ->
+handle_call({accept, Socket}, _From, S) ->
 	{reply, gen_smsc_session:start(?MODULE, Socket, S#state.timers), S};
-handle_call({Bind, Session, Pdu, IPAddr} = R, From, S) when Bind == bind_transceiver;
-                                                            Bind == bind_transmitter;
-                                                            Bind == bind_receiver ->
+handle_call({Bind, _Session, _Pdu, _IPAddr} = R, From, S) 
+  when Bind==bind_transceiver; Bind==bind_transmitter; Bind==bind_receiver ->
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
-handle_call({unbind, Session, Pdu} = R, From, S) ->
+handle_call({unbind, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
-handle_call({CmdName, Session, Pdu} = R, From, S) ->
+handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
 
 

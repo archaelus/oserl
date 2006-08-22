@@ -75,7 +75,6 @@
 %% %@end
 -record(state, {trx_session}).
 
-
 %%%===================================================================
 %%% External functions
 %%%===================================================================
@@ -91,7 +90,6 @@
 %% @end
 start_link() ->
     gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []).
-
 
 %% @spec stop() -> ok
 %%
@@ -138,11 +136,11 @@ init([]) ->
             {stop, SessionError}
     end.
 
-
 %% @spec handle_outbind(Outbind, From, State) -> Result
-%%    OutBind = {outbind, Session, Pdu}
+%%    OutBind = {outbind, Session, Pdu, IpAddr}
 %%    Session = pid()
 %%    Pdu = pdu()
+%%    IpAddr = {int(), int(), int(), int()}
 %%    From = term()
 %%    State = term()
 %%    Result = {noreply, NewState}               |
@@ -159,9 +157,8 @@ init([]) ->
 %%
 %% <p>Handle <i>oubind</i> requests from the peer SMSC.</p>
 %% @end
-handle_outbind({outbind, _Session, _Pdu}, _From, State) ->
+handle_outbind({outbind, _Session, _Pdu, _IpAddr}, _From, State) ->
     {noreply, State}.
-
 
 %% @spec handle_alert_notification(AlertNotification, State) -> Result
 %%    AlertNotification = {alert_notification, Session, Pdu}
@@ -202,7 +199,6 @@ handle_alert_notification({alert_notification, _Session, _Pdu}, State) ->
 %% @end
 handle_enquire_link_failure({enquire_link_failure,_Session,_Status}, State) ->
     {stop, enquire_link_failure, State}.
-
 
 %% @spec handle_operation(Operation, From, State) -> Result
 %%    Operation = {deliver_sm, Session, Pdu} | {data_sm, Session, Pdu}
@@ -252,7 +248,6 @@ handle_operation({_CmdName, _Session, Pdu}, _From, S) ->
     report:info(?MODULE, cannot_handle_operation, operation:to_list(Pdu)),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
-
 %% @spec handle_unbind(Unbind, From, State) -> Result
 %%    Unbind = {unbind, Session, Pdu}
 %%    Session = pid()
@@ -283,7 +278,6 @@ handle_operation({_CmdName, _Session, Pdu}, _From, S) ->
 handle_unbind({unbind, Trx, _Pdu}, _From, #state{trx_session = Trx} = S) -> 
     {stop, normal, S#state{trx_session = undefined}}.
 
-
 %% @spec handle_listen_error(State) -> Result
 %%    State = term()
 %%    Result = {noreply, NewState}               |
@@ -299,7 +293,6 @@ handle_unbind({unbind, Trx, _Pdu}, _From, #state{trx_session = Trx} = S) ->
 %% @end
 handle_listen_error(State) ->
     {stop, {error, listen_error}, State}.
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -332,7 +325,6 @@ handle_listen_error(State) ->
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
-
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
 %%    Result   = {noreply, NewState}          |
@@ -354,7 +346,6 @@ handle_call(die, _From, State) ->
 %% @end
 handle_cast(_Request, State) ->
     {noreply, State}.
-
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -381,7 +372,6 @@ handle_info({'DOWN', _, process, Trx, Info}, #state{trx_session = Trx} = S) ->
 handle_info(_Info, S) ->
     {noreply, S}.
 
-
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
@@ -398,7 +388,6 @@ terminate(kill, _S) ->
 terminate(_Reason, S) ->
     catch gen_smsc:unbind(S#state.trx_session),
     catch gen_smsc:session_stop(S#state.trx_session).
-
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()

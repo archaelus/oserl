@@ -42,7 +42,8 @@
 %%%-------------------------------------------------------------------
 -export([init/1,
          handle_outbind/3,
-         handle_alert_notification/3,
+         handle_alert_notification/2,
+         handle_enquire_link_failure/2,
          handle_operation/3,
          handle_unbind/3,
          handle_listen_error/1,
@@ -75,7 +76,6 @@
 %% %@end
 -record(state, {tx_session}).
 
-
 %%%===================================================================
 %%% External functions
 %%%===================================================================
@@ -92,7 +92,6 @@
 start_link() ->
     gen_esme:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-
 %% @spec submit_sm(MobileNumber, UserMessage) -> ok
 %%     MobileNumber = string()
 %%     UserMessage  = string()
@@ -102,7 +101,6 @@ start_link() ->
 %% @end
 submit_sm(MobileNumber, UserMessage) ->
     gen_esme:call(?SERVER, {submit_sm, MobileNumber, UserMessage}, infinity).
-
 
 %% @spec stop() -> ok
 %%
@@ -146,11 +144,11 @@ init([]) ->
             SessionError
     end.
 
-
 %% @spec handle_outbind(Outbind, From, State) -> Result
-%%    OutBind = {outbind, Session, Pdu}
+%%    OutBind = {outbind, Session, Pdu, IpAddr}
 %%    Session = pid()
 %%    Pdu = pdu()
+%%    IpAddr = {int(), int(), int(), int()}
 %%    From = term()
 %%    State = term()
 %%    Result = {noreply, NewState}               |
@@ -167,15 +165,13 @@ init([]) ->
 %%
 %% <p>Handle <i>oubind</i> requests from the peer SMSC.</p>
 %% @end
-handle_outbind({outbind, Session, Pdu}, From, State) ->
+handle_outbind({outbind, _Session, _Pdu, _IpAddr}, _From, State) ->
     {noreply, State}.
 
-
-%% @spec handle_alert_notification(AlertNotification, From, State) -> Result
+%% @spec handle_alert_notification(AlertNotification, State) -> Result
 %%    AlertNotification = {alert_notification, Session, Pdu}
 %%    Session = pid()
 %%    Pdu = pdu()
-%%    From = term()
 %%    State = term()
 %%    Result = {noreply, NewState}               |
 %%             {noreply, NewState, Timeout}      |
@@ -187,13 +183,32 @@ handle_outbind({outbind, Session, Pdu}, From, State) ->
 %%    Timeout = int()
 %%    Reason = term()
 %%
-%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-3">gen_esme - handle_alert_notification/3</a> callback implementation.
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_alert_notification-3">gen_esme - handle_alert_notification/2</a> callback implementation.
 %%
 %% <p>Handle <i>alert_notification</i> requests from the peer SMSC.</p>
 %% @end
-handle_alert_notification({alert_notification, Session, Pdu}, From, State) -> 
+handle_alert_notification({alert_notification, _Session, _Pdu}, State) -> 
     {noreply, State}.
 
+%% @spec handle_enquire_link_failure(EnquireLinkFailure, State) -> Result
+%%     EnquireLinkFailure = {enquire_link_failure, Session, CommandStatus}
+%%     Session = pid()
+%%     CommandStatus = int()
+%%     State = term()
+%%     Result = {noreply, NewState}               |
+%%              {noreply, NewState, Timeout}      |
+%%              {stop, Reason, NewState}
+%%    NewState = term()
+%%    Timeout = int()
+%%    Reason = term()
+%%
+%% @doc <a href="http://oserl.sourceforge.net/oserl/gen_esme.html#handle_enquire_link_failure-2">gen_esme - handle_enquire_link_failure/2</a> callback implementation.
+%%
+%% <p>Notifies when an <i>enquire_link</i> failure occurs (i.e. the SMSC did
+%% not respond to our <i>enquire_link</i> operation).</p>
+%% @end
+handle_enquire_link_failure({enquire_link_failure, _Session, _Status}, State) -> 
+    {noreply, State}.
 
 %% @spec handle_operation(Operation, From, State) -> Result
 %%    Operation = {deliver_sm, Session, Pdu} | {data_sm, Session, Pdu}
@@ -226,11 +241,10 @@ handle_alert_notification({alert_notification, Session, Pdu}, From, State) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({CmdName, Session, Pdu}, From, S) ->
+handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
     % Don't know how to handle CmdName
     io:format("Don't know how to handle ~p~n", [CmdName]),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
-
 
 %% @spec handle_unbind(Unbind, From, State) -> Result
 %%    Unbind = {unbind, Session, Pdu}
@@ -259,7 +273,7 @@ handle_operation({CmdName, Session, Pdu}, From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Session, Pdu}, From, State) -> 
+handle_unbind({unbind, _Session, _Pdu}, _From, State) -> 
     {reply, ok, State}.
 
 
@@ -278,7 +292,6 @@ handle_unbind({unbind, Session, Pdu}, From, State) ->
 %% @end
 handle_listen_error(State) ->
     {noreply, State}.
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -308,7 +321,7 @@ handle_listen_error(State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call({submit_sm, MobileNumber, UserMessage}, From, S) ->
+handle_call({submit_sm, MobileNumber, UserMessage}, _From, S) ->
     % <p>This function is a direct translation into erlang from the java code 
     % below.
     % </p>
@@ -431,7 +444,6 @@ handle_call({submit_sm, MobileNumber, UserMessage}, From, S) ->
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
-
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
 %%    Result   = {noreply, NewState}          |
@@ -451,9 +463,8 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast(Request, State) ->
+handle_cast(_Request, State) ->
     {noreply, State}.
-
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -475,9 +486,8 @@ handle_cast(Request, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
-
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
@@ -490,12 +500,11 @@ handle_info(Info, State) ->
 %%
 %% <p>Return value is ignored by <tt>gen_esme</tt>.</p>
 %% @end
-terminate(kill, S) ->
+terminate(kill, _S) ->
     ok;
-terminate(Reason, S) ->
+terminate(_Reason, S) ->
     catch gen_smsc:unbind(S#state.tx_session),
     catch gen_smsc:session_stop(S#state.tx_session).
-
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
@@ -507,7 +516,7 @@ terminate(Reason, S) ->
 %%
 %% <p>Convert process state when code is changed.</p>
 %% @end
-code_change(OldVsn, State, Extra) ->
+code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %%%===================================================================

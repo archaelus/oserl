@@ -36,7 +36,7 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start_link/0, stop/0]).
+-export([start_link/0]).
 
 %%%-------------------------------------------------------------------
 %%% Internal SMSC exports
@@ -89,18 +89,6 @@
 start_link() ->
     gen_smsc:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-
-%% @spec stop() -> ok
-%%
-%% @doc Stops the SMSC server.
-%%
-%% @see handle_call/3
-%%
-%% @equiv gen_smsc:call(SERVER, die, 10000)
-%% @end
-stop() ->
-    gen_smsc:call(?SERVER, die, 10000).
-
 %%%===================================================================
 %%% Server functions
 %%%===================================================================
@@ -120,12 +108,12 @@ init([]) ->
     % You may start sessions and issue bind requests here.
     {ok, #state{}}.
 
-
 %% @spec handle_bind(Bind, From, State) -> Result
-%%    Bind = {CmdName, Session, Pdu}
+%%    Bind = {CmdName, Session, Pdu, IpAddr}
 %%    CmdName = bind_receiver | bind_transmitter | bind_transceiver
 %%    Session = pid()
 %%    Pdu = pdu()
+%%    IpAddr = {int(), int(), int(), int()}
 %%    From = term()
 %%    State = term()
 %%    Result = {reply, Reply, NewState}          |
@@ -152,10 +140,9 @@ init([]) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_bind({CmdName, Session, Pdu}, From, State) ->
+handle_bind({_CmdName, _Session, _Pdu, _IpAddr}, _From, State) ->
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, State}.
-
 
 %% @spec handle_operation(Operation, From, State) -> Result
 %%    Operation = {CmdName, Session, Pdu}
@@ -199,10 +186,9 @@ handle_bind({CmdName, Session, Pdu}, From, State) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_operation({CmdName, Session, Pdu}, From, S) ->
+handle_operation({_CmdName, _Session, _Pdu}, _From, S) ->
     % Don't know how to handle CmdName
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
-
 
 %% @spec handle_unbind(Unbind, From, State) -> Result
 %%    Unbind = {unbind, Session, Pdu}
@@ -231,9 +217,8 @@ handle_operation({CmdName, Session, Pdu}, From, S) ->
 %% command_status and the session will remain on it's current bound state
 %% (bound_rx, bound_tx or bound_trx).</p>
 %% @end
-handle_unbind({unbind, Session, Pdu}, From, State) -> 
+handle_unbind({unbind, _Session, _Pdu}, _From, State) -> 
     {reply, ok, State}.
-
 
 %% @spec handle_listen_error(State) -> Result
 %%    State = term()
@@ -250,7 +235,6 @@ handle_unbind({unbind, Session, Pdu}, From, State) ->
 %% @end
 handle_listen_error(State) ->
     {noreply, State}.
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -280,12 +264,9 @@ handle_listen_error(State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_call(Request, From, State) ->
+handle_call(_Request, _From, State) ->
     Reply = ok,
-    {reply, Reply, State};
-handle_call(die, _From, State) ->
-    {stop, normal, ok, State}.
-
+    {reply, Reply, State}.
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -306,9 +287,8 @@ handle_call(die, _From, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_cast(Request, State) ->
+handle_cast(_Request, State) ->
     {noreply, State}.
-
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -330,9 +310,8 @@ handle_cast(Request, State) ->
 %%
 %% @see terminate/2
 %% @end
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
-
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
@@ -345,10 +324,9 @@ handle_info(Info, State) ->
 %%
 %% <p>Return value is ignored by <tt>gen_smsc</tt>.</p>
 %% @end
-terminate(Reason, State) ->
+terminate(_Reason, _State) ->
     % You may stop sessions and issue unbind requests here.
     ok.
-
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
@@ -360,7 +338,7 @@ terminate(Reason, State) ->
 %%
 %% <p>Convert process state when code is changed.</p>
 %% @end
-code_change(OldVsn, State, Extra) ->
+code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %%%===================================================================

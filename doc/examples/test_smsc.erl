@@ -89,7 +89,6 @@
 start_link() ->
     start_link(?DEFAULT_SMPP_PORT).
 
-
 %% @spec start_link(Port) -> Result
 %%    Port = int()
 %%    Result = {ok, Pid} | ignore | {error, Error}
@@ -103,7 +102,6 @@ start_link() ->
 start_link(Port) ->
     gen_smsc:start_link({local, ?SERVER}, ?MODULE, [], []),
     gen_smsc:listen_start(?SERVER, Port, infinity, ?DEFAULT_SMPP_TIMERS).
-
 
 %% @spec deliver_sm(SourceAddr, ShortMessage) -> ok
 %%     SourceAddr = string()
@@ -121,7 +119,6 @@ deliver_sm(SourceAddr, ShortMessage, DestinationAddr) ->
                  {destination_addr, DestinationAddr}, 
                  {short_message, ShortMessage}],
     gen_smsc:cast(?SERVER, {deliver_sm, ParamList}).
-
 
 %% @spec stop() -> ok
 %%
@@ -153,12 +150,12 @@ init([]) ->
     % You may start sessions and issue bind requests here.
     {ok, #state{}}.
 
-
 %% @spec handle_bind(Bind, From, State) -> Result
-%%    Bind = {CmdName, Session, Pdu}
+%%    Bind = {CmdName, Session, Pdu, IpAddr}
 %%    CmdName = bind_receiver | bind_transmitter | bind_transceiver
 %%    Session = pid()
 %%    Pdu = pdu()
+%%    IpAddr = {int(), int(), int(), int()}
 %%    From = term()
 %%    State = term()
 %%    Result = {reply, Reply, NewState}          |
@@ -185,17 +182,17 @@ init([]) ->
 %% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %% desired command_status error code.</p>
 %% @end
-handle_bind({bind_receiver, Rx, _Pdu}, _From, S) ->
+handle_bind({bind_receiver, Rx, _Pdu, _IpAddr}, _From, S) ->
     erlang:monitor(process, Rx),
     io:format("bound_rx: ~p~n", [Rx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, S#state{rx = [Rx|S#state.rx]}};
-handle_bind({bind_transmitter, Tx, _Pdu}, _From, S) ->
+handle_bind({bind_transmitter, Tx, _Pdu, _IpAddr}, _From, S) ->
     erlang:monitor(process, Tx),
     io:format("bound_tx: ~p~n", [Tx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
     {reply, {ok, ParamList}, S#state{tx = [Tx|S#state.tx]}};
-handle_bind({bind_transceiver, Trx, _Pdu}, _From, S) ->
+handle_bind({bind_transceiver, Trx, _Pdu, _IpAddr}, _From, S) ->
     erlang:monitor(process, Trx),
     io:format("bound_trx: ~p~n", [Trx]),
     ParamList = [{system_id, ?SYSTEM_ID}],
@@ -256,7 +253,6 @@ handle_operation({CmdName, _Session, _Pdu}, _From, S) ->
     io:format("Don't know how to handle ~p~n", [CmdName]),
     {reply, {error, ?ESME_RINVCMDID, []}, S}.
 
-
 %% @spec handle_unbind(Unbind, From, State) -> Result
 %%    Unbind = {unbind, Session, Pdu}
 %%    Session = pid()
@@ -288,7 +284,6 @@ handle_unbind({unbind, Session, _Pdu}, _From, S) ->
     io:format("unbind: ~p~n", [Session]),
     {reply, ok, S}.
 
-
 %% @spec handle_listen_error(State) -> Result
 %%    State = term()
 %%    Result = {noreply, NewState}               |
@@ -304,7 +299,6 @@ handle_unbind({unbind, Session, _Pdu}, _From, S) ->
 %% @end
 handle_listen_error(State) ->
     {stop, {error, listen_error}, State}.
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -337,7 +331,6 @@ handle_listen_error(State) ->
 handle_call(die, _From, State) ->
     {stop, normal, ok, State}.
 
-
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
 %%    Result   = {noreply, NewState}          |
@@ -362,7 +355,6 @@ handle_cast({deliver_sm, ParamList}, #state{rx = Rx} = S) ->
                           spawn(fun() -> gen_smsc:deliver_sm(X, ParamList) end)
                   end, Rx),
     {noreply, S}.
-
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -417,7 +409,6 @@ handle_info({'DOWN', _MonitorReference, process, Object, Info}, S) ->
 handle_info(_Info, State) ->
     {noreply, State}.
 
-
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
@@ -435,7 +426,6 @@ terminate(_Reason, S) ->
     L = lists:usort(S#state.rx ++ S#state.tx),
     lists:foreach(fun(X) -> catch gen_smsc:unbind(X) end, L),
     lists:foreach(fun(X) -> catch gen_smsc:session_stop(X) end, L).
-
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()

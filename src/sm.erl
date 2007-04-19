@@ -83,6 +83,18 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% <h2>Changes 1.2 -&gt; 1.3</h2>
+%%%
+%%% [20 Sep 2006]
+%%%
+%%% <p>Improve support for message concatenation and support for application
+%%% port addressing.</p>
+%%%
+%%% <ul>
+%%%   <li>Function <i>reply_address/1</i> removed.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -94,28 +106,30 @@
 %%%-------------------------------------------------------------------
 %%% Include files
 %%%-------------------------------------------------------------------
+-include("oserl.hrl").
 -include("smpp_base.hrl").
 
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([chop_udh/1,
+-export([add_ie/2,
+         chop_udh/1,
+         destination_port/1,
+         ie/2,
          join_user_data/1,
-         message_user_data/1, 
+         message_user_data/1,
+         originator_port/1,
+         port_addressing_8/3,
+         port_addressing_16/3,
          reference_number/1,
          reply_addresses/1,
          reply_destination_address/1,
          reply_source_address/1,
+         split/3,
          split_user_data/2,
-         split_user_data_tlv/1,
          total_segments/1,
          udhi/1,
          udhi/2]).
-
-%%%-------------------------------------------------------------------
-%%% Undocumented exports
-%%%-------------------------------------------------------------------
--export([reply_address/1]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -125,10 +139,6 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
--define(UDHL, 5).  % UDH Length excluded length for Concatenated SMs
--define(IEI, 0).   % Information Element Identifier for Concatenated SMs
--define(IEIDL, 3). % IEI Data length excluded length
--define(REF_NUM(N), N rem 256).
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -137,6 +147,26 @@
 %%%===================================================================
 %%% External functions
 %%%===================================================================
+%% @spec add_ie(ParamList, Ie) -> NewParamList
+%%    ParamList = [{ParamName, ParamValue}]
+%%    Ie = string()
+%%    NewParamList = ParamList
+%%
+%% @doc Adds an Information Element to the User Data Header.  If needed the
+%% User Data Header Indicator is set.  A <tt>NewParamList</tt> is returned.
+%% @end 
+add_ie(ParamList, Ie) ->
+    {Tag, Data} = message_user_data(ParamList),
+    case udhi(ParamList) of
+        true ->
+            {[_Udhl|Ies], Rest} = chop_udh(Data),
+            NewData = udh([Ie, Ies]) ++ Rest,
+            [{Tag, NewData}|lists:keydelete(Tag, 1, ParamList)];
+        false ->
+            NewData = udh([Ie]) ++ Data,
+            [{Tag, NewData}|udhi(lists:keydelete(Tag, 1, ParamList), true)]
+    end.
+
 %% @spec chop_udh(Data) -> {Udh, Rest}
 %%     Data = string()
 %%     Rest = string()
@@ -147,6 +177,47 @@
 chop_udh([Udhl|_] = Data) ->
     lists:split(Udhl + 1, Data).
 
+%% @spec destination_port(Pdu) -> DestinationPort
+%%    Pdu = pdu()
+%%    DestinationPort = int()
+%%
+%% @doc Returns the <tt>DestinationPort</tt> of an Application Port Addressed
+%% Short Message.
+%%
+%% <p>The function will fail if <tt>Pdu</tt> does not correspond with a valid
+%% Application Port Addressed message.</p>
+%% @end 
+destination_port(Pdu) ->
+    {_Tag, Data} = message_user_data(Pdu),
+    case catch ie(?IEI_PORT_16, Data) of
+        [?IEI_PORT_16, _, DestPort1, DestPort2, _, _] ->
+            <<DestPort:16>> = <<DestPort1:8, DestPort2:8>>,
+            DestPort;
+        _Error ->
+            [?IEI_PORT_8, _, DestPort, _] = ie(?IEI_PORT_8, Data),
+            DestPort
+    end.
+
+%% @spec ie(Iei, Udh) -> Ie
+%%    Iei = int()
+%%    Udh = string()
+%%    Ie = string()
+%%
+%% @doc Returns the Information Element in the User Data Header identified by
+%% <tt>Iei</tt>.  If no IE found for the given id the function crashes.
+%% @end 
+ie(Iei, [Udhl|T]) ->
+    ie(Iei, T, Udhl).
+
+%% @doc Auxiliary function for ie/2
+%%
+%% @see ie/2
+%% @end 
+ie(Iei, [Iei, Iedl|_] = Data, _Len) -> 
+    lists:sublist(Data, Iedl + 1);
+ie(Iei, [_Other, Iedl|_] = Data, Len) ->
+    NewLen = Len - Iedl - 1,
+    ie(Iei, lists:sublist(Data, Iedl + 1,  NewLen), NewLen).
 
 %% @spec join_user_data(Segments) -> {Data, RefNum}
 %%    Segments = [Segment]
@@ -156,6 +227,9 @@ chop_udh([Udhl|_] = Data) ->
 %%
 %% @doc Joins the <tt>Segments</tt> of a concatenated message.
 %%
+%% <p>This functions assumes that no other IE than concatenation IE is present 
+%% in the segments UDH, otherwise resulting <tt>Data</tt> will be corrupted.</p>
+%%
 %% @see split_user_data/2
 %% @end 
 join_user_data(Segments) ->
@@ -163,7 +237,6 @@ join_user_data(Segments) ->
     P = fun({[_,_,_,Ref,_,X],_}, {[_,_,_,Ref,_,Y],_}) -> X < Y end,
     [{[_,_,_,Ref,_,_], Data}|T] = lists:sort(P, Choped),     % Get Ref from UDH
     lists:foldl(fun({_,D}, {Acc, R}) -> {Acc ++ D, R} end, {Data, Ref}, T).
-
 
 %% @spec message_user_data(Pdu) -> UserData
 %%    Pdu        = pdu()
@@ -174,6 +247,14 @@ join_user_data(Segments) ->
 %% @doc Gets the message user data from a PDU.  The message user data may came 
 %% in the <i>short_message</i> or in the <i>message_payload</i> parameter.
 %% @end
+message_user_data(ParamList) when list(ParamList) ->
+    case lists:keysearch(short_message, 1, ParamList) of
+        {value, Value} ->
+            Value;
+        false ->
+            {value, Value} = lists:keysearch(message_payload, 1, ParamList),
+            Value
+    end;
 message_user_data(Pdu) ->
     case operation:get_param(short_message, Pdu) of
         ShortMessage when ShortMessage == ""; ShortMessage == undefined ->
@@ -182,6 +263,54 @@ message_user_data(Pdu) ->
             {short_message, ShortMessage}
     end.
 
+%% @spec originator_port(Pdu) -> OriginatorPort
+%%    Pdu = pdu()
+%%    OriginatorPort = int()
+%%
+%% @doc Returns the <tt>OriginatorPort</tt> of an Application Port Addressed
+%% Short Message.
+%%
+%% <p>The function will fail if <tt>Pdu</tt> does not correspond with a valid
+%% Application Port Addressed message.</p>
+%% @end 
+originator_port(Pdu) ->
+    {_Tag, Data} = message_user_data(Pdu),
+    case catch ie(?IEI_PORT_16, Data) of
+        [?IEI_PORT_16, _, _, _, OrigPort1, OrigPort2] ->
+            <<OrigPort:16>> = <<OrigPort1:8, OrigPort2:8>>,
+            OrigPort;
+        _Error ->
+            [?IEI_PORT_8, _, _, OrigPort] = ie(?IEI_PORT_8, Data),
+            OrigPort
+    end.
+
+%% @spec port_addressing_8(ParamList, DestPort, OrigPort) -> 
+%%           NewParamList
+%%    Data = string()
+%%    DestPort = int()
+%%    OrigPort = int()
+%%    NewData = string()
+%%
+%% @doc Adds application port addressing 8 bit address header to the message
+%% user data.
+%% @end 
+port_addressing_8(ParamList, DestPort, OrigPort) ->
+    Ie = port_addressing_8_ie(DestPort, OrigPort),
+    add_ie(ParamList, Ie).
+
+%% @spec port_addressing_16(ParamList, DestPort, OrigPort) -> 
+%%           NewParamList
+%%    Data = string()
+%%    DestPort = int()
+%%    OrigPort = int()
+%%    NewData = string()
+%%
+%% @doc Adds application port addressing 16 bit address header to the message
+%% user data.
+%% @end 
+port_addressing_16(ParamList, DestPort, OrigPort) ->
+    Ie = port_addressing_16_ie(DestPort, OrigPort),
+    add_ie(ParamList, Ie).
 
 %% @spec reference_number(Pdu) -> ReferenceNumber
 %%    Pdu = pdu()
@@ -194,9 +323,8 @@ message_user_data(Pdu) ->
 %% @end 
 reference_number(Pdu) ->
     ShortMessage = operation:get_param(short_message, Pdu),
-    {[?UDHL, ?IEI, ?IEIDL, RefNum|_], _Rest} = chop_udh(ShortMessage),
+    [?IEI_CONCAT, _, RefNum|_] = ie(?IEI_CONCAT, ShortMessage),
     RefNum.
-
 
 %% @spec reply_addresses(Pdu) -> ParamList
 %%    Pdu = pdu()
@@ -213,7 +341,6 @@ reference_number(Pdu) ->
 reply_addresses(Pdu) ->
     reply_source_address(Pdu) ++ reply_destination_address(Pdu).
 
-
 %% @spec reply_destination_address(Pdu) -> ParamList
 %%    Pdu = pdu()
 %%    ParamList = [DestAddrTon | [DestAddrNpi | [DestinationAddr]]]
@@ -228,7 +355,6 @@ reply_destination_address(Pdu) ->
     [{dest_addr_ton, operation:get_param(source_addr_ton, Pdu)},
      {dest_addr_npi, operation:get_param(source_addr_npi, Pdu)},
      {destination_addr, operation:get_param(source_addr, Pdu)}].
-
 
 %% @spec reply_source_address(Pdu) -> ParamList
 %%    Pdu = pdu()
@@ -246,6 +372,63 @@ reply_source_address(Pdu) ->
      {source_addr_npi, operation:get_param(dest_addr_npi, Pdu)},
      {source_addr, operation:get_param(destination_addr, Pdu)}].
 
+%% @spec split(ParamList, RefNum, ConcatenationMethod) -> ParamListList
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
+%%    ParamValue = term()
+%%    RefNum = int()
+%%    ConcatenationMethod = udh | tlv
+%%    ParamListList = [ParamList]
+%%
+%% @doc Returns a list with a <tt>ParamList</tt> for every segment of
+%% a concatenated short message.
+%% @end 
+split(ParamList, RefNum, udh) ->
+    {value, {short_message, SM}} = lists:keysearch(short_message, 1, ParamList),
+    % The short message may already include an User Data Header
+    {Ies, Segments} = case udhi(ParamList) of
+                          true ->
+                              {[Udhl|Rest], Data} = chop_udh(SM),
+                              {Rest, segments(Data, ?SM_MAX_SEGMENT_SIZE-Udhl)};
+                          false ->
+                              {[], segments(SM, ?SM_MAX_SEGMENT_SIZE)}
+                      end,
+    TotalSegments = length(Segments),
+    % Remove the long SM and add the UDHI if not present
+    NewParamList = udhi(lists:keydelete(short_message, 1, ParamList), true),
+    % Add the Concat Information Element to the UDH of every Segment and
+    % build a new Param List for each.
+    F = fun(Segment, SeqNum) ->
+                ConcatIe = concat_ie(RefNum, TotalSegments, SeqNum),
+                ShortMessage = udh([ConcatIe|Ies]) ++ Segment,
+                {[{short_message, ShortMessage}|NewParamList], SeqNum + 1}
+        end,
+    element(1, lists:mapfoldl(F, 1, Segments));
+split(ParamList, RefNum, tlv) ->
+    {value, {short_message, SM}} = lists:keysearch(short_message, 1, ParamList),
+    % The short message may already include an User Data Header
+    Segments = case udhi(ParamList) of
+                   true ->
+                       {[Udhl|_Rest] = Udh, Data} = chop_udh(SM),
+                       L = segments(Data, ?SM_MAX_SEGMENT_SIZE - Udhl),
+                       % Add the header to every segment
+                       lists:map(fun(X) -> Udh ++ X end, L);
+                   false ->
+                       segments(SM, ?SM_MAX_SEGMENT_SIZE)
+               end,
+    TotalSegments = length(Segments),
+    % Remove the long SM from the Param List
+    NewParamList = lists:keydelete(short_message, 1, ParamList),
+    % Create the sar TLVs for every Segment and build a new Param List for each
+    F = fun(Segment, SeqNum) ->
+                Params = [{short_message, Segment},
+                          {sar_msg_ref_num, RefNum},
+                          {sar_segment_seqnum, SeqNum},
+                          {sar_total_segments, TotalSegments}|NewParamList],
+                {Params, SeqNum + 1}
+        end,
+    element(1, lists:mapfoldl(F, 1, Segments)).
+
 
 %% @spec split_user_data(Data, RefNum) -> Segments
 %%    Data = string()
@@ -253,62 +436,20 @@ reply_source_address(Pdu) ->
 %%    Segments = [Segment]
 %%    Segment = string()
 %%
-%% @doc Splits the user data into several segments for message concatenation.
+%% @doc Splits the user <tt>Data</tt> into <tt>Segments</tt> for concatenation.
+%% Returned <tt>Segments</tt> have the appropriated UDH.
 %%
-%% <p>Resulting <tt>Segments</tt> contain the appropriated UDH for message
-%% concatenation, thus they are at most SM_SEGMENT_MAX_SIZE + UDH length (6)
-%% long.</p>
-%%
-%% <p><tt>Segments</tt> are returned in the right order.</p>
-%%
-%% @see join_user_data/1
+%% <p>This functions assumes that no UDH is present in <tt>Data</tt>, if so
+%% resulting <tt>Segments</tt> will be corrupted.</p>
 %% @end 
 split_user_data(Data, RefNum) ->
-    split_user_data(Data, ?REF_NUM(RefNum), []).
-
-%% @doc Auxiliary function for split_user_data/2
-%%
-%% @see split_user_data/2
-%% @end 
-split_user_data(Data, RefNum, Acc) when length(Data) > ?SM_SEGMENT_MAX_SIZE ->
-    {Segment, Rest} = lists:split(?SM_SEGMENT_MAX_SIZE, Data),
-    split_user_data(Rest, RefNum, [Segment|Acc]);
-split_user_data(Data, RefNum, Acc) ->
-    append_udh([Data|Acc], RefNum).
-
-
-%% @spec split_user_data_tlv(Data) -> Segments
-%%    Data = string()
-%%    RefNum = int()
-%%    Segments = [Segment]
-%%    Segment = string()
-%%
-%% @doc Splits the user data into several segments for message concatenation
-%% with <i>sar</i> TLVs.
-%%
-%% <p>No UDH is appended to the resulting segments.  Use this function with
-%% <i>sar</i> parameters.  Use <a href="#split_user_data-2">split_user_data/2
-%% </a> if you are using UDHI method for concatenation.</p>
-%%
-%% <p><tt>Segments</tt> are returned in the right order.  Resulting segments
-%% are at most SM_SEGMENT_MAX_SIZE long (must leave room for the SMSC to
-%% add the headers).</p>
-%%
-%% @see split_user_data/2
-%% @end 
-split_user_data_tlv(Data) ->
-    split_user_data_tlv(Data, []).
-
-%% @doc Auxiliary function for split_user_data_tlv/2
-%%
-%% @see split_user_data_tlv/2
-%% @end 
-split_user_data_tlv(Data, Acc) when length(Data) > ?SM_SEGMENT_MAX_SIZE ->
-    {Segment, Rest} = lists:split(?SM_SEGMENT_MAX_SIZE, Data),
-    split_user_data_tlv(Rest, [Segment|Acc]);
-split_user_data_tlv(Data, Acc) ->
-    lists:reverse([Data|Acc]).
-
+    Segments = segments(Data, ?SM_MAX_SEGMENT_SIZE),
+    TotalSegments = length(Segments),
+    F = fun(Segment, SeqNum) ->
+                ConcatIe = concat_ie(RefNum, TotalSegments, SeqNum),
+                {udh([ConcatIe]) ++ Segment, SeqNum + 1}
+        end,
+    element(1, lists:mapfoldl(F, 1, Segments)).
 
 %% @spec total_segments(Pdu) -> TotalSegments
 %%    Pdu = pdu()
@@ -321,24 +462,28 @@ split_user_data_tlv(Data, Acc) ->
 %% @end 
 total_segments(Pdu) ->
     ShortMessage = operation:get_param(short_message, Pdu),
-    {[?UDHL,?IEI,?IEIDL, _, TotalSegments|_], _Rest} = chop_udh(ShortMessage),
+    [?IEI_CONCAT, _, _, TotalSegments|_] = ie(?IEI_CONCAT, ShortMessage),
     TotalSegments.
-
 
 %% @spec udhi(Pdu) -> bool()
 %%    Pdu = pdu()
 %%
 %% @doc Returns <tt>true</tt> if UDHI is set, <tt>false</tt> otherwise.
-%% @end 
+%% @end
+udhi(ParamList) when list(ParamList) ->
+    case lists:keysearch(esm_class, 1, ParamList) of
+        {value, {esm_class, EsmClass}} ->
+            udhi_value(EsmClass);
+        _Otherwise ->
+            false
+    end;
 udhi(Pdu) ->
     case operation:get_param(esm_class, Pdu) of
-        EsmClass when (EsmClass band ?ESM_CLASS_GSM_UDHI)==?ESM_CLASS_GSM_UDHI,
-                      EsmClass /= undefined ->
-            true;
+        EsmClass when EsmClass /= undefined ->
+            udhi_value(EsmClass);
         _Otherwise ->
             false
     end.
-
 
 %% @spec udhi(ParamList, Udhi) -> NewParamList
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -369,38 +514,91 @@ udhi(ParamList, Udhi) ->
             ParamList
     end.
 
-
-%%%===================================================================
-%%% Undocumented functions
-%%%
-%%% <p>For compatibility only.  Will be removed in future versions</p>
-%%%===================================================================
-reply_address(Pdu) ->
-    [{dest_addr_ton, operation:get_param(source_addr_ton, Pdu)},
-     {dest_addr_npi, operation:get_param(source_addr_npi, Pdu)},
-     {destination_addr, operation:get_param(source_addr, Pdu)}].
-
-
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-%% @spec append_udh(Segments, RefNum) -> UdhSegments
+%% @spec concat_ie(RefNum, TotalSegments, SeqNum) -> Ie
+%%     RefNum = int()
+%%     TotalSegments = int()
+%%     Seqnum = int()
+%%     Ie = string()
 %%
-%% @doc <tt>Segments</tt> are assumed to be in reversed order.
-%%
-%% @see split_user_data/2
+%% @doc Returns the Information Element <tt>Ie</tt> for a concatenated message.
 %% @end 
-append_udh(Segments, RefNum) ->
-    TotalSegments = length(Segments),
-    append_udh(Segments, RefNum, TotalSegments, TotalSegments, []).
+concat_ie(RefNum, TotalSegments, SeqNum) ->
+    [?IEI_CONCAT, ?IEDL_CONCAT, RefNum, TotalSegments, SeqNum].
 
-%% @doc Auxiliary function for append_udh/2
+%% @spec port_addressing_8_ie(DestPort, OrigPort) -> Ie
+%%     DestPort = int()
+%%     OrigPort = int()
+%%     Ie = string()
 %%
-%% @see append_udh/2
+%% @doc Returns the Information Element <tt>Ie</tt> for Application Port 
+%% Addressing 16 bit address.  Only lower 8 bits of the port numbers are taken.
 %% @end 
-append_udh([], _RefNum, _TotalSegments, _SeqNum, Acc) ->
-    Acc;
-append_udh([H|T], RefNum, TotalSegments, SeqNum, Acc) ->
-    % UDH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum]
-    NewH = [?UDHL, ?IEI, ?IEIDL, RefNum, TotalSegments, SeqNum | H],
-    append_udh(T, RefNum, TotalSegments, SeqNum - 1, [NewH|Acc]).
+port_addressing_8_ie(DestPort, OrigPort) ->
+    [DestPort1] = binary_to_list(<<DestPort:8>>),
+    [OrigPort1] = binary_to_list(<<OrigPort:8>>),
+    [?IEI_PORT_8, ?IEDL_PORT_8, DestPort1, OrigPort1].
+
+%% @spec port_addressing_16_ie(DestPort, OrigPort) -> Ie
+%%     DestPort = int()
+%%     OrigPort = int()
+%%     Ie = string()
+%%
+%% @doc Returns the Information Element <tt>Ie</tt> for Application Port 
+%% Addressing 16 bit address.  Only lower 16 bits of the port numbers are taken.
+%% @end 
+port_addressing_16_ie(DestPort, OrigPort) ->
+    [DestPort1, DestPort2] = binary_to_list(<<DestPort:16>>),
+    [OrigPort1, OrigPort2] = binary_to_list(<<OrigPort:16>>),
+    [?IEI_PORT_16, ?IEDL_PORT_16, DestPort1, DestPort2, OrigPort1, OrigPort2].
+
+%% @spec segments(Data, Len) -> Segments
+%%    Data = string()
+%%    Len = int()
+%%    Segments = [Segment]
+%%    Segment = string()
+%%
+%% @doc Splits <tt>Data</tt> in <tt>Segments</tt> of at most <tt>Len</tt>
+%% characters.
+%% @end 
+segments(Data, Len) ->
+    segments(Data, Len, []).
+
+%% @doc Auxiliary function for segments/2
+%%
+%% @see segments/2
+%% @end 
+segments(Data, Len, Acc) ->
+    case catch lists:split(Len, Data) of
+        {'EXIT', _Badarg} ->
+            lists:reverse([Data|Acc]);
+        {Segment, []} ->
+            lists:reverse([Segment|Acc]);
+        {Segment, Rest} ->
+            segments(Rest, Len, [Segment|Acc])
+    end.
+
+%% @spec udh(IeList) -> Udh
+%%    IeList = [Ie]
+%%    Ie = string()
+%%    Udh = string()
+%%
+%% @doc Creates the <tt>Udh</tt> given the list of Information Elements.
+%% @end 
+udh(IeList) ->
+    Udh = lists:flatten(IeList),
+    [length(Udh) | Udh].
+
+%% @spec udhi_value(EsmClass) -> bool()
+%%    EsmClass = int()
+%%
+%% @doc Returns <tt>true</tt> if the User Data Header Indicator bit is 1
+%% in <tt>EsmClass</tt>, <tt>false</tt> otherwise.
+%% @end 
+udhi_value(EsmClass) 
+  when (EsmClass band ?ESM_CLASS_GSM_UDHI) == ?ESM_CLASS_GSM_UDHI ->
+    true;
+udhi_value(_EsmClass) ->
+    false.

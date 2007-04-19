@@ -28,13 +28,16 @@
 %%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol Specification.
 %%%     Version 5.0. SMS Forum.
 %%%   </dd>
+%%%   <dt>[3G TS 23.040]</dt><dd>3G TS 23.040  Technical realization of the 
+%%%     Short Message Service (SMS).
+%%%   </dd>
 %%% </dl>
 %%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
-%%% @version 1.1, {17 May 2004} {@time}.
+%%% @version 1.3, {20 Sep 2006} {@time}.
 %%% @end
 -ifndef(oserl).
 -define(oserl, true).
@@ -52,6 +55,24 @@
 %% %@see section 2.2 on [SMPP 5.0]
 -define(DEFAULT_SMPP_PORT, 2775).
 
+%% User Data Header Macros
+%%
+%% %@see section 9.2.3.24 on [3G TS 23.040]
+-define(UDHL_CONCAT, 5).   % UDH Length excluded length for Concatenated SMs
+-define(UDHL_PORT_16, 6).  % UDHL for 16 bit Application Port Addressing
+-define(UDHL_PORT_8, 4).   % UDHL for 8 bit Application Port Addressing
+
+-define(IEI_CONCAT, 0).    % Information Element Identifier for Concatenated SMs
+-define(IEI_PORT_16, 5).   % IEI for 16 bit Application Port Addressing
+-define(IEI_PORT_8, 4).    % IEI for 8 bit Application Port Addressing
+
+-define(IEDL_CONCAT, 3).   % IE Data length for Concatenated SMs excluded length
+-define(IEDL_PORT_16, 4).  % IEDL for 16 bit Application Port Addressing
+-define(IEDL_PORT_8, 2).   % IEDL for 8 bit Application Port Addressing
+
+%% Short Message sizes
+-define(SM_MAX_SIZE, 160).
+-define(SM_MAX_SEGMENT_SIZE, ?SM_MAX_SIZE - ?UDHL_CONCAT - 1).
 
 %% Timers default values
 %%

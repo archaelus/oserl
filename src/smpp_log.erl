@@ -671,6 +671,8 @@ init(Args) ->
 %%    Id       = term()
 %% @doc
 %% @end
+handle_event({From, IoList}, State) when list(IoList) ->
+    handle_event({From, concat_binary(IoList)}, State);
 handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
     case catch P(BinaryPdu) of
         true when T == disk_log ->

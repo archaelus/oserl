@@ -432,10 +432,6 @@
 -define(NULL_C_OCTET_STRING, "").
 -define(NULL_OCTET_STRING,   "").
 
-%% SM sizes
--define(SM_MAX_SIZE, 160).
--define(SM_SEGMENT_MAX_SIZE, 150).
-
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------

@@ -410,10 +410,25 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%%
+%%% <h2>Changes 1.2 -&gt; 1.3</h2>
+%%%
 %%% [30 Jul 2005]
 %%%
 %%% <ul>
 %%%   <li>Add IPAddr in outbind callback.
+%%%   </li>
+%%% </ul>
+%%%
+%%% [19 Sep 2006]
+%%%
+%%% <ul>
+%%%   <li>Add <tt>EsmeRef</tt> to 
+%%%     <a href="gen_esme.html#session_start-4">session_start/4</a>,
+%%%     <a href="gen_esme.html#session_start-5">session_start/5</a>, 
+%%%     <a href="gen_esme.html#session_start_link-4">session_start_link/4</a> 
+%%%     and <a href="gen_esme.html#session_start_link-5">session_start_link/5
+%%%     </a> functions.
 %%%   </li>
 %%% </ul>
 %%%
@@ -459,10 +474,10 @@
 %%%-------------------------------------------------------------------
 %%% External Session exports
 %%%-------------------------------------------------------------------
--export([session_start/2,
-         session_start/3,
-         session_start_link/2,
+-export([session_start/3,
+         session_start/4,
          session_start_link/3,
+         session_start_link/4,
          session_stop/1,
          bind_receiver/2,
          bind_transmitter/2,
@@ -531,7 +546,6 @@
 %% %@end
 -record(state, {mod, mod_state, lsocket = closed, timers}).
 
-
 %%%===================================================================
 %%% Behaviour functions
 %%%===================================================================
@@ -560,7 +574,6 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
     undefined.
 
-
 %%%===================================================================
 %%% External ESME functions
 %%%===================================================================
@@ -582,7 +595,6 @@ behaviour_info(_Other) ->
 start(Module, Args, Options) ->
     gen_server:start(?MODULE, {Module, Args}, Options).
 
-
 %% @spec start(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
@@ -603,7 +615,6 @@ start(Module, Args, Options) ->
 start(ServerName, Module, Args, Options) ->
     gen_server:start(ServerName, ?MODULE, {Module, Args}, Options).
 
-
 %% @spec start_link(Module, Args, Options) -> Result
 %%    Module = atom()
 %%    Result = {ok, Pid} | ignore | {error, Error}
@@ -621,7 +632,6 @@ start(ServerName, Module, Args, Options) ->
 %% @end
 start_link(Module, Args, Options) ->
     gen_server:start_link(?MODULE, {Module, Args}, Options).
-
 
 %% @spec start_link(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
@@ -643,7 +653,6 @@ start_link(Module, Args, Options) ->
 start_link(ServerName, Module, Args, Options) ->
     gen_server:start_link(ServerName, ?MODULE, {Module, Args}, Options).
 
-
 %% @spec listen_start(ServerRef) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -661,7 +670,6 @@ start_link(ServerName, Module, Args, Options) ->
 %% @end 
 listen_start(ServerRef) -> 
     listen_start(ServerRef, ?DEFAULT_SMPP_PORT, 1, ?DEFAULT_SMPP_TIMERS).
-
 
 %% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -684,7 +692,6 @@ listen_start(ServerRef) ->
 listen_start(ServerRef, Port, Count, Timers) ->
     gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
-
 %% @spec listen_stop(ServerRef) -> ok
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -694,7 +701,6 @@ listen_start(ServerRef, Port, Count, Timers) ->
 %% @end 
 listen_stop(ServerRef) ->
     gen_server:cast(ServerRef, listen_stop).
-
 
 %% @spec call(ServerRef, Request) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -713,7 +719,6 @@ listen_stop(ServerRef) ->
 call(ServerRef, Request) ->
     gen_server:call(ServerRef, {call, Request}).
 
-
 %% @spec call(ServerRef, Request, Timeout) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -731,7 +736,6 @@ call(ServerRef, Request) ->
 %% @end 
 call(ServerRef, Request, Timeout) ->
     gen_server:call(ServerRef, {call, Request}, Timeout).
-    
 
 %% @spec cast(ServerRef, Request) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -750,7 +754,6 @@ call(ServerRef, Request, Timeout) ->
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
-
 %% @spec close_disk_log() -> ok
 %%
 %% @doc Closes the ESME disk log.
@@ -760,7 +763,6 @@ cast(ServerRef, Request) ->
 close_disk_log() ->
     smpp_log:delete_disk_log_handler().
 
-
 %% @spec close_error_logger() -> ok
 %%
 %% @doc Closes the ESME error logger.
@@ -769,7 +771,6 @@ close_disk_log() ->
 %% @end 
 close_error_logger() ->
     smpp_log:delete_error_logger_handler().
-
 
 %% @spec open_disk_log(Args) -> ok
 %%    Args = term()
@@ -786,7 +787,6 @@ close_error_logger() ->
 open_disk_log(Args) ->
     smpp_log:add_disk_log_handler(Args).
 
-
 %% @spec open_error_logger(Args) -> ok
 %%    Args = term()
 %%    Pred = fun()
@@ -800,7 +800,6 @@ open_disk_log(Args) ->
 %% @end 
 open_error_logger(Args) ->
     smpp_log:add_error_logger_handler(Args).
-    
 
 %% @spec reply(Client, Reply) -> true
 %%    Client = term()
@@ -816,7 +815,8 @@ reply(Client, Reply) ->
 %%%===================================================================
 %%% External Session functions
 %%%===================================================================
-%% @spec session_start(Address, Port) -> Result
+%% @spec session_start(EsmeRef, Address, Port) -> Result
+%%    EsmeRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Result = {ok, Session} | {error, Reason}
@@ -828,13 +828,13 @@ reply(Client, Reply) ->
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
 %%
-%% @equiv session_start(Address, Port, DEFAULT_SMPP_TIMERS)
+%% @equiv session_start(EsmeRef, Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
-session_start(Address, Port) ->
-    session_start(Address, Port, ?DEFAULT_SMPP_TIMERS).
+session_start(EsmeRef, Address, Port) ->
+    session_start(EsmeRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
 
-
-%% @spec session_start(Address, Port, Timers) -> Result
+%% @spec session_start(EsmeRef, Address, Port, Timers) -> Result
+%%    EsmeRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Result = {ok, Session} | {error, Reason}
@@ -852,10 +852,10 @@ session_start(Address, Port) ->
 %% @see session_start/2
 %% @see gen_esme_session:start/3
 %% @end 
-session_start(Address, Port, Timers) ->
+session_start(EsmeRef, Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
-            case gen_esme_session:start(?MODULE, Socket, Timers) of
+            case gen_esme_session:start(EsmeRef, ?MODULE, Socket, Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -866,8 +866,8 @@ session_start(Address, Port, Timers) ->
             ConnectError
     end.
 
-
-%% @spec session_start_link(Address, Port) -> Result
+%% @spec session_start_link(EsmeRef, Address, Port) -> Result
+%%    EsmeRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Result = {ok, Session} | {error, Reason}
@@ -881,11 +881,11 @@ session_start(Address, Port, Timers) ->
 %%
 %% @equiv session_start_link(Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
-session_start_link(Address, Port) ->
-    session_start_link(Address, Port, ?DEFAULT_SMPP_TIMERS).
+session_start_link(EsmeRef, Address, Port) ->
+    session_start_link(EsmeRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
 
-
-%% @spec session_start_link(Address, Port, Timers) -> Result
+%% @spec session_start_link(EsmeRef, Address, Port, Timers) -> Result
+%%    EsmeRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Result = {ok, Session} | {error, Reason}
@@ -903,10 +903,10 @@ session_start_link(Address, Port) ->
 %% @see session_start_link/2
 %% @see gen_esme_session:start_link/3
 %% @end 
-session_start_link(Address, Port, Timers) ->
+session_start_link(EsmeRef, Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
-            case gen_esme_session:start_link(?MODULE, Socket, Timers) of
+            case gen_esme_session:start_link(EsmeRef,?MODULE,Socket,Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -917,7 +917,6 @@ session_start_link(Address, Port, Timers) ->
             ConnectError
     end.
 
-
 %% @spec session_stop(Session) -> ok
 %%    Session = pid()
 %%
@@ -925,7 +924,6 @@ session_start_link(Address, Port, Timers) ->
 %% @end 
 session_stop(Session) ->
     gen_esme_session:stop(Session).
-
 
 %% @spec bind_receiver(Session, ParamList) -> Result
 %%    Session = pid()
@@ -942,7 +940,6 @@ session_stop(Session) ->
 bind_receiver(Session, ParamList) ->
     gen_esme_session:bind_receiver(Session, ParamList).
 
-
 %% @spec bind_transmitter(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -957,7 +954,6 @@ bind_receiver(Session, ParamList) ->
 %% @end
 bind_transmitter(Session, ParamList) ->
     gen_esme_session:bind_transmitter(Session, ParamList).
-
 
 %% @spec bind_transceiver(Session, ParamList) -> Result
 %%    Session = pid()
@@ -974,7 +970,6 @@ bind_transmitter(Session, ParamList) ->
 bind_transceiver(Session, ParamList) ->
     gen_esme_session:bind_transceiver(Session, ParamList).
 
-
 %% @spec broadcast_sm(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -989,7 +984,6 @@ bind_transceiver(Session, ParamList) ->
 %% @end
 broadcast_sm(Session, ParamList) ->
     gen_esme_session:broadcast_sm(Session, ParamList).
-
 
 %% @spec cancel_broadcast_sm(Session, ParamList) -> Result
 %%    Session = pid()
@@ -1006,7 +1000,6 @@ broadcast_sm(Session, ParamList) ->
 cancel_broadcast_sm(Session, ParamList) ->
     gen_esme_session:cancel_broadcast_sm(Session, ParamList).
 
-
 %% @spec cancel_sm(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1021,7 +1014,6 @@ cancel_broadcast_sm(Session, ParamList) ->
 %% @end
 cancel_sm(Session, ParamList) ->
     gen_esme_session:cancel_sm(Session, ParamList).
-
 
 %% @spec data_sm(Session, ParamList) -> Result
 %%    Session = pid()
@@ -1038,7 +1030,6 @@ cancel_sm(Session, ParamList) ->
 data_sm(Session, ParamList) ->
     gen_esme_session:data_sm(Session, ParamList).
 
-
 %% @spec query_broadcast_sm(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1053,7 +1044,6 @@ data_sm(Session, ParamList) ->
 %% @end
 query_broadcast_sm(Session, ParamList) ->
     gen_esme_session:query_broadcast_sm(Session, ParamList).
-
 
 %% @spec query_sm(Session, ParamList) -> Result
 %%    Session = pid()
@@ -1070,7 +1060,6 @@ query_broadcast_sm(Session, ParamList) ->
 query_sm(Session, ParamList) ->
     gen_esme_session:query_sm(Session, ParamList).
 
-
 %% @spec replace_sm(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1086,7 +1075,6 @@ query_sm(Session, ParamList) ->
 replace_sm(Session, ParamList) ->
     gen_esme_session:replace_sm(Session, ParamList).
 
-
 %% @spec submit_multi(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1101,7 +1089,6 @@ replace_sm(Session, ParamList) ->
 %% @end
 submit_multi(Session, ParamList) ->
     gen_esme_session:submit_multi(Session, ParamList).
-
 
 %% @spec submit_multi(Session, ParamList, ConcatenationMethod) -> Results
 %%    Session = pid()
@@ -1149,39 +1136,15 @@ submit_multi(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
-submit_multi(Session, ParamList, tlv) ->
+submit_multi(Session, ParamList, ConcatenationMethod) ->
     case lists:keysearch(short_message, 1, ParamList) of
         {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
             RefNum = gen_esme_session:reference_number(Session),
-            Params = lists:keydelete(short_message, 1, ParamList),
-            Segments = sm:split_user_data_tlv(SM),
-            TotalSegments = length(Segments),
-            F = fun(Segment, SeqNum) ->
-                        L = [{short_message, Segment},
-                             {sar_msg_ref_num, RefNum},
-                             {sar_segment_seqnum, SeqNum},
-                             {sar_total_segments, TotalSegments}|Params],
-                        {gen_esme_session:submit_multi(Session, L), SeqNum + 1}
-                end,
-            element(1, lists:mapfoldl(F, 1, Segments));
-        _Otherwise ->
-            [gen_esme_session:submit_multi(Session, ParamList)]
-    end;
-submit_multi(Session, ParamList, udh) ->
-    case lists:keysearch(short_message, 1, ParamList) of
-        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
-            RefNum = gen_esme_session:reference_number(Session),
-            Params = sm:udhi(ParamList, true),
-            F = fun(Segment) ->
-                        S = {short_message, Segment},
-                        L = lists:keyreplace(short_message, 1, Params, S),
-                        gen_esme_session:submit_multi(Session, L)
-                end,
-            lists:map(F, sm:split_user_data(SM, RefNum));
+            F = fun(L) -> gen_esme_session:submit_multi(Session, L) end,
+            lists:map(F, sm:split(ParamList, RefNum, ConcatenationMethod));
         _Otherwise ->
             [gen_esme_session:submit_multi(Session, ParamList)]
     end.
-
 
 %% @spec submit_sm(Session, ParamList) -> Result
 %%    Session = pid()
@@ -1197,7 +1160,6 @@ submit_multi(Session, ParamList, udh) ->
 %% @end
 submit_sm(Session, ParamList) ->
     gen_esme_session:submit_sm(Session, ParamList).
-
 
 %% @spec submit_sm(Session, ParamList, ConcatenationMethod) -> Results
 %%    Session = pid()
@@ -1245,39 +1207,15 @@ submit_sm(Session, ParamList) ->
 %% @see gen_esme_session:submit_sm/3
 %% @see sm:split/2
 %% @end
-submit_sm(Session, ParamList, tlv) ->
+submit_sm(Session, ParamList, ConcatenationMethod) ->
     case lists:keysearch(short_message, 1, ParamList) of
         {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
             RefNum = gen_esme_session:reference_number(Session),
-            Params = lists:keydelete(short_message, 1, ParamList),
-            Segments = sm:split_user_data_tlv(SM),
-            TotalSegments = length(Segments),
-            F = fun(Segment, SeqNum) ->
-                        L = [{short_message, Segment},
-                             {sar_msg_ref_num, RefNum},
-                             {sar_segment_seqnum, SeqNum},
-                             {sar_total_segments, TotalSegments}|Params],
-                        {gen_esme_session:submit_sm(Session, L), SeqNum + 1}
-                end,
-            element(1, lists:mapfoldl(F, 1, Segments));
-        _Otherwise ->
-            [gen_esme_session:submit_sm(Session, ParamList)]
-    end;
-submit_sm(Session, ParamList, udh) ->
-    case lists:keysearch(short_message, 1, ParamList) of
-        {value, {short_message, SM}} when length(SM) > ?SM_MAX_SIZE ->
-            RefNum = gen_esme_session:reference_number(Session),
-            Params = sm:udhi(ParamList, true),
-            F = fun(Segment) ->
-                        S = {short_message, Segment},
-                        L = lists:keyreplace(short_message, 1, Params, S),
-                        gen_esme_session:submit_sm(Session, L)
-                end,
-            lists:map(F, sm:split_user_data(SM, RefNum));
+            F = fun(L) -> gen_esme_session:submit_sm(Session, L) end,
+            lists:map(F, sm:split(ParamList, RefNum, ConcatenationMethod));
         _Otherwise ->
             [gen_esme_session:submit_sm(Session, ParamList)]
     end.
-
 
 %% @spec unbind(Session) -> Result
 %%    Session = pid()
@@ -1290,7 +1228,6 @@ submit_sm(Session, ParamList, udh) ->
 %% @end
 unbind(Session) ->
     gen_esme_session:unbind(Session).
-
 
 %%%===================================================================
 %%% Server functions
@@ -1309,7 +1246,6 @@ unbind(Session) ->
 init({Mod, Args}) ->
     smpp_log:start_link(),
     pack(Mod:init(Args), #state{mod = Mod}).
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -1361,7 +1297,6 @@ handle_call({unbind, _Session, _Pdu} = R, From, S) ->
 handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
 
-
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
 %%    Result   = {noreply, NewState}          |
@@ -1401,7 +1336,6 @@ handle_cast(listen_stop, S) ->
     gen_tcp:close(S#state.lsocket),
     {noreply, S#state{lsocket = closed}}.
 
-
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
 %%    State    = term()
@@ -1424,7 +1358,6 @@ handle_cast(listen_stop, S) ->
 %% @end
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
-
 
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
@@ -1455,7 +1388,6 @@ terminate(R, S) ->
 code_change(OldVsn, S, Extra) ->
     pack((S#state.mod):code_change(OldVsn, S#state.mod_state, Extra), S).
 
-
 %%%===================================================================
 %%% ESME Session functions
 %%%===================================================================
@@ -1470,7 +1402,6 @@ code_change(OldVsn, S, Extra) ->
 handle_outbind(ServerRef, Session, Pdu) ->
     gen_server:cast(ServerRef, {outbind, Session, Pdu}).
 
-
 %% @spec handle_alert_notification(ServerRef, Session, Pdu) -> ok
 %%    ServerRef = pid()
 %%    Session = pid()
@@ -1481,7 +1412,6 @@ handle_outbind(ServerRef, Session, Pdu) ->
 %% @end
 handle_alert_notification(ServerRef, Session, Pdu) ->
     gen_server:cast(ServerRef, {alert_notification, Session, Pdu}).
-
 
 %% @spec handle_enquire_link(ServerRef, Session, Pdu) -> ok
 %%    ServerRef = pid()
@@ -1494,7 +1424,6 @@ handle_alert_notification(ServerRef, Session, Pdu) ->
 handle_enquire_link(ServerRef, Session, Pdu) ->
     gen_server:cast(ServerRef, {enquire_link, Session, Pdu}).
 
-
 %% @spec handle_enquire_link_failure(ServerRef, Session, CommandStatus) -> ok
 %%    ServerRef = pid()
 %%    Session = pid()
@@ -1506,7 +1435,6 @@ handle_enquire_link(ServerRef, Session, Pdu) ->
 %% @end
 handle_enquire_link_failure(ServerRef, Session, CommandStatus) ->
     gen_server:cast(ServerRef, {enquire_link_failure, Session, CommandStatus}).
-
 
 %% @spec handle_operation(ServerRef, Session, {CmdName, Pdu}) -> Result
 %%    ServerRef = pid()
@@ -1524,7 +1452,6 @@ handle_enquire_link_failure(ServerRef, Session, CommandStatus) ->
 handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
     gen_server:call(ServerRef, {CmdName, Session, Pdu}, infinity).
 
-
 %% @spec handle_unbind(ServerRef, Session, Pdu) -> ok | {error, Error}
 %%    ServerRef = pid()
 %%    Session = pid()
@@ -1536,7 +1463,6 @@ handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
 %% @end
 handle_unbind(ServerRef, Session, Pdu) ->
     gen_server:call(ServerRef, {unbind, Session, Pdu}, infinity).
-
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -1566,7 +1492,6 @@ pack({ok, MS, Timeout}, S) ->
     {ok, S#state{mod_state = MS}, Timeout};
 pack(Other, _S) ->
     Other.
-
 
 %% @spec listener(ServerRef, LSocket, Count) -> void()
 %%    ServerRef = pid()

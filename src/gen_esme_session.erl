@@ -599,6 +599,17 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [19 Sep 2006 Enrique Marcote]
+%%%
+%%% <ul>
+%%%   <li>Add <tt>EsmeRef</tt> to 
+%%%     <a href="gen_esme_session.html#start-4">start/4</a>,
+%%%     <a href="gen_esme_session.html#start-5">start/5</a>, 
+%%%     <a href="gen_esme_session.html#start_link-4">start_link/4</a> and 
+%%%     <a href="gen_esme_session.html#start_link-5">start_link/5</a> functions.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2004 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -622,10 +633,10 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start/3, 
-         start/4, 
-         start_link/3, 
+-export([start/4, 
+         start/5, 
          start_link/4, 
+         start_link/5, 
          bind_receiver/2,
          bind_transmitter/2,
          bind_transceiver/2,
@@ -667,8 +678,8 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
-
--define(MAX_SEQUENCE_NUMBER,16#7FFFFFFF).  % PDU sequence number
+-define(MAX_SEQUENCE_NUMBER, 16#7FFFFFFF).  % PDU sequence number
+-define(MAX_REFERENCE_NUMBER, 255).         % Concatenation reference number
 
 %%%-------------------------------------------------------------------
 %%% Records
@@ -795,7 +806,6 @@
          response_time,
          enquire = false}).
 
-
 %%%===================================================================
 %%% External functions
 %%%===================================================================
@@ -818,8 +828,8 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
     undefined.
 
-
-%% @spec start(Mod, Socket, Timers) -> Result
+%% @spec start(EsmeRef, Mod, Socket, Timers) -> Result
+%%    EsmeRef = pid() | atom()
 %%    Mod    = atom()
 %%    Socket = socket()
 %%    Timers = timers()
@@ -827,7 +837,7 @@ behaviour_info(_Other) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -840,13 +850,13 @@ behaviour_info(_Other) ->
 %% @see gen_fsm:start/3
 %% @see start_link/3
 %% @end
-start(Mod, Socket, Timers) ->
-    gen_fsm:start(?MODULE, [self(), Mod, Socket, Timers], []).
+start(EsmeRef, Mod, Socket, Timers) ->
+    gen_fsm:start(?MODULE, [EsmeRef, Mod, Socket, Timers], []).
 
-
-%% @spec start(Name, Mod, Socket, Timers) -> Result
-%%    Name   = {local, Name} | {global, Name}
-%%    Name   = atom()
+%% @spec start(Name, EsmeRef, Mod, Socket, Timers) -> Result
+%%    Name   = {local, Atom} | {global, Atom}
+%%    Atom   = atom()
+%%    EsmeRef = pid() | atom()
 %%    Mod    = atom()
 %%    Socket = pid()
 %%    Timers = timers()
@@ -854,7 +864,7 @@ start(Mod, Socket, Timers) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -869,19 +879,19 @@ start(Mod, Socket, Timers) ->
 %% @see gen_fsm:start/4
 %% @see start_link/4
 %% @end
-start(Name, Mod, Socket, Timers) ->
-    gen_fsm:start(Name, ?MODULE, [self(), Mod, Socket, Timers],[]).
+start(Name, EsmeRef, Mod, Socket, Timers) ->
+    gen_fsm:start(Name, ?MODULE, [EsmeRef, Mod, Socket, Timers],[]).
 
-
-%% @spec start_link(Mod, Socket, Timers) -> Result
-%%    Mod    = atom()
-%%    Socket   = socket()
+%% @spec start_link(EsmeRef, Mod, Socket, Timers) -> Result
+%%    EsmeRef = pid() | atom()
+%%    Mod = atom()
+%%    Socket = socket()
 %%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session ESME (owner).
+%% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -894,13 +904,13 @@ start(Name, Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/3
 %% @see start_link/3
 %% @end
-start_link(Mod, Socket, Timers) ->
-    gen_fsm:start_link(?MODULE, [self(), Mod, Socket, Timers], []).
+start_link(EsmeRef, Mod, Socket, Timers) ->
+    gen_fsm:start_link(?MODULE, [EsmeRef, Mod, Socket, Timers], []).
 
-
-%% @spec start_link(Name, Mod, Socket, Timers) -> Result
+%% @spec start_link(Name, EsmeRef, Mod, Socket, Timers) -> Result
 %%    Name   = {local, Atom} | {global, Atom}
 %%    Atom   = atom()
+%%    EsmeRef = pid() | atom()
 %%    Mod    = atom()
 %%    Socket = socket()
 %%    Timers = timers()
@@ -908,7 +918,7 @@ start_link(Mod, Socket, Timers) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session ESME (owner).
+%% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -923,9 +933,8 @@ start_link(Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/4
 %% @see start_link/2
 %% @end
-start_link(Name, Mod, Socket, Timers) ->
-    gen_fsm:start_link(Name, ?MODULE, [self(), Mod, Socket, Timers],[]).
-
+start_link(Name, EsmeRef, Mod, Socket, Timers) ->
+    gen_fsm:start_link(Name, ?MODULE, [EsmeRef, Mod, Socket, Timers],[]).
 
 %% @spec bind_receiver(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -943,7 +952,6 @@ bind_receiver(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_BIND_RECEIVER,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec bind_transmitter(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -959,7 +967,6 @@ bind_receiver(FsmRef, ParamList) ->
 bind_transmitter(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_BIND_TRANSMITTER,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
-
 
 %% @spec bind_transceiver(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -977,7 +984,6 @@ bind_transceiver(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_BIND_TRANSCEIVER,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec broadcast_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -993,7 +999,6 @@ bind_transceiver(FsmRef, ParamList) ->
 broadcast_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_BROADCAST_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
-
 
 %% @spec cancel_broadcast_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1011,7 +1016,6 @@ cancel_broadcast_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_CANCEL_BROADCAST_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec cancel_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1027,7 +1031,6 @@ cancel_broadcast_sm(FsmRef, ParamList) ->
 cancel_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_CANCEL_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
-
 
 %% @spec data_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1045,7 +1048,6 @@ data_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_DATA_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec enquire_link(FsmRef) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Result = ok | {error, Error}
@@ -1060,7 +1062,6 @@ data_sm(FsmRef, ParamList) ->
 enquire_link(FsmRef) ->
     CmdId = ?COMMAND_ID_ENQUIRE_LINK,
     gen_fsm:sync_send_all_state_event(FsmRef, CmdId, infinity).
-
 
 %% @spec query_broadcast_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1077,7 +1078,6 @@ enquire_link(FsmRef) ->
 query_broadcast_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_QUERY_BROADCAST_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
-
 
 %% @spec query_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1105,7 +1105,6 @@ query_sm(FsmRef, ParamList) ->
 reference_number(FsmRef) ->
     gen_fsm:sync_send_all_state_event(FsmRef, reference_number, infinity).
 
-
 %% @spec replace_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1121,7 +1120,6 @@ reference_number(FsmRef) ->
 replace_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_REPLACE_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
-
 
 %% @spec submit_multi(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1139,7 +1137,6 @@ submit_multi(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_SUBMIT_MULTI,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec submit_sm(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -1156,7 +1153,6 @@ submit_sm(FsmRef, ParamList) ->
     CmdId = ?COMMAND_ID_SUBMIT_SM,
     gen_fsm:sync_send_event(FsmRef, {CmdId, ParamList}, infinity).
 
-
 %% @spec unbind(FsmRef) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Result  = {ok, PduResp} | {error, Error}
@@ -1168,7 +1164,6 @@ submit_sm(FsmRef, ParamList) ->
 %% @end
 unbind(FsmRef) ->
     gen_fsm:sync_send_event(FsmRef, ?COMMAND_ID_UNBIND, infinity).
-
 
 %% @spec stop(FsmRef) -> ok
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1182,7 +1177,6 @@ unbind(FsmRef) ->
 %% @end
 stop(FsmRef) ->
     gen_fsm:send_all_state_event(FsmRef, die).
-
 
 %%%===================================================================
 %%% Server gen_fsm functions
@@ -1215,7 +1209,6 @@ init([Pid, Mod, Socket, T]) ->
                       enquire_link_timer = TE,
                       inactivity_time    = T#timers.inactivity_time,
                       response_time      = T#timers.response_time}}.
-
 
 %% @spec open(Event, StateData) -> Result
 %%    Event         = timeout | term()
@@ -1263,7 +1256,6 @@ open(R, S) ->
     esme_rinvbndsts_resp(R, open, S#state.socket),
     {next_state, open, S}.
 
-
 %% @spec outbound(Event, S) -> Result
 %%    Event         = timeout | term()
 %%    StateData     = term()
@@ -1300,7 +1292,6 @@ outbound(R, S) ->
     esme_rinvbndsts_resp(R, outbound, S#state.socket),
     {next_state, outbound, S}.
     
-
 %% @spec bound_rx(Event, StateData) -> Result
 %%    Event         = timeout | term()
 %%    StateData     = term()
@@ -1361,7 +1352,6 @@ bound_rx(R, S) ->
     esme_rinvbndsts_resp(R, bound_rx, S#state.socket),
     {next_state, bound_rx, S}.
 
-
 %% @spec bound_tx(Event, StateData) -> Result
 %%    Event         = timeout | term()
 %%    StateData     = term()
@@ -1404,7 +1394,6 @@ bound_tx({timeout, _Ref, Timer}, S) ->
 bound_tx(R, S) ->    
     esme_rinvbndsts_resp(R, bound_tx, S#state.socket),
     {next_state, bound_tx, S}.
-
 
 %% @spec bound_trx(Event, StateData) -> Result
 %%    Event         = timeout | term()
@@ -1467,7 +1456,6 @@ bound_trx({timeout, _Ref, Timer}, S) ->
 bound_trx(R, S) ->    
     esme_rinvbndsts_resp(R, bound_trx, S#state.socket),
     {next_state, bound_trx, S}.
-
 
 %% @spec unbound(Event, StateData) -> Result
 %%    Event         = timeout | term()
@@ -1969,7 +1957,8 @@ handle_sync_event(?COMMAND_ID_ENQUIRE_LINK, From, SName, SData) ->
     {next_state, SName, NewS#state{enquire_link_timer = T, enquire = true}};
 handle_sync_event(reference_number, _From, SName, SData) ->
     RefNum = SData#state.reference_number,
-    {reply, RefNum, SName, SData#state{reference_number = RefNum + 1}};
+    NewRefNum = if ?MAX_REFERENCE_NUMBER == RefNum -> 0; true -> RefNum + 1 end,
+    {reply, RefNum, SName, SData#state{reference_number = NewRefNum}};
 handle_sync_event(Event, _From, SName, SData) ->
     Details = [{event, Event}, {state, SName}],
     report:info(?MODULE, unexpected_sync_event, Details),

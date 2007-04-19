@@ -196,6 +196,17 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% [19 Sep 2006 Enrique Marcote]
+%%%
+%%% <ul>
+%%%   <li>Add <tt>SmscRef</tt> to 
+%%%     <a href="gen_smsc_session.html#start-4">start/4</a>,
+%%%     <a href="gen_smsc_session.html#start-5">start/5</a>, 
+%%%     <a href="gen_smsc_session.html#start_link-4">start_link/4</a> and 
+%%%     <a href="gen_smsc_session.html#start_link-5">start_link/5</a> functions.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -229,10 +240,10 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start/3, 
-         start/4, 
-         start_link/3, 
+-export([start/4, 
+         start/5, 
          start_link/4, 
+         start_link/5, 
          alert_notification/2,
          outbind/2,
          deliver_sm/2,
@@ -397,7 +408,6 @@
          inactivity_timer,
          response_time}).
 
-
 %%%===================================================================
 %%% External functions
 %%%===================================================================
@@ -415,16 +425,16 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
     undefined.
 
-
-%% @spec start(Mod, Socket, Timers) -> Result
-%%    Mod    = atom()
+%% @spec start(SmscRef, Mod, Socket, Timers) -> Result
+%%    SmscRef = pid() | atom()
+%%    Mod = atom()
 %%    Socket = socket()
 %%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -437,21 +447,21 @@ behaviour_info(_Other) ->
 %% @see gen_fsm:start/3
 %% @see start_link/3
 %% @end
-start(Mod, Socket, Timers) ->
-    gen_fsm:start(?MODULE, [self(), Mod, Socket, Timers], []).
+start(SmscRef, Mod, Socket, Timers) ->
+    gen_fsm:start(?MODULE, [SmscRef, Mod, Socket, Timers], []).
 
-
-%% @spec start(Name, Mod, Socket, Timers) -> Result
-%%    Name   = {local, Name} | {global, Name}
-%%    Name   = atom()
-%%    Mod    = atom()
+%% @spec start(Name, SmscRef, Mod, Socket, Timers) -> Result
+%%    Name = {local, Atom} | {global, Atom}
+%%    Atom = atom()
+%%    SmscRef = pid() | atom()
+%%    Mod = atom()
 %%    Socket = pid()
 %%    Timers = timers()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -466,11 +476,11 @@ start(Mod, Socket, Timers) ->
 %% @see gen_fsm:start/4
 %% @see start_link/4
 %% @end
-start(Name, Mod, Socket, Timers) ->
-    gen_fsm:start(Name, ?MODULE, [self(), Mod, Socket, Timers],[]).
+start(Name, SmscRef, Mod, Socket, Timers) ->
+    gen_fsm:start(Name, ?MODULE, [SmscRef, Mod, Socket, Timers],[]).
 
-
-%% @spec start_link(Mod, Socket, Timers) -> Result
+%% @spec start_link(SmscRef, Mod, Socket, Timers) -> Result
+%%    SmscRef = pid() | atom()
 %%    Mod    = atom()
 %%    Socket = socket()
 %%    Timers = timers()
@@ -478,7 +488,7 @@ start(Name, Mod, Socket, Timers) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -491,13 +501,13 @@ start(Name, Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/3
 %% @see start/3
 %% @end
-start_link(Mod, Socket, Timers) ->
-    gen_fsm:start_link(?MODULE, [self(), Mod, Socket, Timers], []).
+start_link(SmscRef, Mod, Socket, Timers) ->
+    gen_fsm:start_link(?MODULE, [SmscRef, Mod, Socket, Timers], []).
 
-
-%% @spec start_link(Name, Mod, Socket, Timers) -> Result
-%%    Name   = {local, Name} | {global, Name}
-%%    Name   = atom()
+%% @spec start_link(Name, SmscRef, Mod, Socket, Timers) -> Result
+%%    Name = {local, Atom} | {global, Atom}
+%%    Atom = atom()
+%%    SmscRef = pid() | atom()
 %%    Mod    = atom()
 %%    Socket = pid()
 %%    Timers = timers()
@@ -505,7 +515,7 @@ start_link(Mod, Socket, Timers) ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid} | term()
 %%
-%% @doc Starts the server setting <tt>self()</tt> as the session SMSC (owner).
+%% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
 %% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
 %% ?DEFAULT_TIMERS to set the default values.</p>
@@ -520,9 +530,8 @@ start_link(Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/4
 %% @see start/4
 %% @end
-start_link(Name, Mod, Socket, Timers) ->
-    gen_fsm:start_link(Name, ?MODULE, [self(), Mod, Socket, Timers],[]).
-
+start_link(Name, SmscRef, Mod, Socket, Timers) ->
+    gen_fsm:start_link(Name, ?MODULE, [SmscRef, Mod, Socket, Timers], []).
 
 %% @spec alert_notification(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()

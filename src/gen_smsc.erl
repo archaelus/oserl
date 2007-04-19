@@ -316,6 +316,21 @@
 %%% details on this callback.</p>
 %%%
 %%%
+%%% <h2>Changes 1.2 -&gt; 1.3</h2>
+%%%
+%%% [19 Sep 2006]
+%%%
+%%% <ul>
+%%%   <li>Add <tt>EsmeRef</tt> to 
+%%%     <a href="gen_smsc.html#session_start-4">session_start/4</a>,
+%%%     <a href="gen_smsc.html#session_start-5">session_start/5</a>, 
+%%%     <a href="gen_smsc.html#session_start_link-4">session_start_link/4</a> 
+%%%     and <a href="gen_smsc.html#session_start_link-5">session_start_link/5
+%%%     </a> functions.
+%%%   </li>
+%%% </ul>
+%%%
+%%%
 %%% @copyright 2004 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
 %%%         [http://oserl.sourceforge.net/]
@@ -354,8 +369,10 @@
 %%%-------------------------------------------------------------------
 %%% External Session exports
 %%%-------------------------------------------------------------------
--export([session_start/2,
-         session_start/3,
+-export([session_start/3,
+         session_start/4,
+         session_start_link/3,
+         session_start_link/4,
          session_stop/1,
          alert_notification/2,
          outbind/2,
@@ -409,7 +426,6 @@
 %% %@end
 -record(state, {mod, mod_state, lsocket = closed, timers}).
 
-
 %%%===================================================================
 %%% Behaviour functions
 %%%===================================================================
@@ -457,7 +473,6 @@ behaviour_info(_Other) ->
 start(Module, Args, Options) ->
     gen_server:start(?MODULE, {Module, Args}, Options).
 
-
 %% @spec start(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
 %%    Name       = atom()
@@ -478,7 +493,6 @@ start(Module, Args, Options) ->
 start(ServerName, Module, Args, Options) ->
     gen_server:start(ServerName, ?MODULE, {Module, Args}, Options).
 
-
 %% @spec start_link(Module, Args, Options) -> Result
 %%    Module = atom()
 %%    Result = {ok, Pid} | ignore | {error, Error}
@@ -496,7 +510,6 @@ start(ServerName, Module, Args, Options) ->
 %% @end
 start_link(Module, Args, Options) ->
     gen_server:start_link(?MODULE, {Module, Args}, Options).
-
 
 %% @spec start_link(ServerName, Module, Args, Options) -> Result
 %%    ServerName = {local, Name} | {global, Name}
@@ -518,7 +531,6 @@ start_link(Module, Args, Options) ->
 start_link(ServerName, Module, Args, Options) ->
     gen_server:start_link(ServerName, ?MODULE, {Module, Args}, Options).
 
-
 %% @spec listen_start(ServerRef) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -537,7 +549,6 @@ start_link(ServerName, Module, Args, Options) ->
 %% @end 
 listen_start(ServerRef) -> 
     listen_start(ServerRef, ?DEFAULT_SMPP_PORT, infinity,?DEFAULT_SMPP_TIMERS).
-
 
 %% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -562,7 +573,6 @@ listen_start(ServerRef) ->
 listen_start(ServerRef, Port, Count, Timers) ->
     gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
-
 %% @spec listen_stop(ServerRef) -> ok
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -572,7 +582,6 @@ listen_start(ServerRef, Port, Count, Timers) ->
 %% @end 
 listen_stop(ServerRef) ->
     gen_server:cast(ServerRef, listen_stop).
-
 
 %% @spec call(ServerRef, Request) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -590,7 +599,6 @@ listen_stop(ServerRef) ->
 %% @end 
 call(ServerRef, Request) ->
     gen_server:call(ServerRef, {call, Request}).
-
 
 %% @spec call(ServerRef, Request, Timeout) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
@@ -610,7 +618,6 @@ call(ServerRef, Request) ->
 call(ServerRef, Request, Timeout) ->
     gen_server:call(ServerRef, {call, Request}, Timeout).
     
-
 %% @spec cast(ServerRef, Request) -> Reply
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -628,7 +635,6 @@ call(ServerRef, Request, Timeout) ->
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
-
 %% @spec reply(Client, Reply) -> true
 %%    Client = term()
 %%    Reply  = term()
@@ -640,11 +646,11 @@ cast(ServerRef, Request) ->
 reply(Client, Reply) ->
     gen_server:reply(Client, Reply).
 
-
 %%%===================================================================
 %%% External Session functions
 %%%===================================================================
-%% @spec session_start(Address, Port) -> Result
+%% @spec session_start(SmscRef, Address, Port) -> Result
+%%    SmscRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Result = {ok, Session} | {error, Reason}
@@ -656,13 +662,13 @@ reply(Client, Reply) ->
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
 %% otherwise.</p>
 %%
-%% @equiv session_start(Address, Port, DEFAULT_SMPP_TIMERS)
+%% @equiv session_start(SmscRef, Address, Port, DEFAULT_SMPP_TIMERS)
 %% @end 
-session_start(Address, Port) ->
-	session_start(Address, Port, ?DEFAULT_SMPP_TIMERS).
+session_start(SmscRef, Address, Port) ->
+	session_start(SmscRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
 
-
-%% @spec session_start(Address, Port, Timers) -> Result
+%% @spec session_start(SmscRef, Address, Port, Timers) -> Result
+%%    SmscRef = pid() | atom()
 %%    Address = string() | atom() | ip_address()
 %%    Port = int()
 %%    Timers = timers()
@@ -679,12 +685,12 @@ session_start(Address, Port) ->
 %% otherwise.</p>
 %%
 %% @see session_start/3
-%% @see gen_smsc_session:start/2
+%% @see gen_smsc_session:start/4
 %% @end 
-session_start(Address, Port, Timers) ->
+session_start(SmscRef, Address, Port, Timers) ->
     case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
         {ok, Socket} ->
-            case gen_smsc_session:start(?MODULE, Socket, Timers) of
+            case gen_smsc_session:start(SmscRef, ?MODULE, Socket, Timers) of
                 {ok, Session} ->
                     gen_tcp:controlling_process(Socket, Session),
                     {ok, Session};
@@ -695,6 +701,57 @@ session_start(Address, Port, Timers) ->
             ConnectError
     end.
 
+%% @spec session_start_link(SmscRef, Address, Port) -> Result
+%%    SmscRef = pid() | atom()
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @equiv session_start_link(SmscRef, Address, Port, DEFAULT_SMPP_TIMERS)
+%% @end 
+session_start_link(SmscRef, Address, Port) ->
+	session_start_link(SmscRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
+
+%% @spec session_start_link(SmscRef, Address, Port, Timers) -> Result
+%%    SmscRef = pid() | atom()
+%%    Address = string() | atom() | ip_address()
+%%    Port = int()
+%%    Timers = timers()
+%%    Result = {ok, Session} | {error, Reason}
+%%    Session = pid()
+%%    Reason = term()
+%%
+%% @doc Opens a new session.
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <a href="oserl.html">oserl.hrl</a>.</p>
+%%
+%% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
+%% otherwise.</p>
+%%
+%% @see session_start_link/3
+%% @see gen_smsc_session:start_link/4
+%% @end 
+session_start_link(SmscRef, Address, Port, Timers) ->
+    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
+        {ok, Socket} ->
+            case gen_smsc_session:start_link(SmscRef,?MODULE,Socket,Timers) of
+                {ok, Session} ->
+                    gen_tcp:controlling_process(Socket, Session),
+                    {ok, Session};
+                SessionError ->
+                    SessionError
+            end;
+        ConnectError ->
+            ConnectError
+    end.
 
 %% @spec session_stop(Session) -> ok
 %%    Session = pid()
@@ -703,7 +760,6 @@ session_start(Address, Port, Timers) ->
 %% @end 
 session_stop(Session) ->
     gen_smsc_session:stop(Session).
-
 
 %% @spec alert_notification(Session, ParamList) -> ok
 %%    Session = pid()
@@ -717,7 +773,6 @@ session_stop(Session) ->
 alert_notification(Session, ParamList) ->
     gen_smsc_session:alert_notification(Session, ParamList).
 
-
 %% @spec outbind(Session, ParamList) -> ok
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -729,7 +784,6 @@ alert_notification(Session, ParamList) ->
 %% @end
 outbind(Session, ParamList) ->
     gen_smsc_session:outbind(Session, ParamList).
-
 
 %% @spec data_sm(Session, ParamList) -> Result
 %%    Session = pid()
@@ -746,7 +800,6 @@ outbind(Session, ParamList) ->
 data_sm(Session, ParamList) ->
     gen_smsc_session:data_sm(Session, ParamList).
 
-
 %% @spec deliver_sm(Session, ParamList) -> Result
 %%    Session = pid()
 %%    ParamList  = [{ParamName, ParamValue}]
@@ -762,7 +815,6 @@ data_sm(Session, ParamList) ->
 deliver_sm(Session, ParamList) ->
     gen_smsc_session:deliver_sm(Session, ParamList).
 
-
 %% @spec unbind(Session) -> Result
 %%    Session = pid()
 %%    Result  = {ok, PduResp} | {error, Error}
@@ -774,7 +826,6 @@ deliver_sm(Session, ParamList) ->
 %% @end
 unbind(Session) ->
     gen_smsc_session:unbind(Session).
-
 
 %%%===================================================================
 %%% Server functions
@@ -792,7 +843,6 @@ unbind(Session) ->
 %% @end
 init({Mod, Args}) ->
     pack(Mod:init(Args), #state{mod = Mod}).
-
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -834,7 +884,7 @@ handle_call({listen_start, Port, Count, Timers}, _From, S) ->
             {reply, false, S}
     end;
 handle_call({accept, Socket}, _From, S) ->
-	{reply, gen_smsc_session:start(?MODULE, Socket, S#state.timers), S};
+	{reply, gen_smsc_session:start(self(), ?MODULE, Socket, S#state.timers), S};
 handle_call({Bind, _Session, _Pdu, _IPAddr} = R, From, S) 
   when Bind==bind_transceiver; Bind==bind_transmitter; Bind==bind_receiver ->
     pack((S#state.mod):handle_bind(R, From, S#state.mod_state), S);
@@ -842,7 +892,6 @@ handle_call({unbind, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
 handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
-
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -875,7 +924,6 @@ handle_cast(listen_stop, S) ->
     gen_tcp:close(S#state.lsocket),
     {noreply, S#state{lsocket = closed}}.
 
-
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
 %%    State    = term()
@@ -899,7 +947,6 @@ handle_cast(listen_stop, S) ->
 handle_info(Info, S) ->
     pack((S#state.mod):handle_info(Info, S#state.mod_state), S).
 
-
 %% @spec terminate(Reason, State) -> ok
 %%    Reason = normal | shutdown | term()
 %%    State  = term()
@@ -911,9 +958,7 @@ handle_info(Info, S) ->
 %% <p>Return value is ignored by <tt>gen_server</tt>.</p>
 %% @end
 terminate(R, S) ->
-%    io:format("*** gen_smsc terminating: ~p - ~p ***~n", [self(), R]),
     pack((S#state.mod):terminate(R, S#state.mod_state), S).
-
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %%    OldVsn   = undefined | term()
@@ -927,7 +972,6 @@ terminate(R, S) ->
 %% @end
 code_change(OldVsn, S, Extra) ->
     pack((S#state.mod):code_change(OldVsn, S#state.mod_state, Extra), S).
-
 
 %%%===================================================================
 %%% SMSC Session functions
@@ -948,7 +992,6 @@ code_change(OldVsn, S, Extra) ->
 %% @end
 handle_bind(ServerRef, Session, {CmdName, Pdu, IPAddr}) ->
     gen_server:call(ServerRef, {CmdName, Session, Pdu, IPAddr}, infinity).
-
 
 %% @spec handle_operation(ServerRef, Session, {CmdName, Pdu}) -> Result
 %%    ServerRef = pid()
@@ -974,7 +1017,6 @@ handle_bind(ServerRef, Session, {CmdName, Pdu, IPAddr}) ->
 handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
     gen_server:call(ServerRef, {CmdName, Session, Pdu}, infinity).
 
-
 %% @spec handle_unbind(ServerRef, Session, Pdu) -> ok | {error, Error}
 %%    ServerRef = pid()
 %%    Session = pid()
@@ -986,7 +1028,6 @@ handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
 %% @end
 handle_unbind(ServerRef, Session, Pdu) ->
     gen_server:call(ServerRef, {unbind, Session, Pdu}, infinity).
-
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -1016,7 +1057,6 @@ pack({ok, MS, Timeout}, S) ->
     {ok, S#state{mod_state = MS}, Timeout};
 pack(Other, _S) ->
     Other.
-
 
 %% @spec listener(ServerRef, LSocket, Count) -> void()
 %%    ServerRef = pid()

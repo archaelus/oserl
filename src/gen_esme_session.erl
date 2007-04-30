@@ -1876,7 +1876,7 @@ handle_event({input, Pdu, Lapse, Timestamp}, SName, SData) ->
             cancel_timer(RTimer),
             ets:delete(SData#state.requests, SeqNum),
             gen_fsm:reply(From, {ok, Pdu}),
-            Details = [{sequence_number,SeqNum}, {pdu,binary:to_hexlist(Pdu)}],
+            Details = [{sequence_number,SeqNum}, {pdu,operation:to_list(Pdu)}],
             report:info(?MODULE, no_enquire_link_resp, Details),
             {next_state, SName, SData#state{self_congestion_state = 0.0, 
                                             enquire = false}};

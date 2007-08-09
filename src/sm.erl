@@ -95,6 +95,16 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% <h2>Changes 1.3 -&gt; 1.4</h2>
+%%%
+%%% [9 Aug 2007]
+%%%
+%%% <ul>
+%%%   <li>The function <i>message_user_data/2</i> now searches for 
+%%%     <tt>message_payload</tt> parameter first.
+%%%   </li>
+%%% </ul>
+%%%
 %%%
 %%% @copyright 2003 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -248,19 +258,19 @@ join_user_data(Segments) ->
 %% in the <i>short_message</i> or in the <i>message_payload</i> parameter.
 %% @end
 message_user_data(ParamList) when list(ParamList) ->
-    case lists:keysearch(short_message, 1, ParamList) of
+    case lists:keysearch(message_payload, 1, ParamList) of
         {value, Value} ->
             Value;
         false ->
-            {value, Value} = lists:keysearch(message_payload, 1, ParamList),
+            {value, Value} = lists:keysearch(short_message, 1, ParamList),
             Value
     end;
 message_user_data(Pdu) ->
-    case operation:get_param(short_message, Pdu) of
-        ShortMessage when ShortMessage == ""; ShortMessage == undefined ->
-            {message_payload, operation:get_param(message_payload, Pdu)};
-        ShortMessage ->
-            {short_message, ShortMessage}
+    case operation:get_param(message_payload, Pdu) of
+        undefined ->
+            {short_message, operation:get_param(short_message, Pdu)};
+        MessagePayload ->
+            {message_payload, MessagePayload}
     end.
 
 %% @spec originator_port(Pdu) -> OriginatorPort

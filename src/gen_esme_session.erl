@@ -610,6 +610,13 @@
 %%%   </li>
 %%% </ul>
 %%%
+%%% <h2>Changes 1.3 -&gt; 1.4</h2>
+%%%
+%%% [11 Jul 2007 Enrique Marcote]
+%%%
+%%% <ul>
+%%%   <li>Reference to log added.</li>
+%%% </ul>
 %%%
 %%% @copyright 2004 - 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -633,10 +640,10 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start/4, 
-         start/5, 
+-export([start/3, 
+         start/4, 
+         start_link/3, 
          start_link/4, 
-         start_link/5, 
          bind_receiver/2,
          bind_transmitter/2,
          bind_transceiver/2,
@@ -721,6 +728,7 @@
 %%     callback functions to help identify the owner of the session.
 %%   </dd>
 %%   <dt>Mod: </dt><dd>Callback Module.</dd>
+%%   <dt>Log: </dt><dd>Pid of the SMPP log event manager.</dd>
 %%   <dt>SequenceNumber: </dt><dd>PDU sequence number.</dd>
 %%   <dt>ReferenceNumber: </dt><dd>Concatenation reference number.</dd>
 %%   <dt>Socket: </dt><dd>The <tt>socket()</tt> of the underlying connection
@@ -791,6 +799,7 @@
 -record(state, 
         {esme,
          mod,
+         log, 
          sequence_number = 0,
          reference_number = 0,
          socket,
@@ -828,19 +837,24 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
     undefined.
 
-%% @spec start(EsmeRef, Mod, Socket, Timers) -> Result
+%% @spec start(EsmeRef, Mod, Args) -> Result
 %%    EsmeRef = pid() | atom()
-%%    Mod    = atom()
+%%    Mod = atom()
+%%    Args = [Arg]
+%%    Arg = {socket, Socket} | {timers, Timers} | {log, Log}
 %%    Socket = socket()
 %%    Timers = timers()
+%%    Log = pid()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
-%% ?DEFAULT_TIMERS to set the default values.</p>
+%% <p><tt>Socket</tt> arg is mandatory.</p>
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  If not specified the 
+%% ?DEFAULT_SMPP_TIMERS are assumed as the default value.</p>
 %%
 %% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
 %% definition.</p>
@@ -850,24 +864,29 @@ behaviour_info(_Other) ->
 %% @see gen_fsm:start/3
 %% @see start_link/3
 %% @end
-start(EsmeRef, Mod, Socket, Timers) ->
-    gen_fsm:start(?MODULE, [EsmeRef, Mod, Socket, Timers], []).
+start(EsmeRef, Mod, Args) ->
+    gen_fsm:start(?MODULE, [EsmeRef, Mod, Args], []).
 
-%% @spec start(Name, EsmeRef, Mod, Socket, Timers) -> Result
-%%    Name   = {local, Atom} | {global, Atom}
-%%    Atom   = atom()
+%% @spec start(Name, EsmeRef, Mod, Args) -> Result
+%%    Name = {local, Atom} | {global, Atom}
+%%    Atom = atom()
 %%    EsmeRef = pid() | atom()
-%%    Mod    = atom()
+%%    Mod = atom()
+%%    Args = [Arg]
+%%    Arg = {socket, Socket} | {timers, Timers} | {log, Log}
 %%    Socket = pid()
 %%    Timers = timers()
+%%    Log = pid()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
-%% ?DEFAULT_TIMERS to set the default values.</p>
+%% <p><tt>Socket</tt> arg is mandatory.</p>
+%%
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  If not specified the 
+%% ?DEFAULT_SMPP_TIMERS are assumed as the default value.</p>
 %%
 %% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
 %% definition.</p>
@@ -879,22 +898,25 @@ start(EsmeRef, Mod, Socket, Timers) ->
 %% @see gen_fsm:start/4
 %% @see start_link/4
 %% @end
-start(Name, EsmeRef, Mod, Socket, Timers) ->
-    gen_fsm:start(Name, ?MODULE, [EsmeRef, Mod, Socket, Timers],[]).
+start(Name, EsmeRef, Mod, Args) ->
+    gen_fsm:start(Name, ?MODULE, [EsmeRef, Mod, Args],[]).
 
 %% @spec start_link(EsmeRef, Mod, Socket, Timers) -> Result
 %%    EsmeRef = pid() | atom()
 %%    Mod = atom()
+%%    Args = [Arg]
+%%    Arg = {socket, Socket} | {timers, Timers} | {log, Log}
 %%    Socket = socket()
 %%    Timers = timers()
+%%    Log = pid()
 %%    Result = {ok, Pid} | ignore | {error, Error}
 %%    Pid = pid()
 %%    Error = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
-%% ?DEFAULT_TIMERS to set the default values.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  If not specified the 
+%% ?DEFAULT_SMPP_TIMERS are assumed as the default value.</p>
 %%
 %% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
 %% definition.</p>
@@ -904,24 +926,27 @@ start(Name, EsmeRef, Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/3
 %% @see start_link/3
 %% @end
-start_link(EsmeRef, Mod, Socket, Timers) ->
-    gen_fsm:start_link(?MODULE, [EsmeRef, Mod, Socket, Timers], []).
+start_link(EsmeRef, Mod, Args) ->
+    gen_fsm:start_link(?MODULE, [EsmeRef, Mod, Args], []).
 
 %% @spec start_link(Name, EsmeRef, Mod, Socket, Timers) -> Result
-%%    Name   = {local, Atom} | {global, Atom}
-%%    Atom   = atom()
+%%    Name = {local, Atom} | {global, Atom}
+%%    Atom = atom()
 %%    EsmeRef = pid() | atom()
-%%    Mod    = atom()
+%%    Mod = atom()
+%%    Args = [Arg]
+%%    Arg = {socket, Socket} | {timers, Timers} | {log, Log}
 %%    Socket = socket()
 %%    Timers = timers()
+%%    Log = pid()
 %%    Result = {ok, Pid} | ignore | {error, Error}
-%%    Pid    = pid()
-%%    Error  = {already_started, Pid} | term()
+%%    Pid = pid()
+%%    Error = {already_started, Pid} | term()
 %%
 %% @doc Starts the server setting <tt>EsmeRef</tt> as the session ESME (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
-%% ?DEFAULT_TIMERS to set the default values.</p>
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  If not specified the 
+%% ?DEFAULT_SMPP_TIMERS are assumed as the default value.</p>
 %%
 %% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
 %% definition.</p>
@@ -933,8 +958,8 @@ start_link(EsmeRef, Mod, Socket, Timers) ->
 %% @see gen_fsm:start_link/4
 %% @see start_link/2
 %% @end
-start_link(Name, EsmeRef, Mod, Socket, Timers) ->
-    gen_fsm:start_link(Name, ?MODULE, [EsmeRef, Mod, Socket, Timers],[]).
+start_link(Name, EsmeRef, Mod, Args) ->
+    gen_fsm:start_link(Name, ?MODULE, [EsmeRef, Mod, Args],[]).
 
 %% @spec bind_receiver(FsmRef, ParamList) -> Result
 %%    FsmRef = Name | {Name, Node} | {global, Name} | pid()
@@ -1194,21 +1219,25 @@ stop(FsmRef) ->
 %%
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - init/1</a> callback implementation. Initializes the the fsm.
 %% @end
-init([Pid, Mod, Socket, T]) ->
+init([Pid, Mod, Args]) ->
     Self = self(),
-    proc_lib:spawn_link(fun() -> wait_recv(Self, Socket, <<>>) end),
-    TE = start_timer(T#timers.enquire_link_time, enquire_link_timer),
-    TS = start_timer(T#timers.session_init_time, session_init_timer),
-    {ok, open, #state{esme               = Pid,
-                      mod                = Mod,
-                      socket             = Socket,
-                      requests           = ets:new(esme_requests, []),
-                      session_init_time  = T#timers.session_init_time,
+    Socket = proplists:get_value(socket, Args),
+    Timers = proplists:get_value(timers, Args, ?DEFAULT_SMPP_TIMERS),
+    Log = proplists:get_value(log, Args),
+    proc_lib:spawn_link(fun() -> wait_recv(Self, Socket, <<>>, Log) end),
+    TE = start_timer(Timers#timers.enquire_link_time, enquire_link_timer),
+    TS = start_timer(Timers#timers.session_init_time, session_init_timer),
+    {ok, open, #state{esme = Pid,
+                      mod = Mod,
+                      log = Log,
+                      socket = Socket,
+                      requests = ets:new(esme_requests, []),
+                      session_init_time = Timers#timers.session_init_time,
                       session_init_timer = TS,
-                      enquire_link_time  = T#timers.enquire_link_time,
+                      enquire_link_time = Timers#timers.enquire_link_time,
                       enquire_link_timer = TE,
-                      inactivity_time    = T#timers.inactivity_time,
-                      response_time      = T#timers.response_time}}.
+                      inactivity_time = Timers#timers.inactivity_time,
+                      response_time = Timers#timers.response_time}}.
 
 %% @spec open(Event, StateData) -> Result
 %%    Event         = timeout | term()
@@ -1253,7 +1282,7 @@ open({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, open, S};
 open(R, S) ->    
-    esme_rinvbndsts_resp(R, open, S#state.socket),
+    esme_rinvbndsts_resp(R, open, S#state.socket, S#state.log),
     {next_state, open, S}.
 
 %% @spec outbound(Event, S) -> Result
@@ -1289,7 +1318,7 @@ outbound({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, outbound, S};
 outbound(R, S) ->
-    esme_rinvbndsts_resp(R, outbound, S#state.socket),
+    esme_rinvbndsts_resp(R, outbound, S#state.socket, S#state.log),
     {next_state, outbound, S}.
     
 %% @spec bound_rx(Event, StateData) -> Result
@@ -1349,7 +1378,7 @@ bound_rx({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, bound_rx, S};
 bound_rx(R, S) ->    
-    esme_rinvbndsts_resp(R, bound_rx, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_rx, S#state.socket, S#state.log),
     {next_state, bound_rx, S}.
 
 %% @spec bound_tx(Event, StateData) -> Result
@@ -1392,7 +1421,7 @@ bound_tx({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, bound_tx, S};
 bound_tx(R, S) ->    
-    esme_rinvbndsts_resp(R, bound_tx, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_tx, S#state.socket, S#state.log),
     {next_state, bound_tx, S}.
 
 %% @spec bound_trx(Event, StateData) -> Result
@@ -1454,7 +1483,7 @@ bound_trx({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, bound_trx, S};
 bound_trx(R, S) ->    
-    esme_rinvbndsts_resp(R, bound_trx, S#state.socket),
+    esme_rinvbndsts_resp(R, bound_trx, S#state.socket, S#state.log),
     {next_state, bound_trx, S}.
 
 %% @spec unbound(Event, StateData) -> Result
@@ -1478,7 +1507,7 @@ unbound({timeout, _Ref, Timer}, S) ->
     proc_lib:spawn_link(fun() -> handle_timeout(Timer, Self, S) end),
     {next_state, unbound, S};
 unbound(R, S) ->    
-    esme_rinvbndsts_resp(R, unbound, S#state.socket),
+    esme_rinvbndsts_resp(R, unbound, S#state.socket, S#state.log),
     {next_state, unbound, S}.
 
 %% @doc Auxiliary function for Event/2 functions.
@@ -1493,17 +1522,17 @@ unbound(R, S) ->
 %% @see bound_trx/2
 %% @see unbound/2
 %% @end 
-esme_rinvbndsts_resp({CmdId, Pdu}, SName, Socket) ->
+esme_rinvbndsts_resp({CmdId, Pdu}, SName, Socket, Log) ->
     Details = [{state,SName},{command_id,CmdId},{pdu,operation:to_list(Pdu)}],
     report:info(?MODULE, esme_rinvbndsts, Details),
     SeqNum = operation:get_param(sequence_number, Pdu),
     case ?VALID_COMMAND_ID(CmdId) of
         true ->
             RespId = ?RESPONSE(CmdId),
-            send_response(RespId, ?ESME_RINVBNDSTS, SeqNum, [], Socket);
+            send_response(RespId, ?ESME_RINVBNDSTS, SeqNum, [], Socket, Log);
         false ->
             RespId = ?COMMAND_ID_GENERIC_NACK,
-            send_response(RespId, ?ESME_RINVCMDID, SeqNum, [], Socket)
+            send_response(RespId, ?ESME_RINVCMDID, SeqNum, [], Socket, Log)
     end.
 
 
@@ -1829,8 +1858,9 @@ handle_event({input, Pdu, Lapse, Timestamp}, SName, SData) ->
                     end;
                 _Otherwise -> % Unexpected response
                     Sock = SData#state.socket,
+                    Log = SData#state.log,
                     Nack = ?COMMAND_ID_GENERIC_NACK,
-                    send_response(Nack, ?ESME_RINVCMDID, SeqNum, [], Sock)
+                    send_response(Nack, ?ESME_RINVCMDID, SeqNum, [], Sock, Log)
             end,
             Pcs = operation:get_param(congestion_state, Pdu),
             {next_state, SName, SData#state{peer_congestion_state = Pcs}};
@@ -1859,7 +1889,9 @@ handle_event({input, Pdu, Lapse, Timestamp}, SName, SData) ->
             (SData#state.mod):handle_enquire_link(SData#state.esme,self(),Pdu),
             SeqNum = operation:get_param(sequence_number, Pdu),
             RespId = ?COMMAND_ID_ENQUIRE_LINK_RESP,
-            send_response(RespId, ?ESME_ROK, SeqNum, [], SData#state.socket),
+            Socket = SData#state.socket,
+            Log = SData#state.log,
+            send_response(RespId, ?ESME_ROK, SeqNum, [], Socket, Log),
             T = start_timer(SData#state.enquire_link_time, enquire_link_timer),
             {next_state, SName, SData#state{enquire_link_timer = T}};
         CmdId when SData#state.enquire == true ->
@@ -1893,7 +1925,9 @@ handle_event({error, CmdId, Status, SeqNum}, SName, SData) ->
                  _Otherwise ->
                      ?COMMAND_ID_GENERIC_NACK
              end,
-    send_response(RespId, Status, SeqNum, [], SData#state.socket),
+    Socket = SData#state.socket,
+    Log = SData#state.log,
+    send_response(RespId, Status, SeqNum,[], Socket, Log),
     {next_state, SName, SData};
 handle_event({recv_error, _Error}, unbound, SData) ->
     {stop, normal, SData#state{socket = closed}};
@@ -2077,17 +2111,19 @@ handle_peer_alert_notification({?COMMAND_ID_ALERT_NOTIFICATION,Pdu}, Self, S)->
 %% @end 
 handle_peer_operation({CmdId, Pdu}, Self, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
-    SeqNum  = operation:get_param(sequence_number, Pdu),
-    RespId  = ?RESPONSE(CmdId),
+    SeqNum = operation:get_param(sequence_number, Pdu),
+    RespId = ?RESPONSE(CmdId),
+    Socket = S#state.socket,
+    Log = S#state.log,
     PList2  = [{congestion_state, round(S#state.self_congestion_state)}],
     case (S#state.mod):handle_operation(S#state.esme, Self, {CmdName, Pdu}) of
         {ok, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
-            send_response(RespId, ?ESME_ROK, SeqNum, ParamList,S#state.socket),
+            send_response(RespId, ?ESME_ROK, SeqNum, ParamList, Socket, Log),
             true;
         {error, Error, PList1} ->
             ParamList = operation:merge_params(PList1, PList2),
-            send_response(RespId, Error, SeqNum, ParamList, S#state.socket),
+            send_response(RespId, Error, SeqNum, ParamList, Socket, Log),
             false
     end.
 
@@ -2110,12 +2146,14 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     RespId = ?COMMAND_ID_UNBIND_RESP,
+    Socket = S#state.socket,
+    Log = S#state.log,
     case (S#state.mod):handle_unbind(S#state.esme, Self, Pdu) of
         ok ->
-            send_response(RespId, ?ESME_ROK, SeqNum, [], S#state.socket),
+            send_response(RespId, ?ESME_ROK, SeqNum, [], Socket, Log),
             true;
         {error, Error} ->
-            send_response(RespId, Error, SeqNum, [],  S#state.socket),
+            send_response(RespId, Error, SeqNum, [],  Socket, Log),
             false
     end.
 
@@ -2182,29 +2220,30 @@ send_request(CmdId, ParamList, From, S) ->
 				 OldSeqNum ->
 					 OldSeqNum + 1
 			 end,
-    send_pdu(S#state.socket, operation:new(CmdId, SeqNum, ParamList)),
+    send_pdu(S#state.socket,operation:new(CmdId,SeqNum,ParamList),S#state.log),
     RTimer = start_timer(S#state.response_time, {response_timer, From, CmdId}),
     ets:insert(S#state.requests, {SeqNum, CmdId, RTimer, From}),
     {ok, S#state{sequence_number = SeqNum}}.
 
 
-%% @spec send_response(CmdId, Status, SeqNum, ParamList, Socket) -> Result
-%%    CmdId      = int()
-%%    Status     = int()
-%%    SeqNum     = int()
-%%    ParamList  = [{ParamName, ParamValue}]
-%%    ParamName  = atom()
+%% @spec send_response(CmdId, Status, SeqNum, ParamList, Socket, Log) -> Result
+%%    CmdId = int()
+%%    Status = int()
+%%    SeqNum = int()
+%%    ParamList = [{ParamName, ParamValue}]
+%%    ParamName = atom()
 %%    ParamValue = term()
-%%    Socket     = socket()
-%%    Result     = ok | {error, Error}
-%%    Error      = int()
+%%    Socket = socket()
+%%    Log = pid()
+%%    Result = ok | {error, Error}
+%%    Error = int()
 %%
 %% @doc Send a SMPP response over a <tt>Socket</tt>.
 %% <tt>Status</tt> is the command status and <tt>SeqNun</tt> the sequence
 %% number of the PDU.
 %% @end
-send_response(CmdId, Status, SeqNum, ParamList, Socket) ->
-    send_pdu(Socket, operation:new(CmdId, Status, SeqNum, ParamList)).
+send_response(CmdId, Status, SeqNum, ParamList, Socket, Log) ->
+    send_pdu(Socket, operation:new(CmdId, Status, SeqNum, ParamList), Log).
 
 
 %% @spec send_pdu(Socket, Pdu) -> ok | {error, Reason}
@@ -2213,12 +2252,12 @@ send_response(CmdId, Status, SeqNum, ParamList, Socket) ->
 %%
 %% @doc Send the PDU <tt>Pdu</tt> over a <tt>Socket</tt>.
 %% @end
-send_pdu(Socket, Pdu) ->
+send_pdu(Socket, Pdu, Log) ->
     case operation:esme_pack(Pdu) of
         {ok, BinaryPdu} ->
             case gen_tcp:send(Socket, BinaryPdu) of
                 ok ->
-                    smpp_log:notify_self_operation(BinaryPdu);
+                    smpp_log:notify_self_operation(Log, BinaryPdu);
                 SendError ->
                     Details = [{socket, Socket}, 
                                {pdu, binary:to_hexlist(BinaryPdu)}],
@@ -2243,13 +2282,13 @@ send_pdu(Socket, Pdu) ->
 %%
 %% <p>If the <tt>Socket</tt> is closed a failure is reported.</p>
 %% @end
-wait_recv(FsmRef, Socket, Buffer) ->
+wait_recv(FsmRef, Socket, Buffer, Log) ->
     Timestamp = now(),
     case gen_tcp:recv(Socket, 0) of
         {ok, Input} ->
             L = my_calendar:time_since(Timestamp),
-            B = handle_input(FsmRef, concat_binary([Buffer, Input]), L, 1),
-            recv_loop(FsmRef, Socket, B);
+            B = handle_input(FsmRef, concat_binary([Buffer, Input]), L, 1, Log),
+            recv_loop(FsmRef, Socket, B, Log);
         Error ->
             gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
@@ -2258,13 +2297,13 @@ wait_recv(FsmRef, Socket, Buffer) ->
 %%
 %% @see wait_recv/2
 %% @end
-recv_loop(FsmRef, Socket, Buffer) ->
+recv_loop(FsmRef, Socket, Buffer, Log) ->
     case gen_tcp:recv(Socket, 0, 0) of
         {ok, Input} ->                    % Some input waiting already 
-            B = handle_input(FsmRef, concat_binary([Buffer, Input]), 0, 1),
-            recv_loop(FsmRef, Socket, B);
+            B = handle_input(FsmRef, concat_binary([Buffer, Input]), 0, 1, Log),
+            recv_loop(FsmRef, Socket, B, Log);
         {error, timeout} ->               % No data inmediately available
-            wait_recv(FsmRef, Socket, Buffer);
+            wait_recv(FsmRef, Socket, Buffer, Log);
         Error ->
             gen_fsm:send_all_state_event(FsmRef, {recv_error, Error})
     end.
@@ -2274,7 +2313,7 @@ recv_loop(FsmRef, Socket, Buffer) ->
 %%
 %% <p><tt>N</tt> counts the PDUs in Buffer.</p>
 %% @end
-handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
+handle_input(FsmRef, <<CommandLength:32, Rest/binary>>=Buffer, Lapse, N, Log) ->
     Now = now(), % PDU received.  PDU handling starts now!
     Len = CommandLength - 4,
     case Rest of
@@ -2282,7 +2321,7 @@ handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
             BinaryPdu = <<CommandLength:32, PduRest/binary>>,
             case catch operation:esme_unpack(BinaryPdu) of
                 {ok, Pdu} ->
-                    smpp_log:notify_peer_operation(BinaryPdu),
+                    smpp_log:notify_peer_operation(Log, BinaryPdu),
                     T = Lapse/N,
                     gen_fsm:send_all_state_event(FsmRef, {input, Pdu, T, Now});
                 {error, CmdId, Status, SeqNum} = Event ->
@@ -2299,11 +2338,11 @@ handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
                     gen_fsm:send_all_state_event(FsmRef, Event)
             end,
             % The buffer may carry more than one SMPP PDU.
-            handle_input(FsmRef, NextPdus, Lapse, N + 1);
+            handle_input(FsmRef, NextPdus, Lapse, N + 1, Log);
         _IncompletePdu ->
             Buffer
     end;
-handle_input(_FsmRef, Buffer, _Lapse, _N) ->
+handle_input(_FsmRef, Buffer, _Lapse, _N, _Log) ->
     Buffer.
 
 
@@ -2337,3 +2376,4 @@ cancel_timer(undefined) ->
     false;
 cancel_timer(Ref) ->
     gen_fsm:cancel_timer(Ref).
+

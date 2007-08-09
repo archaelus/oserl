@@ -151,6 +151,16 @@
 %%% predicate sends to the <i>error_logger</i> only those PDU responses with 
 %%% an error code other than 0.</p>
 %%%
+%%% <h2>Changes 1.3 -&gt; 1.4</h2>
+%%%
+%%% [11 Jul 2007]
+%%%
+%%% <ul>
+%%%   <li>Add name to disk_log.  Having a name let us starting several ESMEs
+%%%      in the same node, each ESME with a different disk_log.
+%%%   </li>
+%%%   <li>Use proplists module.</li>
+%%% </ul>
 %%%
 %%% @copyright 2005 Enrique Marcote Peña
 %%% @author Enrique Marcote Peña <mpquique_at_users.sourceforge.net>
@@ -172,18 +182,18 @@
 %%-compile(export_all).
 -export([start/0, 
          start_link/0, 
-         add_disk_log_handler/1, 
-         add_error_logger_handler/1,
-         count/3,
-         delete_disk_log_handler/0, 
-         delete_error_logger_handler/0,
-         match/3,
+         add_disk_log_handler/2, 
+         add_error_logger_handler/2,
+         count/4,
+         delete_disk_log_handler/1, 
+         delete_error_logger_handler/1,
          match/4,
-         notify_peer_operation/1,
-         notify_self_operation/1,
-         swap_disk_log_handler/1,
-         swap_error_logger_handler/1,
-         stop/0]).
+         match/5,
+         notify_peer_operation/2,
+         notify_self_operation/2,
+         swap_disk_log_handler/2,
+         swap_error_logger_handler/2,
+         stop/1]).
 
 %%%-------------------------------------------------------------------
 %%% Internal exports
@@ -198,7 +208,6 @@
 %%%-------------------------------------------------------------------
 %%% Macros
 %%%-------------------------------------------------------------------
--define(SERVER, ?MODULE).
 -define(NAME, ?MODULE).    % Default disk_log name.
 
 % Default logging predicates.
@@ -250,11 +259,13 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state}
+%% %@spec {state, Name, Type, Pred, File, Size, Format}
 %%
 %% %@doc Representation of the server's state
 %%
 %% <dl>
+%%   <dt>Name: </dt><dd>Name of the disk_log.  Default value is 
+%%     <tt>smpp_log</tt>.</dd>
 %%   <dt>Type: </dt><dd><tt>disk_log</tt> or <tt>error_logger</tt>.</dd>
 %%   <dt>Pred: </dt><dd>the predicate binary PDUs must satisfy in order to
 %%     be logged.
@@ -266,7 +277,7 @@
 %%   <dt>Format: </dt><dd>function to format PDUs sent to the logs.</dd>
 %% </dl>
 %% %@end
--record(state, {type, pred, file, size, format}).
+-record(state, {name, type, pred, file, size, format}).
 
 %%%===================================================================
 %%% External functions
@@ -281,7 +292,7 @@
 %% @see gen_event:start/1
 %% @end
 start() ->
-    gen_event:start({local, ?SERVER}). 
+    gen_event:start(). 
 
 
 %% @spec start_link() -> Result
@@ -289,23 +300,29 @@ start() ->
 %%    Pid    = pid()
 %%    Error  = {already_started, Pid}
 %%
-%% @doc Starts the server.
+%% @doc Starts the server and links to it.
 %%
 %% @see gen_event:start_link/1
 %% @end
 start_link() ->
-    gen_event:start_link({local, ?SERVER}). 
+    gen_event:start_link(). 
 
 
-%% @spec add_disk_log_handler(Args) -> Result
+%% @spec add_disk_log_handler(Pid, Args) -> Result
+%%    Pid = pid()
 %%    Args = [Arg]
-%%    Arg = {file, File} | {pred, Pred} | {size, Size} | {format, Format}
+%%    Arg =  {name, Name} | 
+%%           {file, File} | 
+%%           {pred, Pred} | 
+%%           {size, Size} | 
+%%           {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
 %% @doc Adds the disk log event handler.
 %%
 %% <ul>
+%%   <li><b>Name:</b> disk log name.  Default is <i>smpp_log</i>.</li>
 %%   <li><b>File:</b> disk log file name.  Default is <i>smpp_log</i>.</li>
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.  Default predicate
@@ -327,12 +344,13 @@ start_link() ->
 %%
 %% @see gen_event:add_handler/3
 %% @end
-add_disk_log_handler(Args) ->
+add_disk_log_handler(Pid, Args) ->
     NewArgs = [{type, disk_log}|Args],
-    gen_event:add_handler(?SERVER, {?MODULE, disk_log}, NewArgs).
+    gen_event:add_handler(Pid, {?MODULE, disk_log}, NewArgs).
 
 
-%% @spec add_error_logger_handler(Args) -> Result
+%% @spec add_error_logger_handler(Pid, Args) -> Result
+%%    Pid = pid()
 %%    Args = [Arg]
 %%    Arg = {file, File} | {pred, Pred} | {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
@@ -356,26 +374,19 @@ add_disk_log_handler(Args) ->
 %%
 %% @see gen_event:add_handler/3
 %% @end
-add_error_logger_handler(Args) ->
+add_error_logger_handler(Pid, Args) ->
     NewArgs = [{type, error_logger}|Args],
-    gen_event:add_handler(?SERVER, {?MODULE, error_logger}, NewArgs).
+    gen_event:add_handler(Pid, {?MODULE, error_logger}, NewArgs).
 
 
-%% @spec count(Date, From, Pred) -> Result
+%% @spec count(Pid, Date, From, Pred) -> int()
+%%    Pid = pid()
 %%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
 %%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
 %%    FromTime = Time
 %%    ToTime = Time
 %%    From = any | self | peer
 %%    Pred = fun()
-%%    Continuation = start | cont()
-%%    Result = {Continuation2, List} |
-%%             {Continuation2, List, Badbytes} |
-%%             eof |
-%%             {error, Reason}
-%%    List = [{Now, BinaryPdu, From}]
-%%    Now = {MegaSecs, Secs, Microsecs}
-%%    BinaryPdu = binary()
 %%
 %% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
 %% terms.  This function counts logged PDUs matching the given 
@@ -392,27 +403,28 @@ add_error_logger_handler(Args) ->
 %% @see match/3
 %% @see match/4
 %% @end 
-count(Date, From, Pred) ->
-    count(Date, From, Pred, start, 0).
+count(Pid, Date, From, Pred) ->
+    count(Pid, Date, From, Pred, start, 0).
 
 %% @doc Auxiliary function for count/3
 %%
 %% @see count/3
 %% @end 
-count(Date, From, Pred, Continuation, Count) ->
-    case match(Date, From, Pred, Continuation) of
+count(Pid, Date, From, Pred, Continuation, Count) ->
+    case match(Pid, Date, From, Pred, Continuation) of
         eof ->
             {ok, Count};
         {Continuation2, List} ->
-            count(Date, From, Pred, Continuation2, Count + length(List));
+            count(Pid, Date, From, Pred, Continuation2, Count + length(List));
         {Continuation2, List, _Badbytes} ->
-            count(Date, From, Pred, Continuation2, Count + length(List));
+            count(Pid, Date, From, Pred, Continuation2, Count + length(List));
         Error ->
             Error
     end.
 
 
-%% @spec delete_disk_log_handler() -> Result
+%% @spec delete_disk_log_handler(Pid) -> Result
+%%    Pid = pid()
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -420,11 +432,12 @@ count(Date, From, Pred, Continuation, Count) ->
 %%
 %% @see gen_event:delete_handler/3
 %% @end
-delete_disk_log_handler() ->
-    gen_event:delete_handler(?SERVER, {?MODULE, disk_log}, stop).
+delete_disk_log_handler(Pid) ->
+    gen_event:delete_handler(Pid, {?MODULE, disk_log}, stop).
 
 
-%% @spec delete_error_logger_handler() -> Result
+%% @spec delete_error_logger_handler(Pid) -> Result
+%%    Pid = pid()
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
 %%
@@ -432,11 +445,12 @@ delete_disk_log_handler() ->
 %%
 %% @see gen_event:delete_handler/3
 %% @end
-delete_error_logger_handler() ->
-    gen_event:delete_handler(?SERVER, {?MODULE, error_logger}, stop).
+delete_error_logger_handler(Pid) ->
+    gen_event:delete_handler(Pid, {?MODULE, error_logger}, stop).
 
 
-%% @spec match(Date, From, Pred) -> Result
+%% @spec match(Pid, Date, From, Pred) -> Result
+%%    Pid = pid()
 %%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
 %%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
 %%    FromTime = Time
@@ -471,11 +485,12 @@ delete_error_logger_handler() ->
 %%
 %% @equiv match(Date, From, Pred, start)
 %% @end 
-match(Date, From, Pred) ->
-    match(Date, From, Pred, start).
+match(Pid, Date, From, Pred) ->
+    match(Pid, Date, From, Pred, start).
 
 
-%% @spec match(Date, From, Pred, Continuation) -> Result
+%% @spec match(Pid, Date, From, Pred, Continuation) -> Result
+%%    Pid = pid()
 %%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
 %%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
 %%    FromTime = Time
@@ -509,57 +524,36 @@ match(Date, From, Pred) ->
 %%
 %% @see disk_log:chunk/2
 %% @end 
-match(Date, From, Pred, Continuation) ->
-    F = fun({_, _, F}) when From /= any, From /= F ->
-                false;
-           ({_, P, _}) when Date == any ->
-                Pred(P);
-           ({N, P, _}) ->
-                T = calendar:now_to_local_time(N),
-                case Date of
-                    {from, T1} when T >= T1 ->
-                        Pred(P);
-                    {until, T1} when T =< T1 ->
-                        Pred(P);
-                    {lapse, T1, T2} when T >= T1, T =< T2 ->
-                        Pred(P);
-                    _Otherwise ->
-                        false
-                end
-        end,
-    case disk_log:chunk(?NAME, Continuation) of
-        {Continuation2, List} ->
-            {Continuation2, lists:filter(F, List)};
-        {Continuation2, List, Badbytes} ->
-            {Continuation2, lists:filter(F, List), Badbytes};
-        Error ->
-            Error
-    end.
+match(Pid, Date, From, Pred, Continuation) ->
+    Request = {match, Date, From, Pred, Continuation},
+    gen_event:call(Pid, {?MODULE, disk_log}, Request).
 
-
-%% @spec notify_peer_operation(Pdu) -> ok
+%% @spec notify_peer_operation(Pid, Pdu) -> ok
+%%    Pid = pid()
 %%    Pdu = binary()
 %%
 %% @doc Notifies peer SMPP operations to the log.
 %%
-%% @equiv gen_event:notify(SERVER, {peer, Pdu})
+%% @equiv gen_event:notify(Pid, {peer, Pdu})
 %% @end
-notify_peer_operation(Pdu) ->
-    gen_event:notify(?SERVER, {peer, Pdu}).
+notify_peer_operation(Pid, Pdu) ->
+    gen_event:notify(Pid, {peer, Pdu}).
 
 
-%% @spec notify_self_operation(Pdu) -> ok
+%% @spec notify_self_operation(Pid, Pdu) -> ok
+%%    Pid = pid()
 %%    Pdu = binary()
 %%
 %% @doc Notifies self SMPP operations to the log.
 %%
-%% @equiv gen_event:notify(SERVER, {self, Pdu})
+%% @equiv gen_event:notify(Pid, {self, Pdu})
 %% @end
-notify_self_operation(Pdu) ->
-    gen_event:notify(?SERVER, {self, Pdu}).
+notify_self_operation(Pid, Pdu) ->
+    gen_event:notify(Pid, {self, Pdu}).
 
 
-%% @spec swap_disk_log_handler(Args) -> Result
+%% @spec swap_disk_log_handler(Pid, Args) -> Result
+%%    Pid = pid()
 %%    Args = [Arg]
 %%    Arg = {file, File} | {pred, Pred} | {size, Size}
 %%    Result = ok | {'EXIT', Reason} | term()
@@ -586,13 +580,14 @@ notify_self_operation(Pdu) ->
 %%
 %% @see gen_event:swap_handler/3
 %% @end
-swap_disk_log_handler(Args) ->
+swap_disk_log_handler(Pid, Args) ->
     Handler = {?MODULE, disk_log},
     NewArgs = [{type, disk_log}|Args],
-    gen_event:swap_handler(?SERVER, {Handler,swap_handler}, {Handler,NewArgs}).
+    gen_event:swap_handler(Pid, {Handler,swap_handler}, {Handler,NewArgs}).
 
 
-%% @spec swap_error_logger_handler(Args) -> Result
+%% @spec swap_error_logger_handler(Pid, Args) -> Result
+%%    Pid = pid()
 %%    Args = [Arg]
 %%    Arg = {file, File} | {pred, Pred} | {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
@@ -619,23 +614,19 @@ swap_disk_log_handler(Args) ->
 %%
 %% @see gen_event:swap_handler/3
 %% @end
-swap_error_logger_handler(Args) ->
+swap_error_logger_handler(Pid, Args) ->
     Handler = {?MODULE, error_logger},
     NewArgs = [{type, error_logger}|Args],
-    gen_event:swap_handler(?SERVER, {Handler,swap_handler}, {Handler,NewArgs}).
+    gen_event:swap_handler(Pid, {Handler,swap_handler}, {Handler,NewArgs}).
 
 
-%% @spec stop() -> Result
-%%    Result = {ok, Pid} | {error, Error}
+%% @spec stop(Pid) -> ok
 %%    Pid    = pid()
-%%    Error  = {already_started, Pid}
 %%
-%% @doc Starts the server.
-%%
-%% @see gen_event:start/1
+%% @doc Stops the smpp_log event manager with the given <tt>Pid</tt>.
 %% @end
-stop() ->
-    gen_event:stop(?SERVER). 
+stop(Pid) ->
+    gen_event:stop(Pid). 
 
 %%%===================================================================
 %%% Server functions
@@ -649,7 +640,7 @@ stop() ->
 init({NewArgs, OldArgs}) ->
     init(merge_args(NewArgs, OldArgs));
 init(Args) ->
-    case get_arg(type, Args, disk_log) of
+    case proplists:get_value(type, Args, disk_log) of
         disk_log ->
             init_disk_log(Args);
         error_logger ->
@@ -671,18 +662,18 @@ init(Args) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_event({From, IoList}, State) when list(IoList) ->
-    handle_event({From, concat_binary(IoList)}, State);
-handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
+handle_event({From, IoList}, S) when list(IoList) ->
+    handle_event({From, concat_binary(IoList)}, S);
+handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = S) ->
     case catch P(BinaryPdu) of
         true when T == disk_log ->
-            disk_log:alog(?NAME, {now(), F(BinaryPdu), From});
+            disk_log:alog(S#state.name, {now(), F(BinaryPdu), From});
         true when T == error_logger ->
             report:info(?MODULE, {smpp_operation, From}, F(BinaryPdu));
         _Otherwise ->
             ok
     end,
-    {ok, State}.
+    {ok, S}.
 
 
 %% @spec handle_call(Request, State) -> Result
@@ -700,9 +691,36 @@ handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = State) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_call(Request, State) ->
-    report:error(?MODULE, unexpected_call, Request, State),
-    {ok, ok, State}.
+handle_call({match, Date, From, Pred, Continuation}, S) ->
+    F = fun({_, _, F}) when From /= any, From /= F ->
+                false;
+           ({_, P, _}) when Date == any ->
+                Pred(P);
+           ({N, P, _}) ->
+                T = calendar:now_to_local_time(N),
+                case Date of
+                    {from, T1} when T >= T1 ->
+                        Pred(P);
+                    {until, T1} when T =< T1 ->
+                        Pred(P);
+                    {lapse, T1, T2} when T >= T1, T =< T2 ->
+                        Pred(P);
+                    _Otherwise ->
+                        false
+                end
+        end,
+    R = case disk_log:chunk(S#state.name, Continuation) of
+            {Continuation2, List} ->
+                {Continuation2, lists:filter(F, List)};
+            {Continuation2, List, Badbytes} ->
+                {Continuation2, lists:filter(F, List), Badbytes};
+            Error ->
+                Error
+        end,
+    {ok, R, S};
+handle_call(Request, S) ->
+    report:error(?MODULE, unexpected_call, Request, S),
+    {ok, ok, S}.
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = term()
@@ -718,9 +736,9 @@ handle_call(Request, State) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_info(Info, State) ->
-    report:error(?MODULE, unexpected_info, Info, State),
-    {ok, State}.
+handle_info(Info, S) ->
+    report:error(?MODULE, unexpected_info, Info, S),
+    {ok, S}.
 
 %% @spec terminate(Arg, State) -> ok
 %%    Arg    = Args | {stop, Reason} | stop | remove_handler |
@@ -733,7 +751,7 @@ handle_info(Info, State) ->
 %% <p>Return value is ignored by the server.</p>
 %% @end
 terminate(Reason, #state{type = disk_log} = S) ->
-    Result = disk_log:close(?NAME),
+    Result = disk_log:close(S#state.name),
     Args = setup_args(S),
     report:info(smpp_log, terminate, [{reason,Reason}, {result,Result}|Args]),
     Args;
@@ -773,14 +791,19 @@ code_change(_OldVsn, State, _Extra) ->
 %% @see init_error_logger/1
 %% @end 
 init_disk_log(Args) ->
-    Pred = get_arg(pred, Args, ?DISK_LOG_PRED),
-    File = get_arg(file, Args, atom_to_list(?NAME)),
-    Size = get_arg(size, Args, ?SIZE),
-    Format = get_arg(format, Args, ?DISK_LOG_FORMAT),
-    Result = disk_log:open([{name,?NAME},{file,File},{type,wrap},{size,Size}]),
+    Name = proplists:get_value(name, Args, ?NAME),
+    Pred = proplists:get_value(pred, Args, ?DISK_LOG_PRED),
+    File = proplists:get_value(file, Args, atom_to_list(?NAME)),
+    Size = proplists:get_value(size, Args, ?SIZE),
+    Format = proplists:get_value(format, Args, ?DISK_LOG_FORMAT),
+    Result = disk_log:open([{name,Name},{file,File},{type,wrap},{size,Size}]),
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
-    {ok,#state{type=disk_log, pred=Pred, file=File, size=Size, format=Format}}.
-
+    {ok,#state{name = Name, 
+               type = disk_log, 
+               pred = Pred, 
+               file = File, 
+               size = Size, 
+               format = Format}}.
 
 %% @spec init_error_logger(Args) -> {ok, State}
 %%    Args = term()
@@ -792,9 +815,9 @@ init_disk_log(Args) ->
 %% @see init_disk_log/1
 %% @end 
 init_error_logger(Args) ->
-    Pred = get_arg(pred, Args, ?ERROR_LOGGER_PRED),
-    File = get_arg(file, Args, undefined),
-    Format = get_arg(format, Args, ?ERROR_LOGGER_FORMAT),
+    Pred = proplists:get_value(pred, Args, ?ERROR_LOGGER_PRED),
+    File = proplists:get_value(file, Args, undefined),
+    Format = proplists:get_value(format, Args, ?ERROR_LOGGER_FORMAT),
     Result = case error_logger:logfile(filename) of
                  {error, _What} when File /= undefined ->
                      error_logger:logfile({open, File});
@@ -810,25 +833,6 @@ init_error_logger(Args) ->
              end,
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
     {ok, #state{type=error_logger, pred=Pred, file=File, format=Format}}.
-
-
-%% @spec get_arg(Key, List, Default) -> Value
-%%    Key = term()
-%%    List = [{Key, Value}]
-%%    Value = term()
-%%    Default = term()
-%%
-%% @doc Gets the <tt>Value</tt> for a given <tt>Key</tt>, if not found
-%% <tt>Default</tt> is returned.
-%% @end 
-get_arg(Key, List, Default) ->
-    case lists:keysearch(Key, 1, List) of
-        {value, {_Key, Val}} -> 
-            Val;
-        _ -> 
-            Default
-    end.
-
 
 %% @spec setup_args(State) -> Args
 %%    State = state()

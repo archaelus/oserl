@@ -465,10 +465,13 @@
          call/2, 
          call/3, 
          cast/2, 
-         close_disk_log/0,
-         close_error_logger/0,
-         open_disk_log/1,
-         open_error_logger/1,
+         close_disk_log/1,
+         close_error_logger/1,
+         count/4,
+         match/4,
+         match/5,
+         open_disk_log/2,
+         open_error_logger/2,
          reply/2]).
 
 %%%-------------------------------------------------------------------
@@ -519,21 +522,20 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(CONNECT_TIME, 30000).
--define(LISTEN_OPTIONS, 
-        [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
--define(CONNECT_OPTIONS, 
-        [binary, {packet, 0}, {active, false}]).
+-define(CONNECT_OPTS, [binary, {packet, 0}, {active, false}]).
+-define(LISTEN_OPTS, [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
 
 -define(DECR(X), if is_integer(X) -> X - 1; true -> X end).
 
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, Mod, ModState, LSocket, Timers}
-%%    Mod      = atom()
+%% %@spec {state, Mod, ModState, LSocket, Timers, Log}
+%%    Mod = atom()
 %%    ModState = atom()
-%%    LSocket  = socket()
-%%    Timers   = #timers{}
+%%    LSocket = socket()
+%%    Timers = #timers{}
+%%    Log = pid()
 %%
 %% %@doc Representation of the server's state.
 %%
@@ -542,9 +544,10 @@
 %%   <dt>ModState: </dt><dd>Callback module private state.</dd>
 %%   <dt>LSocket: </dt><dd>Listener socket.</dd>
 %%   <dt>Timers: </dt><dd>SMPP timers for accepted session.</dd>
+%%   <dt>Log: </dt><dd>Reference of the SMPP log event manager.</dd>
 %% </dl>
 %% %@end
--record(state, {mod, mod_state, lsocket = closed, timers}).
+-record(state, {mod, mod_state, lsocket = closed, timers, log}).
 
 %%%===================================================================
 %%% Behaviour functions
@@ -754,25 +757,133 @@ call(ServerRef, Request, Timeout) ->
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
-%% @spec close_disk_log() -> ok
+%% @spec close_disk_log(ServerRef) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
 %%
 %% @doc Closes the ESME disk log.
 %%
 %% @see smpp_log:delete_disk_log_handler/0
 %% @end 
-close_disk_log() ->
-    smpp_log:delete_disk_log_handler().
+close_disk_log(ServerRef) ->
+    gen_server:cast(ServerRef, close_disk_log).
 
-%% @spec close_error_logger() -> ok
+%% @spec close_error_logger(ServerRef) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
 %%
 %% @doc Closes the ESME error logger.
 %%
 %% @see smpp_log:delete_error_logger_handler/0
 %% @end 
-close_error_logger() ->
-    smpp_log:delete_error_logger_handler().
+close_error_logger(ServerRef) ->
+    gen_server:cast(ServerRef, close_error_logger).
 
-%% @spec open_disk_log(Args) -> ok
+%% @spec count(ServerRef, Date, From, Pred) -> int()
+%%    ServerRef = pid()
+%%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
+%%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
+%%    FromTime = Time
+%%    ToTime = Time
+%%    From = any | self | peer
+%%    Pred = fun()
+%%
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
+%% terms.  This function counts logged PDUs matching the given 
+%% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
+%%
+%% <ul>
+%%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
+%%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
+%% @end 
+count(ServerRef, Date, From, Pred) ->
+    gen_server:call(ServerRef, {count, Date, From, Pred}, infinity).
+
+%% @spec match(ServerRef, Date, From, Pred) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
+%%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
+%%    FromTime = Time
+%%    ToTime = Time
+%%    From = any | self | peer
+%%    Pred = fun()
+%%    Continuation = start | cont()
+%%    Result = {Continuation2, List} |
+%%             {Continuation2, List, Badbytes} |
+%%             eof |
+%%             {error, Reason}
+%%    List = [{Now, BinaryPdu, From}]
+%%    Now = {MegaSecs, Secs, Microsecs}
+%%    BinaryPdu = binary()
+%%
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
+%% terms.  This function gets the list of logged PDUs matching the given 
+%% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
+%%
+%% <ul>
+%%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
+%%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
+%% 
+%% <p>This function internally calls <a href="#match-5">match/5</a> with 
+%% <tt>start</tt> as the <tt>Continuation</tt> parameters.</p>
+%%
+%% @see match/4
+%%
+%% @equiv match(ServerRef, Date, From, Pred, start)
+%% @end 
+match(ServerRef, Date, From, Pred) ->
+    match(ServerRef, Date, From, Pred, start).
+
+%% @spec match(ServerRef, Date, From, Pred, Continuation) -> Result
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
+%%    Date = any | {from, Time} | {until, Time} | {lapse, FromTime, ToTime}
+%%    Time = {{Year, Month, Day},{Hour, Minutes, Seconds}}
+%%    FromTime = Time
+%%    ToTime = Time
+%%    From = any | self | peer
+%%    Pred = fun()
+%%    Continuation = start | cont()
+%%    Result = {Continuation2, List} |
+%%             {Continuation2, List, Badbytes} |
+%%             eof |
+%%             {error, Reason}
+%%    List = [{Now, BinaryPdu, From}]
+%%    Now = {MegaSecs, Secs, Microsecs}
+%%    BinaryPdu = binary()
+%%
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
+%% terms.  This function gets the list of logged PDUs matching the given 
+%% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
+%%
+%% <ul>
+%%   <li><b>Date:</b> <tt>any</tt>, <tt>{from, Time}</tt>, <tt>{until, Time}
+%%     </tt> or <tt>{lapse, FromTime,ToTime}</tt>.</li>
+%%   <li><b>From:</b> <tt>self</tt>, <tt>peer</tt> or <tt>any</tt>.</li>
+%%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
+%%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
+%% </ul>
+%% @end 
+match(ServerRef, Date, From, Pred, Cont) ->
+    gen_server:call(ServerRef, {match, Date, From, Pred, Cont}, infinity).
+
+%% @spec open_disk_log(ServerRef, Args) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
 %%    Args = term()
 %%    File = string()
 %%    Pred = fun()
@@ -784,10 +895,13 @@ close_error_logger() ->
 %%
 %% @see smpp_log:add_disk_log_handler/1
 %% @end 
-open_disk_log(Args) ->
-    smpp_log:add_disk_log_handler(Args).
+open_disk_log(ServerRef, Args) ->
+    gen_server:cast(ServerRef, {open_disk_log, Args}).
 
-%% @spec open_error_logger(Args) -> ok
+%% @spec open_error_logger(ServerRef, Args) -> ok
+%%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
+%%    Name = atom()
+%%    Node = atom()
 %%    Args = term()
 %%    Pred = fun()
 %%    BinaryPdu = binary()
@@ -798,8 +912,8 @@ open_disk_log(Args) ->
 %%
 %% @see smpp_log:add_error_logger_handler/1
 %% @end 
-open_error_logger(Args) ->
-    smpp_log:add_error_logger_handler(Args).
+open_error_logger(ServerRef, Args) ->
+    gen_server:cast(ServerRef, {open_error_logger, Args}).
 
 %% @spec reply(Client, Reply) -> true
 %%    Client = term()
@@ -853,18 +967,8 @@ session_start(EsmeRef, Address, Port) ->
 %% @see gen_esme_session:start/3
 %% @end 
 session_start(EsmeRef, Address, Port, Timers) ->
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
-        {ok, Socket} ->
-            case gen_esme_session:start(EsmeRef, ?MODULE, Socket, Timers) of
-                {ok, Session} ->
-                    gen_tcp:controlling_process(Socket, Session),
-                    {ok, Session};
-                SessionError ->
-                    SessionError
-            end;
-        ConnectError ->
-            ConnectError
-    end.
+    Request = {session, start, Address, Port, Timers},
+    gen_server:call(EsmeRef, Request, infinity).
 
 %% @spec session_start_link(EsmeRef, Address, Port) -> Result
 %%    EsmeRef = pid() | atom()
@@ -904,18 +1008,8 @@ session_start_link(EsmeRef, Address, Port) ->
 %% @see gen_esme_session:start_link/3
 %% @end 
 session_start_link(EsmeRef, Address, Port, Timers) ->
-    case gen_tcp:connect(Address, Port, ?CONNECT_OPTIONS, ?CONNECT_TIME) of
-        {ok, Socket} ->
-            case gen_esme_session:start_link(EsmeRef,?MODULE,Socket,Timers) of
-                {ok, Session} ->
-                    gen_tcp:controlling_process(Socket, Session),
-                    {ok, Session};
-                SessionError ->
-                    SessionError
-            end;
-        ConnectError ->
-            ConnectError
-    end.
+    Request = {session, start_link, Address, Port, Timers},
+    gen_server:call(EsmeRef, Request, infinity).
 
 %% @spec session_stop(Session) -> ok
 %%    Session = pid()
@@ -1244,8 +1338,8 @@ unbind(Session) ->
 %% <p>Initiates the server.</p>
 %% @end
 init({Mod, Args}) ->
-    smpp_log:start_link(),
-    pack(Mod:init(Args), #state{mod = Mod}).
+    {ok, Log} = smpp_log:start_link(),
+    pack(Mod:init(Args), #state{mod = Mod, log = Log}).
 
 %% @spec handle_call(Request, From, State) -> Result
 %%    Request   = term()
@@ -1278,7 +1372,7 @@ init({Mod, Args}) ->
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
 handle_call({listen_start, Port, Count, Timers}, _From, S) ->
-    case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
+    case gen_tcp:listen(Port, ?LISTEN_OPTS) of
         {ok, LSocket} ->
             Self = self(),
             proc_lib:spawn_link(fun() -> listener(Self, LSocket, Count) end),
@@ -1287,7 +1381,8 @@ handle_call({listen_start, Port, Count, Timers}, _From, S) ->
             {reply, false, S}
     end;
 handle_call({accept, Socket}, _From, S) ->
-    {reply, gen_esme_session:start(?MODULE, Socket, S#state.timers), S};
+    R = gen_esme_session:start(?MODULE, Socket, S#state.timers, S#state.log),
+    {reply, R, S};
 handle_call({Bind, _Session, _Pdu} = R, From, S) when Bind == bind_transceiver;
                                                       Bind == bind_transmitter;
                                                       Bind == bind_receiver ->
@@ -1295,7 +1390,34 @@ handle_call({Bind, _Session, _Pdu} = R, From, S) when Bind == bind_transceiver;
 handle_call({unbind, _Session, _Pdu} = R, From, S) ->
     pack((S#state.mod):handle_unbind(R, From, S#state.mod_state), S);
 handle_call({_CmdName, _Session, _Pdu} = R, From, S) ->
-    pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S).
+    pack((S#state.mod):handle_operation(R, From, S#state.mod_state), S);
+handle_call({session, StartFun, Addr, Port, Timers}, From, S) ->
+    Self = self(),
+    proc_lib:spawn_link(
+      fun() ->
+              case gen_tcp:connect(Addr, Port, ?CONNECT_OPTS, ?CONNECT_TIME) of
+                  {ok, Socket} ->
+                      A = [{socket,Socket}, {timers,Timers}, {log,S#state.log}],
+                      case gen_esme_session:StartFun(Self, ?MODULE, A) of
+                          {ok, Session} ->
+                              gen_tcp:controlling_process(Socket, Session),
+                              gen_server:reply(From, {ok, Session});
+                          SessionError ->
+                              gen_server:reply(From, SessionError)
+                      end;
+                  ConnectError ->
+                      gen_server:reply(From, ConnectError)
+              end
+      end),
+    {noreply, S};
+handle_call({count, Date, From, Pred}, _From, S) ->
+    Reply = smpp_log:count(S#state.log, Date, From, Pred),
+    {reply, Reply, S};
+handle_call({match, Date, From, Pred, Continuation}, _From, S) ->
+    Reply = smpp_log:match(S#state.log, Date, From, Pred, Continuation),
+    {reply, Reply, S}.
+
+
 
 %% @spec handle_cast(Request, State) -> Result
 %%    Request  = term()
@@ -1334,7 +1456,19 @@ handle_cast(listen_error, S) ->
     pack((NewS#state.mod):handle_listen_error(NewS#state.mod_state), NewS);
 handle_cast(listen_stop, S) ->
     gen_tcp:close(S#state.lsocket),
-    {noreply, S#state{lsocket = closed}}.
+    {noreply, S#state{lsocket = closed}};
+handle_cast(close_disk_log, S) ->
+    smpp_log:delete_disk_log_handler(S#state.log),
+    {noreply, S};
+handle_cast(close_error_logger, S) ->
+    smpp_log:delete_error_logger_handler(S#state.log),
+    {noreply, S};
+handle_cast({open_disk_log, Args}, S) ->
+    smpp_log:add_disk_log_handler(S#state.log, Args),
+    {noreply, S};
+handle_cast({open_error_logger, Args}, S) ->
+    smpp_log:add_error_logger_handler(S#state.log, Args),
+    {noreply, S}.
 
 %% @spec handle_info(Info, State) -> Result
 %%    Info     = timeout | term()
@@ -1372,7 +1506,7 @@ handle_info(Info, S) ->
 terminate(R, S) ->
     report:info(?MODULE, terminate, [{reason, R}, {pid, self()}]),
     pack((S#state.mod):terminate(R, S#state.mod_state), S),
-    smpp_log:stop().
+    smpp_log:stop(S#state.log).
 
 
 %% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
@@ -1505,7 +1639,7 @@ pack(Other, _S) ->
 listener(ServerRef, LSocket, Count) ->
     case gen_tcp:accept(LSocket) of
         {ok, Socket} ->
-            inet:setopts(Socket, ?CONNECT_OPTIONS),
+            inet:setopts(Socket, ?CONNECT_OPTS),
             case gen_server:call(ServerRef, {accept, Socket}, infinity) of
                 {ok, Pid} ->
                     gen_tcp:controlling_process(Socket, Pid),

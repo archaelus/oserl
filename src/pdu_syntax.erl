@@ -84,7 +84,7 @@
 %%%   <li>unpack_stds and unpack_tlvs, there is no need to reverse the list 
 %%%       of parameters. The list of parameters will be converted to a dictionary.
 %%%   </li>
-%%%
+%%% </ul>
 %%% [5 Aug 2005 Anders Nygren]
 %%%
 %%% <ul>
@@ -337,7 +337,7 @@ unpack(_BinaryPdu, _PduType) ->
 %%    StdsTypes  = [standard()]
 %%    TlvsTypes  = [tlv()]
 %%    Result     = {ok, BinaryBody} | {error, Error}
-%%    BinaryBody = IOlist()
+%%    BinaryBody = IOlist::list()
 %%    Error      = int()
 %% 
 %% @doc Packs the body's parameter dictionary of a PDU according to their

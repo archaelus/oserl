@@ -901,7 +901,7 @@ start(EsmeRef, Mod, Args) ->
 start(Name, EsmeRef, Mod, Args) ->
     gen_fsm:start(Name, ?MODULE, [EsmeRef, Mod, Args],[]).
 
-%% @spec start_link(EsmeRef, Mod, Socket, Timers) -> Result
+%% @spec start_link(EsmeRef, Mod, Args) -> Result
 %%    EsmeRef = pid() | atom()
 %%    Mod = atom()
 %%    Args = [Arg]
@@ -929,7 +929,7 @@ start(Name, EsmeRef, Mod, Args) ->
 start_link(EsmeRef, Mod, Args) ->
     gen_fsm:start_link(?MODULE, [EsmeRef, Mod, Args], []).
 
-%% @spec start_link(Name, EsmeRef, Mod, Socket, Timers) -> Result
+%% @spec start_link(Name, EsmeRef, Mod, Args) -> Result
 %%    Name = {local, Atom} | {global, Atom}
 %%    Atom = atom()
 %%    EsmeRef = pid() | atom()
@@ -2246,9 +2246,10 @@ send_response(CmdId, Status, SeqNum, ParamList, Socket, Log) ->
     send_pdu(Socket, operation:new(CmdId, Status, SeqNum, ParamList), Log).
 
 
-%% @spec send_pdu(Socket, Pdu) -> ok | {error, Reason}
+%% @spec send_pdu(Socket, Pdu, Log) -> ok | {error, Reason}
 %%    Socket = socket()
 %%    Pdu  = pdu()
+%%    Log = pid()
 %%
 %% @doc Send the PDU <tt>Pdu</tt> over a <tt>Socket</tt>.
 %% @end
@@ -2271,10 +2272,11 @@ send_pdu(Socket, Pdu, Log) ->
     end.
 
 
-%% @spec wait_recv(FsmRef, Socket, Buffer) -> void()
+%% @spec wait_recv(FsmRef, Socket, Buffer, Log) -> void()
 %%    FsmRef = pid()
 %%    Socket = socket()
 %%    Buffer = binary()
+%%    Log = pid()
 %%
 %% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
 %% receive loop to get bulk input.  All data received on the same loop triggers

@@ -18,9 +18,9 @@ INSTALL_DATA = ${INSTALL} -m 644
 # System dependent paths
 # ----------------------------------------------------
 ### oserl use eDoc for documentation, to regenerate update paths as needed!
-EDOC_APP = /usr/local/lib/erlang/lib/edoc-0.6.9
-XMERL_APP = /usr/local/lib/erlang/lib/xmerl-1.0.5
-SYNTAX_TOOLS_APP = /usr/local/lib/erlang/lib/syntax_tools-1.5.0
+EDOC_APP = /Library/DarwinPorts/lib/erlang/lib/edoc-0.7.3
+XMERL_APP =  /Library/DarwinPorts/lib/erlang/lib/xmerl-1.1.4
+SYNTAX_TOOLS_APP = /Library/DarwinPorts/lib/erlang/lib/syntax_tools-1.5.0
 
 EDOC_PATHS = \
 	-pa $(EDOC_APP)/ebin -pa $(XMERL_APP)/ebin -pa $(SYNTAX_TOOLS_APP)/ebin

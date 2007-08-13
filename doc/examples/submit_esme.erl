@@ -57,7 +57,7 @@
 %%% Macros
 %%%-------------------------------------------------------------------
 -define(SERVER, ?MODULE).
--define(SMSC_ADDRESS, {192, 168, 1, 4}).
+-define(SMSC_ADDRESS, {127, 0, 0, 1}).
 -define(SMPP_PORT, ?DEFAULT_SMPP_PORT).
 -define(SYSTEM_ID, atom_to_list(?MODULE)).
 -define(PASSWORD, "secret").

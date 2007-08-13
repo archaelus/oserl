@@ -6,7 +6,7 @@ VSN = 1.3
 
 # FIXME These variables should be automatically set when compiling
 ERL = erl
-ERLC = erlc
+ERLC = erlc +debug_info
 #ETAGS = etags
 EMULATOR = beam
 RM = rm -f

@@ -1225,6 +1225,9 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
 handle_event({recv_error, _Error}, unbound, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [unbound]),
     {stop, normal, StateData#state{socket = closed}};
+handle_event({recv_error, {error, closed}}, State, StateData) when State == unbound; State == open ->
+%    io:format("Underlying connection closed while ~p~n", [unbound]),
+    {stop, normal, StateData#state{socket = closed}};
 handle_event({recv_error, _Error} = R, _StateName, StateData) ->
 %    io:format("Underlying connection closed while ~p~n", [StateName]),
     {stop, R, StateData#state{socket = closed}};

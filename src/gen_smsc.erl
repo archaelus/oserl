@@ -359,6 +359,7 @@
          start_link/3,
          start_link/4, 
          listen_start/1,
+         listen_start/2,
          listen_start/4,
          listen_stop/1,
          call/2, 
@@ -550,6 +551,8 @@ start_link(ServerName, Module, Args, Options) ->
 listen_start(ServerRef) -> 
     listen_start(ServerRef, ?DEFAULT_SMPP_PORT, infinity,?DEFAULT_SMPP_TIMERS).
 
+listen_start(ServerRef, Port) -> 
+    listen_start(ServerRef, Port, infinity, ?DEFAULT_SMPP_TIMERS).
 %% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
 %%    ServerRef = Name | {Name, Node} | {global, Name} | pid()
 %%    Name = atom()
@@ -874,7 +877,7 @@ init({Mod, Args}) ->
 %% @end
 handle_call({call, Request}, From, S) ->
     pack((S#state.mod):handle_call(Request, From, S#state.mod_state), S);
-handle_call({listen_start, Port, Count, Timers}, _From, S) ->
+handle_call({listen_start, Port, Count, Timers}, _From, S = #state{lsocket=closed}) ->
     case gen_tcp:listen(Port, ?LISTEN_OPTIONS) of
         {ok, LSocket} ->
             Self = self(),
@@ -883,6 +886,8 @@ handle_call({listen_start, Port, Count, Timers}, _From, S) ->
         _Error ->
             {reply, false, S}
     end;
+handle_call({listen_start, _Port, _Count, _Timers}, _From, S) ->
+    {reply, false, S};
 handle_call({accept, Socket}, _From, S) ->
 	{reply, gen_smsc_session:start(self(), ?MODULE, Socket, S#state.timers), S};
 handle_call({Bind, _Session, _Pdu, _IPAddr} = R, From, S) 

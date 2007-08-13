@@ -13,7 +13,7 @@ BASE_REL = /var/tmp/$(APPNAME)-$(VSN)
 # Targets
 # ----------------------------------------------------
 
-TARGETS= all docs clean realclean
+TARGETS= all doc clean realclean
 
 #These targets are not real files
 .PHONY: $(TARGETS) $(foreach target,$(TARGETS),$(addsuffix /$(target),$(SUB_DIRECTORIES))))

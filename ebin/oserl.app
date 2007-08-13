@@ -1,6 +1,6 @@
 {application, oserl,
     [{description, "Open SMPP Erlang Library"},
-     {vsn, "1.3"},
+     {vsn, "1.3-catalyst"},
      {id, "oserl"},
      {modules, [base_syntax, 
                 gen_esme, 

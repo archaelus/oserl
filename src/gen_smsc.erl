@@ -140,7 +140,7 @@
 %%%                  {bind_transceiver, Session, Pdu, IPAddr}</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
-%%%   <li><tt>IPAddr = {int(),int(),int(),int()}
+%%%   <li><tt>IPAddr = {int(),int(),int(),int()}</tt></li>
 %%%   <li><tt>From = term()</tt></li>
 %%%   <li><tt>State = term()</tt></li>
 %%%   <li><tt>Result = {reply, Reply, NewState}          |

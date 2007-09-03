@@ -1381,7 +1381,10 @@ handle_call({listen_start, Port, Count, Timers}, _From, S) ->
             {reply, false, S}
     end;
 handle_call({accept, Socket}, _From, S) ->
-    R = gen_esme_session:start(?MODULE, Socket, S#state.timers, S#state.log),
+    R = gen_esme_session:start(self(), ?MODULE,
+                               [{socket, Socket},
+                                {timers, S#state.timers},
+                                {log, S#state.log}]),
     {reply, R, S};
 handle_call({Bind, _Session, _Pdu} = R, From, S) when Bind == bind_transceiver;
                                                       Bind == bind_transmitter;

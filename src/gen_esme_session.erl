@@ -680,7 +680,8 @@
          handle_sync_event/4,
          handle_info/3,
          terminate/3,
-         code_change/4]).
+         code_change/4,
+         cancel_timer/1]).
 
 %%%-------------------------------------------------------------------
 %%% Macros

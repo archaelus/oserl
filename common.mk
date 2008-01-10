@@ -18,9 +18,27 @@ INSTALL_DATA = ${INSTALL} -m 644
 # System dependent paths
 # ----------------------------------------------------
 ### oserl use eDoc for documentation, to regenerate update paths as needed!
-EDOC_APP = /Library/DarwinPorts/lib/erlang/lib/edoc-0.7.3
-XMERL_APP =  /Library/DarwinPorts/lib/erlang/lib/xmerl-1.1.4
-SYNTAX_TOOLS_APP = /Library/DarwinPorts/lib/erlang/lib/syntax_tools-1.5.0
+ifneq ($(wildcard /usr/lib/erlang/lib/edoc*),)
+  EDOC_APP = $(wildcard /usr/lib/erlang/lib/edoc*) 
+else
+  ifneq ($(wildcard /Library/DarwinPorts/lib/erlang/lib/edoc*),)
+    EDOC_APP = $(wildcard /Library/DarwinPorts/lib/erlang/lib/edoc*)
+  endif
+endif
+ifneq ($(wildcard /usr/lib/erlang/lib/xmerl*),)
+  XMERL_APP = $(wildcard /usr/lib/erlang/lib/xmerl*)
+else
+  ifneq ($(wildcard /Library/DarwinPorts/lib/erlang/lib/xmerl*),)
+    XMERL_APP = $(wildcard /Library/DarwinPorts/lib/erlang/lib/xmerl*)
+  endif
+endif
+ifneq ($(wildcard /usr/lib/erlang/lib/syntax_tools*),)
+  SYNTAX_TOOLS_APP = $(wildcard /usr/lib/erlang/lib/syntax_tools*)
+else
+  ifneq ($(wildcard /Library/DarwinPorts/lib/erlang/lib/syntax_tools*),)
+    SYNTAX_TOOLS_APP = $(wildcard /Library/DarwinPorts/lib/erlang/lib/syntax_tools*)
+  endif
+endif
 
 EDOC_PATHS = \
 	-pa $(EDOC_APP)/ebin -pa $(XMERL_APP)/ebin -pa $(SYNTAX_TOOLS_APP)/ebin

@@ -18,7 +18,7 @@
 %%%
 %%% <p>A SMPP <tt>gen_event</tt> manager for SMPP PDU operation logging.</p>
 %%%
-%%% <p>This module provides two independent event handlers for SMPP PDU 
+%%% <p>This module provides two independent event handlers for SMPP PDU
 %%% logging:</p>
 %%%
 %%% <ul>
@@ -31,18 +31,18 @@
 %%% <p>These handlers may be added and swapped dynamically.  By defining the
 %%% appropriated logging predicate (see <a href="#add_disk_log-1">
 %%% add_disk_log/1</a> and <a href="#add_error_logger-1">add_error_logger/1</a>
-%%% for further details and default predicates) you can control which PDUs 
+%%% for further details and default predicates) you can control which PDUs
 %%% should be logged by each handler.</p>
 %%%
-%%% <p>The <i>disk_log</i> stores by default PDUs in binary format within 
+%%% <p>The <i>disk_log</i> stores by default PDUs in binary format within
 %%% tuples <tt>{Now,BinaryPdu,From}</tt>.  <tt>Now</tt> is the timestamp in the
-%%% format returned by the BIF <tt>now()</tt>.  <tt>BinaryPdu</tt> is the SMPP 
-%%% PDU in binary format and <tt>From</tt> indicates who issued the operation, 
+%%% format returned by the BIF <tt>now()</tt>.  <tt>BinaryPdu</tt> is the SMPP
+%%% PDU in binary format and <tt>From</tt> indicates who issued the operation,
 %%% <tt>self</tt> if the operation was issued by our SMPP entity, <tt>peer</tt>
 %%% in case the peer SMPP entity was the originator.</p>
 %%%
-%%% <p>The format of the term stored by the <i>disk_log</i> can be redefined 
-%%% using a custom <tt>Format</tt> predicated.  In such a case, PDUs are 
+%%% <p>The format of the term stored by the <i>disk_log</i> can be redefined
+%%% using a custom <tt>Format</tt> predicated.  In such a case, PDUs are
 %%% stored as <tt>{Now, Format(BinaryPdu), From}</tt>.</p>
 %%%
 %%% <p>In the same way, the format of the output dumped by the
@@ -51,7 +51,7 @@
 %%%
 %%% <p>This module provides also a set of functions for inspecting the
 %%% <i>disk_log</i>:  <a href="#count-3">count/3</a>, <a href="#match-3">
-%%% match/3</a> and <a href="#match-4">match/4</a>.  Again, by defining the 
+%%% match/3</a> and <a href="#match-4">match/4</a>.  Again, by defining the
 %%% search predicate, any set of PDUs is easily extracted.</p>
 %%%
 %%%
@@ -59,22 +59,22 @@
 %%%
 %%% <p>During <a href="gen_esme.html">gen_esme</a> and <a href="gen_smsc.html">
 %%% gen_esme</a> startup the <i>smpp_log</i> manager is started, although no
-%%% event handler is added at that point, thus no logging is done until a 
-%%% handler is explicitly added from the ESME/SMSC implementation by calling 
+%%% event handler is added at that point, thus no logging is done until a
+%%% handler is explicitly added from the ESME/SMSC implementation by calling
 %%% the functions <a href="#add_disk_log_handler-1">add_disk_log_handler/1</a>
 %%% and/or <a href="#add_error_logger_handler-1">add_error_logger_handler/1
 %%% </a>.</p>
 %%%
-%%% <p>Every time a PDU is packed at the session layer the function 
+%%% <p>Every time a PDU is packed at the session layer the function
 %%% <a href="#notify_self_operation-1">notify_self_operation/1</a> is
 %%% called.  The same applies before unpacking for the
 %%% <a href="#notify_peer_operation-1">notify_peer_operation/1</a> function.
 %%% If no log handler was added to the <i>smpp_log</i> manager, these calls
 %%% have no effect.</p>
 %%%
-%%% <p>The <i>error_logger</i> handler is very useful for debugging purposes.  
-%%% The logging predicate can be set accordingly to filter the type of 
-%%% information you need to inspect at runtime. The information sent to the 
+%%% <p>The <i>error_logger</i> handler is very useful for debugging purposes.
+%%% The logging predicate can be set accordingly to filter the type of
+%%% information you need to inspect at runtime. The information sent to the
 %%% <i>error_logger</i> can also be formatted at your own wish.</p>
 %%%
 %%% <p>The <i>disk_log</i> handler is suitable for PDU storage.</p>
@@ -85,7 +85,7 @@
 %%% <p>The <i>disk_log</i> was designed to store SMPP operations on disk.  By
 %%% default PDUs are efficiently stored in binary format.  Storage format can
 %%% be easily customizable.  It is also possible to define which set of PDUs
-%%% should be stored.  For example, to store only <i>submit_sm</i> and 
+%%% should be stored.  For example, to store only <i>submit_sm</i> and
 %%% <i>deliver_sm</i> PDUs on disk do:</p>
 %%%
 %%% <pre>
@@ -138,7 +138,7 @@
 %%% </pre>
 %%%
 %%% <p>By default the information sent to the error_logger is the complete PDU
-%%% parameters list, you could for instance send the PDU in hex format by 
+%%% parameters list, you could for instance send the PDU in hex format by
 %%% simply redefining the format function:</p>
 %%%
 %%% <pre>
@@ -146,9 +146,9 @@
 %%% smpp_log:swap_error_logger_handler([{format, Format}]),
 %%% </pre>
 %%%
-%%% <p>Once finished with the debugging you can delete or swap the 
+%%% <p>Once finished with the debugging you can delete or swap the
 %%% <i>error_logger</i> handler back to the defaults.  Default logging
-%%% predicate sends to the <i>error_logger</i> only those PDU responses with 
+%%% predicate sends to the <i>error_logger</i> only those PDU responses with
 %%% an error code other than 0.</p>
 %%%
 %%% <h2>Changes 1.3 -&gt; 1.4</h2>
@@ -180,12 +180,12 @@
 %%% External exports
 %%%-------------------------------------------------------------------
 %%-compile(export_all).
--export([start/0, 
-         start_link/0, 
-         add_disk_log_handler/2, 
+-export([start/0,
+         start_link/0,
+         add_disk_log_handler/2,
          add_error_logger_handler/2,
          count/4,
-         delete_disk_log_handler/1, 
+         delete_disk_log_handler/1,
          delete_error_logger_handler/1,
          match/4,
          match/5,
@@ -213,7 +213,7 @@
 % Default logging predicates.
 %
 % Logs every operation PDU other than an enquire_link or an enquire_link_resp.
--define(DISK_LOG_PRED, 
+-define(DISK_LOG_PRED,
         fun(BinaryPdu) ->
                 case pdu_syntax:command_id(BinaryPdu) of
                     ?COMMAND_ID_ENQUIRE_LINK ->
@@ -225,7 +225,7 @@
                 end
         end).
 % Logs operation PDU responses with an error command_status
--define(ERROR_LOGGER_PRED, 
+-define(ERROR_LOGGER_PRED,
         fun(BinaryPdu) ->
                 case pdu_syntax:command_status(BinaryPdu) of
                     0 ->
@@ -239,7 +239,7 @@
 -define(DISK_LOG_FORMAT, fun(BinaryPdu) -> BinaryPdu end).
 
 % Default error_logger format function
--define(ERROR_LOGGER_FORMAT, 
+-define(ERROR_LOGGER_FORMAT,
         fun(BinaryPdu) ->
                 case operation:unpack(BinaryPdu) of
                     {ok, PduDict} ->
@@ -264,7 +264,7 @@
 %% %@doc Representation of the server's state
 %%
 %% <dl>
-%%   <dt>Name: </dt><dd>Name of the disk_log.  Default value is 
+%%   <dt>Name: </dt><dd>Name of the disk_log.  Default value is
 %%     <tt>smpp_log</tt>.</dd>
 %%   <dt>Type: </dt><dd><tt>disk_log</tt> or <tt>error_logger</tt>.</dd>
 %%   <dt>Pred: </dt><dd>the predicate binary PDUs must satisfy in order to
@@ -292,7 +292,7 @@
 %% @see gen_event:start/1
 %% @end
 start() ->
-    gen_event:start(). 
+    gen_event:start().
 
 
 %% @spec start_link() -> Result
@@ -305,16 +305,16 @@ start() ->
 %% @see gen_event:start_link/1
 %% @end
 start_link() ->
-    gen_event:start_link(). 
+    gen_event:start_link().
 
 
 %% @spec add_disk_log_handler(Pid, Args) -> Result
 %%    Pid = pid()
 %%    Args = [Arg]
-%%    Arg =  {name, Name} | 
-%%           {file, File} | 
-%%           {pred, Pred} | 
-%%           {size, Size} | 
+%%    Arg =  {name, Name} |
+%%           {file, File} |
+%%           {pred, Pred} |
+%%           {size, Size} |
 %%           {format, Format}
 %%    Result = ok | {'EXIT', Reason} | term()
 %%    Reason = term()
@@ -329,15 +329,15 @@ start_link() ->
 %%     logs every PDU operation other than <i>enquire_link</i> and
 %%     <i>enquire_link_resp</i>.
 %%   </li>
-%%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the 
+%%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the
 %%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>.  The default size is
-%%     <tt>{10485760, 20}</tt> (10M x 20).  Assuming 256 bytes for each PDU.  
-%%     Individual log files of the wrap disk log can store up to 40960 PDUs 
-%%     for the default value.  Having 20 files on the wrap log, the total PDU 
+%%     <tt>{10485760, 20}</tt> (10M x 20).  Assuming 256 bytes for each PDU.
+%%     Individual log files of the wrap disk log can store up to 40960 PDUs
+%%     for the default value.  Having 20 files on the wrap log, the total PDU
 %%     capacity, before wrapping to the first log, is about 819200.
 %%   </li>
 %%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
-%%     the binary PDU as input and returns the term sent to the disk_log.  
+%%     the binary PDU as input and returns the term sent to the disk_log.
 %%     Default format function stores the binary PDU as is.
 %%   </li>
 %% </ul>
@@ -367,7 +367,7 @@ add_disk_log_handler(Pid, Args) ->
 %%     logs only response PDUs with a <i>command_status</i> other than 0x0.
 %%   </li>
 %%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
-%%     the binary PDU as input and returns the term sent to the error_logger.  
+%%     the binary PDU as input and returns the term sent to the error_logger.
 %%     Default format function shows the complete parameters list of the PDU.
 %%   </li>
 %% </ul>
@@ -388,8 +388,8 @@ add_error_logger_handler(Pid, Args) ->
 %%    From = any | self | peer
 %%    Pred = fun()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function counts logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function counts logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -402,14 +402,14 @@ add_error_logger_handler(Pid, Args) ->
 %%
 %% @see match/3
 %% @see match/4
-%% @end 
+%% @end
 count(Pid, Date, From, Pred) ->
     count(Pid, Date, From, Pred, start, 0).
 
 %% @doc Auxiliary function for count/3
 %%
 %% @see count/3
-%% @end 
+%% @end
 count(Pid, Date, From, Pred, Continuation, Count) ->
     case match(Pid, Date, From, Pred, Continuation) of
         eof ->
@@ -466,8 +466,8 @@ delete_error_logger_handler(Pid) ->
 %%    Now = {MegaSecs, Secs, Microsecs}
 %%    BinaryPdu = binary()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function gets the list of logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function gets the list of logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -477,14 +477,14 @@ delete_error_logger_handler(Pid) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
-%% 
-%% <p>This function internally calls <a href="#match-4">match/4</a> with 
+%%
+%% <p>This function internally calls <a href="#match-4">match/4</a> with
 %% <tt>start</tt> as the <tt>Continuation</tt> parameters.</p>
 %%
 %% @see match/4
 %%
 %% @equiv match(Date, From, Pred, start)
-%% @end 
+%% @end
 match(Pid, Date, From, Pred) ->
     match(Pid, Date, From, Pred, start).
 
@@ -506,8 +506,8 @@ match(Pid, Date, From, Pred) ->
 %%    Now = {MegaSecs, Secs, Microsecs}
 %%    BinaryPdu = binary()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function gets the list of logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function gets the list of logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -517,13 +517,13 @@ match(Pid, Date, From, Pred) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
-%% 
-%% <p>This function uses <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:chunk/2</a> to read the terms 
+%%
+%% <p>This function uses <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:chunk/2</a> to read the terms
 %% appended to the disk log.  <tt>Continuation</tt> parameter and result
 %% meanings are those documented in that function.</p>
 %%
 %% @see disk_log:chunk/2
-%% @end 
+%% @end
 match(Pid, Date, From, Pred, Continuation) ->
     Request = {match, Date, From, Pred, Continuation},
     gen_event:call(Pid, {?MODULE, disk_log}, Request).
@@ -566,16 +566,16 @@ notify_self_operation(Pid, Pdu) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be logged.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.
 %%   </li>
-%%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the 
-%%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>. 
+%%   <li><b>Size:</b> a pair <tt>{MaxNoBytes, MaxNoFiles}</tt> as given by the
+%%     <a href="http://www.erlang.se/doc/doc-5.4.3/lib/kernel-2.10.3/doc/html/disk_log.html">disk_log:open/1</a> option <tt>size</tt>.
 %%   </li>
 %%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
-%%     the binary PDU as input and returns the term sent to the disk_log.  
+%%     the binary PDU as input and returns the term sent to the disk_log.
 %%     Default format function stores the binary PDU as is.
 %%   </li>
 %% </ul>
 %%
-%% <p>If a parameter is unspecified, the value of the old disk_log handler 
+%% <p>If a parameter is unspecified, the value of the old disk_log handler
 %% is used.</p>
 %%
 %% @see gen_event:swap_handler/3
@@ -604,12 +604,12 @@ swap_disk_log_handler(Pid, Args) ->
 %%     logs only response PDUs with a <i>command_status</i> other than 0x0.
 %%   </li>
 %%   <li><b>Format:</b> a fun <tt>fun(BinaryPdu) -&gt; term()</tt> that gets
-%%     the binary PDU as input and returns the term sent to the error_logger.  
+%%     the binary PDU as input and returns the term sent to the error_logger.
 %%     Default format function shows the complete parameters list of the PDU.
 %%   </li>
 %% </ul>
 %%
-%% <p>If a parameter is unspecified, the value of the old disk_log handler 
+%% <p>If a parameter is unspecified, the value of the old disk_log handler
 %% is used.</p>
 %%
 %% @see gen_event:swap_handler/3
@@ -626,7 +626,7 @@ swap_error_logger_handler(Pid, Args) ->
 %% @doc Stops the smpp_log event manager with the given <tt>Pid</tt>.
 %% @end
 stop(Pid) ->
-    gen_event:stop(Pid). 
+    gen_event:stop(Pid).
 
 %%%===================================================================
 %%% Server functions
@@ -653,7 +653,7 @@ init(Args) ->
 %%    State    = term()
 %%    Result   = {ok, NewState}                                   |
 %%               {swap_handler, Args1, NewState, Handler2, Args2} |
-%%               remove_handler 
+%%               remove_handler
 %%    NewState = term()
 %%    Args1    = term()
 %%    Args2    = term()
@@ -789,7 +789,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%
 %% @see init/1
 %% @see init_error_logger/1
-%% @end 
+%% @end
 init_disk_log(Args) ->
     Name = proplists:get_value(name, Args, ?NAME),
     Pred = proplists:get_value(pred, Args, ?DISK_LOG_PRED),
@@ -798,11 +798,11 @@ init_disk_log(Args) ->
     Format = proplists:get_value(format, Args, ?DISK_LOG_FORMAT),
     Result = disk_log:open([{name,Name},{file,File},{type,wrap},{size,Size}]),
     report:info(smpp_log, add_handler, [{result, Result}|Args]),
-    {ok,#state{name = Name, 
-               type = disk_log, 
-               pred = Pred, 
-               file = File, 
-               size = Size, 
+    {ok,#state{name = Name,
+               type = disk_log,
+               pred = Pred,
+               file = File,
+               size = Size,
                format = Format}}.
 
 %% @spec init_error_logger(Args) -> {ok, State}
@@ -813,7 +813,7 @@ init_disk_log(Args) ->
 %%
 %% @see init/1
 %% @see init_disk_log/1
-%% @end 
+%% @end
 init_error_logger(Args) ->
     Pred = proplists:get_value(pred, Args, ?ERROR_LOGGER_PRED),
     File = proplists:get_value(file, Args, undefined),
@@ -837,10 +837,10 @@ init_error_logger(Args) ->
 %% @spec setup_args(State) -> Args
 %%    State = state()
 %%    Args = [Arg]
-%%    Arg = {type, Type} | 
-%%          {pred, Pred} | 
-%%          {file, File} | 
-%%          {size, Size} | 
+%%    Arg = {type, Type} |
+%%          {pred, Pred} |
+%%          {file, File} |
+%%          {size, Size} |
 %%          {format, Format}
 %%    Type = error_logger | disk_log
 %%    Pred = fun()
@@ -849,7 +849,7 @@ init_error_logger(Args) ->
 %%    Format = fun()
 %%
 %% @doc Gets the setup <tt>Args</tt> given the <tt>State</tt> record.
-%% @end 
+%% @end
 setup_args(#state{type = T, pred = P, file = N, size = S, format = F}) ->
     [{type, T}, {pred, P}, {file, N}, {size, S}, {format, F}].
 

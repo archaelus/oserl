@@ -36,7 +36,7 @@
 %%% <ul>
 %%%   <li><i>command_id</i> is now included into the PDU descriptor.</li>
 %%%   <li>New functions <a href="#command_id-1">command_id/1</a> and.
-%%%     <a href="#sequence_number-1">sequence_number/1</a> 
+%%%     <a href="#sequence_number-1">sequence_number/1</a>
 %%%   </li>
 %%% </ul>
 %%%
@@ -46,8 +46,8 @@
 %%% [13 Jul 2004]
 %%%
 %%% <ul>
-%%%   <li>Condition <tt>CommandId</tt> of <tt>16#800000000</tt> removed from 
-%%%     guards in functions <a href="#pack-2">pack/2</a> and 
+%%%   <li>Condition <tt>CommandId</tt> of <tt>16#800000000</tt> removed from
+%%%     guards in functions <a href="#pack-2">pack/2</a> and
 %%%     <a href="#unpack-2">unpack/2</a>.
 %%%     <br/>
 %%%     There was one 0 too many on that conditions.
@@ -75,20 +75,20 @@
 %%% [30 Jul 2005 Anders Nygren]
 %%%
 %%% <ul>
-%%%   <li>Do not build a binary in <a href="#pack-2">pack/2</a>, 
+%%%   <li>Do not build a binary in <a href="#pack-2">pack/2</a>,
 %%%       build an iolist, it is more efficient.
 %%%   </li>
 %%%   <li>pack_tlvs, there is no need to reverse the list of TLVs. According to
 %%%       SMPP 5.0, 3.2.1.6 TLV Parameters they can be in any order.
 %%%   </li>
-%%%   <li>unpack_stds and unpack_tlvs, there is no need to reverse the list 
+%%%   <li>unpack_stds and unpack_tlvs, there is no need to reverse the list
 %%%       of parameters. The list of parameters will be converted to a dictionary.
 %%%   </li>
 %%% </ul>
 %%% [5 Aug 2005 Anders Nygren]
 %%%
 %%% <ul>
-%%%   <li>Fix bug in pack/2, there is no BIF to find the length of 
+%%%   <li>Fix bug in pack/2, there is no BIF to find the length of
 %%%       an io_list, so it is still necessary to convert the message
 %%%       body to a binary in order to calculate the PDU length.
 %%%   </li>
@@ -109,11 +109,11 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([command_id/1, 
-         command_status/1, 
-         sequence_number/1, 
-         new_pdu/4, 
-         pack/2, 
+-export([command_id/1,
+         command_status/1,
+         sequence_number/1,
+         new_pdu/4,
+         pack/2,
          unpack/2]).
 
 %%%-------------------------------------------------------------------
@@ -139,10 +139,10 @@
 %%
 %% <p>If the PDU is malformed and the <i>command_id</i> can not be found, the
 %% function crashes.</p>
-%% @end 
+%% @end
 command_id(<<_Len:32, CmdId:32, _Status:32, _SeqNum:32, _Body/binary>>) ->
     CmdId;
-command_id(PduDict) -> 
+command_id(PduDict) ->
     dict:fetch(command_id,  PduDict).
 
 
@@ -151,12 +151,12 @@ command_id(PduDict) ->
 %%
 %% @doc Gets the <i>command_status</i> of a PDU (binary or dictionary).
 %%
-%% <p>If the PDU is malformed and the <i>command_status</i> can not be found, 
+%% <p>If the PDU is malformed and the <i>command_status</i> can not be found,
 %% the function exits.</p>
-%% @end 
+%% @end
 command_status(<<_Len:32, _CmdId:32, Status:32, _SeqNum:32, _Body/binary>>) ->
     Status;
-command_status(PduDict) -> 
+command_status(PduDict) ->
     dict:fetch(command_status,  PduDict).
 
 
@@ -165,12 +165,12 @@ command_status(PduDict) ->
 %%
 %% @doc Gets the <i>sequence_number</i> of a PDU (binary or dictionary).
 %%
-%% <p>If the PDU is malformed and the <i>sequence_number</i> can not be found, 
+%% <p>If the PDU is malformed and the <i>sequence_number</i> can not be found,
 %% the function crashes.</p>
-%% @end 
+%% @end
 sequence_number(<<_Len:32, _CmdId:32, _Status:32, SeqNum:32, _Body/binary>>) ->
     SeqNum;
-sequence_number(PduDict) -> 
+sequence_number(PduDict) ->
     dict:fetch(sequence_number,  PduDict).
 
 
@@ -183,15 +183,15 @@ sequence_number(PduDict) ->
 %%
 %% @doc Creates a new PDU dictionary for a given the <tt>CommandId</tt>, a
 %% <tt>CommandStatus</tt>, <tt>SequenceNumber</tt> and a list of
-%% initial body values.  Every pair of the <tt>Body</tt> list must be on 
+%% initial body values.  Every pair of the <tt>Body</tt> list must be on
 %% the form <tt>{Key, Value}</tt>.
 %%
-%% <p>The <tt>Body</tt> parameter list is ignored whenever 
+%% <p>The <tt>Body</tt> parameter list is ignored whenever
 %% <tt>CommandStatus</tt> is different from 0.</p>
 %% @end
 new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
     Header = [{command_id,      CommandId},
-              {command_status,  CommandStatus}, 
+              {command_status,  CommandStatus},
               {sequence_number, SequenceNumber}],
     case CommandStatus of
         0 ->
@@ -206,18 +206,18 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %%    PduType        = {pdu, StdsTypes, TlvsTypes}
 %%    StdsTypes      = [standard()]
 %%    TlvsTypes      = [tlv()]
-%%    Result         = {ok, BinaryPdu} | 
+%%    Result         = {ok, BinaryPdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
 %%    CommandId      = CmdId | Other
 %%    Other          = int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
+%%
 %% @doc Packs an SMPP PDU dictionary into the corresponding byte stream
 %% given the <tt>PduType</tt>.
 %%
-%% <p>This function generates an exception if <tt>command_id</tt>, 
+%% <p>This function generates an exception if <tt>command_id</tt>,
 %% <tt>command_status</tt>, <tt>sequence_number</tt> are not present
 %% on the PDU dictionary.</p>
 %%
@@ -241,10 +241,10 @@ new_pdu(CommandId, CommandStatus, SequenceNumber, Body) ->
 %% @see pack_body/3
 %% @end
 pack(PduDict, Type) ->
-    PackBody = 
+    PackBody =
         fun (CommandStatus, Dict) when CommandStatus == 0 ->
                 pack_body(Dict, Type#pdu.stds_types, Type#pdu.tlvs_types);
-            (_CommandStatus, _Dict) ->   
+            (_CommandStatus, _Dict) ->
                 % Do NOT pack the body if CommandStatus != 0
                 {ok, []}
         end,
@@ -254,7 +254,7 @@ pack(PduDict, Type) ->
         CmdId when CmdId == Type#pdu.command_id ->
             case PackBody(Status, PduDict) of
                 {ok, BodyL} ->
-		    Body=list_to_binary(BodyL), 
+		    Body=list_to_binary(BodyL),
                     Len = size(Body) + 16,
                     {ok, [<<Len:32,CmdId:32,Status:32,SeqNum:32>>,Body]};
                 {error, Error} ->
@@ -270,15 +270,15 @@ pack(PduDict, Type) ->
 %%    PduType        = {pdu, StdsTypes, TlvsTypes}
 %%    StdsTypes      = [standard()]
 %%    TlvsTypes      = [tlv()]
-%%    Result         = {ok, PduDict} | 
+%%    Result         = {ok, PduDict} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    PduDict        = dictionary()
 %%    Error          = int()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
-%% @doc Unpacks an SMPP Binary PDU (octet stream) into the corresponding 
+%%
+%% @doc Unpacks an SMPP Binary PDU (octet stream) into the corresponding
 %% PDU dictionary according to <tt>PduType</tt>.
 %%
 %% <p>This function returns:</p>
@@ -293,10 +293,10 @@ pack(PduDict, Type) ->
 %%     <tt>undefined</tt> and the <tt>SequenceNumber</tt> 0 if the
 %%     PDU is completly unreadable.
 %%   </li>
-%%   <li><tt>{error, CmdId, CommandStatus, SequenceNumber}</tt> where 
+%%   <li><tt>{error, CmdId, CommandStatus, SequenceNumber}</tt> where
 %%     <tt>CommandStatus</tt> is <tt>?ESME_RUNKNOWNERR</tt> or an error
-%%     code associated to the parameter that caused the failure.  The 
-%%     <i>command_id</i> <tt>CmdId</tt> and the <tt>SequenceNumber</tt> are 
+%%     code associated to the parameter that caused the failure.  The
+%%     <i>command_id</i> <tt>CmdId</tt> and the <tt>SequenceNumber</tt> are
 %%     also included in the error report.
 %%   </li>
 %%   <li><tt>{ok, PduDict}</tt> if the PDU was successfully unpacked.
@@ -306,15 +306,15 @@ pack(PduDict, Type) ->
 %% @see unpack_body/3
 %% @end
 unpack(<<Len:32, Rest/binary>>, Type) when Len == size(Rest) + 4, Len >= 16 ->
-    UnpackBody = 
+    UnpackBody =
         fun (CommandStatus, Bin) when CommandStatus == 0 ->
                 unpack_body(Bin, Type#pdu.stds_types, Type#pdu.tlvs_types);
-            (_CommandStatus, _Bin) ->   
+            (_CommandStatus, _Bin) ->
                 % Do NOT unpack the body if CommandStatus != 0
                 {ok, []}
         end,
     case Rest of
-        <<CmdId:32, Status:32, SeqNum:32, Body/binary>> 
+        <<CmdId:32, Status:32, SeqNum:32, Body/binary>>
           when CmdId == Type#pdu.command_id ->
             case UnpackBody(Status, Body) of
                 {ok, BodyPairs} ->
@@ -339,7 +339,7 @@ unpack(_BinaryPdu, _PduType) ->
 %%    Result     = {ok, BinaryBody} | {error, Error}
 %%    BinaryBody = IOlist::list()
 %%    Error      = int()
-%% 
+%%
 %% @doc Packs the body's parameter dictionary of a PDU according to their
 %% corresponding types.
 %%
@@ -377,9 +377,9 @@ pack_stds(_BodyDict, [], Acc) ->
     {ok, lists:reverse(Acc)};
 pack_stds(BodyDict, [Type|Types], Acc) ->
     Value = case dict:find(param_syntax:get_name(Type), BodyDict) of
-                {ok, ParamValue} -> 
+                {ok, ParamValue} ->
                     ParamValue;
-                error -> 
+                error ->
                     % See how param_syntax:encode/2 handles undefined
                     undefined
             end,
@@ -430,11 +430,11 @@ pack_tlvs(BodyDict, [Type|Types], Acc) ->
 %%    BodyPairs  = [{Key, Value}]
 %%    Error      = int()
 %%
-%% @doc Unpacks the <tt>BinaryBody</tt> of a PDU according to the types 
-%% lists of the standard and TLV parameters specifier (<tt>StdsTypes</tt> 
+%% @doc Unpacks the <tt>BinaryBody</tt> of a PDU according to the types
+%% lists of the standard and TLV parameters specifier (<tt>StdsTypes</tt>
 %% and <tt>TlvsTypes</tt> respectively).
 %%
-%% <p>First the standard parameters are decoded from the head of the 
+%% <p>First the standard parameters are decoded from the head of the
 %% <tt>BinaryBody</tt> following the sequence determined by <tt>StdsTypes
 %% </tt>, the remainder binary contains the TLVs.  Even TLVs may came in any
 %% order, they're extracted in the order determined by <tt>TlvsTypes</tt>.

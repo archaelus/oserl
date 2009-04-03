@@ -24,8 +24,8 @@
 %%% [10 Feb 2004]
 %%%
 %%% <ul>
-%%%   <li>Implemented <tt>get_param/2</tt> and <tt>set_param/3</tt>, 
-%%%     replacements for <tt>pdu_syntax:get_value/2</tt> and 
+%%%   <li>Implemented <tt>get_param/2</tt> and <tt>set_param/3</tt>,
+%%%     replacements for <tt>pdu_syntax:get_value/2</tt> and
 %%%     <tt>pdu_syntax:set_value/3</tt> respectively.
 %%%   </li>
 %%% </ul>
@@ -33,7 +33,7 @@
 %%% [17 Feb 2004]
 %%%
 %%% <ul>
-%%%   <li><tt>new_pdu/5</tt> function removed.  PDU defaults MACROS do no 
+%%%   <li><tt>new_pdu/5</tt> function removed.  PDU defaults MACROS do no
 %%%     longer exist.
 %%%   </li>
 %%% </ul>
@@ -42,9 +42,9 @@
 %%%
 %%% <ul>
 %%%   <li><a href="#pack-1">pack/1</a>, <a href="#pack_esme-1">pack_esme/1</a>,
-%%%     <a href="#pack_smsc-1">pack_smsc/1</a>, 
+%%%     <a href="#pack_smsc-1">pack_smsc/1</a>,
 %%%     <a href="#unpack-1">unpack/1</a>,
-%%%     <a href="#unpack_esme-1">unpack_esme/1</a> and 
+%%%     <a href="#unpack_esme-1">unpack_esme/1</a> and
 %%%     <a href="#unpack_smsc-1">unpack_smsc/1</a> functions redefined.
 %%%   </li>
 %%% </ul>
@@ -55,10 +55,10 @@
 %%% [10 Jun 2004]
 %%%
 %%% <ul>
-%%%   <li><tt>pack_mc/1</tt> is now called 
+%%%   <li><tt>pack_mc/1</tt> is now called
 %%%     <a href="#pack_smsc-1">pack_smsc/1</a>.
 %%%   </li>
-%%%   <li><tt>unpack_mc/1</tt> is now called 
+%%%   <li><tt>unpack_mc/1</tt> is now called
 %%%     <a href="#unpack_smsc-1">unpack_smsc/1</a>.
 %%%   </li>
 %%% </ul>
@@ -67,11 +67,11 @@
 %%%
 %%% <ul>
 %%%   <li><tt>new_xxx/2</tt> and <tt>new_xxx/3</tt> functions removed.  See
-%%%     generic functions <a href="#new-3">new/3</a> and 
+%%%     generic functions <a href="#new-3">new/3</a> and
 %%%     <a href="#new-4">new/4</a> below.
 %%%   </li>
-%%%   <li><tt>request_command_id/1</tt> and <tt>response_command_id/1</tt> 
-%%%     redefined as macros in 
+%%%   <li><tt>request_command_id/1</tt> and <tt>response_command_id/1</tt>
+%%%     redefined as macros in
 %%%     <a href="smpp_globals.html">smpp_globals.hrl</a>.
 %%%   </li>
 %%% </ul>
@@ -104,8 +104,8 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([get_param/2, 
-         set_param/3, 
+-export([get_param/2,
+         set_param/3,
          merge_params/2,
          from_list/1,
          to_list/1,
@@ -192,7 +192,7 @@ merge_params(Params1, Params2) ->
 %% functions, thus should not be included on the <tt>List</tt>.</p>
 %%
 %% % @see dict:from_list/1
-%% @end 
+%% @end
 from_list(List) ->
     dict:from_list(List).
 
@@ -205,11 +205,11 @@ from_list(List) ->
 %%
 %% @doc Converts the Pdu to a list representation.
 %%
-%% <p>Notice that <i>command_length</i> won't be included on the resulting 
+%% <p>Notice that <i>command_length</i> won't be included on the resulting
 %% <tt>List</tt>.</p>
 %%
 %% % @see dict:to_list/1
-%% @end 
+%% @end
 to_list(Pdu) ->
     dict:to_list(Pdu).
 
@@ -222,7 +222,7 @@ to_list(Pdu) ->
 %%    ParamValue     = term()
 %%    Pdu        = pdu()
 %%
-%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
+%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given
 %% <tt>InitParams</tt> and the default values defined for this PDU.
 %%
 %% <p>The <i>command_status</i> is set to <tt>ESME_ROK</tt>.</p>
@@ -242,7 +242,7 @@ new(CommandId, SequenceNumber, InitParams) ->
 %%    ParamValue     = term()
 %%    Pdu        = pdu()
 %%
-%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given 
+%% @doc Creates a new PDU dictionary of type <tt>PdyType</tt> with the given
 %% <tt>InitParams</tt> and the default values defined for this PDU.
 %%
 %% <p>The <i>command_status</i> is set to <tt>CommandStatus</tt>.</p>
@@ -255,19 +255,19 @@ new(CommandId, CommandStatus, SequenceNumber, InitParams) ->
 
 %% @spec pack(Pdu) -> Result
 %%    Pdu        = pdu()
-%%    Result         = {ok, BinaryPdu} | 
+%%    Result         = {ok, BinaryPdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
 %%    Error          = int()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
+%%
 %% @doc Packs any SMPP PDU dictionary into the corresponding byte stream.  This
 %% function handles any operation.
 %%
 %% <p>Before using this function consider esme_pack/1 or smsc_pack/1.  This
-%% generic packing function should only be used on special occasions 
+%% generic packing function should only be used on special occasions
 %% (implementing a Routing Entity).</p>
 %%
 %% @see pdu_syntax:pack/2
@@ -276,71 +276,71 @@ new(CommandId, CommandStatus, SequenceNumber, InitParams) ->
 %% @end
 pack(Pdu) ->
     case pdu_syntax:command_id(Pdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:pack(Pdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM -> 
+        ?COMMAND_ID_DELIVER_SM ->
             pdu_syntax:pack(Pdu, ?DELIVER_SM);
-        ?COMMAND_ID_SUBMIT_SM_RESP -> 
+        ?COMMAND_ID_SUBMIT_SM_RESP ->
             pdu_syntax:pack(Pdu, ?SUBMIT_SM_RESP);
-        ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
+        ?COMMAND_ID_SUBMIT_MULTI_RESP ->
             pdu_syntax:pack(Pdu, ?SUBMIT_MULTI_RESP);
-        ?COMMAND_ID_ALERT_NOTIFICATION -> 
+        ?COMMAND_ID_ALERT_NOTIFICATION ->
             pdu_syntax:pack(Pdu, ?ALERT_NOTIFICATION);
-        ?COMMAND_ID_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?BROADCAST_SM_RESP);
-        ?COMMAND_ID_QUERY_SM_RESP -> 
+        ?COMMAND_ID_QUERY_SM_RESP ->
             pdu_syntax:pack(Pdu, ?QUERY_SM_RESP);
-        ?COMMAND_ID_REPLACE_SM_RESP -> 
+        ?COMMAND_ID_REPLACE_SM_RESP ->
             pdu_syntax:pack(Pdu, ?REPLACE_SM_RESP);
-        ?COMMAND_ID_CANCEL_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_SM_RESP ->
             pdu_syntax:pack(Pdu, ?CANCEL_SM_RESP);
-        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM_RESP);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM_RESP -> 
+        ?COMMAND_ID_DELIVER_SM_RESP ->
             pdu_syntax:pack(Pdu, ?DELIVER_SM_RESP);
-        ?COMMAND_ID_SUBMIT_SM -> 
+        ?COMMAND_ID_SUBMIT_SM ->
             pdu_syntax:pack(Pdu, ?SUBMIT_SM);
-        ?COMMAND_ID_SUBMIT_MULTI -> 
+        ?COMMAND_ID_SUBMIT_MULTI ->
             pdu_syntax:pack(Pdu, ?SUBMIT_MULTI);
-        ?COMMAND_ID_BROADCAST_SM -> 
+        ?COMMAND_ID_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?BROADCAST_SM);
-        ?COMMAND_ID_QUERY_SM -> 
+        ?COMMAND_ID_QUERY_SM ->
             pdu_syntax:pack(Pdu, ?QUERY_SM);
-        ?COMMAND_ID_REPLACE_SM -> 
+        ?COMMAND_ID_REPLACE_SM ->
             pdu_syntax:pack(Pdu, ?REPLACE_SM);
-        ?COMMAND_ID_CANCEL_SM -> 
+        ?COMMAND_ID_CANCEL_SM ->
             pdu_syntax:pack(Pdu, ?CANCEL_SM);
-        ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:pack(Pdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:pack(Pdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:pack(Pdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+        ?COMMAND_ID_BIND_RECEIVER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_RECEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSMITTER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER_RESP);
-        ?COMMAND_ID_OUTBIND -> 
+        ?COMMAND_ID_OUTBIND ->
             pdu_syntax:pack(Pdu, ?OUTBIND);
-        ?COMMAND_ID_BIND_RECEIVER -> 
+        ?COMMAND_ID_BIND_RECEIVER ->
             pdu_syntax:pack(Pdu, ?BIND_RECEIVER);
-        ?COMMAND_ID_BIND_TRANSCEIVER -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER);
-        ?COMMAND_ID_BIND_TRANSMITTER -> 
+        ?COMMAND_ID_BIND_TRANSMITTER ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER);
         Other ->
             {error, Other, ?ESME_RINVCMDID, pdu_syntax:sequence_number(Pdu)}
@@ -349,7 +349,7 @@ pack(Pdu) ->
 
 %% @spec esme_pack(Pdu) -> Result
 %%    Pdu        = pdu()
-%%    Result         = {ok, BinaryPdu} | 
+%%    Result         = {ok, BinaryPdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
 %%    Error          = int()
@@ -360,50 +360,50 @@ pack(Pdu) ->
 %% @doc Packs an SMPP PDU dictionary into the corresponding byte stream.
 %%
 %% <p>This function is optimized for ESME implementations, thus only handles
-%% operations issued by an ESME, any other PDU generates an 
+%% operations issued by an ESME, any other PDU generates an
 %% <tt>?ESME_RINVCMDID</tt> error code.</p>
 %%
 %% @see pdu_syntax:pack/2
 %% @end
 esme_pack(Pdu) ->
     case pdu_syntax:command_id(Pdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:pack(Pdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM_RESP -> 
+        ?COMMAND_ID_DELIVER_SM_RESP ->
             pdu_syntax:pack(Pdu, ?DELIVER_SM_RESP);
-        ?COMMAND_ID_SUBMIT_SM -> 
+        ?COMMAND_ID_SUBMIT_SM ->
             pdu_syntax:pack(Pdu, ?SUBMIT_SM);
-        ?COMMAND_ID_SUBMIT_MULTI -> 
+        ?COMMAND_ID_SUBMIT_MULTI ->
             pdu_syntax:pack(Pdu, ?SUBMIT_MULTI);
-        ?COMMAND_ID_BROADCAST_SM -> 
+        ?COMMAND_ID_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?BROADCAST_SM);
-        ?COMMAND_ID_QUERY_SM -> 
+        ?COMMAND_ID_QUERY_SM ->
             pdu_syntax:pack(Pdu, ?QUERY_SM);
-        ?COMMAND_ID_REPLACE_SM -> 
+        ?COMMAND_ID_REPLACE_SM ->
             pdu_syntax:pack(Pdu, ?REPLACE_SM);
-        ?COMMAND_ID_CANCEL_SM -> 
+        ?COMMAND_ID_CANCEL_SM ->
             pdu_syntax:pack(Pdu, ?CANCEL_SM);
-        ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM ->
             pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:pack(Pdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:pack(Pdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:pack(Pdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER -> 
+        ?COMMAND_ID_BIND_RECEIVER ->
             pdu_syntax:pack(Pdu, ?BIND_RECEIVER);
-        ?COMMAND_ID_BIND_TRANSCEIVER -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER);
-        ?COMMAND_ID_BIND_TRANSMITTER -> 
+        ?COMMAND_ID_BIND_TRANSMITTER ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER);
         Other ->
             {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(Pdu)}
@@ -412,7 +412,7 @@ esme_pack(Pdu) ->
 
 %% @spec smsc_pack(Pdu) -> Result
 %%    Pdu        = pdu()
-%%    Result         = {ok, BinaryPdu} | 
+%%    Result         = {ok, BinaryPdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    BinaryPdu      = bin()
 %%    Error          = int()
@@ -423,54 +423,54 @@ esme_pack(Pdu) ->
 %% @doc Packs an SMPP PDU dictionary into the corresponding byte stream.
 %%
 %% <p>This function is optimized for SMSC implementations, thus only handles
-%% operations issued by an SMSC, any other PDU generates an 
+%% operations issued by an SMSC, any other PDU generates an
 %% <tt>?ESME_RINVCMDID</tt> error code.</p>
 %%
 %% @see pdu_syntax:pack/2
 %% @end
 smsc_pack(Pdu) ->
     case pdu_syntax:command_id(Pdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:pack(Pdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:pack(Pdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM -> 
+        ?COMMAND_ID_DELIVER_SM ->
             pdu_syntax:pack(Pdu, ?DELIVER_SM);
-        ?COMMAND_ID_SUBMIT_SM_RESP -> 
+        ?COMMAND_ID_SUBMIT_SM_RESP ->
             pdu_syntax:pack(Pdu, ?SUBMIT_SM_RESP);
-        ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
+        ?COMMAND_ID_SUBMIT_MULTI_RESP ->
             pdu_syntax:pack(Pdu, ?SUBMIT_MULTI_RESP);
-        ?COMMAND_ID_ALERT_NOTIFICATION -> 
+        ?COMMAND_ID_ALERT_NOTIFICATION ->
             pdu_syntax:pack(Pdu, ?ALERT_NOTIFICATION);
-        ?COMMAND_ID_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?BROADCAST_SM_RESP);
-        ?COMMAND_ID_QUERY_SM_RESP -> 
+        ?COMMAND_ID_QUERY_SM_RESP ->
             pdu_syntax:pack(Pdu, ?QUERY_SM_RESP);
-        ?COMMAND_ID_REPLACE_SM_RESP -> 
+        ?COMMAND_ID_REPLACE_SM_RESP ->
             pdu_syntax:pack(Pdu, ?REPLACE_SM_RESP);
-        ?COMMAND_ID_CANCEL_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_SM_RESP ->
             pdu_syntax:pack(Pdu, ?CANCEL_SM_RESP);
-        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?QUERY_BROADCAST_SM_RESP);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP ->
             pdu_syntax:pack(Pdu, ?CANCEL_BROADCAST_SM_RESP);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:pack(Pdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:pack(Pdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:pack(Pdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:pack(Pdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+        ?COMMAND_ID_BIND_RECEIVER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_RECEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSCEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSMITTER_RESP ->
             pdu_syntax:pack(Pdu, ?BIND_TRANSMITTER_RESP);
-        ?COMMAND_ID_OUTBIND -> 
+        ?COMMAND_ID_OUTBIND ->
             pdu_syntax:pack(Pdu, ?OUTBIND);
         Other ->
             {error, Other, ?ESME_RINVCMDID,pdu_syntax:sequence_number(Pdu)}
@@ -479,18 +479,18 @@ smsc_pack(Pdu) ->
 
 %% @spec unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, Pdu} | 
+%%    Result         = {ok, Pdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
+%%
 %% @doc Unpacks a binary SMPP PDU into the corresponding PDU dictionary.  This
 %% function handles any operation.
 %%
 %% <p>Before using this function consider esme_unpack/1 or smsc_unpack/1.  This
-%% generic unpacking function should only be used on very special occasions 
+%% generic unpacking function should only be used on very special occasions
 %% (such us implementing a Routing Entity).</p>
 %%
 %% @see pdu_syntax:unpack/2
@@ -499,71 +499,71 @@ smsc_pack(Pdu) ->
 %% @end
 unpack(BinaryPdu) ->
     case pdu_syntax:command_id(BinaryPdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM -> 
+        ?COMMAND_ID_DELIVER_SM ->
             pdu_syntax:unpack(BinaryPdu, ?DELIVER_SM);
-        ?COMMAND_ID_SUBMIT_SM_RESP -> 
+        ?COMMAND_ID_SUBMIT_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_SM_RESP);
-        ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
+        ?COMMAND_ID_SUBMIT_MULTI_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_MULTI_RESP);
-        ?COMMAND_ID_ALERT_NOTIFICATION -> 
+        ?COMMAND_ID_ALERT_NOTIFICATION ->
             pdu_syntax:unpack(BinaryPdu, ?ALERT_NOTIFICATION);
-        ?COMMAND_ID_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BROADCAST_SM_RESP);
-        ?COMMAND_ID_QUERY_SM_RESP -> 
+        ?COMMAND_ID_QUERY_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_SM_RESP);
-        ?COMMAND_ID_REPLACE_SM_RESP -> 
+        ?COMMAND_ID_REPLACE_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?REPLACE_SM_RESP);
-        ?COMMAND_ID_CANCEL_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_SM_RESP);
-        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_BROADCAST_SM_RESP);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_BROADCAST_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM_RESP -> 
+        ?COMMAND_ID_DELIVER_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?DELIVER_SM_RESP);
-        ?COMMAND_ID_SUBMIT_SM -> 
+        ?COMMAND_ID_SUBMIT_SM ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_SM);
-        ?COMMAND_ID_SUBMIT_MULTI -> 
+        ?COMMAND_ID_SUBMIT_MULTI ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_MULTI);
-        ?COMMAND_ID_BROADCAST_SM -> 
+        ?COMMAND_ID_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?BROADCAST_SM);
-        ?COMMAND_ID_QUERY_SM -> 
+        ?COMMAND_ID_QUERY_SM ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_SM);
-        ?COMMAND_ID_REPLACE_SM -> 
+        ?COMMAND_ID_REPLACE_SM ->
             pdu_syntax:unpack(BinaryPdu, ?REPLACE_SM);
-        ?COMMAND_ID_CANCEL_SM -> 
+        ?COMMAND_ID_CANCEL_SM ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_SM);
-        ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_BROADCAST_SM);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_BROADCAST_SM);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:unpack(BinaryPdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+        ?COMMAND_ID_BIND_RECEIVER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_RECEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSCEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSMITTER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSMITTER_RESP);
-        ?COMMAND_ID_OUTBIND -> 
+        ?COMMAND_ID_OUTBIND ->
             pdu_syntax:unpack(BinaryPdu, ?OUTBIND);
-        ?COMMAND_ID_BIND_RECEIVER -> 
+        ?COMMAND_ID_BIND_RECEIVER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_RECEIVER);
-        ?COMMAND_ID_BIND_TRANSCEIVER -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSCEIVER);
-        ?COMMAND_ID_BIND_TRANSMITTER -> 
+        ?COMMAND_ID_BIND_TRANSMITTER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSMITTER);
         Other ->
             {error,Other,?ESME_RINVCMDID,pdu_syntax:sequence_number(BinaryPdu)}
@@ -572,13 +572,13 @@ unpack(BinaryPdu) ->
 
 %% @spec esme_unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, Pdu} | 
+%%    Result         = {ok, Pdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
+%%
 %% @doc Unpacks a binary SMPP PDU into the corresponding PDU dictionary.
 %%
 %% <p>This function is optimized for ESME implementation, thus only capable of
@@ -589,47 +589,47 @@ unpack(BinaryPdu) ->
 %% @end
 esme_unpack(BinaryPdu) ->
     case pdu_syntax:command_id(BinaryPdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM -> 
+        ?COMMAND_ID_DELIVER_SM ->
             pdu_syntax:unpack(BinaryPdu, ?DELIVER_SM);
-        ?COMMAND_ID_SUBMIT_SM_RESP -> 
+        ?COMMAND_ID_SUBMIT_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_SM_RESP);
-        ?COMMAND_ID_SUBMIT_MULTI_RESP -> 
+        ?COMMAND_ID_SUBMIT_MULTI_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_MULTI_RESP);
-        ?COMMAND_ID_ALERT_NOTIFICATION -> 
+        ?COMMAND_ID_ALERT_NOTIFICATION ->
             pdu_syntax:unpack(BinaryPdu, ?ALERT_NOTIFICATION);
-        ?COMMAND_ID_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BROADCAST_SM_RESP);
-        ?COMMAND_ID_QUERY_SM_RESP -> 
+        ?COMMAND_ID_QUERY_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_SM_RESP);
-        ?COMMAND_ID_REPLACE_SM_RESP -> 
+        ?COMMAND_ID_REPLACE_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?REPLACE_SM_RESP);
-        ?COMMAND_ID_CANCEL_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_SM_RESP);
-        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_BROADCAST_SM_RESP);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_BROADCAST_SM_RESP);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:unpack(BinaryPdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER_RESP -> 
+        ?COMMAND_ID_BIND_RECEIVER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_RECEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSCEIVER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSCEIVER_RESP);
-        ?COMMAND_ID_BIND_TRANSMITTER_RESP -> 
+        ?COMMAND_ID_BIND_TRANSMITTER_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSMITTER_RESP);
-        ?COMMAND_ID_OUTBIND -> 
+        ?COMMAND_ID_OUTBIND ->
             pdu_syntax:unpack(BinaryPdu, ?OUTBIND);
         Other ->
             {error,Other,?ESME_RINVCMDID,pdu_syntax:sequence_number(BinaryPdu)}
@@ -638,13 +638,13 @@ esme_unpack(BinaryPdu) ->
 
 %% @spec smsc_unpack(BinaryPdu) -> Result
 %%    BinaryPdu      = bin()
-%%    Result         = {ok, Pdu} | 
+%%    Result         = {ok, Pdu} |
 %%                     {error, CommandId, CommandStatus, SequenceNumber}
 %%    Pdu        = pdu()
 %%    CommandId      = undefined | int()
 %%    CommandStatus  = int()
 %%    SequenceNumber = int()
-%% 
+%%
 %% @doc Unpacks a binary SMPP PDU into the corresponding PDU dictionary.
 %%
 %% <p>This function is optimized for SMSC implementation, thus only capable of
@@ -657,43 +657,43 @@ esme_unpack(BinaryPdu) ->
 %% @end
 smsc_unpack(BinaryPdu) ->
     case pdu_syntax:command_id(BinaryPdu) of
-        ?COMMAND_ID_DATA_SM -> 
+        ?COMMAND_ID_DATA_SM ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM);
-        ?COMMAND_ID_DATA_SM_RESP -> 
+        ?COMMAND_ID_DATA_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?DATA_SM_RESP);
-        ?COMMAND_ID_DELIVER_SM_RESP -> 
+        ?COMMAND_ID_DELIVER_SM_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?DELIVER_SM_RESP);
-        ?COMMAND_ID_SUBMIT_SM -> 
+        ?COMMAND_ID_SUBMIT_SM ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_SM);
-        ?COMMAND_ID_SUBMIT_MULTI -> 
+        ?COMMAND_ID_SUBMIT_MULTI ->
             pdu_syntax:unpack(BinaryPdu, ?SUBMIT_MULTI);
-        ?COMMAND_ID_BROADCAST_SM -> 
+        ?COMMAND_ID_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?BROADCAST_SM);
-        ?COMMAND_ID_QUERY_SM -> 
+        ?COMMAND_ID_QUERY_SM ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_SM);
-        ?COMMAND_ID_REPLACE_SM -> 
+        ?COMMAND_ID_REPLACE_SM ->
             pdu_syntax:unpack(BinaryPdu, ?REPLACE_SM);
-        ?COMMAND_ID_CANCEL_SM -> 
+        ?COMMAND_ID_CANCEL_SM ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_SM);
-        ?COMMAND_ID_QUERY_BROADCAST_SM -> 
+        ?COMMAND_ID_QUERY_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?QUERY_BROADCAST_SM);
-        ?COMMAND_ID_CANCEL_BROADCAST_SM -> 
+        ?COMMAND_ID_CANCEL_BROADCAST_SM ->
             pdu_syntax:unpack(BinaryPdu, ?CANCEL_BROADCAST_SM);
-        ?COMMAND_ID_ENQUIRE_LINK -> 
+        ?COMMAND_ID_ENQUIRE_LINK ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK);
-        ?COMMAND_ID_ENQUIRE_LINK_RESP -> 
+        ?COMMAND_ID_ENQUIRE_LINK_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?ENQUIRE_LINK_RESP);
-        ?COMMAND_ID_GENERIC_NACK -> 
+        ?COMMAND_ID_GENERIC_NACK ->
             pdu_syntax:unpack(BinaryPdu, ?GENERIC_NACK);
-        ?COMMAND_ID_UNBIND -> 
+        ?COMMAND_ID_UNBIND ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND);
-        ?COMMAND_ID_UNBIND_RESP -> 
+        ?COMMAND_ID_UNBIND_RESP ->
             pdu_syntax:unpack(BinaryPdu, ?UNBIND_RESP);
-        ?COMMAND_ID_BIND_RECEIVER -> 
+        ?COMMAND_ID_BIND_RECEIVER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_RECEIVER);
-        ?COMMAND_ID_BIND_TRANSCEIVER -> 
+        ?COMMAND_ID_BIND_TRANSCEIVER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSCEIVER);
-        ?COMMAND_ID_BIND_TRANSMITTER -> 
+        ?COMMAND_ID_BIND_TRANSMITTER ->
             pdu_syntax:unpack(BinaryPdu, ?BIND_TRANSMITTER);
         Other ->
             {error,Other,?ESME_RINVCMDID,pdu_syntax:sequence_number(BinaryPdu)}

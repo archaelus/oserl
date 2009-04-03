@@ -18,7 +18,7 @@
 %%%
 %%% <p>Functions for the SMPP parameter syntax manipulation.</p>
 %%%
-%%% <p>As a guideline and to help debugging, this preliminary version includes 
+%%% <p>As a guideline and to help debugging, this preliminary version includes
 %%% references to the specific section numbers on [SMPP 5.0].  These comments
 %%% are likely to disappear on further versions.</p>
 %%%
@@ -28,7 +28,7 @@
 %%% [17 Feb 2004]
 %%%
 %%% <ul>
-%%%   <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible 
+%%%   <li><tt>encode_std/2</tt> and <tt>encode_tlv/2</tt> are now responsible
 %%%     for encoding default values on standard and mandatory tlvs
 %%%     respectively.
 %%%   </li>
@@ -37,7 +37,7 @@
 %%% [30 Jul 2005 Anders Nygren]
 %%%
 %%% <ul>
-%%%   <li>Do not build one binary in encode, build an iolist instead, it is 
+%%%   <li>Do not build one binary in encode, build an iolist instead, it is
 %%%       more efficient.
 %%%   </li>
 %%% </ul>
@@ -45,7 +45,7 @@
 %%%
 %%% <h2>References</h2>
 %%% <dl>
-%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol 
+%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol
 %%%     Specification. Version 5.0. SMS Forum.
 %%%   </dd>
 %%% </dl>
@@ -88,10 +88,10 @@
 %%    Tlv    = bin()
 %%    Rest   = bin()
 %%
-%% @doc Returns the leading <tt>Tlv</tt> and the <tt>Rest</tt> of a 
+%% @doc Returns the leading <tt>Tlv</tt> and the <tt>Rest</tt> of a
 %% <tt>Binary</tt>.
 %% @end
-chop_tlv(<<Tag:16, Len:16, Binary/binary>>) -> 
+chop_tlv(<<Tag:16, Len:16, Binary/binary>>) ->
     case Binary of
         <<Val:Len/binary-unit:8, Rest/binary>> ->
             {ok, <<Tag:16, Len:16, Val/binary>>, Rest};
@@ -109,7 +109,7 @@ chop_tlv(Binary) ->
 %%    Rest      = bin()
 %%    Error     = int()
 %%
-%% @doc Decodes a <tt>Value</tt> from a <tt>Binary</tt> using a 
+%% @doc Decodes a <tt>Value</tt> from a <tt>Binary</tt> using a
 %% <tt>ParameterType</tt> specifier.  Please refer to the functions
 %% decode_std/2 and decode_tlv/2 for further details.
 %%
@@ -130,7 +130,7 @@ decode(_Binary, _ParamType) ->
 %%    Binary    = bin()
 %%    Error     = int()
 %%
-%% @doc Encodes a <tt>Value</tt> using a <tt>ParameterType</tt> 
+%% @doc Encodes a <tt>Value</tt> using a <tt>ParameterType</tt>
 %% specifier.    Please refer to the functions encode_std/2 and encode_tlv/2
 %% for further details.
 %%
@@ -165,9 +165,9 @@ get_name(ParamType) when is_record(ParamType, tlv) ->
 %%    Binary    = bin()
 %%    StdType   = {standard, Name, Domain, Error}
 %%    Name      = atom()
-%%    Domain    = constant()       | 
-%%                integer()        | 
-%%                c_octet_string() | 
+%%    Domain    = constant()       |
+%%                integer()        |
+%%                c_octet_string() |
 %%                octet_string()   |
 %%                list()           |
 %%                composite()      |
@@ -176,19 +176,19 @@ get_name(ParamType) when is_record(ParamType, tlv) ->
 %%    Rest      = bin()
 %%    Error     = int()
 %%
-%% @doc Decodes a <tt>Value</tt> from the head of a <tt>Binary</tt> 
+%% @doc Decodes a <tt>Value</tt> from the head of a <tt>Binary</tt>
 %% using a standard type specifier (<tt>StdType</tt>).
 %%
 %% <p>An standard parameter is directly decoded according to its domain.</p>
 %%
 %% <ol>
-%%   <li>If the <tt>Value</tt> is successfully decoded according to the 
-%%     parameter domain using the base_syntax:decode/2 the term 
+%%   <li>If the <tt>Value</tt> is successfully decoded according to the
+%%     parameter domain using the base_syntax:decode/2 the term
 %%     <tt>{ok, Value, Rest}</tt> is returned.
 %%   </li>
 %%   <li>If the value can not be decode and the parameter has an associated
-%%     <tt>Error</tt>, the term <tt>{error, Error}</tt> is returned. 
-%%     If no Error assigned to the parameter, the term 
+%%     <tt>Error</tt>, the term <tt>{error, Error}</tt> is returned.
+%%     If no Error assigned to the parameter, the term
 %%     <tt>{error, ?ESME_RUNKNOWNERR}</tt> is returned.
 %%   </li>
 %% </ol>
@@ -215,9 +215,9 @@ decode_std(Binary, #standard{domain = Domain, error = Error}) ->
 %%    Name     = atom()
 %%    Tag      = int()
 %%    Domain   = Type
-%%    Type     = constant()       | 
-%%               integer()        | 
-%%               c_octet_string() | 
+%%    Type     = constant()       |
+%%               integer()        |
+%%               c_octet_string() |
 %%               octet_string()   |
 %%               list()           |
 %%               composite()      |
@@ -233,12 +233,12 @@ decode_std(Binary, #standard{domain = Domain, error = Error}) ->
 %%    Rest     = bin()
 %%
 %% @doc Extracts a TLV from a Binary.  This functions searches for the TLV in
-%% the binary and decodes it.  Assumes that Binary is a concatenation of 
+%% the binary and decodes it.  Assumes that Binary is a concatenation of
 %% encoded TLVs.  If the TLV is multiple, the function gets every occurrence of
 %% the TLV, otherwise, once the first occurrence is found the function stops
 %% searching.
 %%
-%% <p>The <tt>Rest</tt> of the binary, without the decoded octets, is 
+%% <p>The <tt>Rest</tt> of the binary, without the decoded octets, is
 %% returned in the resulting term.  The order of the remainder TLVs is
 %% preserved within <tt>Rest</tt>.</p>
 %%
@@ -246,7 +246,7 @@ decode_std(Binary, #standard{domain = Domain, error = Error}) ->
 %%
 %% <ul>
 %%   <li><tt>{ok, undefined, Rest}</tt> if the TLV is optional
-%%     and no ocurrences where found.  If a TLV having a reserved value was 
+%%     and no ocurrences where found.  If a TLV having a reserved value was
 %%     discarded, <tt>Rest</tt> might not be equal to <tt>Binary</tt>.
 %%   </li>
 %%   <li><tt>{ok, ValueList, Rest}</tt> where <tt>ValueList</tt> is a
@@ -256,19 +256,19 @@ decode_std(Binary, #standard{domain = Domain, error = Error}) ->
 %%   <li><tt>{ok, Value, Rest}</tt> where <tt>Value</tt> is a term, if
 %%     one occurrence of a single TLV was found.
 %%   </li>
-%%   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> if a mandatory TLV doesn't 
+%%   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> if a mandatory TLV doesn't
 %%     ocurr on <tt>Binary</tt>.
 %%   </li>
-%%   <li><tt>{error, ?ESME_RINVTLVSTREAM}</tt> if the value of the TLV is 
+%%   <li><tt>{error, ?ESME_RINVTLVSTREAM}</tt> if the value of the TLV is
 %%     shorter than the length specified on the TLV or a binary with 1-3 octets
-%%     was encountered while trying to decode the TLV, indicating a corrupt 
+%%     was encountered while trying to decode the TLV, indicating a corrupt
 %%     PDU.
 %%   </li>
 %%   <li><tt>{error, ?ESME_RINVTLVLEN}</tt> is retuned if the TLV has
 %%     specified a length that is invalid.
 %%   </li>
 %%   <li><tt>{error, ?ESME_RINVTLVVAL}</tt> is returned if the TLV value
-%%     could not be decoded.  If the TLV has a particular error code 
+%%     could not be decoded.  If the TLV has a particular error code
 %%     associated, the TLV error code is reported instead of ?ESME_RINVTLVVAL.
 %%   </li>
 %% </ul>
@@ -294,7 +294,7 @@ decode_tlv(Binary, TlvType) ->
         Error ->
             Error
     end.
-            
+
 %% @doc Auxiliary function for decode_tlv/2
 %%
 %% @see decode_tlv_value/2
@@ -313,17 +313,17 @@ decode_tlv(<<T:16, L:16, Bin/binary>>, #tlv{tag = T} = TlvType, Values, Acc) ->
                     decode_tlv(Rest, TlvType, Values, Acc);
                 {ok, Value} ->
                     case TlvType#tlv.multiple of
-                        true ->   
+                        true ->
                             % If multiple values allowed, keep on searching
                             decode_tlv(Rest, TlvType, [Value|Values], Acc);
-                        _False -> 
+                        _False ->
                             % On single TLVs no further searching needed
                             decode_tlv(<<>>, TlvType, [Value], [Rest|Acc])
                     end;
                 Error ->
                     Error
             end;
-        _TruncatedVal ->  
+        _TruncatedVal ->
             % The Value is shorter than Len octets, report the error
             {error, ?ESME_RINVTLVSTREAM}
     end;
@@ -333,7 +333,7 @@ decode_tlv(<<T:16, L:16, Bin/binary>>, TlvType, Values, Acc) ->
         <<V:L/binary-unit:8, Rest/binary>> ->
             Tlv = <<T:16, L:16, V:L/binary-unit:8>>,
             decode_tlv(Rest, TlvType, Values, [Tlv|Acc]);
-        TruncatedVal -> 
+        TruncatedVal ->
             % The remainder of the binary is shorter than Len octets.  Error
             % handled at the moment of decoding this particular TLV.
             Tlv = <<T:16, L:16, TruncatedVal/binary>>,
@@ -355,7 +355,7 @@ decode_tlv_value(BinaryValue, TlvType) ->
         {ok, _Value, _Something} ->
             % Uhmm, not all the value was decoded... TLV length is greater
             % than the size permitted by the domain specifier.
-            {error, ?ESME_RINVTLVLEN}; 
+            {error, ?ESME_RINVTLVLEN};
         {error, _Reason} ->
             % The value doesn't match the declared domain for this TLV, it may
             % be a reserved value though, in such a case the SMPP protocol
@@ -378,9 +378,9 @@ decode_tlv_value(BinaryValue, TlvType) ->
 %% @spec encode_std(Value, StdType) -> {ok, Binary} | {error, Error}
 %%    Value     = term()
 %%    StdType   = {standard, Name, Domain, Error}
-%%    Domain    = constant()       | 
-%%                integer()        | 
-%%                c_octet_string() | 
+%%    Domain    = constant()       |
+%%                integer()        |
+%%                c_octet_string() |
 %%                octet_string()   |
 %%                list()           |
 %%                composite()      |
@@ -395,13 +395,13 @@ decode_tlv_value(BinaryValue, TlvType) ->
 %% <p>An standard parameter is directly encoded using its domain specifier.</p>
 %%
 %% <ol>
-%%   <li>If the <tt>Value</tt> is successfully encoded according to the 
-%%     parameter domain using the base_syntax:encode/2 the term 
+%%   <li>If the <tt>Value</tt> is successfully encoded according to the
+%%     parameter domain using the base_syntax:encode/2 the term
 %%     <tt>{ok, Binary}</tt> is returned.
 %%   </li>
 %%   <li>If the value can not be encoded and the parameter has an associated
-%%     <tt>Error</tt>, the term <tt>{error, Error}</tt> is returned. 
-%%     If no Error assigned to the parameter, the term 
+%%     <tt>Error</tt>, the term <tt>{error, Error}</tt> is returned.
+%%     If no Error assigned to the parameter, the term
 %%     <tt>{error, ?ESME_RUNKNOWNERR}</tt> is returned.
 %%   </li>
 %% </ol>
@@ -435,9 +435,9 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 %%    Name     = atom()
 %%    Tag      = int()
 %%    Domain   = Type
-%%    Type     = constant()       | 
-%%               integer()        | 
-%%               c_octet_string() | 
+%%    Type     = constant()       |
+%%               integer()        |
+%%               c_octet_string() |
 %%               octet_string()   |
 %%               list()           |
 %%               composite()      |
@@ -449,26 +449,26 @@ encode_std(Value, #standard{domain = Domain, error = Error}) ->
 %%    Err      = int()
 %%    Binary   = bin()
 %%
-%% @doc Encodes a TLV into binary format.  The SMPP Protocol Specification 
+%% @doc Encodes a TLV into binary format.  The SMPP Protocol Specification
 %% (section 3.1 on [SMPP v5.0]) determines that a TLV must be encoded using; 2
 %% octets for the Tag, 2 octets for Length field and Length octets for the
 %% Value (in that order).
 %%
 %% <ol>
-%%   <li><tt>Value</tt> is encoded into <tt>Binary</tt> according to 
+%%   <li><tt>Value</tt> is encoded into <tt>Binary</tt> according to
 %%     the base type of the parameter using base_syntax:encode/2.  The term
-%%     <tt>{ok, &lt;&lt;Tag:16/integer, (size(Binary)):16/integer, 
+%%     <tt>{ok, &lt;&lt;Tag:16/integer, (size(Binary)):16/integer,
 %%     Binary/binary&gt;&gt;}</tt> is returned.
 %%   </li>
-%%   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if 
+%%   <li><tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if
 %%     <tt>Value</tt> is the atom <tt>undefined</tt> on mandatory TLVs.
 %%   </li>
-%%   <li>Additionally, <tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if 
+%%   <li>Additionally, <tt>{error, ?ESME_RMISSINGTLV}</tt> is returned if
 %%     <tt>Value</tt> is an empty list on mandatory multiple TLVs.
 %%   </li>
 %%   <li>The term <tt>{error, ?ESME_RINVTLVVAL}</tt> is returned if
 %%     <tt>Value</tt> doesn't match the TLV domain.  If the parameter has
-%%     an associated <tt>Error</tt>, the term <tt>{error, Error}</tt> 
+%%     an associated <tt>Error</tt>, the term <tt>{error, Error}</tt>
 %%     is returned instead of <tt>{error, ?ESME_RINVTLVVAL}</tt>.
 %%   </li>
 %% </ol>
@@ -521,7 +521,7 @@ encode_multiple_tlv([Value|Values], TlvType, Acc) ->
 %% @doc Auxiliary function for encode_tlv/2
 %%
 %% @see base_syntax:encode/2
-%% @end 
+%% @end
 encode_single_tlv(Value, #tlv{tag = Tag, domain = Domain, error = Error}) ->
     case base_syntax:encode(Value, Domain) of
         {ok, Binary} ->

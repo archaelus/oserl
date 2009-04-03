@@ -19,7 +19,7 @@
 %%% <p>A generic SMSC SMPP session modeled as a FSM.  It also implements the
 %%% <a href="gen_connection.html">gen_connection</a> behaviour.</p>
 %%%
-%%% <p>Every SMPP session works over a single TCP/IP connection.  If the 
+%%% <p>Every SMPP session works over a single TCP/IP connection.  If the
 %%% underlying connection exits, the session is also terminated.</p>
 %%%
 %%% <p>Session failures due to connection errors must be handled by the
@@ -29,7 +29,7 @@
 %%% <h2>State transitions table</h2>
 %%%
 %%% <p>To a better understanding of this behaviour, should notice that the
-%%% state name on a SMSC session references that state of the ESME session on 
+%%% state name on a SMSC session references that state of the ESME session on
 %%% the other peer.  Thus:</p>
 %%%
 %%% <dl>
@@ -43,7 +43,7 @@
 %%% </dl>
 %%%
 %%% <p>Possible states for the SMSC SMPP session are shown in the first row.
-%%% Events are those in the first column.  This table shows the next state 
+%%% Events are those in the first column.  This table shows the next state
 %%% given an event and the current state.</p>
 %%%
 %%% <p>Operations issued by the other peer (ESME) are treated asynchronously
@@ -52,24 +52,24 @@
 %%%
 %%% <h3>response_timer</h3>
 %%%
-%%% <p>One <quote>instance</quote> of this timer is started for each request.  
-%%% On expiration, the request is considered unsuccessful.</p>  
+%%% <p>One <quote>instance</quote> of this timer is started for each request.
+%%% On expiration, the request is considered unsuccessful.</p>
 %%%
-%%% <p>The timer associated to a request is stopped when the corresponding 
+%%% <p>The timer associated to a request is stopped when the corresponding
 %%% response arrives.</p>
 %%%
 %%%
 %%% <h2>Callback Function Index</h2>
 %%%
-%%% <p>A module implementing this behaviour must export these functions.  
+%%% <p>A module implementing this behaviour must export these functions.
 %%% Leaving a callback undefined crashes the entire session (when that
 %%% particular function is called).</p>
 %%%
 %%% <table width="100%" border="1">
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_bind-3">handle_bind/3</a></td>
-%%%     <td>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
-%%%       <i>bind_transceiver</i> operations (from the peer ESME) to the 
+%%%     <td>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and
+%%%       <i>bind_transceiver</i> operations (from the peer ESME) to the
 %%%       callback SMSC.
 %%%     </td>
 %%%   </tr>
@@ -79,13 +79,13 @@
 %%%     <td>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
 %%%       <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
 %%%       <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
-%%%       <i>data_sm</i> operations (from the peer ESME) to the callback 
+%%%       <i>data_sm</i> operations (from the peer ESME) to the callback
 %%%       SMSC.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
-%%%     <td>This callback forwards an unbind request (issued by a peer ESME) 
+%%%     <td>This callback forwards an unbind request (issued by a peer ESME)
 %%%       to the SMSC.
 %%%     </td>
 %%%   </tr>
@@ -93,15 +93,15 @@
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
-%%% 
+%%%
 %%% <h3><a name="handle_bind-3">handle_bind/3</a></h3>
 %%%
 %%% <tt>handle_bind(SMSC, Session, {CmdName, Pdu}) -> Result</tt>
 %%% <ul>
 %%%   <li><tt>SMSC = pid()</tt></li>
 %%%   <li><tt>Session = pid()</tt></li>
-%%%   <li><tt>CmdName = bind_receiver | 
-%%%                     bind_transmitter | 
+%%%   <li><tt>CmdName = bind_receiver |
+%%%                     bind_transmitter |
 %%%                     bind_transceiver</tt></li>
 %%%   <li><tt>Pdu = pdu()</tt></li>
 %%%   <li><tt>Result = {ok, ParamList} | {error, Error, ParamList}</tt></li>
@@ -110,8 +110,8 @@
 %%%   <li><tt>ParamValue = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and 
-%%% <i>bind_transceiver</i> operations (from the peer ESME) to the 
+%%% <p>Forwards <i>bind_receiver</i>, <i>bind_transmitter</i> and
+%%% <i>bind_transceiver</i> operations (from the peer ESME) to the
 %%% callback SMSC.</p>
 %%%
 %%% <p>The <tt>ParamList</tt> included in the response is used to construct
@@ -120,10 +120,10 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the
 %%% session id.</p>
 %%%
-%%% 
+%%%
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
 %%% <tt>handle_operation(SMSC, Session, {CmdName, Pdu}) -> Result</tt>
@@ -157,10 +157,10 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the
 %%% session id.</p>
 %%%
-%%% 
+%%%
 %%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
 %%%
 %%% <tt>handle_unbind(SMSC, Session, Pdu) -> ok | {error, Error}</tt>
@@ -171,17 +171,17 @@
 %%%   <li><tt>Error = int()</tt></li>
 %%% </ul>
 %%%
-%%% <p>This callback forwards an unbind request (issued by a peer ESME) to the 
+%%% <p>This callback forwards an unbind request (issued by a peer ESME) to the
 %%% SMSC.</p>
 %%%
-%%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
+%%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK
 %%% command_status is sent to the MC and the session moves into the unbound
 %%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
 %%% response PDU sent by the session to the MC will have an <tt>Error</tt>
 %%% command_status and the session will remain on it's current bound state
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
-%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the 
+%%% <p><tt>SMSC</tt> is the SMSC's process id, <tt>Session</tt> is the
 %%% session id.</p>
 %%%
 %%% <h2>Changes 1.1 -&gt; 1.2</h2>
@@ -190,7 +190,7 @@
 %%%
 %%% <ul>
 %%%   <li>Wrap #state.sequence_number to 1 when it reaches 16#7FFFFFFF.</li>
-%%%   <li>Do not reset timers when a PDU is dropped because the peer is 
+%%%   <li>Do not reset timers when a PDU is dropped because the peer is
 %%%       congested.</li>
 %%%   <li>handle_peer_bind/3, add remote peer IP address in handle_bind callback.
 %%%   </li>
@@ -199,10 +199,10 @@
 %%% [19 Sep 2006 Enrique Marcote]
 %%%
 %%% <ul>
-%%%   <li>Add <tt>SmscRef</tt> to 
+%%%   <li>Add <tt>SmscRef</tt> to
 %%%     <a href="gen_smsc_session.html#start-4">start/4</a>,
-%%%     <a href="gen_smsc_session.html#start-5">start/5</a>, 
-%%%     <a href="gen_smsc_session.html#start_link-4">start_link/4</a> and 
+%%%     <a href="gen_smsc_session.html#start-5">start/5</a>,
+%%%     <a href="gen_smsc_session.html#start_link-4">start_link/4</a> and
 %%%     <a href="gen_smsc_session.html#start_link-5">start_link/5</a> functions.
 %%%   </li>
 %%% </ul>
@@ -214,11 +214,11 @@
 %%% @version 1.1, {07 June 2004} {@time}.
 %%% @end
 %%%
-%%% %@TODO New fsm implementation (on stdlib 1.12) includes now timers, use 
-%%% this new feature and remove custom timers.  Built in timers do not include 
-%%% reset feature :-( a little bit of extra work will be required (cancel + 
-%%% start and updating state data.  Consider creating the functions 
-%%% reset_active_timers and cancel_active_timers, both take StateData as an 
+%%% %@TODO New fsm implementation (on stdlib 1.12) includes now timers, use
+%%% this new feature and remove custom timers.  Built in timers do not include
+%%% reset feature :-( a little bit of extra work will be required (cancel +
+%%% start and updating state data.  Consider creating the functions
+%%% reset_active_timers and cancel_active_timers, both take StateData as an
 %%% argument and return {ok, NewStateData} | error.  Put canceled timers to
 %%% undefined)
 %%%
@@ -240,10 +240,10 @@
 %%%-------------------------------------------------------------------
 %%% External exports
 %%%-------------------------------------------------------------------
--export([start/4, 
-         start/5, 
-         start_link/4, 
-         start_link/5, 
+-export([start/4,
+         start/5,
+         start_link/4,
+         start_link/5,
          alert_notification/2,
          outbind/2,
          deliver_sm/2,
@@ -279,7 +279,7 @@
 -define(SERVER, ?MODULE).
 
 % Bound state for a given command_id
--define(BOUND(B), if 
+-define(BOUND(B), if
                       B == ?COMMAND_ID_BIND_RECEIVER    -> bound_rx;
                       B == ?COMMAND_ID_BIND_TRANSMITTER -> bound_tx;
                       B == ?COMMAND_ID_BIND_TRANSCEIVER -> bound_trx
@@ -290,7 +290,7 @@
 %%%-------------------------------------------------------------------
 %%% Records
 %%%-------------------------------------------------------------------
-%% %@spec {state, 
+%% %@spec {state,
 %%         SMSC,
 %%         Mod,
 %%         SequenceNumber,
@@ -335,7 +335,7 @@
 %%   <dt>SelfCongestionState: </dt><dd>ESME congestion state (default is 0).
 %%   </dd>
 %%   <dt>PeerCongestionState: </dt><dd>MC congestion state.  Might the atom
-%%     <tt>undefined</tt> if the peer ESME doesn't support the 
+%%     <tt>undefined</tt> if the peer ESME doesn't support the
 %%     <i>congestion_state</i> parameter.
 %%   </dd>
 %%   <dt>SessionInitTime: </dt><dd>A value in milliseconds or the atom
@@ -346,7 +346,7 @@
 %%
 %%     <p>This timer is started when a new connection is accepted from the
 %%     Mc and aborted when the session moves away from the open state (or if
-%%     the connection is reopen).  
+%%     the connection is reopen).
 %%
 %%     <p>On expiration the event <tt>{timeout, Ref, session_init_timer}
 %%     </tt> is asynchronously signaled to the current state.
@@ -359,7 +359,7 @@
 %%   <dt>EnquireLinkTimer: </dt><dd>PID of the process running the enquire
 %%     link timeout (might be the atom <tt>undefined</tt>).
 %%
-%%     <p>This timer is started when the session gets to a bound state; 
+%%     <p>This timer is started when the session gets to a bound state;
 %%     bound_rx, bound_tx or bound_trx, and restarted every time a *valid*
 %%     request (response) is sent (received).  The timer is aborted if the
 %%     session gets unbound.  Erroneous requests/responses do *not* reset this
@@ -376,7 +376,7 @@
 %%   <dt>InactivityTimer: </dt><dd>PID of the process running the inactivity
 %%     timeout (might be the atom <tt>undefined</tt>).
 %%
-%%     <p>This timer is started when the session gets to a bound state; 
+%%     <p>This timer is started when the session gets to a bound state;
 %%     bound_rx, bound_tx or bound_trx, and restarted every time a *valid*
 %%     request (response) is sent (received).  The timer is aborted if the
 %%     session gets unbound.  Erroneous requests/responses do *not* reset this
@@ -392,7 +392,7 @@
 %%   </dd>
 %% </dl>
 %% %@end
--record(state, 
+-record(state,
         {smsc,
          mod,
          sequence_number = 0,
@@ -436,10 +436,10 @@ behaviour_info(_Other) ->
 %%
 %% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro
 %% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record
 %% definition.</p>
 %%
 %% <p>The gen_smsc_session is not registered.</p>
@@ -463,14 +463,14 @@ start(SmscRef, Mod, Socket, Timers) ->
 %%
 %% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro
 %% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record
 %% definition.</p>
 %%
 %% <p>If <tt>Name = {local, TheName}</tt>, the gen_smsc_session is registered
-%% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the 
+%% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the
 %% gen_smsc_session is registered globally as <tt>TheName</tt>.</p>
 %%
 %% @see gen_fsm:start/4
@@ -490,10 +490,10 @@ start(Name, SmscRef, Mod, Socket, Timers) ->
 %%
 %% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro
 %% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record
 %% definition.</p>
 %%
 %% <p>The gen_smsc_session is not registered.</p>
@@ -517,14 +517,14 @@ start_link(SmscRef, Mod, Socket, Timers) ->
 %%
 %% @doc Starts the server setting <tt>SmscRef</tt> as the session SMSC (owner).
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record.  Use the macro
 %% ?DEFAULT_TIMERS to set the default values.</p>
 %%
-%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record 
+%% <p>Refer to <b>oserl.hrl</b> for more details on the <tt>timers</tt> record
 %% definition.</p>
 %%
 %% <p>If <tt>Name = {local, TheName}</tt>, the gen_smsc_session is registered
-%% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the 
+%% locally as <tt>TheName</tt>.  If <tt>Name = {global, TheName}</tt>, the
 %% gen_smsc_session is registered globally as <tt>TheName</tt>.</p>
 %%
 %% @see gen_fsm:start_link/4
@@ -559,7 +559,7 @@ alert_notification(FsmRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues an <i>outbind</i> operation on the session identified by 
+%% @doc Issues an <i>outbind</i> operation on the session identified by
 %% <tt>FsmRef</tt>.
 %% @end
 outbind(FsmRef, ParamList) ->
@@ -576,7 +576,7 @@ outbind(FsmRef, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>data_sm</i> operation on the session identified by 
+%% @doc Issues a <i>data_sm</i> operation on the session identified by
 %% <tt>FsmRef</tt>.
 %% @end
 data_sm(FsmRef, ParamList) ->
@@ -607,7 +607,7 @@ deliver_sm(FsmRef, ParamList) ->
 %%    PduResp = pdu()
 %%    Error   = int()
 %%
-%% @doc Issues an <i>unbind</i> operation on the session identified by 
+%% @doc Issues an <i>unbind</i> operation on the session identified by
 %% <tt>FsmRef</tt>.
 %% @end
 unbind(FsmRef) ->
@@ -636,7 +636,7 @@ stop(FsmRef) ->
 %%    Result     = {ok, StateName, StateData}          |
 %%                 {ok, StateName, StateData, Timeout} |
 %%                 ignore                              |
-%%                 {stop, StopReason}                   
+%%                 {stop, StopReason}
 %%    StateName  = atom()
 %%    StateData  = term()
 %%    Timeout    = int()
@@ -699,7 +699,7 @@ open({timeout, _Ref, session_init_timer}, S) ->
 open({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, open, S};
-open(R, S) ->    
+open(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, open, S}.
 
@@ -744,7 +744,7 @@ outbound({timeout, _Ref, _Timer}, S) ->
 outbound(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, outbound, S}.
-    
+
 
 %% @spec bound_rx(Event, StateData) -> Result
 %%    Event         = timeout | term()
@@ -788,7 +788,7 @@ bound_rx({timeout, _Ref, inactivity_timer}, S) ->
 bound_rx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_rx, S};
-bound_rx(R, S) ->    
+bound_rx(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, bound_rx, S}.
 
@@ -849,7 +849,7 @@ bound_tx({timeout, _Ref, inactivity_timer}, S) ->
 bound_tx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_tx, S};
-bound_tx(R, S) ->    
+bound_tx(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, bound_tx, S}.
 
@@ -910,7 +910,7 @@ bound_trx({timeout, _Ref, inactivity_timer}, S) ->
 bound_trx({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, bound_trx, S};
-bound_trx(R, S) ->    
+bound_trx(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, bound_trx, S}.
 
@@ -938,7 +938,7 @@ unbound({timeout, _Ref, enquire_link_timer}, S) ->
 unbound({timeout, _Ref, _Timer}, S) ->
     % Ignore false timeouts
     {next_state, unbound, S};
-unbound(R, S) ->    
+unbound(R, S) ->
     esme_rinvbndsts_resp(R, S#state.socket),
     {next_state, unbound, S}.
 
@@ -953,7 +953,7 @@ unbound(R, S) ->
 %% @see bound_tx/2
 %% @see bound_trx/2
 %% @see unbound/2
-%% @end 
+%% @end
 esme_rinvbndsts_resp({CmdId, Pdu}, Socket) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     case ?VALID_COMMAND_ID(CmdId) of
@@ -975,14 +975,14 @@ esme_rinvbndsts_resp({CmdId, Pdu}, Socket) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
 %%    Timeout       = int() | infinity
 %%    Reason        = term()
 %%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name open.
 %% @end
 open({?COMMAND_ID_OUTBIND, ParamList}, _From, S) ->
@@ -1003,14 +1003,14 @@ open(_Event, _From, S) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
 %%    Timeout       = int() | infinity
 %%    Reason        = term()
 %%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name outbound.
 %% @end
 outbound(_Event, _From, S) ->
@@ -1026,23 +1026,23 @@ outbound(_Event, _From, S) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
 %%    Timeout       = int() | infinity
 %%    Reason        = term()
 %%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for 
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name bound_rx.  Bound against a receiver ESME.
 %% @end
-bound_rx({CmdId, _}, _From, S) 
+bound_rx({CmdId, _}, _From, S)
   when is_integer(S#state.peer_congestion_state) and
        (S#state.peer_congestion_state > 90) and
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
-    % If the other peer is congested do not send the request.  
+    % If the other peer is congested do not send the request.
     %
     % Notice that only current request is dropped, for the next one, we put
     % the peer_congestion_state back to 90.
@@ -1077,7 +1077,7 @@ bound_rx(_Event, _From, S) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
@@ -1105,7 +1105,7 @@ bound_tx(_Event, _From, S) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
@@ -1115,13 +1115,13 @@ bound_tx(_Event, _From, S) ->
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - StateName/3</a> callback implementation.  Handles events for
 %% the state name bound_trx.  Bound against a transceiver ESME.
 %% @end
-bound_trx({CmdId, _}, _From, S) 
-  when is_integer(S#state.peer_congestion_state) and 
-       (S#state.peer_congestion_state > 90) and 
+bound_trx({CmdId, _}, _From, S)
+  when is_integer(S#state.peer_congestion_state) and
+       (S#state.peer_congestion_state > 90) and
        ((CmdId == ?COMMAND_ID_DATA_SM) or
         (CmdId == ?COMMAND_ID_DELIVER_SM) or
         (CmdId == ?COMMAND_ID_ALERT_NOTIFICATION)) ->
-    % If the other peer is congested the request is not sent.  
+    % If the other peer is congested the request is not sent.
     %
     % Notice that only current request is dropped, for the next one we put
     % the peer_congestion_state back to 90.
@@ -1156,7 +1156,7 @@ bound_trx(_Event, _From, S) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
@@ -1190,7 +1190,7 @@ handle_event({input, BinaryPdu, Lapse, Index}, StateName, StateData) ->
     case catch operation:smsc_unpack(BinaryPdu) of
         {ok, Pdu} ->
             handle_input_correct_pdu(Pdu, StateData),
-            NewStateData = 
+            NewStateData =
                 case StateName of
                     bound_rx ->
                         % Bound against a receiver, check ESME congestion
@@ -1311,10 +1311,10 @@ handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
 %% </dl>
 %% @end
 congestion_state(Lapse, Index, Time) ->
-    case catch ((99 * Time) / ((Lapse / Index) + Time)) of 
-        Result when is_float(Result) -> 
+    case catch ((99 * Time) / ((Lapse / Index) + Time)) of
+        Result when is_float(Result) ->
             trunc(Result);
-        _DivisionByZero -> 
+        _DivisionByZero ->
             0
     end.
 
@@ -1329,7 +1329,7 @@ congestion_state(Lapse, Index, Time) ->
 %%                    {reply, Reply, NextStateName, NextStateData}          |
 %%                    {reply, Reply, NextStateName, NextStateData, Timeout} |
 %%                    {stop, Reason, NewStateData}                          |
-%%                    {stop, Reason, Reply, NewStateData}                    
+%%                    {stop, Reason, Reply, NewStateData}
 %%    Reply         = term()
 %%    NextStateName = atom()
 %%    NextStateData = term()
@@ -1349,18 +1349,18 @@ handle_sync_event(_Event, _From, StateName, StateData) ->
 %%    StateData     = term()
 %%    Result        = {next_state, NextStateName, NextStateData}          |
 %%                    {next_state, NextStateName, NextStateData, Timeout} |
-%%                    {stop, Reason, NewStateData}                         
+%%                    {stop, Reason, NewStateData}
 %%    NextStateName = atom()
 %%    NextStateData = term()
 %%    Timeout       = int() | infinity
 %%    Reason        = term()
 %%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception 
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - handle_info/3</a> callback implementation.  Call on reception
 %% of any other messages than a synchronous or asynchronous event.
 %% @end
-handle_info(_Info, StateName, StateData) -> 
+handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
-    
+
 
 %% @spec terminate(Reason, StateName, StateData) -> true
 %%    Reason    = normal | shutdown | term()
@@ -1393,7 +1393,7 @@ terminate(R, N, S) ->
 %%    NextStateName = atom()
 %%    NewStateData  = term()
 %%
-%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - code_change/4</a> callback implementation.  Convert process 
+%% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_fsm.html">gen_fsm - code_change/4</a> callback implementation.  Convert process
 %% state when code is changed
 %% @end
 code_change(_OldVsn, StateName, StateData, _Extra) ->
@@ -1416,7 +1416,7 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %%
 %% <p>Returns <tt>true</tt> if the bind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
-%% @end 
+%% @end
 handle_peer_bind({CmdId, Pdu}, Self, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
@@ -1445,7 +1445,7 @@ handle_peer_bind({CmdId, Pdu}, Self, S) ->
 %%
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
-%% @end 
+%% @end
 handle_peer_operation({CmdId, Pdu}, Self, S) ->
     CmdName = ?COMMAND_NAME(CmdId),
     SeqNum  = operation:get_param(sequence_number, Pdu),
@@ -1477,7 +1477,7 @@ handle_peer_operation({CmdId, Pdu}, Self, S) ->
 %%
 %% <p>Returns <tt>true</tt> if the unbind is accepted by the callback module,
 %% <tt>false</tt> otherwise.</p>
-%% @end 
+%% @end
 handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
     SeqNum = operation:get_param(sequence_number, Pdu),
     RespId = ?COMMAND_ID_UNBIND_RESP,
@@ -1502,7 +1502,7 @@ handle_peer_unbind({?COMMAND_ID_UNBIND, Pdu}, Self, S) ->
 %% @doc Send a SMPP request given the command PDU.
 %%
 %% <p>This function doesn't expect any response, thus no request broker is
-%% spawned.  Used by the <i>outbind</i> and <i>alert_notification</i> 
+%% spawned.  Used by the <i>outbind</i> and <i>alert_notification</i>
 %% operations.</p>
 %%
 %% <p>If PDU is not successfully sent, the functions exits on error.</p>
@@ -1596,14 +1596,14 @@ send_pdu(Socket, Pdu) ->
 %%    Time   = int()
 %%
 %% @doc The request broker waits for <tt>Time</tt> milliseconds until a
-%% response for the request arrives.  The response is forwarded to the 
+%% response for the request arrives.  The response is forwarded to the
 %% <tt>Caller</tt> of the request, if the <tt>Time</tt> expires
-%% before any response is received, the term <tt>{error, Error}</tt> 
+%% before any response is received, the term <tt>{error, Error}</tt>
 %% is reported to the <tt>Caller</tt>, where <tt>Error</tt> is
 %% <tt>operation:request_failure_code(CmdId)</tt>.
 %% @end
 request_broker(undefined, CmdId, Time) ->
-    receive 
+    receive
         {FsmRef, {response, RespId, Pdu}} ->
             case operation:get_param(command_status, Pdu) of
                 ?ESME_ROK when RespId == ?COMMAND_ID_UNBIND_RESP ->
@@ -1642,7 +1642,7 @@ request_broker(Caller, CmdId, Time) ->
 %%    Socket = socket()
 %%    Buffer = binary()
 %%
-%% @doc Waits until new data is received on <tt>Socket</tt> and starts a 
+%% @doc Waits until new data is received on <tt>Socket</tt> and starts a
 %% receive loop to get bulk input.  All data received on the same loop triggers
 %% the event <i>recv</i> with the same timestamp (with a 0 time lapse).
 %%
@@ -1665,7 +1665,7 @@ wait_recv(FsmRef, Socket, Buffer) ->
 %% @end
 recv_loop(FsmRef, Socket, Buffer) ->
     case gen_tcp:recv(Socket, 0, 0) of
-        {ok, Input} ->                    % Some input waiting already 
+        {ok, Input} ->                    % Some input waiting already
             B = handle_input(FsmRef, concat_binary([Buffer, Input]), 0, 1),
             recv_loop(FsmRef, Socket, B);
         {error, timeout} ->               % No data inmediately available
@@ -1682,7 +1682,7 @@ recv_loop(FsmRef, Socket, Buffer) ->
 handle_input(FsmRef, <<CommandLength:32, Rest/binary>> = Buffer, Lapse, N) ->
     Len = CommandLength - 4,
     case Rest of
-        <<PduRest:Len/binary-unit:8, NextPdus/binary>> -> 
+        <<PduRest:Len/binary-unit:8, NextPdus/binary>> ->
             BinaryPdu = <<CommandLength:32, PduRest/binary>>,
             gen_fsm:send_all_state_event(FsmRef, {input, BinaryPdu, Lapse, N}),
             % The buffer may carry more than one SMPP PDU.
@@ -1699,9 +1699,9 @@ handle_input(_FsmRef, Buffer, _Lapse, _N) ->
 %%    Msg  = term()
 %%    Ref  = pid()
 %%
-%% @doc Starts a timer, setting the current process as its parent, and returns 
+%% @doc Starts a timer, setting the current process as its parent, and returns
 %% the PID of the timeout process.
-%% 
+%%
 %% <p><tt>Time</tt> is the value of the time in milliseconds or the
 %% atom <tt>infinity</tt>, the later doesn't start any timer.</p>
 %%
@@ -1721,7 +1721,7 @@ start_timer(Time, Msg) ->
 timer_loop(_FsmRef, infinity, _Event) ->
     ok;
 timer_loop(FsmRef, Time, Event) ->
-    receive 
+    receive
         {FsmRef, cancel_timer} ->
             ok;
         _Reset ->
@@ -1734,7 +1734,7 @@ timer_loop(FsmRef, Time, Event) ->
 %% @spec cancel_timer(Timer) -> ok
 %%    Timer = pid()
 %%
-%% @doc Aborts the timer process whose PID is <tt>Timer</tt>.  Only 
+%% @doc Aborts the timer process whose PID is <tt>Timer</tt>.  Only
 %% the timer's parent is allowed to stop it.
 %% @end
 cancel_timer(Timer) when is_pid(Timer) ->
@@ -1746,7 +1746,7 @@ cancel_timer(_Timer) ->  % might be the atom undefined
 %% @spec reset_timer(Timer) -> ok
 %%    Timer = pid()
 %%
-%% @doc Restarts the timer process whose PID is <tt>Timer</tt>.  Only 
+%% @doc Restarts the timer process whose PID is <tt>Timer</tt>.  Only
 %% the timer's parent is allowed to restart it.
 %% @end
 reset_timer(Timer) when is_pid(Timer) ->

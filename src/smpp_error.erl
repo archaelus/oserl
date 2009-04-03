@@ -58,7 +58,7 @@
 %% @doc Given the <tt>CommandStatus</tt> returned by any SMPP operation, it
 %% returns a descriptive string of the error in English (as described in the
 %% SMPP specification V5.0).
-%% @end 
+%% @end
 format(?ESME_ROK) ->
     "No Error.";
 format(?ESME_RINVMSGLEN) ->
@@ -182,11 +182,11 @@ format(?ESME_RINVBCASTCNTTYPE) ->
 format(?ESME_RINVBCASTMSGCLASS) ->
     "Broadcast Message Class is invalid.";
 format(?ESME_RBCASTFAIL) ->
-    "broadcast_sm operation failed."; 
+    "broadcast_sm operation failed.";
 format(?ESME_RBCASTQUERYFAIL) ->
-    "query_broadcast_sm operation failed."; 
+    "query_broadcast_sm operation failed.";
 format(?ESME_RBCASTCANCELFAIL) ->
-    "cancel_broadcast_sm operation failed."; 
+    "cancel_broadcast_sm operation failed.";
 format(?ESME_RINVBCAST_REP) ->
     "Number of Repeated Broadcasts is invalid.";
 format(?ESME_RINVBCASTSRVGRP) ->

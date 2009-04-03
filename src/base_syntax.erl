@@ -27,24 +27,24 @@
 %%% [18 Feb 2004]
 %%%
 %%% <ul>
-%%%   <li>Trailing <tt>NULL_CHARACTER</tt> is transparetly handled by 
+%%%   <li>Trailing <tt>NULL_CHARACTER</tt> is transparetly handled by
 %%%     <a href="#encode-2">base_syntax:encode/2</a> and
 %%%     <a href="#decode-2">base_syntax:decode/2</a> functions.
 %%%   </li>
 %%%   <li>
-%%%   <a 
+%%%   <a
 %%%   href="http://oserl.sourceforge.net/common_lib/binary.html#take_until-3">
-%%%   take_until/3</a> moved to module <a href="binary.html">binary.erl</a> of 
+%%%   take_until/3</a> moved to module <a href="binary.html">binary.erl</a> of
 %%%   the <a href="http://oserl.sourceforge.net/common_lib/index.html">
 %%%   common_lib</a>.
 %%%   </li>
 %%%   <li>
-%%%   <a 
+%%%   <a
 %%%   href="http://oserl.sourceforge.net/common_lib/my_string.html#is_dec-1">
-%%%   is_dec/1</a> and 
-%%%   <a 
+%%%   is_dec/1</a> and
+%%%   <a
 %%%   href="http://oserl.sourceforge.net/common_lib/my_string.html#is_hex-1">
-%%%   is_hex/1</a> moved to module <a href="my_string.html">my_string.erl</a> 
+%%%   is_hex/1</a> moved to module <a href="my_string.html">my_string.erl</a>
 %%%   of the <a href="http://oserl.sourceforge.net/common_lib/index.html">
 %%%   common_lib</a>.
 %%%   </li>
@@ -59,7 +59,7 @@
 %%%
 %%% <h2>References</h2>
 %%% <dl>
-%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol 
+%%%   <dt>[SMPP 5.0]</dt><dd>Short Message Peer-to-Peer Protocol
 %%%     Specification. Version 5.0. SMS Forum.
 %%%   </dd>
 %%% </dl>
@@ -99,9 +99,9 @@
 %%%===================================================================
 %% @spec decode(Binary, Type) -> {ok, Value, Rest} | {error, Reason}
 %%    Binary   = bin()
-%%    Type     = {constant, Constant}                  | 
-%%               {integer, Size, Min, Max}             | 
-%%               {c_octet_string, Fixed, Size, Format} | 
+%%    Type     = {constant, Constant}                  |
+%%               {integer, Size, Min, Max}             |
+%%               {c_octet_string, Fixed, Size, Format} |
 %%               {octet_string, Fixed, Size, Format}   |
 %%               {list, Type, Size}                    |
 %%               {composite, Name, Tuple}              |
@@ -118,12 +118,12 @@
 %%    Rest     = bin()
 %%    Reason   = {type_mismatch, Type, Details}
 %%    Details  = Data | Reason
-%%    Data     = bin() | int() | string() 
+%%    Data     = bin() | int() | string()
 %%
-%% @doc Decodes a Value from the head of a Binary using a Type specifier.  As 
+%% @doc Decodes a Value from the head of a Binary using a Type specifier.  As
 %% the Value is decoded a type checking operation is performed, if successful
 %% the term <tt>{ok, Value, Rest}</tt> is returned (where Rest is the
-%% remainder of the unused binary), otherwise <tt>{error, {type_mismatch, 
+%% remainder of the unused binary), otherwise <tt>{error, {type_mismatch,
 %% Type, Details}}</tt> is returned.
 %%
 %% <p>where</p>
@@ -156,7 +156,7 @@
 %%
 %% <h4><a name="decode-integer">integer</a></h4>
 %%
-%% <p>Checks if Value is a valid Size octets integer.  Must be an integer 
+%% <p>Checks if Value is a valid Size octets integer.  Must be an integer
 %% between 0 and <tt>math:pow(256, Size) - 1</tt>.</p>
 %%
 %% <p>An integer of Size octets is taken from the head of the Binary, if not
@@ -165,11 +165,11 @@
 %%
 %% <h4><a name="decode-c_octet_string">c_octet_string</a></h4>
 %%
-%% <p>Checks if Value is a valid C-Octet String.  A C-Octet String must be 
+%% <p>Checks if Value is a valid C-Octet String.  A C-Octet String must be
 %% NULL_CHARACTER ($\0) terminated.</p>
 %%
 %% <p>When a fixed size is given and the Size-th octet on the Binary is the
-%% NULL_CHARACTER, a <tt>Size - 1</tt> long binary is taken an translated into 
+%% NULL_CHARACTER, a <tt>Size - 1</tt> long binary is taken an translated into
 %% string using the binary_to_list BIF.</p>
 %%
 %% <p>On variable length strings, every octet until the NULL_CHARACTER is taken
@@ -177,22 +177,22 @@
 %% translated to a list with the BIF binary_to_list.  Notice that the resulting
 %% <tt>Value</tt> is always smaller than <tt>Size</tt> characters long.</p>
 %%
-%% <p><font color="red">Important (Since version 0.2).</font>  The base syntax 
+%% <p><font color="red">Important (Since version 0.2).</font>  The base syntax
 %% takes care of trailing NULL_CHARACTERs for you so, <i>even you have to count
 %% this character when setting the <tt>Size</tt> field</i>, <b>do not</b> add a
-%% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:decode/2 
+%% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:decode/2
 %% handles NULLs on its own.</p>
 %%
-%% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string 
-%% accordingly to SMPP specs.  Do not expect decoded c_octet_string values to 
-%% have a trailing NULL_CHARACTER.  This character is automatically removed at 
+%% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string
+%% accordingly to SMPP specs.  Do not expect decoded c_octet_string values to
+%% have a trailing NULL_CHARACTER.  This character is automatically removed at
 %% decode time.</p>
 %%
 %%
 %% <h4><a name="decode-octet_string">octet_string</a></h4>
 %%
-%% <p>When a fixed size is given the Value must be exactly 0 or Size 
-%% characters long.  For variable lengths any range between 0 and Size 
+%% <p>When a fixed size is given the Value must be exactly 0 or Size
+%% characters long.  For variable lengths any range between 0 and Size
 %% octets is considered to be correct.</p>
 %%
 %% <p>Fixed size Octet Strings are decoded pretty much like a C-Octet String,
@@ -201,7 +201,7 @@
 %% <p>It's not easy to guess where a variable Octet String ends, in fact this
 %% data-type makes sense only if encapsulated inside a TLV.  In order to let a
 %% TLV recursively decode an inner variable Octet String the following rule
-%% applies; if size(Binary) less than Size, the hole Binary is translated to a 
+%% applies; if size(Binary) less than Size, the hole Binary is translated to a
 %% list (string), otherwise the first Size octets of the Binary are taken.</p>
 %%
 %%
@@ -209,9 +209,9 @@
 %%
 %% <p>Every Value in the list must conform the given Type.</p>
 %%
-%% <p>To decode a list, a (Size / 256) + 1 octets integer indicating the 
+%% <p>To decode a list, a (Size / 256) + 1 octets integer indicating the
 %% total number (Num) of values is extracted from the head of the Binary, then
-%% a list with Num elements is decoded using the base Type of the list.  
+%% a list with Num elements is decoded using the base Type of the list.
 %% This list of Values is returned, Num is discarded.</p>
 %%
 %%
@@ -220,7 +220,7 @@
 %% <p>In a composite every field is checked against the corresponding field
 %% in the tuple with the types.</p>
 %%
-%% <p>Every field in the composite is decoded, one at a time, using the 
+%% <p>Every field in the composite is decoded, one at a time, using the
 %% corresponding field in the type descriptor.  On anonymous composites
 %% (<tt>Name = undefined</tt>) the returning Value is a tuple built from
 %% the individual fields, named composites tuples are translated to a record of
@@ -242,9 +242,9 @@
 %% @end
 decode(Binary, #constant{value = Value} = Type) ->
     Cons = if
-               is_list(Value) -> 
+               is_list(Value) ->
                    list_to_binary(Value);
-               is_integer(Value) -> 
+               is_integer(Value) ->
                    <<Value/integer>>;
                is_binary(Value) ->
                    <<Value/binary>>;
@@ -356,7 +356,7 @@ decode(Binary, #union{types = Types} = Type) when length(Types) > 0 ->
         {error, Reason} ->
             {error, {type_mismatch, Type, Reason}};
         Ok ->
-            Ok            
+            Ok
     end;
 decode(Binary, Type) ->
     {error, {type_mismatch, Type, Binary}}.
@@ -367,7 +367,7 @@ decode(Binary, Type) ->
 %% <p>This function decodes Times occurrences of a given Type or until an
 %% error is reported.</p>
 %%
-%% <p>If Times is the atom <tt>until_error</tt>, the function tries to 
+%% <p>If Times is the atom <tt>until_error</tt>, the function tries to
 %% decode a Value of Type until an error is reported, at this point the list of
 %% Values previously decoded are returned (Notice that in this case the error
 %% is *NOT* reported).</p>
@@ -402,7 +402,7 @@ decode_iter(Binary, _Type, _Times, Acc) ->
 %% @doc Auxiliary function for decode/2.
 %%
 %% <p>This functions decodes a list of Values using the corresponding type
-%% on the list of types, the list of decoded Values is returned.  Used to 
+%% on the list of types, the list of decoded Values is returned.  Used to
 %% transverse complex data structures (lists and composites).</p>
 %%
 %% @see decode_list/3
@@ -427,9 +427,9 @@ decode_list(Binary, [Type|Types], Values) ->
 
 %% @doc Auxiliary function for decode/2
 %%
-%% <p>Tries to decode a Value using all <tt>Types</tt> on a list, first 
-%% successful match is returned.  If none of the <tt>Types</tt> apply, this 
-%% function tries to guess the closest error description (error with highest 
+%% <p>Tries to decode a Value using all <tt>Types</tt> on a list, first
+%% successful match is returned.  If none of the <tt>Types</tt> apply, this
+%% function tries to guess the closest error description (error with highest
 %% priority).</p>
 %%
 %% @see decode_try/4
@@ -461,9 +461,9 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 
 %% @spec encode(Value, Type) -> {ok, Binary} | {error, Reason}
 %%    Value    = term()
-%%    Type     = {constant, Constant}                  | 
-%%               {integer, Size, Min, Max}             | 
-%%               {c_octet_string, Fixed, Size, Format} | 
+%%    Type     = {constant, Constant}                  |
+%%               {integer, Size, Min, Max}             |
+%%               {c_octet_string, Fixed, Size, Format} |
 %%               {octet_string, Fixed, Size, Format}   |
 %%               {list, Type, Size}                    |
 %%               {composite, Name, Tuple}              |
@@ -478,11 +478,11 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %%    Types    = [Type]
 %%    Binary   = bin()
 %%    Reason   = {type_mismatch, Type, Details}
-%%    Details  = Data | Reason 
+%%    Details  = Data | Reason
 %%    Data     = bin() | int() | string()
 %%
 %% @doc Encodes a Value using a Type specifier.  Before encoding the value
-%% a type checking operation is done, if unsuccessful the term 
+%% a type checking operation is done, if unsuccessful the term
 %% <tt>{error, {type_mismatch, Type, Details}}</tt> is returned.
 %%
 %% <p>where</p>
@@ -507,7 +507,7 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %%
 %% <h4><a name="encode-constant">constant</a></h4>
 %%
-%% <p>Value must be identical to given constant.  Binaries, strings and 
+%% <p>Value must be identical to given constant.  Binaries, strings and
 %% integers are valid constants.</p>
 %%
 %% <p>The Value is directly encoded into a binary.</p>
@@ -515,7 +515,7 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %%
 %% <h4><a name="encode-integer">integer</a></h4>
 %%
-%% <p>Checks if Value is a valid Size octets integer.  Must be an integer 
+%% <p>Checks if Value is a valid Size octets integer.  Must be an integer
 %% between 0 and <tt>math:pow(256, Size) - 1</tt>.</p>
 %%
 %% <p>The integer is translated into binary using Size octets.</p>
@@ -523,12 +523,12 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %%
 %% <h4><a name="encode-c_octet_string">c_octet_string</a></h4>
 %%
-%% <p>Checks if Value is a valid C-Octet String: Just a string with Size - 1 
-%% characters.  Notice that C-Octet Strings (erlang) Values should not include 
-%% the terminating NULL_CHARACTER ($\0), it is automatically included by the 
+%% <p>Checks if Value is a valid C-Octet String: Just a string with Size - 1
+%% characters.  Notice that C-Octet Strings (erlang) Values should not include
+%% the terminating NULL_CHARACTER ($\0), it is automatically included by the
 %% encode function.</p>
 %%
-%% <p>When a fixed size is given, the <tt>Value</tt> (having no terminating 
+%% <p>When a fixed size is given, the <tt>Value</tt> (having no terminating
 %% NULL_CHARACTER) must be exactly 0 or Size - 1 characters long.  For variable
 %% lengths any range between 0 and Size - 1 octets is considered to be correct.
 %% </p>
@@ -536,22 +536,22 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %% <p>The string is translated into binary using the BIF <tt>list_to_binary
 %% </tt>, thus one octet per character.</p>
 %%
-%% <p><font color="red">Important (Since version 0.2).</font>  The base syntax 
+%% <p><font color="red">Important (Since version 0.2).</font>  The base syntax
 %% takes care of trailing NULL_CHARACTERs for you so, <i>even you have to count
 %% this character when setting the <tt>Size</tt> field</i>, <b>do not</b> add a
-%% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:encode/2 
+%% trailing NULL_CHARACTER in your c_octet_string values, base_syntax:encode/2
 %% handles NULLs on its own.</p>
 %%
-%% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string 
+%% <p>As a rule of thumb.  Set the <tt>Size</tt> of your c_octet_string
 %% accordingly to SMPP specs.  Do not add the trailing NULL_CHARACTER to the
-%% values of the c_octet_string parameters.  The NULL_CHARACTER is 
+%% values of the c_octet_string parameters.  The NULL_CHARACTER is
 %% automatically included at encode time.</p>
 %%
 %%
 %% <h4><a name="encode-octet_string">octet_string</a></h4>
 %%
-%% <p>When a fixed size is given the Value must be exactly 0 or Size 
-%% characters long.  For variable lengths any range between 0 and Size 
+%% <p>When a fixed size is given the Value must be exactly 0 or Size
+%% characters long.  For variable lengths any range between 0 and Size
 %% octets is considered to be correct.</p>
 %%
 %% <p>An string is translated into binary using the BIF <tt>list_to_binary
@@ -591,13 +591,13 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %% @see encode_list/2
 %% @see encode_try/2
 %% @end
-encode(Value, #constant{value = Value}) when is_list(Value) -> 
+encode(Value, #constant{value = Value}) when is_list(Value) ->
     {ok, list_to_binary(Value)};
-encode(Value, #constant{value = Value}) when is_integer(Value) -> 
+encode(Value, #constant{value = Value}) when is_integer(Value) ->
     {ok, <<Value/integer>>};
-encode(Value, #constant{value = Value}) when is_binary(Value) -> 
+encode(Value, #constant{value = Value}) when is_binary(Value) ->
     {ok, <<Value/binary>>};
-encode(Value, #integer{size = Size, min = Min, max = Max}) 
+encode(Value, #integer{size = Size, min = Min, max = Max})
   when is_integer(Value), Value >= Min, Value =< Max  ->
     {ok, <<Value:Size/integer-unit:8>>};
 encode(Value, #c_octet_string{format = F} = Type) when F /= undefined ->
@@ -620,13 +620,13 @@ encode(Value, #octet_string{format = F} = Type) when F /= undefined ->
         false ->
             {error, {type_mismatch, Type, Value}}
     end;
-encode(Value, #octet_string{fixed = true, size = Size}) 
+encode(Value, #octet_string{fixed = true, size = Size})
   when is_list(Value), (length(Value) == Size) or (length(Value) == 0) ->
     {ok, list_to_binary(Value)};
 encode(Value, #octet_string{size = Size})
   when is_list(Value), length(Value) =< Size ->
     {ok, list_to_binary(Value)};
-encode(Values, #list{type = InnerType, size = Size} = Type) 
+encode(Values, #list{type = InnerType, size = Size} = Type)
   when is_list(Values), length(Values) =< Size ->
     case encode_iter(Values, InnerType) of
         {ok, Binary} ->
@@ -635,7 +635,7 @@ encode(Values, #list{type = InnerType, size = Size} = Type)
         {error, Reason} ->
             {error, {type_mismatch, Type, Reason}}
     end;
-encode(Value, #composite{name = undefined, tuple = Tuple} = Type) 
+encode(Value, #composite{name = undefined, tuple = Tuple} = Type)
   when is_tuple(Value), byte_size(Value) == byte_size(Tuple) ->
     case encode_list(tuple_to_list(Value), tuple_to_list(Tuple)) of
         {error, Reason} ->
@@ -643,7 +643,7 @@ encode(Value, #composite{name = undefined, tuple = Tuple} = Type)
         Ok ->
             Ok
     end;
-encode(Value, #composite{name = Name, tuple = Tuple} = Type) 
+encode(Value, #composite{name = Name, tuple = Tuple} = Type)
   when element(1, Value) == Name, byte_size(Value) - 1 == byte_size(Tuple) ->
     case encode_list(tl(tuple_to_list(Value)), tuple_to_list(Tuple)) of
         {error, Reason} ->
@@ -656,7 +656,7 @@ encode(Value, #union{types = Types} = Type) when length(Types) > 0 ->
         {error, Reason} ->
             {error, {type_mismatch, Type, Reason}};
         Ok ->
-            Ok            
+            Ok
     end;
 encode(Value, Type) ->
     {error, {type_mismatch, Type, Value}}.
@@ -747,9 +747,9 @@ encode_try(Value, [Type|Types], Error, Priority) ->
 
 
 %% @spec fit(Type, Size) -> NewType
-%%    Type     = {constant, Constant}                  | 
-%%               {integer, Size, Min, Max}             | 
-%%               {c_octet_string, Fixed, Size, Format} | 
+%%    Type     = {constant, Constant}                  |
+%%               {integer, Size, Min, Max}             |
+%%               {c_octet_string, Fixed, Size, Format} |
 %%               {octet_string, Fixed, Size, Format}   |
 %%               {list, Type, Size}                    |
 %%               {composite, Name, Tuple}              |
@@ -779,7 +779,7 @@ encode_try(Value, [Type|Types], Error, Priority) ->
 %%   <li>On strings (c_octet_string and octet_string), besides the size field,
 %%     the length is set to fixed (<tt>fixed = true</tt>).
 %%   </li>
-%%   <li>The min and max fields are not changed on integers, the size is 
+%%   <li>The min and max fields are not changed on integers, the size is
 %%     changed with no further checking.
 %%   </li>
 %%   <li>If the new Size is greater than the one permitted by the Type, the
@@ -815,13 +815,13 @@ fit(Type, _Size) ->
 %%
 %% @doc Gets the priority of an Error report, the biggest the highest.
 %%
-%% <p>FIXME:  This patch is a *SIMPLE* way of adding some sort of priorities 
+%% <p>FIXME:  This patch is a *SIMPLE* way of adding some sort of priorities
 %% on errors.  It works fine for PDU encoding but a better approach should be
 %% provided in the future.</p>
 %%
-%% <p>Just about every PDU failure has an error_depth of 2, produced by the 
-%% command_id constant mismatch.  Whenever the command_id constant test 
-%% succeeds, if an error ocurrs on a later field of the PDU, even this error 
+%% <p>Just about every PDU failure has an error_depth of 2, produced by the
+%% command_id constant mismatch.  Whenever the command_id constant test
+%% succeeds, if an error ocurrs on a later field of the PDU, even this error
 %% would have the same depth (2), it should be consider a better match...
 %% <i>well this is just what this patch does</i>.</p>
 %%
@@ -836,12 +836,12 @@ error_priority(_Error) ->
 %% @end
 error_priority({type_mismatch, _Type, {type_mismatch, Type, Reason}}, Depth) ->
     error_priority({type_mismatch, Type, Reason}, Depth + 1);
-error_priority({type_mismatch, T, _R}, Depth) when is_record(T, integer); 
+error_priority({type_mismatch, T, _R}, Depth) when is_record(T, integer);
                                                    is_record(T, c_octet_string);
                                                    is_record(T, octet_string) ->
     (Depth * 3) + 1;
 error_priority({type_mismatch, T, _R}, Depth) when is_record(T, union);
-                                                   is_record(T, list); 
+                                                   is_record(T, list);
                                                    is_record(T, composite) ->
     (Depth * 3) + 2;
 error_priority(_Other, Depth) -> % contants and unknown errors

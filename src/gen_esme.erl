@@ -18,28 +18,28 @@
 %%%
 %%% <p>A generic ESME implemented as a <i>gen_server</i>.</p>
 %%%
-%%% <p>This behaviour acts as an extended <i>gen_server</i>, homonymous 
+%%% <p>This behaviour acts as an extended <i>gen_server</i>, homonymous
 %%% functions have the exact same meaning.</p>
 %%%
 %%% <p>By default sessions are NOT linked to the parent ESME, thus silently
-%%% dropped if an error occurs.  To monitor sessions, ESME programmers may 
-%%% either use <tt>erlang:monitor(process, Session)</tt> or explicitly create 
+%%% dropped if an error occurs.  To monitor sessions, ESME programmers may
+%%% either use <tt>erlang:monitor(process, Session)</tt> or explicitly create
 %%% a link to them.</p>
 %%%
 %%% <p>SMPP operations are directly issued upon underlying sessions, they
-%%% don't go through the ESME server loop.  This means you may call the 
-%%% functions <a href="#session_start-2">session_start/2</a>, 
-%%% <a href="#session_start-3">session_start/3</a>, 
-%%% <a href="#session_stop-1">session_stop/1</a>, 
+%%% don't go through the ESME server loop.  This means you may call the
+%%% functions <a href="#session_start-2">session_start/2</a>,
+%%% <a href="#session_start-3">session_start/3</a>,
+%%% <a href="#session_stop-1">session_stop/1</a>,
 %%% <a href="#bind_receiver-2">bind_receiver/2</a>,
 %%% <a href="#bind_transmitter-2">bind_transmitter/2</a>,
-%%% <a href="#bind_transceiver-2">bind_transceiver/2</a>, 
-%%% <a href="#broadcast_sm-2">broadcast_sm/2</a>, 
-%%% <a href="#cancel_broadcast_sm-2">cancel_broadcast_sm/2</a>, 
+%%% <a href="#bind_transceiver-2">bind_transceiver/2</a>,
+%%% <a href="#broadcast_sm-2">broadcast_sm/2</a>,
+%%% <a href="#cancel_broadcast_sm-2">cancel_broadcast_sm/2</a>,
 %%% <a href="#cancel_sm-2">cancel_sm/2</a>, <a href="#data_sm-2">data_sm/2</a>,
-%%% <a href="#query_broadcast_sm-2">query_broadcast_sm/2</a>, 
+%%% <a href="#query_broadcast_sm-2">query_broadcast_sm/2</a>,
 %%% <a href="#query_sm-2">query_sm/2</a>, <a href="#replace_sm-2">replace_sm/2
-%%% </a>, <a href="#submit_multi-2">submit_multi/2</a>, 
+%%% </a>, <a href="#submit_multi-2">submit_multi/2</a>,
 %%% <a href="#submit_sm-2">submit_sm/2</a> or <a href="#unbind-1">unbind/1</a>
 %%% from within any callback without having the risk of blocking the ESME
 %%% server.</p>
@@ -53,7 +53,7 @@
 %%%
 %%% <h2>Callback Function Index</h2>
 %%%
-%%% <p>A module implementing this behaviour must export these functions.  
+%%% <p>A module implementing this behaviour must export these functions.
 %%% Leaving a callback undefined crashes the entire ESME whenever that
 %%% particular function is called.</p>
 %%%
@@ -65,7 +65,7 @@
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_outbind-3">handle_outbind/3</a></td>
-%%%     <td>Forwards <i>outbind</i> operations (from the peer SMSCs) to the 
+%%%     <td>Forwards <i>outbind</i> operations (from the peer SMSCs) to the
 %%%       callback ESME.
 %%%     </td>
 %%%   </tr>
@@ -87,13 +87,13 @@
 %%%     <td>Forwards <i>broadcast_sm</i>, <i>cancel_broadcast_sm</i>,
 %%%       <i>cancel_sm</i>, <i>query_broadcast_sm</i>, <i>query_sm</i>,
 %%%       <i>replace_sm</i>, <i>submit_multi</i>, <i>submit_sm</i> and
-%%%       <i>data_sm</i> operations (from the peer SMSC) to the callback 
+%%%       <i>data_sm</i> operations (from the peer SMSC) to the callback
 %%%       ESME.
 %%%     </td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_unbind-3">handle_unbind/3</a></td>
-%%%     <td>This callback forwards an unbind request (issued by peer SMSCs) 
+%%%     <td>This callback forwards an unbind request (issued by peer SMSCs)
 %%%       to the callback ESME.
 %%%     </td>
 %%%   </tr>
@@ -104,33 +104,33 @@
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_call-3">handle_call/3</a></td>
-%%%     <td>Forwards <i>gen_server:handle_call/3</i> callbacks to the ESME 
+%%%     <td>Forwards <i>gen_server:handle_call/3</i> callbacks to the ESME
 %%%       server.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td>
-%%%     <td>Forwards <i>gen_server:handle_cast/2</i> callbacks to the ESME 
+%%%     <td>Forwards <i>gen_server:handle_cast/2</i> callbacks to the ESME
 %%%       server.</td>
 %%%     <td>.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#handle_info-2">handle_info/2
 %%%       </a></td>
-%%%     <td>Forwards <i>gen_server:handle_info/2</i> callbacks to the ESME 
+%%%     <td>Forwards <i>gen_server:handle_info/2</i> callbacks to the ESME
 %%%       server.</td>
 %%%     <td>.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#terminate-2">terminate/2
 %%%       </a></td>
-%%%     <td>Forwards <i>gen_server:terminate/2</i> callbacks to the ESME 
+%%%     <td>Forwards <i>gen_server:terminate/2</i> callbacks to the ESME
 %%%       server.</td>
 %%%     <td>.</td>
 %%%   </tr>
 %%%   <tr>
 %%%     <td valign="top"><a href="#code_change-3">code_change/3
 %%%       </a></td>
-%%%     <td>Forwards <i>gen_server:code_change/3</i> callbacks to the ESME 
+%%%     <td>Forwards <i>gen_server:code_change/3</i> callbacks to the ESME
 %%%       server.</td>
 %%%     <td>.</td>
 %%%   </tr>
@@ -138,7 +138,7 @@
 %%%
 %%%
 %%% <h2>Callback Function Details</h2>
-%%% 
+%%%
 %%% <h3><a name="init-1">init/1</a></h3>
 %%%
 %%% <tt>init(Args) -&gt; Result</tt>
@@ -169,7 +169,7 @@
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>outbind</i>, operations (from the peer SMSCs) to the 
+%%% <p>Forwards <i>outbind</i>, operations (from the peer SMSCs) to the
 %%% callback ESME.</p>
 %%%
 %%%
@@ -192,7 +192,7 @@
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>Forwards <i>alert_notification</i>, operations (from the peer SMSCs) 
+%%% <p>Forwards <i>alert_notification</i>, operations (from the peer SMSCs)
 %%% to the callback ESME.</p>
 %%%
 %%%
@@ -218,7 +218,7 @@
 %%% <p>Notifies when an <i>enquire_link</i> failure occurs (i.e. the SMSC did
 %%% not respond to our <i>enquire_link</i> operation).</p>
 %%%
-%%% 
+%%%
 %%% <h3><a name="handle_operation-3">handle_operation/3</a></h3>
 %%%
 %%% <tt>handle_operation(Operation, From, State) -&gt; Result</tt>
@@ -253,7 +253,7 @@
 %%% term <tt>{error, Error, ParamList}</tt>, where <tt>Error</tt> is the
 %%% desired command_status error code.</p>
 %%%
-%%% 
+%%%
 %%% <h3><a name="handle_unbind-3">handle_unbind/3</a></h3>
 %%%
 %%% <tt>handle_unbind(Unbind, From, State) -&gt; Result</tt>
@@ -274,17 +274,17 @@
 %%%   <li><tt>Reason = term()</tt></li>
 %%% </ul>
 %%%
-%%% <p>This callback forwards an unbind request (issued by peer ESMEs) to the 
+%%% <p>This callback forwards an unbind request (issued by peer ESMEs) to the
 %%% SMSC.</p>
 %%%
-%%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK 
+%%% <p>If <tt>ok</tt> returned an unbind_resp with a ESME_ROK
 %%% command_status is sent to the MC and the session moves into the unbound
 %%% state.  When <tt>{error, Error}</tt> is returned by the ESME, the
 %%% response PDU sent by the session to the MC will have an <tt>Error</tt>
 %%% command_status and the session will remain on it's current bound state
 %%% (bound_rx, bound_tx or bound_trx).</p>
 %%%
-%%% 
+%%%
 %%% <h3><a name="handle_listen_error-1">handle_listen_error/1</a></h3>
 %%%
 %%% <tt>handle_listen_error(State) -&gt; Result</tt>
@@ -389,12 +389,12 @@
 %%%     <a href="#close_error_logger-0">close_error_logger</a> implemented.
 %%%     <br/>
 %%%     By default neither the disk_log nor the error_logger handler are
-%%%     added to the <a href="smpp_log.html">smpp_log</a> event manager, thus 
+%%%     added to the <a href="smpp_log.html">smpp_log</a> event manager, thus
 %%%     no logging is done until <a href="#open_disk_log-1">open_disk_log/1</a>
-%%%     and/or <a href="#open_error_logger-1">open_error_logger/1</a> are 
+%%%     and/or <a href="#open_error_logger-1">open_error_logger/1</a> are
 %%%     called.
 %%%     <br/>
-%%%     Please refer to <a href="smpp_log.html">smpp_log</a> for further 
+%%%     Please refer to <a href="smpp_log.html">smpp_log</a> for further
 %%%     information about OSERL logs.
 %%%   </li>
 %%% </ul>
@@ -402,7 +402,7 @@
 %%% [4 Jul 2005]
 %%%
 %%% <ul>
-%%%   <li>Implement <i>gen_esme_session</i> callback 
+%%%   <li>Implement <i>gen_esme_session</i> callback
 %%%     <a href="gen_esme_session.html#handle_enquire_link-3">
 %%%     handle_enquire_link/3</a>.
 %%%     <br/>
@@ -423,10 +423,10 @@
 %%% [19 Sep 2006]
 %%%
 %%% <ul>
-%%%   <li>Add <tt>EsmeRef</tt> to 
+%%%   <li>Add <tt>EsmeRef</tt> to
 %%%     <a href="gen_esme.html#session_start-4">session_start/4</a>,
-%%%     <a href="gen_esme.html#session_start-5">session_start/5</a>, 
-%%%     <a href="gen_esme.html#session_start_link-4">session_start_link/4</a> 
+%%%     <a href="gen_esme.html#session_start-5">session_start/5</a>,
+%%%     <a href="gen_esme.html#session_start_link-4">session_start_link/4</a>
 %%%     and <a href="gen_esme.html#session_start_link-5">session_start_link/5
 %%%     </a> functions.
 %%%   </li>
@@ -458,13 +458,13 @@
 -export([start/3,
          start/4,
          start_link/3,
-         start_link/4, 
+         start_link/4,
          listen_start/1,
          listen_start/4,
          listen_stop/1,
-         call/2, 
-         call/3, 
-         cast/2, 
+         call/2,
+         call/3,
+         cast/2,
          close_disk_log/1,
          close_error_logger/1,
          count/4,
@@ -511,11 +511,11 @@
 %%%-------------------------------------------------------------------
 %%% Internal gen_esme_session exports
 %%%-------------------------------------------------------------------
--export([handle_outbind/3, 
-         handle_alert_notification/3, 
+-export([handle_outbind/3,
+         handle_alert_notification/3,
          handle_enquire_link/3,
          handle_enquire_link_failure/3,
-         handle_operation/3, 
+         handle_operation/3,
          handle_unbind/3]).
 
 %%%-------------------------------------------------------------------
@@ -563,11 +563,11 @@
 %% @end
 behaviour_info(callbacks) ->
     [{init, 1},
-     {handle_outbind, 3}, 
-     {handle_alert_notification, 2}, 
-     {handle_enquire_link_failure, 2}, 
-     {handle_operation, 3}, 
-     {handle_unbind, 3}, 
+     {handle_outbind, 3},
+     {handle_alert_notification, 2},
+     {handle_enquire_link_failure, 2},
+     {handle_operation, 3},
+     {handle_unbind, 3},
      {handle_listen_error, 1},
      {handle_call, 3},
      {handle_cast, 2},
@@ -662,7 +662,7 @@ start_link(ServerName, Module, Args, Options) ->
 %%    Node = atom()
 %%    Reason = term()
 %%
-%% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on 
+%% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on
 %% <tt>DEFAULT_SMPP_PORT</tt>.
 %%
 %% <p>By default only one connection is accepted before the listen socket
@@ -670,8 +670,8 @@ start_link(ServerName, Module, Args, Options) ->
 %%
 %% @see listen_start/4
 %% @equiv listen(ServerRef, DEFAULT_SMPP_PORT, 1, DEFAULT_SMPP_TIMERS)
-%% @end 
-listen_start(ServerRef) -> 
+%% @end
+listen_start(ServerRef) ->
     listen_start(ServerRef, ?DEFAULT_SMPP_PORT, 1, ?DEFAULT_SMPP_TIMERS).
 
 %% @spec listen_start(ServerRef, Port, Count, Timers) -> ok | {error, Reason}
@@ -685,13 +685,13 @@ listen_start(ServerRef) ->
 %%
 %% @doc Puts the ESME Server <tt>ServerRef</tt> to listen on <tt>Port</tt>
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in
 %% <a href="oserl.html">oserl.hrl</a>.  Accepted session will be subject to
 %% given timers.</p>
 %%
 %% <p><tt>Count</tt> connections are accepted.  Started sessions are NOT
 %% linked to the SMSC.</p>
-%% @end 
+%% @end
 listen_start(ServerRef, Port, Count, Timers) ->
     gen_server:call(ServerRef, {listen_start, Port, Count, Timers}).
 
@@ -701,7 +701,7 @@ listen_start(ServerRef, Port, Count, Timers) ->
 %%    Node = atom()
 %%
 %% @doc Stops listening.
-%% @end 
+%% @end
 listen_stop(ServerRef) ->
     gen_server:cast(ServerRef, listen_stop).
 
@@ -712,13 +712,13 @@ listen_stop(ServerRef) ->
 %%    Request = term()
 %%    Reply = term()
 %%
-%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-2">gen_server:call/2</a>.  
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-2">gen_server:call/2</a>.
 %%
-%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the
 %% arguments to <tt>Module:handle_call/3</tt>.</p>
 %%
 %% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
-%% @end 
+%% @end
 call(ServerRef, Request) ->
     gen_server:call(ServerRef, {call, Request}).
 
@@ -730,13 +730,13 @@ call(ServerRef, Request) ->
 %%    Timeout = int() | infinity
 %%    Reply = term()
 %%
-%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-3">gen_server:call/3</a>.  
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#call-3">gen_server:call/3</a>.
 %%
-%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the
 %% arguments to <tt>Module:handle_call/3</tt>.</p>
 %%
 %% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
-%% @end 
+%% @end
 call(ServerRef, Request, Timeout) ->
     gen_server:call(ServerRef, {call, Request}, Timeout).
 
@@ -747,13 +747,13 @@ call(ServerRef, Request, Timeout) ->
 %%    Request = term()
 %%    Reply = term()
 %%
-%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#cast-2">gen_server:cast/2</a>.  
+%% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#cast-2">gen_server:cast/2</a>.
 %%
-%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the 
+%% <p><tt>Request</tt> is an arbitrary term which is passed as one of the
 %% arguments to <tt>Module:handle_cast/2</tt>.</p>
 %%
 %% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
-%% @end 
+%% @end
 cast(ServerRef, Request) ->
     gen_server:cast(ServerRef, {cast, Request}).
 
@@ -765,7 +765,7 @@ cast(ServerRef, Request) ->
 %% @doc Closes the ESME disk log.
 %%
 %% @see smpp_log:delete_disk_log_handler/0
-%% @end 
+%% @end
 close_disk_log(ServerRef) ->
     gen_server:cast(ServerRef, close_disk_log).
 
@@ -777,7 +777,7 @@ close_disk_log(ServerRef) ->
 %% @doc Closes the ESME error logger.
 %%
 %% @see smpp_log:delete_error_logger_handler/0
-%% @end 
+%% @end
 close_error_logger(ServerRef) ->
     gen_server:cast(ServerRef, close_error_logger).
 
@@ -790,8 +790,8 @@ close_error_logger(ServerRef) ->
 %%    From = any | self | peer
 %%    Pred = fun()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function counts logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function counts logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -801,7 +801,7 @@ close_error_logger(ServerRef) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
-%% @end 
+%% @end
 count(ServerRef, Date, From, Pred) ->
     gen_server:call(ServerRef, {count, Date, From, Pred}, infinity).
 
@@ -824,8 +824,8 @@ count(ServerRef, Date, From, Pred) ->
 %%    Now = {MegaSecs, Secs, Microsecs}
 %%    BinaryPdu = binary()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function gets the list of logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function gets the list of logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -835,14 +835,14 @@ count(ServerRef, Date, From, Pred) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
-%% 
-%% <p>This function internally calls <a href="#match-5">match/5</a> with 
+%%
+%% <p>This function internally calls <a href="#match-5">match/5</a> with
 %% <tt>start</tt> as the <tt>Continuation</tt> parameters.</p>
 %%
 %% @see match/4
 %%
 %% @equiv match(ServerRef, Date, From, Pred, start)
-%% @end 
+%% @end
 match(ServerRef, Date, From, Pred) ->
     match(ServerRef, Date, From, Pred, start).
 
@@ -865,8 +865,8 @@ match(ServerRef, Date, From, Pred) ->
 %%    Now = {MegaSecs, Secs, Microsecs}
 %%    BinaryPdu = binary()
 %%
-%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt> 
-%% terms.  This function gets the list of logged PDUs matching the given 
+%% @doc PDUs are logged in the disk log as <tt>{Now, BinaryPdu, From}</tt>
+%% terms.  This function gets the list of logged PDUs matching the given
 %% <tt>Date</tt>, <tt>From</tt> and <tt>Pred</tt>.
 %%
 %% <ul>
@@ -876,7 +876,7 @@ match(ServerRef, Date, From, Pred) ->
 %%   <li><b>Pred:</b> a predicate the binary PDUs must satisfy in order to
 %%     be matched.  <tt>fun(BinaryPdu) -&gt; bool()</tt>.</li>
 %% </ul>
-%% @end 
+%% @end
 match(ServerRef, Date, From, Pred, Cont) ->
     gen_server:call(ServerRef, {match, Date, From, Pred, Cont}, infinity).
 
@@ -894,7 +894,7 @@ match(ServerRef, Date, From, Pred, Cont) ->
 %% <p><tt>Pred</tt> is a fun <tt>fun(BinaryPdu) -&gt; bool()</tt></p>
 %%
 %% @see smpp_log:add_disk_log_handler/1
-%% @end 
+%% @end
 open_disk_log(ServerRef, Args) ->
     gen_server:cast(ServerRef, {open_disk_log, Args}).
 
@@ -911,7 +911,7 @@ open_disk_log(ServerRef, Args) ->
 %% <p><tt>Pred</tt> is a fun <tt>fun(BinaryPdu) -&gt; bool()</tt></p>
 %%
 %% @see smpp_log:add_error_logger_handler/1
-%% @end 
+%% @end
 open_error_logger(ServerRef, Args) ->
     gen_server:cast(ServerRef, {open_error_logger, Args}).
 
@@ -922,7 +922,7 @@ open_error_logger(ServerRef, Args) ->
 %% @doc Equivalent to <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#reply-2">gen_server:reply/2</a>.
 %%
 %% <p>Please refer to the <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html">gen_server</a> man page for greater details.</p>
-%% @end 
+%% @end
 reply(Client, Reply) ->
     gen_server:reply(Client, Reply).
 
@@ -943,7 +943,7 @@ reply(Client, Reply) ->
 %% otherwise.</p>
 %%
 %% @equiv session_start(EsmeRef, Address, Port, DEFAULT_SMPP_TIMERS)
-%% @end 
+%% @end
 session_start(EsmeRef, Address, Port) ->
     session_start(EsmeRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
 
@@ -957,7 +957,7 @@ session_start(EsmeRef, Address, Port) ->
 %%
 %% @doc Opens a new session.  By default Sessions are NOT linked to the ESME.
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in
 %% <a href="oserl.html">oserl.hrl</a>.</p>
 %%
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
@@ -965,7 +965,7 @@ session_start(EsmeRef, Address, Port) ->
 %%
 %% @see session_start/2
 %% @see gen_esme_session:start/3
-%% @end 
+%% @end
 session_start(EsmeRef, Address, Port, Timers) ->
     Request = {session, start, Address, Port, Timers},
     gen_server:call(EsmeRef, Request, infinity).
@@ -984,7 +984,7 @@ session_start(EsmeRef, Address, Port, Timers) ->
 %% otherwise.</p>
 %%
 %% @equiv session_start_link(Address, Port, DEFAULT_SMPP_TIMERS)
-%% @end 
+%% @end
 session_start_link(EsmeRef, Address, Port) ->
     session_start_link(EsmeRef, Address, Port, ?DEFAULT_SMPP_TIMERS).
 
@@ -998,7 +998,7 @@ session_start_link(EsmeRef, Address, Port) ->
 %%
 %% @doc Opens a new session linked to the ESME.
 %%
-%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in 
+%% <p><tt>Timers</tt> is a <tt>timers</tt> record as declared in
 %% <a href="oserl.html">oserl.hrl</a>.</p>
 %%
 %% <p>Returns <tt>{ok, Session}</tt> if success, <tt>{error, Reason}</tt>
@@ -1006,7 +1006,7 @@ session_start_link(EsmeRef, Address, Port) ->
 %%
 %% @see session_start_link/2
 %% @see gen_esme_session:start_link/3
-%% @end 
+%% @end
 session_start_link(EsmeRef, Address, Port, Timers) ->
     Request = {session, start_link, Address, Port, Timers},
     gen_server:call(EsmeRef, Request, infinity).
@@ -1015,7 +1015,7 @@ session_start_link(EsmeRef, Address, Port, Timers) ->
 %%    Session = pid()
 %%
 %% @doc Closes the <tt>Session</tt>.
-%% @end 
+%% @end
 session_stop(Session) ->
     gen_esme_session:stop(Session).
 
@@ -1028,7 +1028,7 @@ session_stop(Session) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>bind_receiver</i> operation on the session 
+%% @doc Issues a <i>bind_receiver</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 bind_receiver(Session, ParamList) ->
@@ -1043,7 +1043,7 @@ bind_receiver(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>bind_transmitter</i> operation on the session 
+%% @doc Issues a <i>bind_transmitter</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 bind_transmitter(Session, ParamList) ->
@@ -1058,7 +1058,7 @@ bind_transmitter(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>bind_transceiver</i> operation on the session 
+%% @doc Issues a <i>bind_transceiver</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 bind_transceiver(Session, ParamList) ->
@@ -1073,7 +1073,7 @@ bind_transceiver(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>broadcast_sm</i> operation on the session 
+%% @doc Issues a <i>broadcast_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 broadcast_sm(Session, ParamList) ->
@@ -1088,7 +1088,7 @@ broadcast_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>cancel_broadcast_sm</i> operation on the session 
+%% @doc Issues a <i>cancel_broadcast_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 cancel_broadcast_sm(Session, ParamList) ->
@@ -1103,7 +1103,7 @@ cancel_broadcast_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>cancel_sm</i> operation on the session 
+%% @doc Issues a <i>cancel_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 cancel_sm(Session, ParamList) ->
@@ -1118,7 +1118,7 @@ cancel_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>data_sm</i> operation on the session identified by 
+%% @doc Issues a <i>data_sm</i> operation on the session identified by
 %% <tt>Session</tt>.
 %% @end
 data_sm(Session, ParamList) ->
@@ -1133,7 +1133,7 @@ data_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>query_broadcast_sm</i> operation on the session 
+%% @doc Issues a <i>query_broadcast_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 query_broadcast_sm(Session, ParamList) ->
@@ -1148,7 +1148,7 @@ query_broadcast_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>query_sm</i> operation on the session 
+%% @doc Issues a <i>query_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 query_sm(Session, ParamList) ->
@@ -1163,7 +1163,7 @@ query_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>replace_sm</i> operation on the session 
+%% @doc Issues a <i>replace_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 replace_sm(Session, ParamList) ->
@@ -1178,7 +1178,7 @@ replace_sm(Session, ParamList) ->
 %%    PduResp    = pdu()
 %%    Error      = int()
 %%
-%% @doc Issues a <i>submit_multi</i> operation on the session 
+%% @doc Issues a <i>submit_multi</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 submit_multi(Session, ParamList) ->
@@ -1195,10 +1195,10 @@ submit_multi(Session, ParamList) ->
 %%    PduResp = pdu()
 %%    Error = int()
 %%
-%% @doc Issues a <i>submit_sm</i> operation on the session 
+%% @doc Issues a <i>submit_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %%
-%% <p>This submission function automatically accomplishes long messages 
+%% <p>This submission function automatically accomplishes long messages
 %% segmentation and concatenation using the <tt>ConcatenationMethod</tt>
 %% indicated.</p>
 %%
@@ -1215,9 +1215,9 @@ submit_multi(Session, ParamList) ->
 %%
 %% <p>The <i>short_message</i> is splited if longer than SM_MAX_SIZE macro
 %% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
-%% called and the message is send as is.  Resulting segments are 
-%% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
-%% to allow room for the UDH.  You may want to redefine these macros to fit 
+%% called and the message is send as is.  Resulting segments are
+%% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method,
+%% to allow room for the UDH.  You may want to redefine these macros to fit
 %% your particular needs, find them in <tt>oserl.hrl</tt>
 %% </p>
 %%
@@ -1249,7 +1249,7 @@ submit_multi(Session, ParamList, ConcatenationMethod) ->
 %%    PduResp = pdu()
 %%    Error = int()
 %%
-%% @doc Issues a <i>submit_sm</i> operation on the session 
+%% @doc Issues a <i>submit_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %% @end
 submit_sm(Session, ParamList) ->
@@ -1266,10 +1266,10 @@ submit_sm(Session, ParamList) ->
 %%    PduResp = pdu()
 %%    Error = int()
 %%
-%% @doc Issues a <i>submit_sm</i> operation on the session 
+%% @doc Issues a <i>submit_sm</i> operation on the session
 %% identified by <tt>Session</tt>.
 %%
-%% <p>This submission function automatically accomplishes long messages 
+%% <p>This submission function automatically accomplishes long messages
 %% segmentation and concatenation using the <tt>ConcatenationMethod</tt>
 %% indicated.</p>
 %%
@@ -1286,9 +1286,9 @@ submit_sm(Session, ParamList) ->
 %%
 %% <p>The <i>short_message</i> is splited if longer than SM_MAX_SIZE macro
 %% (defaults to 160), otherwise <a href="#submit_sm-2">submit_sm/2</a> is
-%% called and the message is send as is.  Resulting segments are 
-%% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method, 
-%% to allow room for the UDH.  You may want to redefine these macros to fit 
+%% called and the message is send as is.  Resulting segments are
+%% SM_SEGMENT_MAX_SIZE which defaults to 150 for either concatenation method,
+%% to allow room for the UDH.  You may want to redefine these macros to fit
 %% your particular needs, find them in <tt>oserl.hrl</tt>
 %% </p>
 %%
@@ -1317,7 +1317,7 @@ submit_sm(Session, ParamList, ConcatenationMethod) ->
 %%    PduResp = pdu()
 %%    Error   = int()
 %%
-%% @doc Issues an <i>unbind</i> operation on the session identified by 
+%% @doc Issues an <i>unbind</i> operation on the session identified by
 %% <tt>Session</tt>.
 %% @end
 unbind(Session) ->
@@ -1357,7 +1357,7 @@ init({Mod, Args}) ->
 %%    Reason    = term()
 %%
 %% @doc <a href="http://www.erlang.org/doc/r9c/lib/stdlib-1.12/doc/html/gen_server.html#handle_call-3">gen_server - handle_call/3</a> callback implementation.
-%% 
+%%
 %% <p>Handling call messages.</p>
 %%
 %% <ul>
@@ -1533,7 +1533,7 @@ code_change(OldVsn, S, Extra) ->
 %%    Session = pid()
 %%    Pdu = pdu()
 %%
-%% @doc <a href="gen_esme_session.html#handle_outbind-3">gen_esme_session - 
+%% @doc <a href="gen_esme_session.html#handle_outbind-3">gen_esme_session -
 %% handle_outbind/3</a> callback implementation.
 %% @end
 handle_outbind(ServerRef, Session, Pdu) ->
@@ -1567,7 +1567,7 @@ handle_enquire_link(ServerRef, Session, Pdu) ->
 %%    CommandStatus = int()
 %%
 %% @doc <a href="gen_esme_session.html#handle_enquire_link_failure-3">
-%% gen_esme_session - handle_enquire_link_failure/3</a> callback 
+%% gen_esme_session - handle_enquire_link_failure/3</a> callback
 %% implementation.
 %% @end
 handle_enquire_link_failure(ServerRef, Session, CommandStatus) ->
@@ -1583,7 +1583,7 @@ handle_enquire_link_failure(ServerRef, Session, CommandStatus) ->
 %%    ParamName  = atom()
 %%    ParamValue = term()
 %%
-%% @doc <a href="gen_esme_session.html#handle_operation-3">gen_esme_session - 
+%% @doc <a href="gen_esme_session.html#handle_operation-3">gen_esme_session -
 %% handle_operation/3</a> callback implementation.
 %% @end
 handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
@@ -1595,7 +1595,7 @@ handle_operation(ServerRef, Session, {CmdName, Pdu}) ->
 %%    Pdu = pdu()
 %%    Error = int()
 %%
-%% @doc <a href="gen_esme_session.html#handle_unbind-3">gen_esme_session - 
+%% @doc <a href="gen_esme_session.html#handle_unbind-3">gen_esme_session -
 %% handle_unbind/3</a> callback implementation.
 %% @end
 handle_unbind(ServerRef, Session, Pdu) ->
@@ -1610,7 +1610,7 @@ handle_unbind(ServerRef, Session, Pdu) ->
 %% state into mine.
 %%
 %% <p>Originally written by Ulf Wiger for his dispatched_server.erl module.</p>
-%% @end 
+%% @end
 pack({reply, Reply, MS}, S) ->
     {reply, Reply, S#state{mod_state = MS}};
 pack({reply, Reply, MS, Timeout}, S) ->

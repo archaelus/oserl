@@ -116,9 +116,9 @@ chop_tlv(Binary) ->
 %% @see decode_std/2
 %% @see decode_tlv/2
 %% @end
-decode(Binary, ParamType) when record(ParamType, standard) ->
+decode(Binary, ParamType) when is_record(ParamType, standard) ->
     decode_std(Binary, ParamType);
-decode(Binary, ParamType) when record(ParamType, tlv) ->
+decode(Binary, ParamType) when is_record(ParamType, tlv) ->
     decode_tlv(Binary, ParamType);
 decode(_Binary, _ParamType) ->
     {error, ?ESME_RUNKNOWNERR}.
@@ -137,9 +137,9 @@ decode(_Binary, _ParamType) ->
 %% @see encode_std/2
 %% @see encode_tlv/2
 %% @end
-encode(Value, ParamType) when record(ParamType, standard) ->
+encode(Value, ParamType) when is_record(ParamType, standard) ->
     encode_std(Value, ParamType);
-encode(Value, ParamType) when record(ParamType, tlv) ->
+encode(Value, ParamType) when is_record(ParamType, tlv) ->
     encode_tlv(Value, ParamType);
 encode(_Value, _ParamType) ->
     {error, ?ESME_RUNKNOWNERR}.
@@ -152,9 +152,9 @@ encode(_Value, _ParamType) ->
 %%
 %% @doc Gets the name from a parameter type declaration.
 %% @end
-get_name(ParamType) when record(ParamType, standard) ->
+get_name(ParamType) when is_record(ParamType, standard) ->
     ParamType#standard.name;
-get_name(ParamType) when record(ParamType, tlv) ->
+get_name(ParamType) when is_record(ParamType, tlv) ->
     ParamType#tlv.name.
 
 
@@ -489,7 +489,7 @@ encode_tlv(undefined, _TlvType) ->
     {ok, <<>>};
 encode_tlv([], #tlv{multiple = true}) ->
     {ok, <<>>};
-encode_tlv(Values, #tlv{multiple = true} = TlvType) when list(Values) ->
+encode_tlv(Values, #tlv{multiple = true} = TlvType) when is_list(Values) ->
     encode_multiple_tlv(Values, TlvType);
 encode_tlv(Value, TlvType) ->
     encode_single_tlv(Value, TlvType).
@@ -525,7 +525,7 @@ encode_multiple_tlv([Value|Values], TlvType, Acc) ->
 encode_single_tlv(Value, #tlv{tag = Tag, domain = Domain, error = Error}) ->
     case base_syntax:encode(Value, Domain) of
         {ok, Binary} ->
-            {ok, [<<Tag:16/integer, (size(Binary)):16/integer>>, Binary]};
+            {ok, [<<Tag:16/integer, (byte_size(Binary)):16/integer>>, Binary]};
         {error, _Reason} ->
             if
                 Error == undefined ->

@@ -1312,7 +1312,7 @@ handle_input_corrupt_pdu(CmdId, Status, SeqNum, S) ->
 %% @end
 congestion_state(Lapse, Index, Time) ->
     case catch ((99 * Time) / ((Lapse / Index) + Time)) of 
-        Result when float(Result) -> 
+        Result when is_float(Result) -> 
             trunc(Result);
         _DivisionByZero -> 
             0
@@ -1737,7 +1737,7 @@ timer_loop(FsmRef, Time, Event) ->
 %% @doc Aborts the timer process whose PID is <tt>Timer</tt>.  Only 
 %% the timer's parent is allowed to stop it.
 %% @end
-cancel_timer(Timer) when pid(Timer) ->
+cancel_timer(Timer) when is_pid(Timer) ->
     Timer ! {self(), cancel_timer};
 cancel_timer(_Timer) ->  % might be the atom undefined
     ok.
@@ -1749,7 +1749,7 @@ cancel_timer(_Timer) ->  % might be the atom undefined
 %% @doc Restarts the timer process whose PID is <tt>Timer</tt>.  Only 
 %% the timer's parent is allowed to restart it.
 %% @end
-reset_timer(Timer) when pid(Timer) ->
+reset_timer(Timer) when is_pid(Timer) ->
     Timer ! {self(), reset};
 reset_timer(_Timer) ->  % might be the atom undefined
     ok.

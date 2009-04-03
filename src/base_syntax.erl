@@ -242,16 +242,16 @@
 %% @end
 decode(Binary, #constant{value = Value} = Type) ->
     Cons = if
-               list(Value) -> 
+               is_list(Value) -> 
                    list_to_binary(Value);
-               integer(Value) -> 
+               is_integer(Value) -> 
                    <<Value/integer>>;
-               binary(Value) ->
+               is_binary(Value) ->
                    <<Value/binary>>;
                true ->                    % Should *NOT* happen
                    term_to_binary(Value)
            end,
-    Size = size(Cons),
+    Size = byte_size(Cons),
     case Binary of
         <<Cons:Size/binary-unit:8, Rest/binary>> ->
             {ok, Value, Rest};
@@ -591,14 +591,14 @@ decode_try(Binary, [Type|Types], Error, Priority) ->
 %% @see encode_list/2
 %% @see encode_try/2
 %% @end
-encode(Value, #constant{value = Value}) when list(Value) -> 
+encode(Value, #constant{value = Value}) when is_list(Value) -> 
     {ok, list_to_binary(Value)};
-encode(Value, #constant{value = Value}) when integer(Value) -> 
+encode(Value, #constant{value = Value}) when is_integer(Value) -> 
     {ok, <<Value/integer>>};
-encode(Value, #constant{value = Value}) when binary(Value) -> 
+encode(Value, #constant{value = Value}) when is_binary(Value) -> 
     {ok, <<Value/binary>>};
 encode(Value, #integer{size = Size, min = Min, max = Max}) 
-  when integer(Value), Value >= Min, Value =< Max  ->
+  when is_integer(Value), Value >= Min, Value =< Max  ->
     {ok, <<Value:Size/integer-unit:8>>};
 encode(Value, #c_octet_string{format = F} = Type) when F /= undefined ->
     case F(Value) of
@@ -608,10 +608,10 @@ encode(Value, #c_octet_string{format = F} = Type) when F /= undefined ->
             {error, {type_mismatch, Type, Value}}
     end;
 encode(Value, #c_octet_string{fixed = true, size = Size})
-  when list(Value), (length(Value) == Size - 1) or (length(Value) == 0) ->
+  when is_list(Value), (length(Value) == Size - 1) or (length(Value) == 0) ->
     {ok, list_to_binary(Value ++ [?NULL_CHARACTER])};
 encode(Value, #c_octet_string{size = Size})
-  when list(Value), length(Value) < Size -> % was =<
+  when is_list(Value), length(Value) < Size -> % was =<
     {ok, list_to_binary(Value ++ [?NULL_CHARACTER])};
 encode(Value, #octet_string{format = F} = Type) when F /= undefined ->
     case F(Value) of
@@ -621,13 +621,13 @@ encode(Value, #octet_string{format = F} = Type) when F /= undefined ->
             {error, {type_mismatch, Type, Value}}
     end;
 encode(Value, #octet_string{fixed = true, size = Size}) 
-  when list(Value), (length(Value) == Size) or (length(Value) == 0) ->
+  when is_list(Value), (length(Value) == Size) or (length(Value) == 0) ->
     {ok, list_to_binary(Value)};
 encode(Value, #octet_string{size = Size})
-  when list(Value), length(Value) =< Size ->
+  when is_list(Value), length(Value) =< Size ->
     {ok, list_to_binary(Value)};
 encode(Values, #list{type = InnerType, size = Size} = Type) 
-  when list(Values), length(Values) =< Size ->
+  when is_list(Values), length(Values) =< Size ->
     case encode_iter(Values, InnerType) of
         {ok, Binary} ->
             LenSize = trunc(Size / 256) + 1,
@@ -636,7 +636,7 @@ encode(Values, #list{type = InnerType, size = Size} = Type)
             {error, {type_mismatch, Type, Reason}}
     end;
 encode(Value, #composite{name = undefined, tuple = Tuple} = Type) 
-  when tuple(Value), size(Value) == size(Tuple) ->
+  when is_tuple(Value), byte_size(Value) == byte_size(Tuple) ->
     case encode_list(tuple_to_list(Value), tuple_to_list(Tuple)) of
         {error, Reason} ->
             {error, {type_mismatch, Type, Reason}};
@@ -644,7 +644,7 @@ encode(Value, #composite{name = undefined, tuple = Tuple} = Type)
             Ok
     end;
 encode(Value, #composite{name = Name, tuple = Tuple} = Type) 
-  when element(1, Value) == Name, size(Value) - 1 == size(Tuple) ->
+  when element(1, Value) == Name, byte_size(Value) - 1 == byte_size(Tuple) ->
     case encode_list(tl(tuple_to_list(Value)), tuple_to_list(Tuple)) of
         {error, Reason} ->
             {error, {type_mismatch, Type, Reason}};
@@ -836,13 +836,13 @@ error_priority(_Error) ->
 %% @end
 error_priority({type_mismatch, _Type, {type_mismatch, Type, Reason}}, Depth) ->
     error_priority({type_mismatch, Type, Reason}, Depth + 1);
-error_priority({type_mismatch, T, _R}, Depth) when record(T, integer); 
-                                                   record(T, c_octet_string);
-                                                   record(T, octet_string) ->
+error_priority({type_mismatch, T, _R}, Depth) when is_record(T, integer); 
+                                                   is_record(T, c_octet_string);
+                                                   is_record(T, octet_string) ->
     (Depth * 3) + 1;
-error_priority({type_mismatch, T, _R}, Depth) when record(T, union);
-                                                   record(T, list); 
-                                                   record(T, composite) ->
+error_priority({type_mismatch, T, _R}, Depth) when is_record(T, union);
+                                                   is_record(T, list); 
+                                                   is_record(T, composite) ->
     (Depth * 3) + 2;
 error_priority(_Other, Depth) -> % contants and unknown errors
     (Depth * 3) + 0.

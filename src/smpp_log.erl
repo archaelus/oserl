@@ -662,7 +662,7 @@ init(Args) ->
 %%    Id       = term()
 %% @doc
 %% @end
-handle_event({From, IoList}, S) when list(IoList) ->
+handle_event({From, IoList}, S) when is_list(IoList) ->
     handle_event({From, concat_binary(IoList)}, S);
 handle_event({From, BinaryPdu}, #state{type=T, pred=P, format=F} = S) ->
     case catch P(BinaryPdu) of

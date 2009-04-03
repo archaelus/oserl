@@ -257,7 +257,7 @@ join_user_data(Segments) ->
 %% @doc Gets the message user data from a PDU.  The message user data may came 
 %% in the <i>short_message</i> or in the <i>message_payload</i> parameter.
 %% @end
-message_user_data(ParamList) when list(ParamList) ->
+message_user_data(ParamList) when is_list(ParamList) ->
     case lists:keysearch(message_payload, 1, ParamList) of
         {value, Value} ->
             Value;
@@ -480,7 +480,7 @@ total_segments(Pdu) ->
 %%
 %% @doc Returns <tt>true</tt> if UDHI is set, <tt>false</tt> otherwise.
 %% @end
-udhi(ParamList) when list(ParamList) ->
+udhi(ParamList) when is_list(ParamList) ->
     case lists:keysearch(esm_class, 1, ParamList) of
         {value, {esm_class, EsmClass}} ->
             udhi_value(EsmClass);
